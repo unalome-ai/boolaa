@@ -1,0 +1,42 @@
+# DigitalOcean App Platform spec for the Boolaa web app (landing + app on boolaa.ro).
+# Apply: doctl apps create --spec .do/app.yaml   |   doctl apps update <id> --spec .do/app.yaml
+# The NEXT_PUBLIC_* values are public by design (the anon key is protected by RLS);
+# they are baked into the client bundle at build time.
+name: boolaa-web
+region: fra
+domains:
+  - domain: boolaa.ro
+    type: PRIMARY
+  - domain: www.boolaa.ro
+    type: ALIAS
+services:
+  - name: web
+    github:
+      repo: bogdan-raduta/boolaa
+      branch: main
+      deploy_on_push: true
+    source_dir: apps/boolaa-web
+    environment_slug: node-js
+    build_command: npm ci && npm run build
+    run_command: npm start
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /
+    envs:
+      - key: PORT
+        value: "8080"
+        scope: RUN_TIME
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+        scope: RUN_AND_BUILD_TIME
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: __SET_AFTER_SUPABASE_PROJECT_IS_CREATED__
+        scope: RUN_AND_BUILD_TIME
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        value: __SET_AFTER_SUPABASE_PROJECT_IS_CREATED__
+        scope: RUN_AND_BUILD_TIME
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://boolaa.ro
+        scope: RUN_AND_BUILD_TIME
