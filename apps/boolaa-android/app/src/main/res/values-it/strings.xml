@@ -63,7 +63,7 @@
     <string name="error_network">Impossibile raggiungere Boolaa. Controlla la connessione e riprova.</string>
     <string name="error_not_authenticated">La tua sessione è scaduta. Accedi di nuovo.</string>
     <string name="error_not_member">Non sei membro di questa bolla.</string>
-    <string name="error_only_owner_can_remove">Solo il proprietario può rimuovere i membri.</string>
+    <string name="error_only_owner_can_remove">Solo il proprietario o un admin può rimuovere membri.</string>
     <string name="error_permission_denied">Non hai il permesso di farlo.</string>
     <string name="error_report_target_not_found">Questo contenuto non esiste più.</string>
     <string name="error_request_not_found">Questa richiesta di adesione non esiste più.</string>
@@ -319,7 +319,7 @@
     <string name="rotate_invite_confirm">Cambia codice</string>
     <string name="invite_rotated">Nuovo codice di invito pronto</string>
     <string name="error_too_many_invite_attempts">Troppi tentativi con codici non validi. Riprova tra un\'ora.</string>
-    <string name="error_only_owner_can_rotate">Solo il proprietario può cambiare il codice di invito.</string>
+    <string name="error_only_owner_can_rotate">Solo il proprietario o un admin può cambiare il codice di invito.</string>
     <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
     <string name="bubble_photo">Foto della bolla</string>
     <string name="add_bubble_photo">Aggiungi una foto</string>

@@ -169,7 +169,16 @@
     "revokeBody": "It will need a new code from your email before it can see your bubbles again.",
     "revokeConfirm": "Remove device",
     "deleteCodeNote": "To make sure it's you, we'll email you a 6-digit code first.",
-    "codeSentBody": "Enter the 6-digit code we just emailed you. Your account will be deleted right after."
+    "codeSentBody": "Enter the 6-digit code we just emailed you. Your account will be deleted right after.",
+    "exportData": "Download my data",
+    "exportTitle": "Download your data",
+    "exportBody": "You get one JSON file with everything Boolaa stores about you: your profile, bubbles, messages, posts, reactions, reports, blocks and settings. Your photos are listed as links that work for 7 days. Keep the file private.",
+    "exportCodeNote": "To keep it safe, we'll email you a code first. You can download your data once an hour.",
+    "exportSendCode": "Send code",
+    "exportCodeSent": "Enter the 6-digit code we just emailed you. Your file downloads right after.",
+    "exportDownload": "Download",
+    "exportPreparing": "Preparing your data…",
+    "exportDone": "Your data is ready."
   },
   "chat": {
     "live": "live",
@@ -266,7 +275,7 @@
     "bubble": "Bubble",
     "name": "Name",
     "noDescription": "No description",
-    "ownerOnly": "Only the owner can edit these details.",
+    "ownerOnly": "Only the owner and admins can edit these details.",
     "inviteCode": "Invite code",
     "copy": "Copy",
     "copied": "Copied",
@@ -310,7 +319,17 @@
     "addBubblePhoto": "Add a photo",
     "changeBubblePhoto": "Change photo",
     "removeBubblePhoto": "Remove photo",
-    "bubblePhotoHint": "Everyone in the bubble sees it. Square photos look best."
+    "bubblePhotoHint": "Everyone in the bubble sees it. Square photos look best.",
+    "admin": "Admin",
+    "makeAdmin": "Make admin",
+    "removeAdmin": "Remove admin",
+    "transferOwnership": "Transfer ownership",
+    "transferTitle": "Transfer ownership?",
+    "transferBody": "<strong>{name}</strong> becomes the owner of {bubble}. You'll lose your owner rights and become an admin: you won't be able to change roles, remove admins or take ownership back unless {name} gives it back.",
+    "transferred": "{name} is now the owner.",
+    "madeAdmin": "{name} is now an admin.",
+    "removedAdmin": "{name} is no longer an admin.",
+    "memberActions": "Manage {name}"
   },
   "home": {
     "chat": "Chat",
@@ -344,7 +363,7 @@
     "imageTooLarge": "That photo is too large. Pick a smaller one.",
     "imageUnsupported": "We can't read that image. Try a different photo.",
     "generic": "Something went wrong. Please try again.",
-    "onlyOwnerCanRemove": "Only the owner can remove members.",
+    "onlyOwnerCanRemove": "Only the owner or an admin can remove members.",
     "cannotRemoveSelf": "You can't remove yourself. Use “Leave bubble” instead.",
     "memberNotFound": "That person is no longer a member.",
     "cannotReportYourself": "You can't report yourself.",
@@ -366,8 +385,10 @@
     "samePassword": "Your new password must be different from the old one.",
     "oauthFailed": "Couldn't sign you in with that account. Try again.",
     "tooManyInviteAttempts": "Too many tries with invalid codes. Try again in an hour.",
-    "onlyOwnerCanRotate": "Only the owner can change the invite code.",
-    "chatMessageGone": "That message no longer exists."
+    "onlyOwnerCanRotate": "Only the owner or an admin can change the invite code.",
+    "chatMessageGone": "That message no longer exists.",
+    "ownerOnlyAction": "Only the owner can do that.",
+    "exportRateLimited": "You can download your data once an hour. Try again later."
   },
   "safety": {
     "moreActions": "More actions",
@@ -566,5 +587,31 @@
     "react": "React",
     "chip": "{reaction}: {count, plural, one {# reaction} other {# reactions}}",
     "reactedByYou": "You reacted"
+  },
+  "search": {
+    "open": "Search this bubble",
+    "title": "Search",
+    "placeholder": "Search {bubble}",
+    "clear": "Clear search",
+    "hint": "Find messages, events, food, items and links.",
+    "minLength": "Type at least 2 characters.",
+    "noResults": "No results for “{query}”",
+    "noResultsHint": "Try another word, or fewer letters.",
+    "error": "Search didn't work. Try again.",
+    "retry": "Try again",
+    "results": "{count, plural, one {# result} other {# results}}",
+    "kindMessage": "Message",
+    "kindEvent": "Event",
+    "kindFood": "Food post",
+    "kindItem": "Item",
+    "kindLink": "Link",
+    "messageUnavailable": "We couldn't find that message in the chat."
+  },
+  "appearance": {
+    "title": "Appearance",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "hint": "System follows your device's light or dark setting."
   }
 }

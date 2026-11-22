@@ -72,6 +72,7 @@
       "delete_account": "ștergerea contului tău",
       "change_password": "schimbarea parolei tale",
       "change_email": "schimbarea adresei tale de email",
+      "export_data": "descărcarea unei copii a datelor tale",
       "generic": "o schimbare în contul tău"
     }
   },

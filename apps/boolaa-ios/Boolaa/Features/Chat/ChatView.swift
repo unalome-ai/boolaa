@@ -13,6 +13,9 @@ final class ChatModel {
     /// "New messages" divider: above this message until the chat closes.
     private(set) var dividerID: UUID?
     var error: String?
+    /// A message opened from search: the view scrolls to it once, then rings it for a few seconds.
+    var jumpTarget: UUID?
+    var highlighted: UUID?
     let images = ChatImageURLs()
     let reactions = ReactionStore(.chatMessage)
     private var authors: [UUID: UserProfile] = [:]
@@ -88,6 +91,27 @@ final class ChatModel {
             onPrepended(anchor)
             signPhotos(of: page)
             await loadReactions(of: page)
+        } catch {
+            self.error = error.userMessage
+        }
+    }
+
+    /// Loads the window from `id` to the newest message (`chat_messages_around`, contiguous with what is
+    /// loaded, so live messages and older pages keep working) and asks the view to scroll to it.
+    func jump(to id: UUID) async {
+        guard let api, let bubbleID else { return }
+        do {
+            let rows = try await api.chatAround(bubbleID: bubbleID, messageID: id).map(withAuthor)
+            let window = ChatJump.window(rows, target: id)
+            guard window.found else {
+                error = String(localized: "We couldn't find that message in the chat.")
+                return
+            }
+            if window.reachedStart { reachedStart = true }
+            messages = ChatJump.merge(messages, window: rows)
+            signPhotos(of: rows)
+            jumpTarget = id
+            await loadReactions(of: rows)
         } catch {
             self.error = error.userMessage
         }
@@ -233,6 +257,16 @@ struct ChatView: View {
                                                               onReact: { react(message, $0) }) { pendingDelete = message })
                                     .modifier(MessagePop(enabled: initialIDs.map { !$0.contains(message.id) } ?? false,
                                                          anchor: isMine ? .bottomTrailing : .bottomLeading))
+                                    .overlay {
+                                        if model.highlighted == message.id {
+                                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                                .strokeBorder(Theme.brandText, lineWidth: 3)
+                                                .padding(-3)
+                                                .allowsHitTesting(false)
+                                                .transition(.opacity)
+                                                .accessibilityIdentifier("chat-highlight")
+                                        }
+                                    }
                                 if !message.isDeleted {
                                     let chips = model.reactions.summary(for: message.id, me: session.userID)
                                     if !chips.isEmpty {
@@ -263,6 +297,18 @@ struct ChatView: View {
                     withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
                     Task { await markRead() }
                 }
+                // A message opened from search: centre it, ring it for 4 s.
+                .onChange(of: model.jumpTarget) { _, target in
+                    guard let target else { return }
+                    model.jumpTarget = nil
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(150))
+                        withAnimation(Motion.resolve(Motion.gentle, reduceMotion: reduceMotion)) { proxy.scrollTo(target, anchor: .center) }
+                        model.highlighted = target
+                        try? await Task.sleep(for: .seconds(4))
+                        if model.highlighted == target { withAnimation(Motion.gentle) { model.highlighted = nil } }
+                    }
+                }
                 .onChange(of: composerFocused) { _, focused in
                     if focused { withAnimation { proxy.scrollTo(Self.bottomID, anchor: .bottom) } }
                 }
@@ -284,6 +330,10 @@ struct ChatView: View {
                 return unread.lastReadAt[id]
             }
             initialIDs = Set(model.messages.map(\.id))
+            if let target = router.takeChatJump() {
+                await model.jump(to: target)
+                initialIDs = Set(model.messages.map(\.id)) // the window doesn't pop in
+            }
             await markRead()
             await model.listen(client: session.api.client, bubbleID: id)
         }

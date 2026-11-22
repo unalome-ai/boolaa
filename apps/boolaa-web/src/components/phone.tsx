@@ -1,6 +1,7 @@
 import { getImageProps } from "next/image";
 import type { CSSProperties } from "react";
 import type { Locale } from "@/i18n/config";
+import { readTheme } from "@/lib/theme-server";
 import { cx } from "@/lib/utils";
 
 /**
@@ -15,10 +16,11 @@ const HEIGHT = 1435;
 
 /**
  * A screenshot inside a generic phone frame drawn in CSS (`.phone` in globals.css). The dark
- * screenshot is used when the visitor's system is in dark mode, like the rest of the site.
+ * screenshot follows the site's theme: the visitor's choice (src/lib/theme.ts) or, for "System",
+ * their OS (a <picture> source).
  * Everything is lazy-loaded except the hero (`eager`).
  */
-export function Phone({
+export async function Phone({
   locale,
   screen,
   alt,
@@ -36,14 +38,16 @@ export function Phone({
   className?: string;
   style?: CSSProperties;
 }) {
+  const theme = await readTheme();
   const common = { alt, width: WIDTH, height: HEIGHT, sizes };
   const { props: dark } = getImageProps({ ...common, src: `/screens/${locale}/dark/${screen}.webp` });
-  const { props: light } = getImageProps({ ...common, src: `/screens/${locale}/light/${screen}.webp`, loading: eager ? "eager" : "lazy" });
+  const imgScheme = theme === "dark" ? "dark" : "light";
+  const { props: light } = getImageProps({ ...common, src: `/screens/${locale}/${imgScheme}/${screen}.webp`, loading: eager ? "eager" : "lazy" });
   return (
     <div className={cx("phone", className)} style={style} aria-hidden={alt ? undefined : true}>
       <div className="phone-screen">
         <picture>
-          <source media="(prefers-color-scheme: dark)" srcSet={dark.srcSet} sizes={sizes} />
+          {theme === "system" && <source media="(prefers-color-scheme: dark)" srcSet={dark.srcSet} sizes={sizes} />}
           {/* next/image's props on a plain <img>, so <picture> can swap in the dark screenshot */}
           <img {...light} alt={alt} fetchPriority={eager ? "high" : undefined} draggable={false} />
         </picture>

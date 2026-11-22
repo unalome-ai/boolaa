@@ -79,7 +79,7 @@ struct Suspension: Equatable, Sendable {
 
 /// What a code proves: signing in on a new device, or re-confirming a sensitive action in this session.
 enum SensitiveAction: String, Sendable {
-    case deleteAccount = "delete_account", changePassword = "change_password", changeEmail = "change_email", generic
+    case deleteAccount = "delete_account", changePassword = "change_password", changeEmail = "change_email", exportData = "export_data", generic
 }
 
 /// A `device-code` Edge Function failure: HTTP status, its `error` code and `attempts_left` for `invalid_code`.

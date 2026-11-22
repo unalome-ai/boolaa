@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Camera, FileText, LogOut, ShieldCheck, Trash2, Undo2 } from "lucide-react";
+import { Camera, Download, FileText, LogOut, ShieldCheck, Trash2, Undo2 } from "lucide-react";
 import { useBoolaa } from "@/components/boolaa-provider";
 import { Avatar, ErrorText, Modal } from "@/components/ui";
 import { useTranslations } from "next-intl";
@@ -12,6 +12,7 @@ import { hardNavigate, removeImage, uploadImage } from "@/lib/utils";
 import { unregisterPush } from "@/lib/push";
 import { AccountSecurity } from "@/components/account-security";
 import { DeleteAccountPanel } from "@/components/delete-account";
+import { DataExportPanel } from "@/components/data-export";
 
 export function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("profile");
@@ -182,11 +183,12 @@ function BlockedUsers() {
   );
 }
 
-/** Legal links and account deletion (App Store 5.1.1(v)). */
+/** Legal links, data export (GDPR access) and account deletion (App Store 5.1.1(v)). */
 function AccountSection() {
   const { supabase, userId } = useBoolaa();
   const t = useTranslations();
   const [confirming, setConfirming] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   return (
     <section className="mt-6 space-y-3 border-t border-line pt-5">
@@ -198,6 +200,13 @@ function AccountSection() {
           <FileText size={15} /> {t("legal.terms")}
         </Link>
       </div>
+      {!exporting ? (
+        <button type="button" onClick={() => setExporting(true)} className="btn-ghost w-full" data-testid="export-data">
+          <Download size={18} /> {t("profile.exportData")}
+        </button>
+      ) : (
+        <DataExportPanel supabase={supabase} onClose={() => setExporting(false)} />
+      )}
       {!confirming ? (
         <button type="button" onClick={() => setConfirming(true)} className="btn-danger w-full" data-testid="delete-account">
           <Trash2 size={18} /> {t("profile.deleteAccount")}

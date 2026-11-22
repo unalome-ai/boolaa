@@ -70,7 +70,7 @@
     <string name="error_network">Can\'t reach Boolaa. Check your connection and try again.</string>
     <string name="error_not_authenticated">Your session has expired. Sign in again.</string>
     <string name="error_not_member">You\'re not a member of this bubble.</string>
-    <string name="error_only_owner_can_remove">Only the owner can remove members.</string>
+    <string name="error_only_owner_can_remove">Only the owner or an admin can remove members.</string>
     <string name="error_permission_denied">You don\'t have permission to do that.</string>
     <string name="error_report_target_not_found">This content no longer exists.</string>
     <string name="error_request_not_found">This join request no longer exists.</string>
@@ -319,7 +319,7 @@
     <string name="rotate_invite_confirm">Change code</string>
     <string name="invite_rotated">New invite code ready</string>
     <string name="error_too_many_invite_attempts">Too many tries with invalid codes. Try again in an hour.</string>
-    <string name="error_only_owner_can_rotate">Only the owner can change the invite code.</string>
+    <string name="error_only_owner_can_rotate">Only the owner or an admin can change the invite code.</string>
     <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
     <string name="bubble_photo">Bubble photo</string>
     <string name="add_bubble_photo">Add a photo</string>

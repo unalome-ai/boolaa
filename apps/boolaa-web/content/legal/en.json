@@ -85,6 +85,7 @@
         "title": "Your rights",
         "body": [
           "You have the right to access your data, to rectify it, to erase it, to receive it in a portable format, to restrict or object to its processing, and to withdraw any consent at any time.",
+          "To get a copy of your data yourself, use \"Download my data\" in your profile (web) or account settings (apps). After you enter a code we email you, you get a JSON file with everything we store about you (profile, account and sign-in details, bubbles, messages, posts, reactions, reports you filed, blocks and settings), with links to your photos that work for 7 days. You can do this once an hour. Reports other people filed about you aren't in the file, because they contain those people's data; write to privacy@boolaa.ro to get the moderation records about you, with other people's details removed.",
           "You can edit your profile and delete your content or your whole account directly in the app. For anything else, write to privacy@boolaa.ro. We answer within one month.",
           "You also have the right to lodge a complaint with ANSPDCP (www.dataprotection.ro) or with the supervisory authority where you live."
         ]

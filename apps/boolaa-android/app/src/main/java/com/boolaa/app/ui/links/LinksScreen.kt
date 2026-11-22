@@ -10,6 +10,8 @@ import com.boolaa.app.model.SharedLink
 import com.boolaa.app.model.ReportTarget
 import com.boolaa.app.model.ReportTargetType
 import com.boolaa.app.ui.safety.ReportSheet
+import com.boolaa.app.ui.shell.PushHighlightScroll
+import com.boolaa.app.ui.shell.pushHighlight
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -225,10 +227,19 @@ fun LinksScreen(onBack: () -> Unit) {
     val allTags = links.orEmpty().flatMap { it.tags }.distinct().sorted()
     val hue = Feature.LINKS.hue
     val c = BoolaaTheme.colors
+    // A push or search hit: scroll to the link and ring it for 4 s (clear a tag filter that would hide it).
+    val listState = rememberLazyListState()
+    PushHighlightScroll(listState, loaded = links != null)
+    val highlight by container.push.highlight.collectAsStateWithLifecycle()
+    LaunchedEffect(highlight, links) {
+        val target = links?.firstOrNull { it.id == highlight } ?: return@LaunchedEffect
+        if (tagFilter != null && tagFilter !in target.tags) tagFilter = null
+    }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().testTag("links-screen")) {
         PushedHeader(stringResource(R.string.links), bubble.name, Hue.forId(bubble.id), onBack, backTag = "links-back")
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.navigationBarsPadding(),
@@ -265,7 +276,7 @@ fun LinksScreen(onBack: () -> Unit) {
                     val open = { runCatching { uriHandler.openUri(link.url) }; Unit }
                     val picker = com.boolaa.app.ui.components.rememberReactionPicker()
                     Column(
-                        Modifier.animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()).popIn(index + 1)
+                        Modifier.pushHighlight(link.id).animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()).popIn(index + 1)
                             .boolaaCard(0.dp).testTag("link-${link.id}"),
                     ) {
                     // Tap opens the link; long press opens the reaction picker.

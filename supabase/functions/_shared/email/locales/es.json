@@ -72,6 +72,7 @@
       "delete_account": "eliminar tu cuenta",
       "change_password": "cambiar tu contraseña",
       "change_email": "cambiar tu dirección de correo",
+      "export_data": "descargar una copia de tus datos",
       "generic": "un cambio en tu cuenta"
     }
   },

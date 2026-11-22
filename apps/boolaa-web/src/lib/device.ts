@@ -150,7 +150,7 @@ export const sendDeviceCode = (supabase: BoolaaClient, locale?: string) =>
 export const verifyDeviceCode = (supabase: BoolaaClient, code: string) =>
   deviceCode(supabase, { action: "verify", purpose: "device", device_id: getDeviceId(), label: deviceLabel(), code });
 
-export type SensitiveAction = "delete_account" | "change_password" | "change_email" | "generic";
+export type SensitiveAction = "delete_account" | "change_password" | "change_email" | "export_data" | "generic";
 
 export const sendSensitiveCode = (supabase: BoolaaClient, action: SensitiveAction, locale?: string) =>
   deviceCode(supabase, { action: "send", purpose: "sensitive_action", sensitive_action: action, locale });

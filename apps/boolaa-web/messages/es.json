@@ -169,7 +169,16 @@
     "revokeBody": "Necesitará un código nuevo de tu correo antes de volver a ver tus burbujas.",
     "revokeConfirm": "Quitar dispositivo",
     "deleteCodeNote": "Para asegurarnos de que eres tú, primero te enviaremos un código de 6 dígitos por correo.",
-    "codeSentBody": "Introduce el código de 6 dígitos que te acabamos de enviar. Tu cuenta se eliminará justo después."
+    "codeSentBody": "Introduce el código de 6 dígitos que te acabamos de enviar. Tu cuenta se eliminará justo después.",
+    "exportData": "Descargar mis datos",
+    "exportTitle": "Descarga tus datos",
+    "exportBody": "Recibes un archivo JSON con todo lo que Boolaa guarda sobre ti: tu perfil, burbujas, mensajes, publicaciones, reacciones, denuncias, bloqueos y ajustes. Tus fotos aparecen como enlaces válidos durante 7 días. Guarda el archivo solo para ti.",
+    "exportCodeNote": "Por seguridad, primero te enviamos un código por correo. Puedes descargar tus datos una vez por hora.",
+    "exportSendCode": "Enviar código",
+    "exportCodeSent": "Introduce el código de 6 dígitos que te acabamos de enviar por correo. El archivo se descarga justo después.",
+    "exportDownload": "Descargar",
+    "exportPreparing": "Preparando tus datos…",
+    "exportDone": "Tus datos están listos."
   },
   "chat": {
     "live": "en directo",
@@ -266,7 +275,7 @@
     "bubble": "Burbuja",
     "name": "Nombre",
     "noDescription": "Sin descripción",
-    "ownerOnly": "Solo el propietario puede editar estos datos.",
+    "ownerOnly": "Solo el propietario y los admins pueden editar estos datos.",
     "inviteCode": "Código de invitación",
     "copy": "Copiar",
     "copied": "Copiado",
@@ -310,7 +319,17 @@
     "addBubblePhoto": "Añadir una foto",
     "changeBubblePhoto": "Cambiar la foto",
     "removeBubblePhoto": "Quitar la foto",
-    "bubblePhotoHint": "La ve todo el mundo en la burbuja. Las fotos cuadradas quedan mejor."
+    "bubblePhotoHint": "La ve todo el mundo en la burbuja. Las fotos cuadradas quedan mejor.",
+    "admin": "Admin",
+    "makeAdmin": "Hacer admin",
+    "removeAdmin": "Quitar el rol de admin",
+    "transferOwnership": "Ceder el rol de propietario",
+    "transferTitle": "¿Ceder el rol de propietario?",
+    "transferBody": "<strong>{name}</strong> pasa a ser propietario de {bubble}. Pierdes tus derechos de propietario y pasas a ser admin: ya no podrás cambiar roles, quitar admins ni recuperar la propiedad, salvo que {name} te la devuelva.",
+    "transferred": "{name} ahora es el propietario.",
+    "madeAdmin": "{name} ahora es admin.",
+    "removedAdmin": "{name} ya no es admin.",
+    "memberActions": "Gestionar a {name}"
   },
   "home": {
     "chat": "Chat",
@@ -344,7 +363,7 @@
     "imageTooLarge": "Esa foto es demasiado grande. Elige una más pequeña.",
     "imageUnsupported": "No podemos leer esa imagen. Prueba con otra foto.",
     "generic": "Algo ha ido mal. Inténtalo de nuevo.",
-    "onlyOwnerCanRemove": "Solo el propietario puede quitar miembros.",
+    "onlyOwnerCanRemove": "Solo el propietario o un admin puede quitar miembros.",
     "cannotRemoveSelf": "No puedes quitarte desde aquí. Usa «Salir de la burbuja».",
     "memberNotFound": "Esa persona ya no forma parte de la burbuja.",
     "cannotReportYourself": "No puedes denunciarte a ti.",
@@ -366,8 +385,10 @@
     "samePassword": "Tu contraseña nueva tiene que ser distinta de la anterior.",
     "oauthFailed": "No hemos podido iniciar sesión con esa cuenta. Inténtalo de nuevo.",
     "tooManyInviteAttempts": "Demasiados intentos con códigos no válidos. Inténtalo de nuevo dentro de una hora.",
-    "onlyOwnerCanRotate": "Solo el propietario puede cambiar el código de invitación.",
-    "chatMessageGone": "Ese mensaje ya no existe."
+    "onlyOwnerCanRotate": "Solo el propietario o un admin puede cambiar el código de invitación.",
+    "chatMessageGone": "Ese mensaje ya no existe.",
+    "ownerOnlyAction": "Solo el propietario puede hacer eso.",
+    "exportRateLimited": "Puedes descargar tus datos una vez por hora. Inténtalo más tarde."
   },
   "safety": {
     "moreActions": "Más acciones",
@@ -566,5 +587,31 @@
     "react": "Reaccionar",
     "chip": "{reaction}: {count, plural, one {# reacción} other {# reacciones}}",
     "reactedByYou": "Has reaccionado"
+  },
+  "search": {
+    "open": "Buscar en la burbuja",
+    "title": "Buscar",
+    "placeholder": "Buscar en {bubble}",
+    "clear": "Borrar la búsqueda",
+    "hint": "Encuentra mensajes, eventos, comida, objetos y enlaces.",
+    "minLength": "Escribe al menos 2 caracteres.",
+    "noResults": "No hay resultados para «{query}»",
+    "noResultsHint": "Prueba con otra palabra o con menos letras.",
+    "error": "La búsqueda no ha funcionado. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "results": "{count, plural, one {# resultado} other {# resultados}}",
+    "kindMessage": "Mensaje",
+    "kindEvent": "Evento",
+    "kindFood": "Publicación de comida",
+    "kindItem": "Objeto",
+    "kindLink": "Enlace",
+    "messageUnavailable": "No hemos encontrado ese mensaje en el chat."
+  },
+  "appearance": {
+    "title": "Apariencia",
+    "themeSystem": "Sistema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "hint": "Sistema sigue el ajuste claro u oscuro de tu dispositivo."
   }
 }

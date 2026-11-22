@@ -65,7 +65,7 @@ class SafetyTest {
             assertTrue(a.approveJoinRequest(b.requestToJoin(bubble.inviteCode).id))
             val fromB = b.sendMessage(bubble.id, bId, "hello from B $run")
             a.sendMessage(bubble.id, aId, "hello from A $run")
-            assertTrue(a.chatMessages(bubble.id).any { it.id == fromB.id })
+            assertTrue(a.latestChatMessages(bubble.id, 50).any { it.id == fromB.id })
 
             // Report errors (no report rows are created on these paths).
             expectError(UserFacingError.CANNOT_REPORT_SELF) { b.report(ReportTargetType.CHAT_MESSAGE, fromB.id, ReportReason.SPAM, null) }
@@ -76,13 +76,13 @@ class SafetyTest {
             // Block is two-way: neither side sees the other's messages; members still list both.
             a.block(aId, bId)
             assertEquals(listOf(bId), a.blocks().map { it.blockedId })
-            assertFalse(a.chatMessages(bubble.id).any { it.senderId == bId })
-            assertFalse(b.chatMessages(bubble.id).any { it.senderId == aId })
+            assertFalse(a.latestChatMessages(bubble.id, 50).any { it.senderId == bId })
+            assertFalse(b.latestChatMessages(bubble.id, 50).any { it.senderId == aId })
             assertEquals(2, a.members(bubble.id).size)
 
             a.unblock(aId, bId)
             assertTrue(a.blocks().isEmpty())
-            assertTrue(a.chatMessages(bubble.id).any { it.id == fromB.id })
+            assertTrue(a.latestChatMessages(bubble.id, 50).any { it.id == fromB.id })
 
             // delete_my_account: storage under <uid>/ is removed first, then the auth user and everything it owns.
             val avatar = b.uploadImage(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()), ImageBucket.AVATARS, bId)
@@ -90,7 +90,7 @@ class SafetyTest {
             b.deleteMyAccount(bId); bDeleted = true
             assertTrue(httpStatus(avatar) >= 400)
             assertFalse(a.members(bubble.id).any { it.userId == bId })
-            assertFalse(a.chatMessages(bubble.id).any { it.senderId == bId })
+            assertFalse(a.latestChatMessages(bubble.id, 50).any { it.senderId == bId })
             b.client.auth.signOut()
             expectError(UserFacingError.INVALID_CREDENTIALS) {
                 b.client.auth.signInWith(Email) { email = "android-blocked-$run@boolaa.test"; password = "password123" }

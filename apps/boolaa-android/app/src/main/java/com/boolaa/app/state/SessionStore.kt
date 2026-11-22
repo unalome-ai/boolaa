@@ -9,6 +9,8 @@ import com.boolaa.app.core.DeviceCodeBody
 import com.boolaa.app.core.DeviceIdentity
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.SensitiveAction
+import com.boolaa.app.core.DataExportFile
+import com.boolaa.app.core.exportMyData
 import com.boolaa.app.core.TERMS_VERSION
 import com.boolaa.app.core.UserFacingError
 import com.boolaa.app.core.AccountStatusRow
@@ -536,6 +538,9 @@ class SessionStore(
         api.deviceCode(DeviceCodeBody.verify(CodePurpose.SENSITIVE_ACTION, code, null, null))
     }
 
+    /** "Download my data": call right after a verified `export_data` code (the proof belongs to this session). */
+    suspend fun exportMyData(): DataExportFile = api.exportMyData()
+
     /**
      * Change password, step 1: emails a `change_password` code. The server refuses a password change
      * without one (guard_sensitive_auth_change, docs/auth-security.md → Sensitive actions).
@@ -596,7 +601,7 @@ class SessionStore(
 
     suspend fun invitePreview(code: String) = api.invitePreview(code)
 
-    /** Owner only; the reload brings the new code into the current bubble. */
+    /** Owner or admin; the reload brings the new code into the current bubble. */
     suspend fun rotateInviteCode(bubbleId: String): String {
         val code = api.rotateInviteCode(bubbleId)
         reload()
@@ -625,7 +630,7 @@ class SessionStore(
     }
 
     /**
-     * Bubble logo (owner only): compress like an avatar (512 px, 2 MB), upload to `bubble.images/<bubble id>/`,
+     * Bubble logo (owner or admin): compress like an avatar (512 px, 2 MB), upload to `bubble.images/<bubble id>/`,
      * point the row at it, then remove the previous object. A failed row update removes the new upload.
      */
     suspend fun setBubbleLogo(bubble: Bubble, jpeg: ByteArray) {

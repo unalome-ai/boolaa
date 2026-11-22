@@ -129,6 +129,23 @@ sequenceDiagram
 ```
 The proof belongs to the **session** that requested the code, so another signed-in device can't use it, and it expires 10 minutes after verification. While `device_verification_enforced` is off, `delete_my_account()` still works without a code, so today's clients keep working. New clients should always do the code step.
 
+### Flow: download my data
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant F as device-code function
+  participant X as data-export function
+  participant DB as Postgres
+  C->>F: POST {action:"send", purpose:"sensitive_action", sensitive_action:"export_data"}
+  F-->>C: 200 sent (email: "confirm: download a copy of your data")
+  C->>F: POST {action:"verify", purpose:"sensitive_action", code}
+  F-->>C: 200 verified
+  C->>X: POST /functions/v1/data-export (same session, within 10 min)
+  X->>DB: rpc export_my_data() with the user's JWT (proof + 1/hour limit)
+  X-->>C: 200 boolaa-data-YYYY-MM-DD.json (photo links: public, or signed for 7 days)
+```
+Unlike `delete_my_account()`, `export_my_data()` needs the code **always**, not only while `device_verification_enforced` is on: the export is new (every client sends the code), and a full copy of the account is exactly what a stolen session would take. Like delete, the proof belongs to the session that verified it and lasts 10 minutes; it isn't bound to the action named in the email (no proof is). It needs the device check, but not the age confirmation and not an active account (the right of access stays during a suspension). At most one export per user per rolling hour. Function errors: 401 `unauthorized`, 403 `session_not_verified`, 403 `reauthentication_required`, 429 `export_rate_limited` (`retry_after` seconds, `Retry-After` header), 500 `server_error`. Contents and exclusions: `docs/boolaa-spec.md`, "Data export".
+
 ### Flow: revoke a device ("Your devices")
 `list_my_devices()` → the user taps revoke → `revoke_device(hash)`. The revoked device is no longer trusted, and **every other session of the user** drops out of `verified_sessions`, the caller's own session excepted. The next `start_device_check` passes again on still-trusted devices and needs a code on the revoked one. A revoked device is not signed out: it just sees no data until it verifies again.
 
@@ -144,6 +161,7 @@ The proof belongs to the **session** that requested the code, so another signed-
 | `is_session_verified()` | `boolean` | Optional diagnostic. |
 | `confirm_age(p_terms_version text)` | `timestamptz` | Sets `age_confirmed_at` (only if null) and `terms_version` for the caller. Needs the device check, not the age check. Errors: `invalid terms version`. |
 | `delete_my_account()` | void | Errors: `session not verified`, `reauthentication required`. |
+| `export_my_data()` | jsonb | Called by the `data-export` function. Always needs a fresh `sensitive_action` code from this session; one per hour. Errors: `session not verified`, `reauthentication required`, `export rate limited` (DETAIL = seconds to wait). |
 | Existing RPCs (`create_bubble`, `request_to_join`, `approve_join_request`, `reject_join_request`, `remove_member`, `toggle_rsvp`, `report_content`) | unchanged | Can additionally raise `session not verified` or `age confirmation required`. |
 
 Trusted devices are capped at **10 per user**: the least recently seen one is dropped. Expired codes are pruned (rows older than one day) on every send.
@@ -158,7 +176,7 @@ Trusted devices are capped at **10 per user**: the least recently seen one is dr
 | `{"action":"send","purpose":"sensitive_action","sensitive_action":"delete_account"}` | `200 {"status":"sent","expires_at":"…"}` |
 | `{"action":"verify","purpose":"sensitive_action","code":"123456"}` | `200 {"status":"verified"}` |
 
-`sensitive_action` names the action in the email: `delete_account`, or `generic` (the default). An optional `locale` is used only when `user_metadata.locale` is missing.
+`sensitive_action` names the action in the email: `delete_account`, `change_password`, `change_email`, `export_data`, or `generic` (the default). An optional `locale` is used only when `user_metadata.locale` is missing.
 
 | HTTP | `error` | Meaning, and what the client shows |
 |---|---|---|

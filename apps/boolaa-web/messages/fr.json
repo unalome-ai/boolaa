@@ -169,7 +169,16 @@
     "revokeBody": "Il lui faudra un nouveau code reçu par e-mail avant de revoir tes bulles.",
     "revokeConfirm": "Retirer l'appareil",
     "deleteCodeNote": "Pour être sûrs que c'est bien toi, on t'envoie d'abord un code à 6 chiffres par e-mail.",
-    "codeSentBody": "Saisis le code à 6 chiffres qu'on vient de t'envoyer. Ton compte sera supprimé juste après."
+    "codeSentBody": "Saisis le code à 6 chiffres qu'on vient de t'envoyer. Ton compte sera supprimé juste après.",
+    "exportData": "Télécharger mes données",
+    "exportTitle": "Télécharge tes données",
+    "exportBody": "Tu reçois un fichier JSON avec tout ce que Boolaa conserve sur toi : ton profil, tes bulles, messages, publications, réactions, signalements, blocages et réglages. Tes photos y figurent sous forme de liens valables 7 jours. Garde ce fichier pour toi.",
+    "exportCodeNote": "Pour ta sécurité, on t'envoie d'abord un code par e-mail. Tu peux télécharger tes données une fois par heure.",
+    "exportSendCode": "Envoyer le code",
+    "exportCodeSent": "Saisis le code à 6 chiffres qu'on vient de t'envoyer par e-mail. Le fichier se télécharge juste après.",
+    "exportDownload": "Télécharger",
+    "exportPreparing": "Préparation de tes données…",
+    "exportDone": "Tes données sont prêtes."
   },
   "chat": {
     "live": "en direct",
@@ -266,7 +275,7 @@
     "bubble": "Bulle",
     "name": "Nom",
     "noDescription": "Pas de description",
-    "ownerOnly": "Seul le propriétaire peut modifier ces informations.",
+    "ownerOnly": "Seuls le propriétaire et les admins peuvent modifier ces informations.",
     "inviteCode": "Code d'invitation",
     "copy": "Copier",
     "copied": "Copié",
@@ -310,7 +319,17 @@
     "addBubblePhoto": "Ajouter une photo",
     "changeBubblePhoto": "Changer la photo",
     "removeBubblePhoto": "Retirer la photo",
-    "bubblePhotoHint": "Tout le monde dans la bulle la voit. Les photos carrées rendent mieux."
+    "bubblePhotoHint": "Tout le monde dans la bulle la voit. Les photos carrées rendent mieux.",
+    "admin": "Admin",
+    "makeAdmin": "Nommer admin",
+    "removeAdmin": "Retirer le rôle d'admin",
+    "transferOwnership": "Céder le rôle de propriétaire",
+    "transferTitle": "Céder le rôle de propriétaire ?",
+    "transferBody": "<strong>{name}</strong> devient propriétaire de {bubble}. Tu perds tes droits de propriétaire et deviens admin : tu ne pourras plus changer les rôles, retirer des admins ni reprendre la propriété, sauf si {name} te la rend.",
+    "transferred": "{name} est maintenant propriétaire.",
+    "madeAdmin": "{name} est maintenant admin.",
+    "removedAdmin": "{name} n'est plus admin.",
+    "memberActions": "Gérer {name}"
   },
   "home": {
     "chat": "Discussion",
@@ -344,7 +363,7 @@
     "imageTooLarge": "Cette photo est trop lourde. Choisis-en une plus petite.",
     "imageUnsupported": "Impossible de lire cette image. Essaie une autre photo.",
     "generic": "Un problème est survenu. Réessaie.",
-    "onlyOwnerCanRemove": "Seul le propriétaire peut retirer des membres.",
+    "onlyOwnerCanRemove": "Seul le propriétaire ou un admin peut retirer des membres.",
     "cannotRemoveSelf": "Tu ne peux pas te retirer toi-même. Utilise « Quitter la bulle ».",
     "memberNotFound": "Cette personne ne fait plus partie de la bulle.",
     "cannotReportYourself": "Tu ne peux pas te signaler toi-même.",
@@ -366,8 +385,10 @@
     "samePassword": "Ton nouveau mot de passe doit être différent de l'ancien.",
     "oauthFailed": "Impossible de te connecter avec ce compte. Réessaie.",
     "tooManyInviteAttempts": "Trop d'essais avec des codes invalides. Réessaie dans une heure.",
-    "onlyOwnerCanRotate": "Seul le propriétaire peut changer le code d'invitation.",
-    "chatMessageGone": "Ce message n'existe plus."
+    "onlyOwnerCanRotate": "Seul le propriétaire ou un admin peut changer le code d'invitation.",
+    "chatMessageGone": "Ce message n'existe plus.",
+    "ownerOnlyAction": "Seul le propriétaire peut faire ça.",
+    "exportRateLimited": "Tu peux télécharger tes données une fois par heure. Réessaie plus tard."
   },
   "safety": {
     "moreActions": "Plus d'actions",
@@ -566,5 +587,31 @@
     "react": "Réagir",
     "chip": "{reaction} : {count, plural, one {# réaction} other {# réactions}}",
     "reactedByYou": "Tu as réagi"
+  },
+  "search": {
+    "open": "Rechercher dans la bulle",
+    "title": "Rechercher",
+    "placeholder": "Rechercher dans {bubble}",
+    "clear": "Effacer la recherche",
+    "hint": "Trouve des messages, des événements, des plats, des objets et des liens.",
+    "minLength": "Tape au moins 2 caractères.",
+    "noResults": "Aucun résultat pour « {query} »",
+    "noResultsHint": "Essaie un autre mot ou moins de lettres.",
+    "error": "La recherche n'a pas marché. Réessaie.",
+    "retry": "Réessayer",
+    "results": "{count, plural, one {# résultat} other {# résultats}}",
+    "kindMessage": "Message",
+    "kindEvent": "Événement",
+    "kindFood": "Publication gourmande",
+    "kindItem": "Objet",
+    "kindLink": "Lien",
+    "messageUnavailable": "Impossible de trouver ce message dans la discussion."
+  },
+  "appearance": {
+    "title": "Apparence",
+    "themeSystem": "Système",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "hint": "Système suit le réglage clair ou sombre de ton appareil."
   }
 }

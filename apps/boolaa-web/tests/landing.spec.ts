@@ -81,9 +81,15 @@ test("the landing page switches language from the header menu (keyboard too) and
   await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "ro");
 
   // Keyboard: open with ArrowDown, move to French, Enter.
-  await header.getByTestId("language-button").focus();
-  await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("menuitemradio", { name: "Română" })).toBeFocused();
+  // The switch to Romanian re-renders the page (server refresh); under load a key press can land
+  // on the old button before the new one is wired up, so retry opening until the menu takes focus.
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(async () => {
+    if (await page.getByRole("menu").count()) await page.keyboard.press("Escape");
+    await header.getByTestId("language-button").focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("menuitemradio", { name: "Română" })).toBeFocused({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("menuitemradio", { name: "Français" })).toBeFocused();
   await page.keyboard.press("Enter");

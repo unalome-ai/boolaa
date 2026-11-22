@@ -23,6 +23,7 @@ import { badgeText } from "@/lib/chat";
 import { CreateJoinTabs } from "@/components/create-join";
 import { ProfileSheet } from "@/components/profile-sheet";
 import { DeepLinkTarget } from "@/components/deep-link";
+import { BubbleSearch, SearchButton } from "@/components/bubble-search";
 import { BubbleLogo } from "@/components/orb";
 import { Avatar, Modal } from "@/components/ui";
 import { FEATURE_HUE, HUES, hueClass, hueFor, type Hue } from "@/lib/hue";
@@ -304,6 +305,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [requested, setRequested] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const isChat = pathname.startsWith("/chat");
   const isSub = isChat || pathname.startsWith("/links");
 
@@ -335,6 +337,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {navKey ? t(`nav.${navKey}`) : "Boolaa"}
               </h1>
             </div>
+            {bubble && <SearchButton onClick={() => setSearchOpen(true)} />}
             <button
               type="button"
               onClick={() => setProfileOpen(true)}
@@ -373,6 +376,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {!isChat && <Dock pathname={pathname} chatLabel={t("nav.openChat")} />}
 
+      <BubbleSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
       <Modal open={newOpen} onClose={() => setNewOpen(false)} title={t("createJoin.dialogTitle")}>
         {requested ? (

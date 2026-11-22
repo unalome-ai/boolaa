@@ -479,6 +479,11 @@ final class SessionStore {
         try await api.deviceCode(BoolaaAPI.DeviceCodeBody.verifySensitive(code: code))
     }
 
+    /// "Download my data": call right after a verified `export_data` code (the proof belongs to this session).
+    func exportMyData() async throws -> DataExportFile {
+        try await api.exportMyData()
+    }
+
     /// Emails a `change_password` code. The server refuses a password change without one
     /// (guard_sensitive_auth_change, docs/auth-security.md → Sensitive actions).
     func requestPasswordChangeCode() async throws {

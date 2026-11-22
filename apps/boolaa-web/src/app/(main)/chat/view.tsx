@@ -17,17 +17,21 @@ import { cx } from "@/lib/utils";
 import { useChatDraft } from "@/lib/chat-draft";
 import { useReactions } from "@/lib/reactions";
 import { ReactionChips, ReactionPicker } from "@/components/reactions";
+import { HIGHLIGHT_EVENT, aroundWindow, type HighlightDetail } from "@/lib/search";
 
 /** Scrolled this close to the top, the next older page loads. */
 const TOP_THRESHOLD = 160;
 /** Within this distance from the bottom, new messages keep the view pinned to the bottom. */
 const BOTTOM_THRESHOLD = 120;
+/** How long a message opened from search stays highlighted. */
+const HIGHLIGHT_MS = 4000;
 
 export default function ChatPage() {
   const { supabase, userId, profile, blocked } = useBoolaa();
   const bubble = useBubble();
   const unread = useChatUnread();
   const t = useTranslations("chat");
+  const ts = useTranslations("search");
   const tc = useTranslations("common");
   const errorText = useErrorText();
   const fmt = useFormat();
@@ -59,6 +63,9 @@ export default function ChatPage() {
   const liveIds = useMemo(() => (messages ?? []).filter((m) => !m.deleted_at).map((m) => m.id), [messages]);
   const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "chat_message", targetIds: liveIds, userId, onError: (e) => setError(errorText(e)) });
   const { bind: bindReactions, reload: reloadReactions, dropTarget } = reactions;
+  // A message opened from search (docs/boolaa-spec.md, "Search"): scrolled to and highlighted once rendered.
+  const [jumpTo, setJumpTo] = useState<string | null>(null);
+  const lastJump = useRef<{ id: string; at: number } | null>(null);
 
   // A prefilled message from elsewhere ("Ask in chat" on a market item): put it in the composer, unsent.
   const onDraft = useCallback((draft: string) => {
@@ -152,6 +159,47 @@ export default function ChatPage() {
     setMessages((prev) => mergeMessages(prev ?? [], rows));
   }, [messages, hasMore, loadingOlder, page]);
 
+  // Load the window from the message to the newest one (contiguous with what's loaded, so live
+  // messages and older pages keep working), then scroll to it and highlight it.
+  const jump = useCallback(
+    async (id: string) => {
+      const now = Date.now();
+      if (lastJump.current?.id === id && now - lastJump.current.at < 3000) return; // URL + event for one tap
+      lastJump.current = { id, at: now };
+      const { data, error } = await supabase
+        .rpc("chat_messages_around", { p_bubble_id: bubble.id, p_message_id: id })
+        .select(`*, sender:users!sender_id(${AUTHOR})`)
+        .returns<ChatMessage[]>();
+      if (error) return setLoadError(error);
+      const rows = data ?? [];
+      const win = aroundWindow(rows, id);
+      if (!win.found) return setError(ts("messageUnavailable"));
+      if (win.startReached) setHasMore(false); // the window holds the first message
+      pinned.current = false;
+      setMessages((prev) => mergeMessages(prev ?? [], rows));
+      setJumpTo(id);
+    },
+    [supabase, bubble.id, ts],
+  );
+
+  // Opened as /chat?message=<id>, or told by search while this route is mounted (possibly hidden).
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get("message");
+    if (id) {
+      url.searchParams.delete("message");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the RPC
+      void jump(id);
+    }
+    const onHighlight = (e: Event) => {
+      const d = (e as CustomEvent<HighlightDetail>).detail;
+      if (d?.path === "/chat") void jump(d.id);
+    };
+    window.addEventListener(HIGHLIGHT_EVENT, onHighlight);
+    return () => window.removeEventListener(HIGHLIGHT_EVENT, onHighlight);
+  }, [jump]);
+
   const onScroll = () => {
     const el = listRef.current;
     if (!el) return;
@@ -218,6 +266,17 @@ export default function ChatPage() {
     [messages, authors, userId, profile, blocked],
   );
   const divider = marker === undefined ? -1 : dividerIndex(rendered, marker, userId);
+
+  useEffect(() => {
+    if (!jumpTo) return;
+    const el = listRef.current?.querySelector<HTMLElement>(`[data-testid="chat-message"][data-id="${CSS.escape(jumpTo)}"]`);
+    if (!el) return; // not rendered yet (or hidden by a block): wait for the next render
+    setJumpTo(null);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    el.dataset.highlight = "true";
+    setTimeout(() => delete el.dataset.highlight, HIGHLIGHT_MS);
+  }, [jumpTo, rendered]);
 
   function pickPhoto(file: File | undefined) {
     if (!file) return;

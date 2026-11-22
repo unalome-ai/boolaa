@@ -1,6 +1,10 @@
 package com.boolaa.app.ui.shell
 
 import com.boolaa.app.ui.settings.NotificationsScreen
+import com.boolaa.app.core.SearchHit
+import com.boolaa.app.core.SearchKind
+import com.boolaa.app.ui.search.SearchScreen
+import com.boolaa.app.ui.components.CircleIconButton
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -123,12 +127,15 @@ object ShellRoutes {
     const val CHAT = "chat"
     const val LINKS = "links"
     const val NOTIFICATIONS = "notifications"
+    const val SEARCH = "search"
 }
 
 /** Navigation actions the tab screens use (deep links from Home cards, Links from Settings). */
 class ShellNavigator(private val nav: NavHostController) {
     /** Text to prefill (not send) in the chat composer, e.g. "Ask in chat" on a market item. Consumed by the chat. */
     var chatDraft by mutableStateOf<String?>(null)
+    /** A chat message to open in context (a search hit). Consumed by the chat. */
+    var chatJump by mutableStateOf<String?>(null)
 
     fun openTab(tab: MainTab) = nav.navigate(tab.route) {
         popUpTo(MainTab.HOME.route) { saveState = true }
@@ -141,6 +148,22 @@ class ShellNavigator(private val nav: NavHostController) {
     }
     fun openLinks() = nav.navigate(ShellRoutes.LINKS) { launchSingleTop = true }
     fun openNotifications() = nav.navigate(ShellRoutes.NOTIFICATIONS) { launchSingleTop = true }
+    fun openSearch() = nav.navigate(ShellRoutes.SEARCH) { launchSingleTop = true }
+
+    /**
+     * A tapped search hit: close search and open it in context with the push highlight machinery (scroll to it, ring
+     * for 4 s). Chat messages load the chat around the message ([chatJump]).
+     */
+    fun openSearchHit(hit: SearchHit, highlight: (String) -> Unit) {
+        if (nav.currentBackStackEntry?.destination?.route == ShellRoutes.SEARCH) nav.popBackStack()
+        when (hit.kind) {
+            SearchKind.CHAT_MESSAGE -> { chatJump = hit.id; nav.navigate(ShellRoutes.CHAT) { launchSingleTop = true } }
+            SearchKind.EVENT -> { highlight(hit.id); openTab(MainTab.EVENTS) }
+            SearchKind.FOOD_POST -> { highlight(hit.id); openTab(MainTab.FOOD) }
+            SearchKind.MARKET_ITEM -> { highlight(hit.id); openTab(MainTab.MARKETPLACE) }
+            SearchKind.SHARED_LINK -> { highlight(hit.id); openLinks() }
+        }
+    }
     fun back() = nav.popBackStack()
 }
 
@@ -177,7 +200,8 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
         BubbleGlow(Hue.forId(state.currentBubble?.id))
         Column(Modifier.fillMaxSize()) {
             AnimatedVisibility(tab != null, enter = fadeIn(Motion.fade()), exit = fadeOut(Motion.fade())) {
-                ShellHeader(title = stringResource(lastTab.title), onProfile = { showProfile = true }, onAddBubble = { showAddBubble = true })
+                ShellHeader(title = stringResource(lastTab.title), onProfile = { showProfile = true }, onAddBubble = { showAddBubble = true },
+                    onSearch = { navigator.openSearch() })
             }
             val rise = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.roundToPx() }
             NavHost(
@@ -197,11 +221,15 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                 val push = fadeIn(tween(200)) + slideInHorizontally(Motion.gentle()) { it / 5 }
                 val pop = fadeOut(tween(160)) + slideOutHorizontally(Motion.gentle()) { it / 5 }
                 composable(ShellRoutes.CHAT, enterTransition = { push }, popExitTransition = { pop }) {
-                    ChatScreen(onBack = { navigator.back() }, pendingDraft = navigator.chatDraft, onDraftTaken = { navigator.chatDraft = null })
+                    ChatScreen(onBack = { navigator.back() }, pendingDraft = navigator.chatDraft, onDraftTaken = { navigator.chatDraft = null },
+                        pendingJump = navigator.chatJump, onJumpTaken = { navigator.chatJump = null })
                 }
                 composable(ShellRoutes.LINKS, enterTransition = { push }, popExitTransition = { pop }) { LinksScreen(onBack = { navigator.back() }) }
                 composable(ShellRoutes.NOTIFICATIONS, enterTransition = { push }, popExitTransition = { pop }) {
                     NotificationsScreen(onBack = { navigator.back() })
+                }
+                composable(ShellRoutes.SEARCH, enterTransition = { push }, popExitTransition = { pop }) {
+                    SearchScreen(onBack = { navigator.back() }, onOpen = { hit -> navigator.openSearchHit(hit) { container.push.setHighlight(it) } })
                 }
             }
         }
@@ -241,7 +269,7 @@ private fun BubbleGlow(hue: Hue) {
 
 /** Large rolling title, avatar button and the bubble chips with "+ New". No background: the glow shows through. */
 @Composable
-fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit) {
+fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit, onSearch: () -> Unit = {}) {
     val container = LocalAppContainer.current
     val session = container.session
     val state by session.state.collectAsStateWithLifecycle()
@@ -260,9 +288,12 @@ fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit) {
                 FitText(text, Type.screenTitle, color = BoolaaTheme.colors.textPrimary, minScale = 0.6f,
                     modifier = Modifier.fillMaxWidth().testTag("screen-title").semantics { heading() })
             }
+            // Search this bubble, next to the avatar.
+            CircleIconButton(BoolaaIcons.Search, stringResource(R.string.search_open), onSearch,
+                Modifier.padding(start = 12.dp).testTag("search-button"), surface = true, size = 44.dp)
             val profileLabel = stringResource(R.string.profile)
             Box(
-                Modifier.padding(start = 12.dp).glow(BoolaaTheme.colors.cardShadow, 10.dp, 4.dp).clip(CircleShape)
+                Modifier.padding(start = 10.dp).glow(BoolaaTheme.colors.cardShadow, 10.dp, 4.dp).clip(CircleShape)
                     .clickableRipple(scale = 0.88f, onClick = onProfile)
                     .semantics { contentDescription = profileLabel; role = Role.Button }
                     .testTag("profile-button"),

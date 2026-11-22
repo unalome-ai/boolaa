@@ -113,7 +113,8 @@ enum class CodePurpose(val wire: String) { DEVICE("device"), SENSITIVE_ACTION("s
 
 /** Names the action in the sensitive-action email. The backend knows `delete_account` and `generic`. */
 enum class SensitiveAction(val wire: String) {
-    DELETE_ACCOUNT("delete_account"), CHANGE_PASSWORD("change_password"), CHANGE_EMAIL("change_email"), GENERIC("generic")
+    DELETE_ACCOUNT("delete_account"), CHANGE_PASSWORD("change_password"), CHANGE_EMAIL("change_email"), EXPORT_DATA("export_data"),
+    GENERIC("generic")
 }
 
 /**

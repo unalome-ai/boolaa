@@ -254,6 +254,12 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     val hue = Feature.MARKET.hue
     val gridState = rememberLazyGridState()
     PushHighlightScroll(gridState, loaded = items != null)
+    // A push or search hit hidden by a filter: show everything so it can be scrolled to.
+    val highlight by container.push.highlight.collectAsStateWithLifecycle()
+    LaunchedEffect(highlight, items) {
+        val target = items?.firstOrNull { it.id == highlight } ?: return@LaunchedEffect
+        if (MarketRules.visible(listOf(target), filter, hideTaken).isEmpty()) { filter = MarketFilter.ALL; hideTaken = false }
+    }
 
     BoolaaRefreshBox(isRefreshing = busy && items != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("market-screen")) {

@@ -347,6 +347,24 @@ export type Database = {
           },
         ]
       }
+      data_export_requests: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_challenges: {
         Row: {
           attempts: number
@@ -1247,10 +1265,37 @@ export type Database = {
         Returns: string[]
       }
       bubble_member_ids: { Args: { p_bubble_id: string }; Returns: string[] }
+      bubble_role: {
+        Args: { p_bubble_id: string; p_user_id: string }
+        Returns: string
+      }
       can_manage_bubble: { Args: { p_bubble_id: string }; Returns: boolean }
       can_manage_bubble_object: { Args: { p_name: string }; Returns: boolean }
       can_read_chat_image: { Args: { p_path: string }; Returns: boolean }
       chat_image_uploaded: { Args: { p_path: string }; Returns: boolean }
+      chat_messages_around: {
+        Args: {
+          p_before?: number
+          p_bubble_id: string
+          p_limit?: number
+          p_message_id: string
+        }
+        Returns: {
+          bubble_id: string
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          image_path: string | null
+          sender_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "chat_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       chat_messages_page: {
         Args: { p_before_id?: string; p_bubble_id: string; p_limit?: number }
         Returns: {
@@ -1319,6 +1364,7 @@ export type Database = {
       delete_my_account: { Args: never; Returns: undefined }
       device_hash_of: { Args: { p_device_id: string }; Returns: string }
       enqueue_event_reminders: { Args: never; Returns: number }
+      export_my_data: { Args: never; Returns: Json }
       generate_invite_code: { Args: never; Returns: string }
       get_invite_preview: {
         Args: { p_code: string }
@@ -1468,6 +1514,42 @@ export type Database = {
       retry_link_previews: { Args: never; Returns: number }
       revoke_device: { Args: { p_device_hash: string }; Returns: boolean }
       rotate_invite_code: { Args: { p_bubble_id: string }; Returns: string }
+      search_bubble: {
+        Args: {
+          p_bubble_id: string
+          p_kinds?: string[]
+          p_limit?: number
+          p_query: string
+        }
+        Returns: {
+          author_id: string
+          author_name: string
+          created_at: string
+          event_at: string
+          id: string
+          kind: string
+          matched_words: string[]
+          rank: number
+          snippet: string
+          title: string
+        }[]
+      }
+      search_doc: { Args: { p_parts: string[] }; Returns: string }
+      search_fold: { Args: { p_text: string }; Returns: string }
+      search_link_doc: {
+        Args: {
+          p_preview_description: string
+          p_preview_title: string
+          p_tags: string[]
+          p_title: string
+          p_url: string
+        }
+        Returns: string
+      }
+      search_snippet: {
+        Args: { p_texts: string[]; p_width?: number; p_words: string[] }
+        Returns: string
+      }
       set_account_status: {
         Args: {
           p_reason: string
@@ -1475,6 +1557,10 @@ export type Database = {
           p_until: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      set_member_role: {
+        Args: { p_bubble_id: string; p_role: string; p_user_id: string }
         Returns: undefined
       }
       shares_bubble_with: { Args: { p_user_id: string }; Returns: boolean }
@@ -1511,6 +1597,10 @@ export type Database = {
         Returns: Json
       }
       toggle_rsvp: { Args: { p_event_id: string }; Returns: string[] }
+      transfer_ownership: {
+        Args: { p_bubble_id: string; p_new_owner: string }
+        Returns: undefined
+      }
       trust_device: {
         Args: { p_device_hash: string; p_label: string; p_user_id: string }
         Returns: undefined

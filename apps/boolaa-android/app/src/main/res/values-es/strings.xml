@@ -63,7 +63,7 @@
     <string name="error_network">No se puede conectar con Boolaa. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="error_not_authenticated">Tu sesión ha caducado. Vuelve a iniciar sesión.</string>
     <string name="error_not_member">No eres miembro de esta burbuja.</string>
-    <string name="error_only_owner_can_remove">Solo el propietario puede quitar miembros.</string>
+    <string name="error_only_owner_can_remove">Solo el propietario o un admin puede quitar miembros.</string>
     <string name="error_permission_denied">No tienes permiso para hacer eso.</string>
     <string name="error_report_target_not_found">Este contenido ya no existe.</string>
     <string name="error_request_not_found">Esta solicitud para unirse ya no existe.</string>
@@ -319,7 +319,7 @@
     <string name="rotate_invite_confirm">Cambiar código</string>
     <string name="invite_rotated">Nuevo código de invitación listo</string>
     <string name="error_too_many_invite_attempts">Demasiados intentos con códigos no válidos. Inténtalo de nuevo dentro de una hora.</string>
-    <string name="error_only_owner_can_rotate">Solo el propietario puede cambiar el código de invitación.</string>
+    <string name="error_only_owner_can_rotate">Solo el propietario o un admin puede cambiar el código de invitación.</string>
     <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
     <string name="bubble_photo">Foto de la burbuja</string>
     <string name="add_bubble_photo">Añadir una foto</string>

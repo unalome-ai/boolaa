@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* `dark:` follows the theme choice: data-theme on <html>, else the OS (see "Dark tokens" below). */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) { @slot; }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) { @slot; }
+  }
+}
+
 /* ================================================================================================
  * Boolaa "Soft pop" design system (docs/design-system.md). The iOS app is the reference; the
  * values below are the same tokens in CSS px.
@@ -40,8 +48,38 @@
   color-scheme: light;
 }
 
+/* Dark tokens. The theme choice (Settings → Appearance, cookie `boolaa_theme`, src/lib/theme.ts) puts
+   data-theme="light" | "dark" on <html> in the server render; without it ("System") the OS decides.
+   Keep the two copies below identical. */
+:root[data-theme="dark"] {
+  --grape-ink: #b7a6ff;
+  --coral-ink: #ff9a8f;
+  --mint-ink: #5fe3c2;
+  --sky-ink: #7cc6ff;
+  --sunny-ink: #ffd466;
+  --pink-ink: #ff9ccb;
+  --tangerine-ink: #ffb866;
+  --indigo-ink: #a3aeff;
+  --danger-ink: #ff8a8f;
+  --wash: 24%;
+
+  --app-bg: #15111f;
+  --app-card: #221c33;
+  --app-field: #2c2545;
+  --app-line: rgb(255 255 255 / 0.08);
+  --app-fg: #f5f2ff;
+  --app-muted: #aba4c4;
+
+  --shadow-tint: rgb(0 0 0 / 0.28);
+  --shadow-tint-float: rgb(0 0 0 / 0.45);
+
+  --backdrop-top: #241a45;
+  --backdrop-bottom: #1f1430;
+  --orb-opacity: 0.22;
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --grape-ink: #b7a6ff;
     --coral-ink: #ff9a8f;
     --mint-ink: #5fe3c2;
@@ -448,7 +486,8 @@ html { scroll-behavior: smooth; }
 
 /* Header glow strength (2.4) */
 :root { --glow-a: 30%; --glow-b: 22%; }
-@media (prefers-color-scheme: dark) { :root { --glow-a: 20%; --glow-b: 12%; } }
+:root[data-theme="dark"] { --glow-a: 20%; --glow-b: 12%; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glow-a: 20%; --glow-b: 12%; } }
 
 /* Phone frame for the landing's real screenshots (components/phone.tsx). A plain rounded slab:
    percentages keep the proportions at any width (padding and x-radius follow the width). */
@@ -507,7 +546,8 @@ html { scroll-behavior: smooth; }
   to { transform: translateY(0) rotate(var(--tilt-end, 0deg)); }
 }
 :root { --phone-shadow: rgb(42 27 94 / 0.5); }
-@media (prefers-color-scheme: dark) { :root { --phone-shadow: rgb(0 0 0 / 0.85); } }
+:root[data-theme="dark"] { --phone-shadow: rgb(0 0 0 / 0.85); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --phone-shadow: rgb(0 0 0 / 0.85); } }
 
 /* Landing floaters (bob 3 to 6 px on a 3.6 to 6 s sine) */
 @layer components {
@@ -523,8 +563,9 @@ html { scroll-behavior: smooth; }
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
 }
+:root[data-theme="dark"] .skeleton { background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.08) 50%, transparent 70%); }
 @media (prefers-color-scheme: dark) {
-  .skeleton { background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.08) 50%, transparent 70%); }
+  :root:not([data-theme="light"]) .skeleton { background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.08) 50%, transparent 70%); }
 }
 @keyframes shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; background-image: none; } }

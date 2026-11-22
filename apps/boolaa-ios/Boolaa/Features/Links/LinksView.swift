@@ -107,6 +107,7 @@ struct LinksView: View {
                             onOpen: { if let u = URL(string: link.url) { openURL(u) } },
                             onDelete: { Task { await delete(link) } })
                         .safetyContextMenu(.link(link), react: { react(link, $0) })
+                        .pushHighlightTarget(link.id)
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                         .popIn(index)
                 }
@@ -116,6 +117,8 @@ struct LinksView: View {
             .animation(Motion.resolve(Motion.bouncy, reduceMotion: reduceMotion), value: model.links.map(\.id))
         }
         .scrollDismissesKeyboard(.interactively)
+        // A link opened from search (docs/boolaa-spec.md, "Search"): scrolled to and ringed briefly.
+        .scrollsToPushHighlight(model.links.map(\.id))
         .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
         .toolbar(.hidden, for: .navigationBar)
         .refreshFeedback { await reload() }

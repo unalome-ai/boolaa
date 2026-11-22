@@ -373,4 +373,45 @@ do $$ begin
 end $$;
 rollback;
 
+\echo '10. bubble roles: roles change only through owner RPCs (20261123190000_bubble_roles.sql)'
+begin;
+update public.app_settings set device_verification_enforced = false, age_confirmation_required = false;
+do $$ begin
+  assert not has_table_privilege('authenticated', 'public.bubble_members', 'update'), 'bubble_members not updatable';
+  assert not has_table_privilege('authenticated', 'public.bubble_members', 'insert'), 'bubble_members not insertable';
+  assert not has_function_privilege('authenticated', 'public.bubble_role(uuid,uuid)', 'execute'), 'bubble_role internal';
+  assert not has_function_privilege('anon', 'public.transfer_ownership(uuid,uuid)', 'execute'), 'anon transfer closed';
+  assert not has_function_privilege('anon', 'public.set_member_role(uuid,uuid,text)', 'execute'), 'anon set role closed';
+end $$;
+set local role authenticated;
+-- Climbing Crew: bob owns, alice is a member.
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  begin
+    perform public.set_member_role('aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'admin');
+    assert false, 'member promoted herself';
+  exception when others then assert sqlerrm = 'only the owner can change roles', sqlerrm; end;
+  assert not public.can_manage_bubble('aaaaaaaa-0000-0000-0000-000000000002'), 'member does not manage';
+end $$;
+select set_config('request.jwt.claims', :'bob', true);
+do $$ begin
+  perform public.set_member_role('aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'admin');
+end $$;
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  assert public.can_manage_bubble('aaaaaaaa-0000-0000-0000-000000000002'), 'admin manages';
+  begin
+    perform public.remove_member('aaaaaaaa-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222');
+    assert false, 'admin removed the owner';
+  exception when others then assert sqlerrm = 'only the owner can remove admins', sqlerrm; end;
+end $$;
+select set_config('request.jwt.claims', :'bob', true);
+do $$ begin
+  perform public.transfer_ownership('aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111');
+  assert (select array_agg(role order by role) from bubble_members where bubble_id = 'aaaaaaaa-0000-0000-0000-000000000002')
+         = array['admin', 'owner'], 'bob admin, alice owner';
+end $$;
+reset role;
+rollback;
+
 \echo 'ALL RLS CHECKS PASSED'

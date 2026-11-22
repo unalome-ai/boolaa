@@ -72,7 +72,7 @@ enum DebugHooks {
         #endif
     }
 
-    /// Profile-sheet screen to open once (blocked | deleteAccount), consumed on first read.
+    /// Profile-sheet screen to open once (blocked | security | notifications | deleteAccount | exportData), consumed on first read.
     @MainActor private static var profileOpenConsumed = false
     @MainActor static func consumeProfileOpen() -> String? {
         guard !profileOpenConsumed else { return nil }

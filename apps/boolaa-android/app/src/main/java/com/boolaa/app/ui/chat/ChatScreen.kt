@@ -25,6 +25,9 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -268,6 +271,31 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         }
     }
 
+    private val _jumpTarget = MutableStateFlow<JumpTarget?>(null)
+    /** A message to scroll to and highlight (a search hit), once it's in [messages]. */
+    val jumpTarget = _jumpTarget.asStateFlow()
+
+    /**
+     * Opens [messageId] in context: loads `chat_messages_around` (contiguous with the newest page), merges it like a
+     * page and asks the list to scroll to it. If it isn't returned, shows "We couldn't find that message".
+     */
+    fun jumpTo(messageId: String) = launchCatching(trackBusy = false) {
+        val rows = api.chatMessagesAround(bubbleId, messageId)
+        val window = com.boolaa.app.core.ChatJump.window(rows, messageId)
+        if (window == null) {
+            showError(R.string.search_message_unavailable)
+            return@launchCatching
+        }
+        rows.forEach { m -> m.sender?.let { authors[it.id] = it } }
+        val current = _messages.value.orEmpty()
+        _hasMore.value = com.boolaa.app.core.ChatJump.hasMoreAfterMerge(current, _hasMore.value, window)
+        _messages.update { held -> ChatMerge.mergePage(held.orEmpty(), rows, authors) }
+        reactions.refresh(liveIds())
+        _jumpTarget.value = JumpTarget(messageId)
+    }
+
+    fun jumpDone(target: JumpTarget) { if (_jumpTarget.value == target) _jumpTarget.value = null }
+
     /**
      * One channel `chat:<bubble id>`: INSERT and UPDATE filtered by bubble_id, merged by id (records carry
      * "2026-11-22 15:26:52.4+00" timestamps). Deletions arrive as UPDATEs. Reloads the newest page once subscribed.
@@ -369,6 +397,9 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     }
 }
 
+/** One jump request; identity equality so jumping to the same message twice runs twice. */
+class JumpTarget(val id: String)
+
 /** What the chat list shows, newest first (the list is laid out bottom-up). */
 private sealed class ChatRow(val key: String) {
     class Message(val message: ChatMessage, val showAuthor: Boolean) : ChatRow(message.id)
@@ -382,7 +413,10 @@ private sealed class ChatRow(val key: String) {
  * deletion, photos from the private bucket, read marker and the "New messages" divider.
  */
 @Composable
-fun ChatScreen(onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: () -> Unit = {}) {
+fun ChatScreen(
+    onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: () -> Unit = {},
+    pendingJump: String? = null, onJumpTaken: () -> Unit = {},
+) {
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val bubble = state.currentBubble ?: return
@@ -443,6 +477,16 @@ fun ChatScreen(onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: (
         }.distinctUntilChanged().collect { (near, _) -> if (near) vm.loadOlder() }
     }
 
+    // A search hit: load the chat around it (works whether the chat just opened or was already open).
+    LaunchedEffect(pendingJump, vm) {
+        if (pendingJump != null) {
+            onJumpTaken()
+            vm.jumpTo(pendingJump)
+        }
+    }
+    val jump by vm.jumpTarget.collectAsStateWithLifecycle()
+    var highlightedId by remember { mutableStateOf<String?>(null) }
+
     val dividerId = remember(list, lastReadAt) { list?.let { ChatMerge.dividerBefore(it, lastReadAt, me) } }
     val rows = remember(list, dividerId, hasMore) {
         val l = list.orEmpty()
@@ -455,6 +499,25 @@ fun ChatScreen(onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: (
             }
             if (l.isNotEmpty()) add(if (hasMore) ChatRow.LoadingOlder else ChatRow.Start)
         }
+    }
+    // The jumped-to message: once it's in the list, scroll it to about the middle and ring it for 4 s.
+    val currentRows by rememberUpdatedState(rows)
+    LaunchedEffect(jump) {
+        val target = jump ?: return@LaunchedEffect
+        snapshotFlow { currentRows.indexOfFirst { it.key == target.id } }.first { it >= 0 }
+        delay(150) // first layout of the merged list
+        val index = currentRows.indexOfFirst { it.key == target.id }
+        if (index >= 0) {
+            listState.scrollToItem(index)
+            val size = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == target.id }?.size ?: 0
+            val viewport = listState.layoutInfo.viewportSize.height
+            // Negative offset moves the item away from the bottom edge (reverse layout) towards the centre.
+            listState.scrollToItem(index, -((viewport - size) / 2).coerceAtLeast(0))
+        }
+        highlightedId = target.id
+        delay(4_000)
+        highlightedId = null
+        vm.jumpDone(target)
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().testTag("chat-screen")) {
@@ -479,6 +542,7 @@ fun ChatScreen(onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: (
                                 val pop = remember(message.id) { openedAt != null && message.createdAt > openedAt && popped.add(message.id) }
                                 MessageRow(
                                     message, isMine = mine, showAuthor = row.showAuthor, popIn = pop,
+                                    highlighted = message.id == highlightedId,
                                     imageUrl = message.imagePath?.let { imageUrls[it] },
                                     onReport = if (!mine && !message.isDeleted) ({
                                         reporting = ReportTarget(ReportTargetType.CHAT_MESSAGE, message.id, message.senderId,
@@ -620,7 +684,7 @@ private val TheirsShape = RoundedCornerShape(21.dp, 21.dp, 21.dp, 6.dp)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageRow(
-    message: ChatMessage, isMine: Boolean, showAuthor: Boolean, popIn: Boolean = false, imageUrl: String? = null,
+    message: ChatMessage, isMine: Boolean, showAuthor: Boolean, popIn: Boolean = false, highlighted: Boolean = false, imageUrl: String? = null,
     onReport: (() -> Unit)? = null, onDelete: (() -> Unit)? = null,
     reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
 ) {
@@ -652,6 +716,8 @@ fun MessageRow(
                 )
             }
             val shape = if (isMine) MineShape else TheirsShape
+            // A search hit opened in context: the same brand ring as push highlights, for 4 s.
+            val ring = if (highlighted) Modifier.border(3.dp, com.boolaa.app.ui.theme.Brand.hue.fill, shape).testTag("message-highlighted") else Modifier
             val action = onDelete ?: onReport
             val actionLabel = if (onDelete != null) deleteLabel else reportLabel
             if (message.isDeleted) {
@@ -659,7 +725,7 @@ fun MessageRow(
                     stringResource(R.string.chat_deleted),
                     style = Type.body.copy(fontStyle = FontStyle.Italic),
                     color = c.textSecondary,
-                    modifier = Modifier.clip(shape).border(1.dp, c.hairline, shape).padding(horizontal = 14.dp, vertical = 10.dp)
+                    modifier = Modifier.clip(shape).border(1.dp, c.hairline, shape).then(ring).padding(horizontal = 14.dp, vertical = 10.dp)
                         .testTag("message-deleted-${message.id}"),
                 )
             } else {
@@ -668,6 +734,7 @@ fun MessageRow(
                         .then(if (isMine) Modifier.glow(Hue.grape.fill.copy(alpha = 0.25f), 8.dp, 4.dp, 21.dp) else Modifier.glow(c.cardShadow, 8.dp, 3.dp, 21.dp))
                         .clip(shape)
                         .then(if (isMine) Modifier.background(Hue.grape.gradient) else Modifier.background(c.otherBubble).border(1.dp, c.hairline, shape))
+                        .then(ring)
                         .then(
                             // Long press: the reactions row plus Delete (own) or Report (others) below it.
                             if (action != null || onReact != null) Modifier

@@ -47,6 +47,7 @@ struct MainShellView: View {
         .environment(router)
         .sheet(isPresented: $router.showProfile) { ProfileSheet().boolaaSheet() }
         .sheet(isPresented: $router.showAddBubble) { AddBubbleSheet().boolaaSheet() }
+        .sheet(isPresented: $router.showSearch) { SearchView().environment(router).boolaaSheet() }
         .sheet(item: Binding(get: { safety.reportTarget }, set: { safety.reportTarget = $0 })) { ReportSheet(target: $0).boolaaSheet() }
         .sensoryFeedback(.selection, trigger: router.tab)
         .sensoryFeedback(.impact(weight: .medium), trigger: session.currentBubble?.id)
@@ -183,6 +184,19 @@ struct ShellHeader: View {
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("screen-title")
                 Spacer()
+                if session.currentBubble != nil {
+                    Button { router.showSearch = true } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 18, weight: .heavy))
+                            .foregroundStyle(Theme.brandText)
+                            .frame(width: 44, height: 44)
+                            .background(Circle().fill(Theme.card))
+                            .cardChrome(radius: 22)
+                    }
+                    .buttonStyle(.squishIcon)
+                    .accessibilityLabel(Text("Search this bubble"))
+                    .accessibilityIdentifier("search-button")
+                }
                 Button { router.showProfile = true } label: {
                     AvatarView(user: session.profile, size: 44)
                         .floatingShadow(Hue.grape.fill)

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bubble roles: owner, admins, ownership transfer (supabase/migrations/20261123190000_bubble_roles.sql). -->
+<resources>
+    <string name="admin">Admin</string>
+    <string name="make_admin">Make admin</string>
+    <string name="remove_admin">Remove admin</string>
+    <string name="transfer_ownership">Transfer ownership</string>
+    <string name="transfer_ownership_title">Transfer ownership?</string>
+    <string name="transfer_ownership_body">%1$s becomes the owner of %2$s. You\'ll lose your owner rights and become an admin: you won\'t be able to change roles, remove admins or take ownership back unless %1$s gives it back.</string>
+    <string name="ownership_transferred">%1$s is now the owner.</string>
+    <string name="made_admin">%1$s is now an admin.</string>
+    <string name="removed_admin">%1$s is no longer an admin.</string>
+    <string name="member_actions">Manage %1$s</string>
+    <string name="bubble_details_managers_only">Only the owner and admins can edit these details.</string>
+    <string name="error_owner_only_action">Only the owner can do that.</string>
+</resources>

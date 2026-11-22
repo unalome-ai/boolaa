@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bubble roles: owner, admins, ownership transfer (supabase/migrations/20261123190000_bubble_roles.sql). -->
+<resources>
+    <string name="admin">Admin</string>
+    <string name="make_admin">Numește admin</string>
+    <string name="remove_admin">Retrage rolul de admin</string>
+    <string name="transfer_ownership">Cedează rolul de proprietar</string>
+    <string name="transfer_ownership_title">Cedezi rolul de proprietar?</string>
+    <string name="transfer_ownership_body">%1$s devine proprietarul bulei %2$s. Pierzi drepturile de proprietar și devii admin: nu mai poți schimba roluri, elimina admini sau lua înapoi rolul de proprietar decât dacă ți-l cedează %1$s.</string>
+    <string name="ownership_transferred">%1$s e acum proprietarul.</string>
+    <string name="made_admin">%1$s e acum admin.</string>
+    <string name="removed_admin">%1$s nu mai e admin.</string>
+    <string name="member_actions">Gestionează %1$s</string>
+    <string name="bubble_details_managers_only">Doar proprietarul și adminii pot modifica aceste detalii.</string>
+    <string name="error_owner_only_action">Doar proprietarul poate face asta.</string>
+</resources>

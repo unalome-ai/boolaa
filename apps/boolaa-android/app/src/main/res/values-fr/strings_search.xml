@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Search inside a bubble (docs/boolaa-spec.md "Search"). -->
+<resources>
+    <string name="search_open">Rechercher dans la bulle</string>
+    <string name="search_placeholder">Rechercher dans %1$s</string>
+    <string name="search_clear">Effacer la recherche</string>
+    <string name="search_hint">Trouve des messages, des événements, des plats, des objets et des liens.</string>
+    <string name="search_min_length">Tape au moins 2 caractères.</string>
+    <string name="search_no_results">Aucun résultat pour « %1$s »</string>
+    <string name="search_no_results_hint">Essaie un autre mot ou moins de lettres.</string>
+    <string name="search_error">La recherche n\'a pas marché. Réessaie.</string>
+    <string name="search_retry">Réessayer</string>
+    <plurals name="search_results">
+        <item quantity="one">%d résultat</item>
+        <item quantity="many">%d résultats</item>
+        <item quantity="other">%d résultats</item>
+    </plurals>
+    <string name="search_kind_message">Message</string>
+    <string name="search_kind_event">Événement</string>
+    <string name="search_kind_food">Publication gourmande</string>
+    <string name="search_kind_item">Objet</string>
+    <string name="search_kind_link">Lien</string>
+    <string name="search_message_unavailable">Impossible de trouver ce message dans la discussion.</string>
+</resources>

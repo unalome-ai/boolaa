@@ -1,5 +1,6 @@
 // Emailed 6-digit codes for (a) signing in on a new device and (b) re-confirming a
-// sensitive action (account deletion). Called by clients with their user JWT:
+// sensitive action (delete_account, change_password, change_email, export_data). Called by clients
+// with their user JWT:
 //
 //   POST /functions/v1/device-code
 //   { "action": "send",   "purpose": "device", "device_id": "<secret>" }

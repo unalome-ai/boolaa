@@ -52,6 +52,10 @@ final class ShellRouter {
     var scrollToRequests = false
     /// Text the chat composer picks up once when it opens ("Ask in chat" on a market item). Never sent automatically.
     var chatDraft: String?
+    /// The search sheet (docs/boolaa-spec.md, "Search").
+    var showSearch = false
+    /// A chat message opened from search: the chat loads the window around it, scrolls to it and rings it.
+    var chatJump: UUID?
 
     func open(_ destination: ShellDestination) {
         if path.last != destination { path.append(destination) }
@@ -61,6 +65,27 @@ final class ShellRouter {
     func openChat(draft: String) {
         chatDraft = draft
         open(.chat)
+    }
+
+    /// Opens a search hit in context: its tab (or Links / the chat) with the row highlighted.
+    func open(_ hit: SearchHit) {
+        showSearch = false
+        path = []
+        switch hit.kind {
+        case .chatMessage:
+            chatJump = hit.id
+            open(.chat)
+        case .event: highlight = hit.id; tab = .events
+        case .foodPost: highlight = hit.id; tab = .food
+        case .marketItem: highlight = hit.id; tab = .marketplace
+        case .sharedLink: highlight = hit.id; open(.links)
+        }
+    }
+
+    /// Hands a pending chat jump to the chat exactly once.
+    func takeChatJump() -> UUID? {
+        defer { chatJump = nil }
+        return chatJump
     }
 
     /// Hands the pending draft to the composer exactly once.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Download my data" (GDPR export) in the profile sheet. -->
+<resources>
+    <string name="profile_export_data">Descargar mis datos</string>
+    <string name="profile_export_title">Descarga tus datos</string>
+    <string name="profile_export_body">Recibes un archivo JSON con todo lo que Boolaa guarda sobre ti: tu perfil, burbujas, mensajes, publicaciones, reacciones, denuncias, bloqueos y ajustes. Tus fotos aparecen como enlaces válidos durante 7 días. Guarda el archivo solo para ti.</string>
+    <string name="profile_export_code_note">Por seguridad, primero te enviamos un código por correo. Puedes descargar tus datos una vez por hora.</string>
+    <string name="profile_export_preparing">Preparando tus datos…</string>
+    <string name="profile_export_done">Tus datos están listos.</string>
+    <string name="error_export_rate_limited">Puedes descargar tus datos una vez por hora. Inténtalo más tarde.</string>
+</resources>

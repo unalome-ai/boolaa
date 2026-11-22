@@ -178,5 +178,8 @@ export function muteActive(row: { until: string | null } | null | undefined, now
   return !!row && (row.until === null || new Date(row.until).getTime() > now);
 }
 
-/** Query parameter that carries the deep-link target on each route (docs/push-notifications.md §5). */
-export const TARGET_PARAM: Record<string, string> = { "/events": "event", "/food": "post", "/marketplace": "item" };
+/**
+ * Query parameter that carries the deep-link target on each route (docs/push-notifications.md §5;
+ * `/links` for search hits, docs/boolaa-spec.md "Search"). The chat handles `?message=` itself.
+ */
+export const TARGET_PARAM: Record<string, string> = { "/events": "event", "/food": "post", "/marketplace": "item", "/links": "link" };

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Search inside a bubble (docs/boolaa-spec.md "Search"). -->
+<resources>
+    <string name="search_open">Caută în bulă</string>
+    <string name="search_placeholder">Caută în %1$s</string>
+    <string name="search_clear">Șterge căutarea</string>
+    <string name="search_hint">Găsește mesaje, evenimente, mâncare, obiecte și linkuri.</string>
+    <string name="search_min_length">Scrie cel puțin 2 caractere.</string>
+    <string name="search_no_results">Niciun rezultat pentru „%1$s”</string>
+    <string name="search_no_results_hint">Încearcă alt cuvânt sau mai puține litere.</string>
+    <string name="search_error">Căutarea n-a mers. Încearcă din nou.</string>
+    <string name="search_retry">Încearcă din nou</string>
+    <plurals name="search_results">
+        <item quantity="one">%d rezultat</item>
+        <item quantity="few">%d rezultate</item>
+        <item quantity="other">%d de rezultate</item>
+    </plurals>
+    <string name="search_kind_message">Mesaj</string>
+    <string name="search_kind_event">Eveniment</string>
+    <string name="search_kind_food">Postare culinară</string>
+    <string name="search_kind_item">Obiect</string>
+    <string name="search_kind_link">Link</string>
+    <string name="search_message_unavailable">Nu am găsit mesajul în chat.</string>
+</resources>

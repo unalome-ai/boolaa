@@ -85,6 +85,7 @@
         "title": "Tes droits",
         "body": [
           "Tu as le droit d'accéder à tes données, de les rectifier, de les effacer, de les recevoir dans un format portable, d'en limiter le traitement ou de t'y opposer, et de retirer ton consentement à tout moment.",
+          "Pour obtenir toi-même une copie de tes données, utilise « Télécharger mes données » dans ton profil (web) ou dans les réglages du compte (applications). Après avoir saisi le code qu'on t'envoie par e-mail, tu reçois un fichier JSON avec tout ce que nous conservons sur toi (profil, données du compte et des connexions, bulles, messages, publications, réactions, signalements que tu as faits, blocages et réglages), avec des liens vers tes photos valables 7 jours. Tu peux le faire une fois par heure. Les signalements faits par d'autres personnes à ton sujet ne figurent pas dans le fichier, car ils contiennent les données de ces personnes ; écris à privacy@boolaa.ro pour obtenir les informations de modération qui te concernent, sans les données des autres.",
           "Tu peux modifier ton profil et supprimer tes contenus ou tout ton compte directement dans l'application. Pour toute autre demande, écris à privacy@boolaa.ro. Nous répondons dans un délai d'un mois.",
           "Tu peux aussi introduire une réclamation auprès de l'ANSPDCP (www.dataprotection.ro) ou de l'autorité de contrôle de ton pays de résidence."
         ]

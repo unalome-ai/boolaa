@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ManageAccounts
 import androidx.compose.material.icons.rounded.AddReaction
 import androidx.compose.material.icons.rounded.BookmarkAdded
 import androidx.compose.material.icons.rounded.EventAvailable
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Redeem
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.QrCode2
@@ -86,6 +88,7 @@ object BoolaaIcons {
     val Copy = Icons.Rounded.ContentCopy
     val Check = Icons.Rounded.Check
     val Close = Icons.Rounded.Close
+    val Search = Icons.Rounded.Search
     val Share = Icons.Rounded.Share
     val QrCode = Icons.Rounded.QrCode2
     val Free = Icons.Rounded.Redeem
@@ -109,6 +112,7 @@ object BoolaaIcons {
     val Reserved = Icons.Rounded.BookmarkAdded
     val Taken = Icons.Rounded.TaskAlt
     val RemoveMember = Icons.Rounded.PersonRemove
+    val ManageMember = Icons.Rounded.ManageAccounts
 
     /** Owner crown (Material Symbols "crown" is not in the icons artifact, so it is drawn here). */
     val Crown: ImageVector by lazy {

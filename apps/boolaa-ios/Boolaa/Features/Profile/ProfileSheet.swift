@@ -13,6 +13,7 @@ struct ProfileSheet: View {
     @State private var path: [ProfileDestination] = []
     @State private var legalPage: LegalPage?
     @State private var showDeleteAccount = false
+    @State private var showExportData = false
 
     enum ProfileDestination: Hashable { case blocked, security, notifications }
 
@@ -78,6 +79,15 @@ struct ProfileSheet: View {
                     .buttonStyle(SecondaryButtonStyle())
                     .accessibilityIdentifier("sign-out")
 
+                    Button { showExportData = true } label: {
+                        Label { Text("Download my data") } icon: { Image(systemName: "arrow.down.doc") }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.brandText)
+                            .frame(minHeight: 44)
+                    }
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("export-data")
+
                     Button(role: .destructive) { showDeleteAccount = true } label: {
                         Label { Text("Delete account") } icon: { Image(systemName: "trash") }
                             .font(.subheadline.weight(.semibold))
@@ -101,6 +111,9 @@ struct ProfileSheet: View {
                 }
             }
             .legalPageSheet($legalPage)
+            .sheet(isPresented: $showExportData) {
+                ExportDataSheet().boolaaSheet()
+            }
             .sheet(isPresented: $showDeleteAccount) {
                 DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() }).boolaaSheet()
             }
@@ -111,6 +124,7 @@ struct ProfileSheet: View {
                 case "security": path = [.security]
                 case "notifications": path = [.notifications]
                 case "deleteAccount": showDeleteAccount = true
+                case "exportData": showExportData = true
                 default: break
                 }
             }

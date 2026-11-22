@@ -63,7 +63,7 @@
     <string name="error_network">Impossible de joindre Boolaa. Vérifie ta connexion et réessaie.</string>
     <string name="error_not_authenticated">Ta session a expiré. Reconnecte-toi.</string>
     <string name="error_not_member">Tu n\'es pas membre de cette bulle.</string>
-    <string name="error_only_owner_can_remove">Seul le propriétaire peut retirer des membres.</string>
+    <string name="error_only_owner_can_remove">Seul le propriétaire ou un admin peut retirer des membres.</string>
     <string name="error_permission_denied">Tu n\'as pas l\'autorisation de faire ça.</string>
     <string name="error_report_target_not_found">Ce contenu n\'existe plus.</string>
     <string name="error_request_not_found">Cette demande d\'adhésion n\'existe plus.</string>
@@ -319,7 +319,7 @@
     <string name="rotate_invite_confirm">Changer le code</string>
     <string name="invite_rotated">Nouveau code d\'invitation prêt</string>
     <string name="error_too_many_invite_attempts">Trop d\'essais avec des codes invalides. Réessaie dans une heure.</string>
-    <string name="error_only_owner_can_rotate">Seul le propriétaire peut changer le code d\'invitation.</string>
+    <string name="error_only_owner_can_rotate">Seul le propriétaire ou un admin peut changer le code d\'invitation.</string>
     <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
     <string name="bubble_photo">Photo de la bulle</string>
     <string name="add_bubble_photo">Ajouter une photo</string>

@@ -33,7 +33,34 @@ data class Bubble(
 )
 
 @Serializable
-enum class MemberRole { @SerialName("owner") OWNER, @SerialName("member") MEMBER }
+enum class MemberRole(val wire: String) {
+    @SerialName("owner") OWNER("owner"),
+    @SerialName("admin") ADMIN("admin"),
+    @SerialName("member") MEMBER("member"),
+}
+
+/**
+ * What a role may do in a bubble (20261123190000_bubble_roles.sql); the server enforces the same rules.
+ * The owner and admins manage the bubble (details, photo, invite code) and remove plain members; only the owner
+ * removes admins, changes roles and transfers ownership.
+ */
+object MemberPermissions {
+    fun canManage(role: MemberRole?): Boolean = role == MemberRole.OWNER || role == MemberRole.ADMIN
+
+    /** Whether [myRole] may remove someone with [targetRole] (never yourself: that is leaving). */
+    fun canRemove(myRole: MemberRole?, targetRole: MemberRole, isSelf: Boolean = false): Boolean = !isSelf && when (myRole) {
+        MemberRole.OWNER -> targetRole != MemberRole.OWNER
+        MemberRole.ADMIN -> targetRole == MemberRole.MEMBER
+        else -> false
+    }
+
+    /** Make admin / remove admin / transfer ownership: owner only, on someone else. */
+    fun canChangeRoles(myRole: MemberRole?, isSelf: Boolean = false): Boolean = !isSelf && myRole == MemberRole.OWNER
+
+    /** My role from the live members list, falling back to the cached membership role. */
+    fun roleOf(userId: String, members: List<BubbleMember>, fallback: MemberRole? = null): MemberRole? =
+        members.firstOrNull { it.userId == userId }?.role ?: fallback
+}
 
 /** `public.bubble_members`, optionally embedding the bubble or the user. */
 @Serializable

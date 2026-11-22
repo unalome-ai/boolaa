@@ -27,6 +27,7 @@ import com.boolaa.app.R
 import com.boolaa.app.model.Bubble
 import com.boolaa.app.model.BubbleMember
 import com.boolaa.app.model.JoinRequest
+import com.boolaa.app.model.MemberPermissions
 import com.boolaa.app.model.MemberRole
 import com.boolaa.app.model.ReportTarget
 import com.boolaa.app.model.ReportTargetType
@@ -99,9 +100,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -202,7 +206,10 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
     private val _requests = MutableStateFlow<List<JoinRequest>?>(null)
     val requests = _requests.asStateFlow()
 
-    /** Live pending-requests and members lists (bubble_members / join_requests are in the realtime publication). */
+    /**
+     * Live pending-requests and members lists (bubble_members / join_requests are in the realtime publication).
+     * Every bubble_members event reloads, UPDATEs included, so role changes and ownership transfers show up live.
+     */
     private val live = LiveTables.open(
         container.api.client, viewModelScope, "settings:$bubbleId",
         listOf(TableWatch("bubble_members", "bubble_id", bubbleId), TableWatch("join_requests", "bubble_id", bubbleId)),
@@ -242,6 +249,19 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
         load()
     }
 
+    /** Owner only: make a member an admin or an admin a plain member ([role] ADMIN or MEMBER). */
+    fun setRole(member: BubbleMember, role: MemberRole, onDone: () -> Unit) = launchCatching(trackBusy = false, onSuccess = onDone) {
+        container.api.setMemberRole(bubbleId, member.userId, role)
+        load()
+    }
+
+    /** Owner only: hands the bubble to [member]; the caller becomes an admin (the session reload updates my role). */
+    fun transferOwnership(member: BubbleMember, onDone: () -> Unit) = launchCatching(trackBusy = false, onSuccess = onDone) {
+        container.api.transferOwnership(bubbleId, member.userId)
+        container.session.reload()
+        load()
+    }
+
     fun reject(r: JoinRequest) = launchCatching(trackBusy = false) {
         container.api.rejectJoinRequest(r.id)
         load()
@@ -253,7 +273,7 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
 
     fun leave() = launchCatching { container.session.leaveCurrentBubble() }
 
-    /** Owner only: a new invite code; old links and QR codes stop working. */
+    /** Owner or admin: a new invite code; old links and QR codes stop working. */
     fun rotateInvite(onDone: () -> Unit) = launchCatching(trackBusy = false, onSuccess = onDone) {
         container.session.rotateInviteCode(bubbleId)
     }
@@ -261,7 +281,7 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
     private val _logoBusy = MutableStateFlow(false)
     val logoBusy = _logoBusy.asStateFlow()
 
-    /** Owner only: picked photo -> ImageCompression (512 px, like avatars) -> bubble.images -> bubbles.logo. */
+    /** Owner or admin: picked photo -> ImageCompression (512 px, like avatars) -> bubble.images -> bubbles.logo. */
     fun setLogo(bubble: Bubble, resolver: ContentResolver, uri: Uri) = launchCatching(trackBusy = false) {
         _logoBusy.value = true
         try {
@@ -291,7 +311,15 @@ fun SettingsScreen(navigator: ShellNavigator) {
     var removing by remember { mutableStateOf<BubbleMember?>(null) }
     var reporting by remember { mutableStateOf<ReportTarget?>(null) }
     var blocking by remember { mutableStateOf<BubbleMember?>(null) }
-    val isOwner = state.currentRole == MemberRole.OWNER
+    var transferring by remember { mutableStateOf<BubbleMember?>(null) }
+    // My role from the live members list (realtime), the cached membership until it loads.
+    val myRole = MemberPermissions.roleOf(me, members, fallback = state.currentRole)
+    val canManage = MemberPermissions.canManage(myRole)
+    val context = LocalContext.current
+    val madeAdminText = stringResource(R.string.made_admin)
+    val removedAdminText = stringResource(R.string.removed_admin)
+    val transferredText = stringResource(R.string.ownership_transferred)
+    val notice = { template: String, name: String -> Toast.makeText(context, template.format(name), Toast.LENGTH_SHORT).show() }
     val c = BoolaaTheme.colors
     val listState = rememberLazyListState()
     // A tapped join-request push scrolls to the pending requests.
@@ -304,8 +332,8 @@ fun SettingsScreen(navigator: ShellNavigator) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            item(key = "info-${bubble.id}") { InfoCard(bubble, members.size, isOwner, vm, Modifier.popIn(0)) }
-            item(key = "invite-${bubble.id}") { InviteCard(bubble, isOwner, vm, Modifier.popIn(1)) }
+            item(key = "info-${bubble.id}") { InfoCard(bubble, members.size, canManage, vm, Modifier.popIn(0)) }
+            item(key = "invite-${bubble.id}") { InviteCard(bubble, canManage, vm, Modifier.popIn(1)) }
             item(key = "links") {
                 SettingsRow(BoolaaIcons.Link, Hue.sky, stringResource(R.string.shared_links), BoolaaIcons.Disclosure, navigator::openLinks,
                     Modifier.popIn(2).testTag("settings-links"))
@@ -332,10 +360,21 @@ fun SettingsScreen(navigator: ShellNavigator) {
                             )
                             val blocked = m.userId in state.blockedIds
                             if (blocked) StatusBadge(stringResource(R.string.blocked_badge), danger = true, modifier = Modifier.padding(start = 6.dp))
-                            if (m.role == MemberRole.OWNER) StatusBadge(stringResource(R.string.owner), hue = Hue.sunny, icon = BoolaaIcons.Crown, modifier = Modifier.padding(start = 6.dp))
-                            else if (isOwner && m.userId != me) {
+                            when (m.role) {
+                                MemberRole.OWNER -> StatusBadge(stringResource(R.string.owner), hue = Hue.sunny, icon = BoolaaIcons.Crown, modifier = Modifier.padding(start = 6.dp))
+                                MemberRole.ADMIN -> StatusBadge(stringResource(R.string.admin), hue = Hue.sky, modifier = Modifier.padding(start = 6.dp).testTag("admin-badge-${displayName(m.user)}"))
+                                MemberRole.MEMBER -> Unit
+                            }
+                            if (MemberPermissions.canRemove(myRole, m.role, isSelf = m.userId == me)) {
                                 CircleIconButton(BoolaaIcons.RemoveMember, stringResource(R.string.remove_member), onClick = { removing = m },
-                                    danger = true, size = 36.dp, modifier = Modifier.testTag("remove-member-${displayName(m.user)}"))
+                                    danger = true, size = 36.dp, modifier = Modifier.padding(start = 6.dp).testTag("remove-member-${displayName(m.user)}"))
+                            }
+                            if (MemberPermissions.canChangeRoles(myRole, isSelf = m.userId == me) && m.role != MemberRole.OWNER) {
+                                val name = displayName(m.user)
+                                MemberRoleMenu(m,
+                                    onMakeAdmin = { vm.setRole(m, MemberRole.ADMIN) { notice(madeAdminText, name) } },
+                                    onRemoveAdmin = { vm.setRole(m, MemberRole.MEMBER) { notice(removedAdminText, name) } },
+                                    onTransfer = { transferring = m })
                             }
                             if (m.userId != me) {
                                 val name = displayName(m.user)
@@ -372,6 +411,15 @@ fun SettingsScreen(navigator: ShellNavigator) {
             onConfirm = { vm.block(m.userId) }, onDismiss = { blocking = null },
         )
     }
+    transferring?.let { m ->
+        val name = displayName(m.user)
+        ConfirmDialog(
+            title = stringResource(R.string.transfer_ownership_title),
+            message = stringResource(R.string.transfer_ownership_body, name, bubble.name),
+            confirm = stringResource(R.string.transfer_ownership),
+            onConfirm = { vm.transferOwnership(m) { notice(transferredText, name) } }, onDismiss = { transferring = null },
+        )
+    }
     removing?.let { m ->
         ConfirmDialog(
             title = stringResource(R.string.remove_member_confirm_title, displayName(m.user)),
@@ -391,6 +439,30 @@ fun SettingsScreen(navigator: ShellNavigator) {
     ErrorDialogFor(vm)
 }
 
+/** Owner-only per-member menu ("Manage {name}"): make / remove admin and transfer ownership. */
+@Composable
+private fun MemberRoleMenu(member: BubbleMember, onMakeAdmin: () -> Unit, onRemoveAdmin: () -> Unit, onTransfer: () -> Unit) {
+    val c = BoolaaTheme.colors
+    val name = displayName(member.user)
+    var open by remember { mutableStateOf(false) }
+    IconButton(onClick = { open = true }, modifier = Modifier.size(44.dp).testTag("member-roles-$name")) {
+        Icon(BoolaaIcons.ManageMember, contentDescription = stringResource(R.string.member_actions, name), tint = c.textSecondary)
+    }
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = c.card) {
+        if (member.role == MemberRole.ADMIN) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.remove_admin), style = Type.body) }, onClick = { open = false; onRemoveAdmin() },
+                modifier = Modifier.testTag("menu-remove-admin"))
+        } else {
+            DropdownMenuItem(text = { Text(stringResource(R.string.make_admin), style = Type.body) }, onClick = { open = false; onMakeAdmin() },
+                modifier = Modifier.testTag("menu-make-admin"))
+        }
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.transfer_ownership), style = Type.body) }, onClick = { open = false; onTransfer() },
+            leadingIcon = { Icon(BoolaaIcons.Crown, contentDescription = null) }, modifier = Modifier.testTag("menu-transfer-ownership"),
+        )
+    }
+}
+
 /** Settings / profile row: 56 high, radius 20, a 34 badge in a hue, a label and a trailing symbol. */
 @Composable
 fun SettingsRow(icon: ImageVector, hue: Hue, label: String, trailing: ImageVector?, onClick: () -> Unit, modifier: Modifier = Modifier, value: String? = null) {
@@ -407,7 +479,7 @@ fun SettingsRow(icon: ImageVector, hue: Hue, label: String, trailing: ImageVecto
 }
 
 @Composable
-private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
+private fun InfoCard(bubble: Bubble, memberCount: Int, canManage: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
     var editing by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf(bubble.name) }
     var description by rememberSaveable { mutableStateOf(bubble.description.orEmpty()) }
@@ -434,18 +506,20 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: Set
                         modifier = Modifier.padding(top = 4.dp).clip(CircleShape).background(Hue.grape.wash).padding(horizontal = 10.dp, vertical = 4.dp),
                     )
                 }
-                if (isOwner) {
+                if (canManage) {
                     CircleIconButton(BoolaaIcons.Edit, stringResource(R.string.edit_bubble),
                         onClick = { name = bubble.name; description = bubble.description.orEmpty(); editing = true },
                         size = 40.dp, modifier = Modifier.testTag("edit-bubble"))
                 }
             }
-            if (isOwner) BubbleLogoControls(bubble, vm)
+            if (canManage) BubbleLogoControls(bubble, vm)
+            else Text(stringResource(R.string.bubble_details_managers_only), style = Type.caption, color = c.textSecondary,
+                modifier = Modifier.testTag("bubble-details-managers-only"))
         }
     }
 }
 
-/** Owner-only: add / change / remove the bubble photo (Android Photo Picker, no permission needed). */
+/** Owner and admins: add / change / remove the bubble photo (Android Photo Picker, no permission needed). */
 @Composable
 private fun BubbleLogoControls(bubble: Bubble, vm: SettingsViewModel) {
     val c = BoolaaTheme.colors
@@ -477,7 +551,7 @@ private fun BubbleLogoControls(bubble: Bubble, vm: SettingsViewModel) {
 
 /** The invite code as a ticket: grape wash, dashed outline; the copy button morphs to a mint check for 1.5 s. */
 @Composable
-private fun InviteCard(bubble: Bubble, isOwner: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
+private fun InviteCard(bubble: Bubble, canManage: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val view = LocalView.current
     var copied by remember { mutableStateOf(false) }
@@ -544,7 +618,7 @@ private fun InviteCard(bubble: Bubble, isOwner: Boolean, vm: SettingsViewModel, 
             CircleIconButton(BoolaaIcons.QrCode, stringResource(R.string.invite_qr_code), onClick = { showQr = true },
                 size = 44.dp, modifier = Modifier.testTag("show-invite-qr"))
             Spacer(Modifier.weight(1f))
-            if (isOwner) {
+            if (canManage) {
                 TextButton(onClick = { confirmRotate = true }, modifier = Modifier.testTag("rotate-invite")) {
                     Text(stringResource(R.string.rotate_invite_code), style = Type.headline, color = grape.text)
                 }

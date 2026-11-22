@@ -169,7 +169,16 @@
     "revokeBody": "Va avea nevoie de un cod nou pe email înainte să-ți vadă din nou bulele.",
     "revokeConfirm": "Elimină dispozitivul",
     "deleteCodeNote": "Ca să fim siguri că ești tu, îți trimitem mai întâi un cod din 6 cifre pe email.",
-    "codeSentBody": "Introdu codul din 6 cifre pe care tocmai ți l-am trimis. Contul tău va fi șters imediat după."
+    "codeSentBody": "Introdu codul din 6 cifre pe care tocmai ți l-am trimis. Contul tău va fi șters imediat după.",
+    "exportData": "Descarcă datele mele",
+    "exportTitle": "Descarcă-ți datele",
+    "exportBody": "Primești un fișier JSON cu tot ce păstrează Boolaa despre tine: profilul, bulele, mesajele, postările, reacțiile, raportările, blocările și setările. Fotografiile tale apar ca linkuri valabile 7 zile. Păstrează fișierul doar pentru tine.",
+    "exportCodeNote": "Ca să fie în siguranță, îți trimitem mai întâi un cod pe email. Poți descărca datele o dată pe oră.",
+    "exportSendCode": "Trimite codul",
+    "exportCodeSent": "Introdu codul din 6 cifre pe care ți l-am trimis pe email. Fișierul se descarcă imediat după.",
+    "exportDownload": "Descarcă",
+    "exportPreparing": "Îți pregătim datele…",
+    "exportDone": "Datele tale sunt gata."
   },
   "chat": {
     "live": "în direct",
@@ -266,7 +275,7 @@
     "bubble": "Bulă",
     "name": "Nume",
     "noDescription": "Fără descriere",
-    "ownerOnly": "Doar proprietarul poate modifica aceste detalii.",
+    "ownerOnly": "Doar proprietarul și adminii pot modifica aceste detalii.",
     "inviteCode": "Cod de invitație",
     "copy": "Copiază",
     "copied": "Copiat",
@@ -310,7 +319,17 @@
     "addBubblePhoto": "Adaugă o fotografie",
     "changeBubblePhoto": "Schimbă fotografia",
     "removeBubblePhoto": "Elimină fotografia",
-    "bubblePhotoHint": "O vede toată lumea din bulă. Fotografiile pătrate arată cel mai bine."
+    "bubblePhotoHint": "O vede toată lumea din bulă. Fotografiile pătrate arată cel mai bine.",
+    "admin": "Admin",
+    "makeAdmin": "Numește admin",
+    "removeAdmin": "Retrage rolul de admin",
+    "transferOwnership": "Cedează rolul de proprietar",
+    "transferTitle": "Cedezi rolul de proprietar?",
+    "transferBody": "<strong>{name}</strong> devine proprietarul bulei {bubble}. Pierzi drepturile de proprietar și devii admin: nu mai poți schimba roluri, elimina admini sau lua înapoi rolul de proprietar decât dacă ți-l cedează {name}.",
+    "transferred": "{name} e acum proprietarul.",
+    "madeAdmin": "{name} e acum admin.",
+    "removedAdmin": "{name} nu mai e admin.",
+    "memberActions": "Gestionează {name}"
   },
   "home": {
     "chat": "Chat",
@@ -344,7 +363,7 @@
     "imageTooLarge": "Fotografia e prea mare. Alege una mai mică.",
     "imageUnsupported": "Nu putem citi această imagine. Încearcă altă fotografie.",
     "generic": "Ceva n-a mers. Încearcă din nou.",
-    "onlyOwnerCanRemove": "Doar proprietarul poate elimina membri.",
+    "onlyOwnerCanRemove": "Doar proprietarul sau un admin poate elimina membri.",
     "cannotRemoveSelf": "Nu te poți elimina singur de aici. Folosește „Părăsește bula”.",
     "memberNotFound": "Persoana nu mai face parte din bulă.",
     "cannotReportYourself": "Nu te poți raporta pe tine.",
@@ -366,8 +385,10 @@
     "samePassword": "Parola nouă trebuie să fie diferită de cea veche.",
     "oauthFailed": "Nu te-am putut conecta cu acel cont. Încearcă din nou.",
     "tooManyInviteAttempts": "Prea multe încercări cu coduri greșite. Încearcă din nou peste o oră.",
-    "onlyOwnerCanRotate": "Doar proprietarul poate schimba codul de invitație.",
-    "chatMessageGone": "Mesajul nu mai există."
+    "onlyOwnerCanRotate": "Doar proprietarul sau un admin poate schimba codul de invitație.",
+    "chatMessageGone": "Mesajul nu mai există.",
+    "ownerOnlyAction": "Doar proprietarul poate face asta.",
+    "exportRateLimited": "Poți descărca datele o dată pe oră. Încearcă din nou mai târziu."
   },
   "safety": {
     "moreActions": "Mai multe acțiuni",
@@ -566,5 +587,31 @@
     "react": "Reacționează",
     "chip": "{reaction}: {count, plural, one {# reacție} few {# reacții} other {# de reacții}}",
     "reactedByYou": "Ai reacționat"
+  },
+  "search": {
+    "open": "Caută în bulă",
+    "title": "Caută",
+    "placeholder": "Caută în {bubble}",
+    "clear": "Șterge căutarea",
+    "hint": "Găsește mesaje, evenimente, mâncare, obiecte și linkuri.",
+    "minLength": "Scrie cel puțin 2 caractere.",
+    "noResults": "Niciun rezultat pentru „{query}”",
+    "noResultsHint": "Încearcă alt cuvânt sau mai puține litere.",
+    "error": "Căutarea n-a mers. Încearcă din nou.",
+    "retry": "Încearcă din nou",
+    "results": "{count, plural, one {# rezultat} few {# rezultate} other {# de rezultate}}",
+    "kindMessage": "Mesaj",
+    "kindEvent": "Eveniment",
+    "kindFood": "Postare culinară",
+    "kindItem": "Obiect",
+    "kindLink": "Link",
+    "messageUnavailable": "Nu am găsit mesajul în chat."
+  },
+  "appearance": {
+    "title": "Aspect",
+    "themeSystem": "Sistem",
+    "themeLight": "Luminos",
+    "themeDark": "Întunecat",
+    "hint": "Sistem urmează setarea luminos sau întunecat a dispozitivului tău."
   }
 }

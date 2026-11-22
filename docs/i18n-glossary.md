@@ -18,6 +18,7 @@ Languages: **en** (source and fallback), **ro**, **fr**, **es**, **it**. Both cl
 | approve / reject | Approve / Reject | Aprobă / Respinge | Approuver / Refuser | Aprobar / Rechazar | Approva / Rifiuta |
 | pending approval | Pending approval | În așteptarea aprobării | En attente d'approbation | Pendiente de aprobación | In attesa di approvazione |
 | members / owner | members / owner | membri / proprietar | membres / propriétaire | miembros / propietario | membri / proprietario |
+| admin (bubble role) | admin / admins | admin / admini | admin / admins | admin / admins | admin / admin |
 | leave bubble | Leave bubble | Părăsește bula | Quitter la bulle | Salir de la burbuja | Lascia la bolla |
 | RSVP / Going | RSVP / Going | Particip | Je participe | Voy | Ci sono |
 | Free / Trade (item status) | Free / Trade | Gratuit / Schimb | Gratuit / Échange | Gratis / Intercambio | Gratis / Scambio |
@@ -130,3 +131,45 @@ Web keys under `reactions.*` and `links.previewLoading`; Android `reaction_*` (p
 | `chip` | {reaction}: {count, plural, one {# reaction} other {# reactions}} | {reaction}: {count, plural, one {# reacție} few {# reacții} other {# de reacții}} | {reaction} : {count, plural, one {# réaction} other {# réactions}} | {reaction}: {count, plural, one {# reacción} other {# reacciones}} | {reaction}: {count, plural, one {# reazione} other {# reazioni}} |
 | `reactedByYou` | You reacted | Ai reacționat | Tu as réagi | Has reaccionado | Hai reagito |
 | `linkPreviewLoading` | Loading preview… | Se încarcă previzualizarea… | Chargement de l'aperçu… | Cargando vista previa… | Caricamento dell'anteprima… |
+
+## Roles (docs/boolaa-spec.md, "Roles")
+
+Web keys under `settings.*` and `errors.*`; iOS uses the English text as the key; Android `strings_roles.xml` (plus `error_only_owner_can_rotate` / `error_only_owner_can_remove`). "Admin" stays "Admin" in every language (badge). `{name}` is a member's name, `{bubble}` the bubble name (user content).
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| admin (badge) | Admin | Admin | Admin | Admin | Admin |
+| makeAdmin | Make admin | Numește admin | Nommer admin | Hacer admin | Rendi admin |
+| removeAdmin | Remove admin | Retrage rolul de admin | Retirer le rôle d'admin | Quitar el rol de admin | Togli il ruolo di admin |
+| transferOwnership | Transfer ownership | Cedează rolul de proprietar | Céder le rôle de propriétaire | Ceder el rol de propietario | Cedi il ruolo di proprietario |
+| transferTitle | Transfer ownership? | Cedezi rolul de proprietar? | Céder le rôle de propriétaire ? | ¿Ceder el rol de propietario? | Cedere il ruolo di proprietario? |
+| transferBody ({name}, {bubble}; web wraps name in <strong>) | {name} becomes the owner of {bubble}. You'll lose your owner rights and become an admin: you won't be able to change roles, remove admins or take ownership back unless {name} gives it back. | {name} devine proprietarul bulei {bubble}. Pierzi drepturile de proprietar și devii admin: nu mai poți schimba roluri, elimina admini sau lua înapoi rolul de proprietar decât dacă ți-l cedează {name}. | {name} devient propriétaire de {bubble}. Tu perds tes droits de propriétaire et deviens admin : tu ne pourras plus changer les rôles, retirer des admins ni reprendre la propriété, sauf si {name} te la rend. | {name} pasa a ser propietario de {bubble}. Pierdes tus derechos de propietario y pasas a ser admin: ya no podrás cambiar roles, quitar admins ni recuperar la propiedad, salvo que {name} te la devuelva. | {name} diventa proprietario di {bubble}. Perdi i diritti di proprietario e diventi admin: non potrai più cambiare i ruoli, rimuovere gli admin né riprenderti la proprietà, a meno che {name} non te la restituisca. |
+| transferred (notice) | {name} is now the owner. | {name} e acum proprietarul. | {name} est maintenant propriétaire. | {name} ahora es el propietario. | {name} ora è il proprietario. |
+| madeAdmin (notice) | {name} is now an admin. | {name} e acum admin. | {name} est maintenant admin. | {name} ahora es admin. | {name} ora è admin. |
+| removedAdmin (notice) | {name} is no longer an admin. | {name} nu mai e admin. | {name} n'est plus admin. | {name} ya no es admin. | {name} non è più admin. |
+| memberActions (a11y label of the per-member menu) | Manage {name} | Gestionează {name} | Gérer {name} | Gestionar a {name} | Gestisci {name} |
+| ownerOnly (CHANGED existing text, shown to plain members under the bubble details) | Only the owner and admins can edit these details. | Doar proprietarul și adminii pot modifica aceste detalii. | Seuls le propriétaire et les admins peuvent modifier ces informations. | Solo el propietario y los admins pueden editar estos datos. | Solo il proprietario e gli admin possono modificare questi dettagli. |
+| error onlyOwnerCanRotate (CHANGED text; backend text unchanged: "only the owner can change the invite code") | Only the owner or an admin can change the invite code. | Doar proprietarul sau un admin poate schimba codul de invitație. | Seul le propriétaire ou un admin peut changer le code d'invitation. | Solo el propietario o un admin puede cambiar el código de invitación. | Solo il proprietario o un admin può cambiare il codice di invito. |
+| error onlyOwnerCanRemove (CHANGED text; backend text unchanged: "only the owner can remove members") | Only the owner or an admin can remove members. | Doar proprietarul sau un admin poate elimina membri. | Seul le propriétaire ou un admin peut retirer des membres. | Solo el propietario o un admin puede quitar miembros. | Solo il proprietario o un admin può rimuovere membri. |
+| error ownerOnlyAction (NEW; backend texts "only the owner can remove admins", "only the owner can transfer ownership", "only the owner can change roles") | Only the owner can do that. | Doar proprietarul poate face asta. | Seul le propriétaire peut faire ça. | Solo el propietario puede hacer eso. | Solo il proprietario può farlo. |
+
+## Data export and theme (docs/boolaa-spec.md, "Data export", "Theme (web)")
+
+Web keys `profile.export*`, `errors.exportRateLimited`, `appearance.*` (web only); Android `profile_export_*` and `error_export_rate_limited` (`strings_export.xml`); iOS the English text as key. The confirmation email names the action `export_data` (`_shared/email/locales/*.json`).
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| exportData (button) | Download my data | Descarcă datele mele | Télécharger mes données | Descargar mis datos | Scarica i miei dati |
+| exportTitle | Download your data | Descarcă-ți datele | Télécharge tes données | Descarga tus datos | Scarica i tuoi dati |
+| exportBody | You get one JSON file with everything Boolaa stores about you: your profile, bubbles, messages, posts, reactions, reports, blocks and settings. Your photos are listed as links that work for 7 days. Keep the file private. | Primești un fișier JSON cu tot ce păstrează Boolaa despre tine: profilul, bulele, mesajele, postările, reacțiile, raportările, blocările și setările. Fotografiile tale apar ca linkuri valabile 7 zile. Păstrează fișierul doar pentru tine. | Tu reçois un fichier JSON avec tout ce que Boolaa conserve sur toi : ton profil, tes bulles, messages, publications, réactions, signalements, blocages et réglages. Tes photos y figurent sous forme de liens valables 7 jours. Garde ce fichier pour toi. | Recibes un archivo JSON con todo lo que Boolaa guarda sobre ti: tu perfil, burbujas, mensajes, publicaciones, reacciones, denuncias, bloqueos y ajustes. Tus fotos aparecen como enlaces válidos durante 7 días. Guarda el archivo solo para ti. | Ricevi un file JSON con tutto ciò che Boolaa conserva su di te: profilo, bolle, messaggi, post, reazioni, segnalazioni, blocchi e impostazioni. Le tue foto sono incluse come link validi per 7 giorni. Tieni il file per te. |
+| exportCodeNote | To keep it safe, we'll email you a code first. You can download your data once an hour. | Ca să fie în siguranță, îți trimitem mai întâi un cod pe email. Poți descărca datele o dată pe oră. | Pour ta sécurité, on t'envoie d'abord un code par e-mail. Tu peux télécharger tes données une fois par heure. | Por seguridad, primero te enviamos un código por correo. Puedes descargar tus datos una vez por hora. | Per sicurezza, prima ti mandiamo un codice via email. Puoi scaricare i tuoi dati una volta all'ora. |
+| exportCodeSent (web) | Enter the 6-digit code we just emailed you. Your file downloads right after. | Introdu codul din 6 cifre pe care ți l-am trimis pe email. Fișierul se descarcă imediat după. | Saisis le code à 6 chiffres qu'on vient de t'envoyer par e-mail. Le fichier se télécharge juste après. | Introduce el código de 6 dígitos que te acabamos de enviar por correo. El archivo se descarga justo después. | Inserisci il codice di 6 cifre che ti abbiamo appena mandato via email. Il file si scarica subito dopo. |
+| exportPreparing | Preparing your data… | Îți pregătim datele… | Préparation de tes données… | Preparando tus datos… | Stiamo preparando i tuoi dati… |
+| exportDone | Your data is ready. | Datele tale sunt gata. | Tes données sont prêtes. | Tus datos están listos. | I tuoi dati sono pronti. |
+| error `export rate limited` / function `export_rate_limited` (429) → `exportRateLimited` | You can download your data once an hour. Try again later. | Poți descărca datele o dată pe oră. Încearcă din nou mai târziu. | Tu peux télécharger tes données une fois par heure. Réessaie plus tard. | Puedes descargar tus datos una vez por hora. Inténtalo más tarde. | Puoi scaricare i tuoi dati una volta all'ora. Riprova più tardi. |
+| email action `export_data` | download a copy of your data | descărcarea unei copii a datelor tale | le téléchargement d'une copie de tes données | descargar una copia de tus datos | il download di una copia dei tuoi dati |
+| appearance.title (web) | Appearance | Aspect | Apparence | Apariencia | Aspetto |
+| themeSystem / themeLight / themeDark | System / Light / Dark | Sistem / Luminos / Întunecat | Système / Clair / Sombre | Sistema / Claro / Oscuro | Sistema / Chiaro / Scuro |
+| appearance.hint | System follows your device's light or dark setting. | Sistem urmează setarea luminos sau întunecat a dispozitivului tău. | Système suit le réglage clair ou sombre de ton appareil. | Sistema sigue el ajuste claro u oscuro de tu dispositivo. | Sistema segue l'impostazione chiara o scura del tuo dispositivo. |
+
+The function's `reauthentication_required` and `session_not_verified` reuse `reauthenticationRequired` / `sessionNotVerified`.

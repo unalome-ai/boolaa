@@ -39,8 +39,30 @@ struct Bubble: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+/// Bubble roles (docs/boolaa-spec.md, "Roles"; 20261123190000_bubble_roles.sql). The UI uses the
+/// permission helpers only to hide what a role can't do; the RPCs enforce the same rules.
 enum MemberRole: String, Codable, Sendable {
-    case owner, member
+    case owner, admin, member
+
+    /// An unknown future role decodes as a plain member instead of failing the whole list.
+    init(from decoder: any Decoder) throws {
+        self = MemberRole(rawValue: try decoder.singleValueContainer().decode(String.self)) ?? .member
+    }
+
+    /// Edit name, description and photo, and rotate the invite code (`can_manage_bubble`).
+    var canManage: Bool { self == .owner || self == .admin }
+
+    /// Make/remove admin and transfer ownership.
+    var canChangeRoles: Bool { self == .owner }
+
+    /// `remove_member`: the owner removes anyone else, an admin removes plain members only.
+    func canRemove(_ target: MemberRole) -> Bool {
+        switch self {
+        case .owner: target != .owner
+        case .admin: target == .member
+        case .member: false
+        }
+    }
 }
 
 /// `public.bubble_members`, optionally embedding the bubble or the user.

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Check, ChevronRight, Clock, Copy, Crown, ImagePlus, Link2, LogOut, RefreshCw, Share2, Trash2, UserMinus, X } from "lucide-react";
+import { Check, ChevronRight, Clock, Copy, Crown, ImagePlus, Link2, LogOut, RefreshCw, Settings2, Share2, Shield, ShieldOff, Trash2, UserMinus, X } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, BubblePhoto, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
@@ -14,7 +14,9 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { inviteUrl } from "@/lib/invite";
+import { canManage, canRemove, roleOf } from "@/lib/roles";
 import { BubbleMute, NotificationSettings } from "@/components/notification-settings";
+import { ThemePicker } from "@/components/theme-picker";
 
 export default function SettingsPage() {
   const { supabase, userId, refreshBubbles } = useBoolaa();
@@ -22,6 +24,7 @@ export default function SettingsPage() {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const tn = useTranslations("notifications");
+  const ta = useTranslations("appearance");
   const errorText = useErrorText();
   const fmt = useFormat();
   const [members, setMembers] = useState<Member[] | null>(null);
@@ -34,6 +37,8 @@ export default function SettingsPage() {
   const [leaving, setLeaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [removing, setRemoving] = useState<Member | null>(null);
+  const [transferring, setTransferring] = useState<Member | null>(null);
+  const [roleBusy, setRoleBusy] = useState(false);
   const [live, setLive] = useState(false);
   const requestIds = useRef<Set<string>>(new Set());
   const loadSeq = useRef(0);
@@ -101,8 +106,11 @@ export default function SettingsPage() {
 
   const memberCount = members?.length ?? 0;
   const memberIds = new Set((members ?? []).map((m) => m.user_id));
-  // Ownership can move (oldest member inherits it when the owner leaves), so read it from live data.
-  const isOwner = members ? members.some((m) => m.user_id === userId && m.role === "owner") : bubble.role === "owner";
+  // Roles can change at any time (transfer, promotion, hand-over when the owner leaves), so read
+  // mine from the live members list (docs/boolaa-spec.md, "Roles"). The server enforces all of it.
+  const myRole = members ? roleOf(members.find((m) => m.user_id === userId)?.role) : roleOf(bubble.role);
+  const isOwner = myRole === "owner";
+  const manager = canManage(myRole);
   const full = memberCount >= bubble.max_size;
   const needed = Math.floor(memberCount / 2) + 1; // strict majority, as in try_admit_join_request
   // Only votes from current members count (votes of people who left are discarded).
@@ -144,7 +152,7 @@ export default function SettingsPage() {
     }
   }
 
-  /** Owner only: a new code; the old code, link and QR code stop working at once. */
+  /** Owner or admin: a new code; the old code, link and QR code stop working at once. */
   async function rotate() {
     setRotateBusy(true);
     setError(null);
@@ -184,6 +192,33 @@ export default function SettingsPage() {
     void load();
   }
 
+  /** Owner only: promote a member to admin or demote an admin. */
+  async function setRole(m: Member, role: "admin" | "member") {
+    setError(null);
+    setRoleBusy(true);
+    const { error } = await supabase.rpc("set_member_role", { p_bubble_id: bubble.id, p_user_id: m.user_id, p_role: role });
+    setRoleBusy(false);
+    if (error) return setError(errorText(error));
+    const name = m.user?.name ?? tc("someone");
+    setNotice(role === "admin" ? t("madeAdmin", { name }) : t("removedAdmin", { name }));
+    setTimeout(() => setNotice(null), 2500);
+    void load();
+  }
+
+  /** Owner only: hand the bubble to another member; I become an admin. */
+  async function transfer(m: Member) {
+    setError(null);
+    setRoleBusy(true);
+    const { error } = await supabase.rpc("transfer_ownership", { p_bubble_id: bubble.id, p_new_owner: m.user_id });
+    setRoleBusy(false);
+    setTransferring(null);
+    if (error) return setError(errorText(error));
+    setNotice(t("transferred", { name: m.user?.name ?? tc("someone") }));
+    setTimeout(() => setNotice(null), 2500);
+    void load();
+    void refreshBubbles(); // my role in the bubble list
+  }
+
   async function leave() {
     const { error } = await supabase.from("bubble_members").delete().eq("bubble_id", bubble.id).eq("user_id", userId);
     if (error) return setError(errorText(error));
@@ -201,7 +236,7 @@ export default function SettingsPage() {
       )}
 
       <SectionTitle hue="indigo">{t("bubble")}</SectionTitle>
-      <BubbleDetails key={bubble.id} canEdit={isOwner} />
+      <BubbleDetails key={bubble.id} canEdit={manager} />
 
       {/* Invite "ticket" (6.3) */}
       <div
@@ -233,7 +268,7 @@ export default function SettingsPage() {
             <button type="button" onClick={shareLink} className="btn h-10 bg-brand/15 px-3.5 text-sm text-brand-ink" data-testid="share-invite-link">
               <Share2 size={16} strokeWidth={2.6} /> {t("shareLink")}
             </button>
-            {isOwner && (
+            {manager && (
               <button type="button" onClick={() => setRotating(true)} className="btn h-10 bg-brand/15 px-3.5 text-sm text-brand-ink" data-testid="rotate-invite">
                 <RefreshCw size={16} strokeWidth={2.6} /> {t("rotateCode")}
               </button>
@@ -312,8 +347,21 @@ export default function SettingsPage() {
                   <Crown size={14} strokeWidth={2.6} /> {t("owner")}
                 </span>
               )}
+              {m.role === "admin" && (
+                <span className="hue-sky inline-flex h-7 items-center gap-1 rounded-full bg-hue-wash px-3 font-display text-xs font-black text-hue-ink" data-testid="admin-badge">
+                  <Shield size={14} strokeWidth={2.6} /> {t("admin")}
+                </span>
+              )}
               <SafetyMenu type="user" id={m.user_id} author={{ id: m.user_id, name: m.user?.name }} />
-              {isOwner && m.role !== "owner" && m.user_id !== userId && (
+              {isOwner && m.user_id !== userId && (
+                <RoleMenu
+                  member={m}
+                  busy={roleBusy}
+                  onSetRole={(role) => void setRole(m, role)}
+                  onTransfer={() => setTransferring(m)}
+                />
+              )}
+              {canRemove(myRole, roleOf(m.role)) && m.user_id !== userId && (
                 <button
                   type="button"
                   onClick={() => setRemoving(m)}
@@ -334,6 +382,11 @@ export default function SettingsPage() {
       <div className="space-y-3" id="notifications">
         <BubbleMute key={bubble.id} />
         <NotificationSettings />
+      </div>
+
+      <SectionTitle hue="indigo">{ta("title")}</SectionTitle>
+      <div id="appearance">
+        <ThemePicker />
       </div>
 
       <SectionTitle>{t("more")}</SectionTitle>
@@ -371,6 +424,30 @@ export default function SettingsPage() {
         </div>
       </Modal>
 
+      <Modal open={!!transferring} onClose={() => setTransferring(null)} title={t("transferTitle")}>
+        <p className="mb-5 text-muted" data-testid="transfer-body">
+          {t.rich("transferBody", {
+            name: transferring?.user?.name ?? tc("someone"),
+            bubble: bubble.name,
+            strong: (chunks) => <strong className="text-fg">{chunks}</strong>,
+          })}
+        </p>
+        <div className="flex gap-3">
+          <button type="button" onClick={() => setTransferring(null)} className="btn-ghost flex-1">
+            {tc("cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={() => transferring && transfer(transferring)}
+            disabled={roleBusy}
+            className="btn-destructive flex-1"
+            data-testid="transfer-confirm"
+          >
+            {t("transferOwnership")}
+          </button>
+        </div>
+      </Modal>
+
       <Modal open={rotating} onClose={() => setRotating(false)} title={t("rotateTitle")}>
         <p className="mb-5 text-muted">{t("rotateBody")}</p>
         <div className="flex gap-3">
@@ -399,6 +476,84 @@ export default function SettingsPage() {
           </button>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+/** The owner's per-member menu: make/remove admin and transfer ownership. */
+function RoleMenu({
+  member,
+  busy,
+  onSetRole,
+  onTransfer,
+}: {
+  member: Member;
+  busy: boolean;
+  onSetRole: (role: "admin" | "member") => void;
+  onTransfer: () => void;
+}) {
+  const t = useTranslations("settings");
+  const tc = useTranslations("common");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const isAdmin = member.role === "admin";
+  const item = "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field disabled:opacity-50";
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-label={t("memberActions", { name: member.user?.name ?? tc("someone") })}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-field hover:text-fg"
+        data-testid="role-menu"
+      >
+        <Settings2 size={17} />
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 top-full z-[250] mt-1 min-w-56 overflow-hidden rounded-field border border-line bg-card py-1 shadow-float">
+          <button
+            type="button"
+            role="menuitem"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              onSetRole(isAdmin ? "member" : "admin");
+            }}
+            className={item}
+            data-testid={isAdmin ? "remove-admin" : "make-admin"}
+          >
+            {isAdmin ? <ShieldOff size={16} /> : <Shield size={16} />} {isAdmin ? t("removeAdmin") : t("makeAdmin")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              onTransfer();
+            }}
+            className={item}
+            data-testid="transfer-ownership"
+          >
+            <Crown size={16} /> {t("transferOwnership")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -469,7 +624,7 @@ function BubbleDetails({ canEdit }: { canEdit: boolean }) {
 }
 
 /**
- * Owner-only photo controls (docs/boolaa-spec.md, "Bubble photo"): upload or replace through the shared
+ * Owner/admin photo controls (docs/boolaa-spec.md, "Bubble photo"): upload or replace through the shared
  * image pipeline into `bubble.images/<bubble id>/`, point bubbles.logo at it, then delete the previous
  * file (best effort; the hourly sweep removes anything missed). Members get the change live.
  */

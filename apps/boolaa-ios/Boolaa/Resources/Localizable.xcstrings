@@ -1,6 +1,128 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ becomes the owner of %@. You'll lose your owner rights and become an admin: you won't be able to change roles, remove admins or take ownership back unless %@ gives it back.": {
+      "comment": "Transfer confirmation; arguments: new owner's name, bubble name, new owner's name",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ becomes the owner of %2$@. You'll lose your owner rights and become an admin: you won't be able to change roles, remove admins or take ownership back unless %3$@ gives it back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pasa a ser propietario de %2$@. Pierdes tus derechos de propietario y pasas a ser admin: ya no podrás cambiar roles, quitar admins ni recuperar la propiedad, salvo que %3$@ te la devuelva."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ devient propriétaire de %2$@. Tu perds tes droits de propriétaire et deviens admin : tu ne pourras plus changer les rôles, retirer des admins ni reprendre la propriété, sauf si %3$@ te la rend."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ diventa proprietario di %2$@. Perdi i diritti di proprietario e diventi admin: non potrai più cambiare i ruoli, rimuovere gli admin né riprenderti la proprietà, a meno che %3$@ non te la restituisca."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ devine proprietarul bulei %2$@. Pierzi drepturile de proprietar și devii admin: nu mai poți schimba roluri, elimina admini sau lua înapoi rolul de proprietar decât dacă ți-l cedează %3$@."
+          }
+        }
+      }
+    },
+    "%@ is no longer an admin.": {
+      "comment": "Notice after removing a member's admin role",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ya no es admin."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ n'est plus admin."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ non è più admin."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nu mai e admin."
+          }
+        }
+      }
+    },
+    "%@ is now an admin.": {
+      "comment": "Notice after making a member an admin",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ahora es admin."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ est maintenant admin."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ora è admin."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ e acum admin."
+          }
+        }
+      }
+    },
+    "%@ is now the owner.": {
+      "comment": "Notice after transferring ownership; the argument is the new owner's name",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ahora es el propietario."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ est maintenant propriétaire."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ora è il proprietario."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ e acum proprietarul."
+          }
+        }
+      }
+    },
     "%@: %lld reactions": {
       "comment": "Accessibility label of a reaction chip; the first argument is the reaction name, the second the count",
       "localizations": {
@@ -32,7 +154,7 @@
             }
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$#@count@"
@@ -43,22 +165,22 @@
               "formatSpecifier": "lld",
               "variations": {
                 "plural": {
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg de reacciones"
+                    }
+                  },
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg reacție"
-                    }
-                  },
-                  "few": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg reacții"
+                      "value": "%arg reacción"
                     }
                   },
                   "other": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg de reacții"
+                      "value": "%arg reacciones"
                     }
                   }
                 }
@@ -77,56 +199,22 @@
               "formatSpecifier": "lld",
               "variations": {
                 "plural": {
-                  "one": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg réaction"
-                    }
-                  },
                   "many": {
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg de réactions"
                     }
                   },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg réaction"
+                    }
+                  },
                   "other": {
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg réactions"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@: %2$#@count@"
-          },
-          "substitutions": {
-            "count": {
-              "argNum": 2,
-              "formatSpecifier": "lld",
-              "variations": {
-                "plural": {
-                  "one": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg reacción"
-                    }
-                  },
-                  "many": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg de reacciones"
-                    }
-                  },
-                  "other": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg reacciones"
                     }
                   }
                 }
@@ -145,22 +233,56 @@
               "formatSpecifier": "lld",
               "variations": {
                 "plural": {
-                  "one": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg reazione"
-                    }
-                  },
                   "many": {
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg di reazioni"
                     }
                   },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg reazione"
+                    }
+                  },
                   "other": {
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg reazioni"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$#@count@"
+          },
+          "substitutions": {
+            "count": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg reacții"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg reacție"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg de reacții"
                     }
                   }
                 }
@@ -860,6 +982,125 @@
         }
       }
     },
+    "%lld results": {
+      "comment": "Number of search results (announced by VoiceOver)",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld result"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld results"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld resultados"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld resultado"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld resultados"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld résultats"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld résultat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld résultats"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld risultati"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld risultato"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld risultati"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rezultate"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rezultat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de rezultate"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld unread messages": {
       "comment": "Accessibility label of the unread badge; the argument is the count (99+ shown above 99)",
       "localizations": {
@@ -1009,10 +1250,10 @@
     },
     "1 hour": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "O oră"
+            "value": "1 hora"
           }
         },
         "fr": {
@@ -1021,26 +1262,26 @@
             "value": "1 heure"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 hora"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "1 ora"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O oră"
           }
         }
       }
     },
     "1 week": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "O săptămână"
+            "value": "1 semana"
           }
         },
         "fr": {
@@ -1049,16 +1290,16 @@
             "value": "1 semaine"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 semana"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "1 settimana"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O săptămână"
           }
         }
       }
@@ -1093,10 +1334,10 @@
     },
     "8 hours": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "8 ore"
+            "value": "8 horas"
           }
         },
         "fr": {
@@ -1105,13 +1346,13 @@
             "value": "8 heures"
           }
         },
-        "es": {
+        "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "8 horas"
+            "value": "8 ore"
           }
         },
-        "it": {
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "8 ore"
@@ -1128,10 +1369,10 @@
             "value": "@%1$@, is “%2$@” still available?"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "@%1$@, mai e disponibil „%2$@”?"
+            "value": "@%1$@, ¿sigue disponible «%2$@»?"
           }
         },
         "fr": {
@@ -1140,16 +1381,16 @@
             "value": "@%1$@, « %2$@ » est toujours disponible ?"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "@%1$@, ¿sigue disponible «%2$@»?"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "@%1$@, «%2$@» è ancora disponibile?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%1$@, mai e disponibil „%2$@”?"
           }
         }
       }
@@ -1192,10 +1433,10 @@
             "value": "Add a reaction"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adaugă o reacție"
+            "value": "Añadir una reacción"
           }
         },
         "fr": {
@@ -1204,16 +1445,16 @@
             "value": "Ajouter une réaction"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir una reacción"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Aggiungi una reazione"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă o reacție"
           }
         }
       }
@@ -1249,10 +1490,10 @@
     "Add to calendar": {
       "comment": "Button adding an event to the phone's calendar",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adaugă în calendar"
+            "value": "Añadir al calendario"
           }
         },
         "fr": {
@@ -1261,16 +1502,45 @@
             "value": "Ajouter au calendrier"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi al calendario"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă în calendar"
+          }
+        }
+      }
+    },
+    "Admin": {
+      "comment": "Badge for a bubble admin",
+      "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Añadir al calendario"
+            "value": "Admin"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aggiungi al calendario"
+            "value": "Admin"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin"
           }
         }
       }
@@ -1306,10 +1576,10 @@
     "Allow calendar access in Settings to add events.": {
       "comment": "Error when calendar access is restricted",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permite accesul la calendar din Setări ca să adaugi evenimente."
+            "value": "Permite el acceso al calendario en Ajustes para añadir eventos."
           }
         },
         "fr": {
@@ -1318,26 +1588,26 @@
             "value": "Autorise l'accès au calendrier dans Réglages pour ajouter des événements."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Permite el acceso al calendario en Ajustes para añadir eventos."
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Consenti l'accesso al calendario nelle Impostazioni per aggiungere eventi."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permite accesul la calendar din Setări ca să adaugi evenimente."
           }
         }
       }
     },
     "Allow notifications": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permite notificările"
+            "value": "Permitir notificaciones"
           }
         },
         "fr": {
@@ -1346,16 +1616,16 @@
             "value": "Autoriser les notifications"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Permitir notificaciones"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Consenti le notifiche"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permite notificările"
           }
         }
       }
@@ -1531,10 +1801,10 @@
     "Ask in chat": {
       "comment": "Opens the bubble chat with a question about this item",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Întreabă în chat"
+            "value": "Preguntar en el chat"
           }
         },
         "fr": {
@@ -1543,16 +1813,16 @@
             "value": "Demander dans la discussion"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preguntar en el chat"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Chiedi in chat"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Întreabă în chat"
           }
         }
       }
@@ -1588,10 +1858,10 @@
     "Availability": {
       "comment": "Label of the marketplace availability picker",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disponibilitate"
+            "value": "Disponibilidad"
           }
         },
         "fr": {
@@ -1600,16 +1870,16 @@
             "value": "Disponibilité"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponibilidad"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Disponibilità"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponibilitate"
           }
         }
       }
@@ -1617,19 +1887,13 @@
     "Available": {
       "comment": "Marketplace item availability",
       "localizations": {
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponibil"
-          }
-        },
-        "fr": {
+        "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Disponible"
           }
         },
-        "es": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Disponible"
@@ -1639,6 +1903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disponibile"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponibil"
           }
         }
       }
@@ -2263,10 +2533,10 @@
     },
     "Chat messages": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mesaje din chat"
+            "value": "Mensajes del chat"
           }
         },
         "fr": {
@@ -2275,16 +2545,16 @@
             "value": "Messages de discussion"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mensajes del chat"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Messaggi in chat"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaje din chat"
           }
         }
       }
@@ -2425,6 +2695,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alege o parolă mai puternică (cel puțin 6 caractere)."
+          }
+        }
+      }
+    },
+    "Clear search": {
+      "comment": "Clears the search field",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar la búsqueda"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer la recherche"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancella la ricerca"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Șterge căutarea"
           }
         }
       }
@@ -3327,6 +3626,62 @@
         }
       }
     },
+    "Download my data": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar mis datos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télécharger mes données"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica i miei dati"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarcă datele mele"
+          }
+        }
+      }
+    },
+    "Download your data": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarga tus datos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télécharge tes données"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarica i tuoi dati"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarcă-ți datele"
+          }
+        }
+      }
+    },
     "Edit": {
       "localizations": {
         "es": {
@@ -3635,12 +3990,41 @@
         }
       }
     },
-    "Event reminders (1 hour before)": {
+    "Event": {
+      "comment": "Kind of a search result",
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Événement"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evento"
+          }
+        },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mementouri pentru evenimente (cu o oră înainte)"
+            "value": "Eveniment"
+          }
+        }
+      }
+    },
+    "Event reminders (1 hour before)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorios de eventos (1 hora antes)"
           }
         },
         "fr": {
@@ -3649,16 +4033,16 @@
             "value": "Rappels d'événements (1 heure avant)"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recordatorios de eventos (1 hora antes)"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Promemoria degli eventi (1 ora prima)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mementouri pentru evenimente (cu o oră înainte)"
           }
         }
       }
@@ -3776,6 +4160,35 @@
         }
       }
     },
+    "Find messages, events, food, items and links.": {
+      "comment": "Search hint before typing",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encuentra mensajes, eventos, comida, objetos y enlaces."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trouve des messages, des événements, des plats, des objets et des liens."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trova messaggi, eventi, cibo, oggetti e link."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Găsește mesaje, evenimente, mâncare, obiecte și linkuri."
+          }
+        }
+      }
+    },
     "First we'll send a code to your current email. After that, both addresses get an email to confirm the change.": {
       "localizations": {
         "es": {
@@ -3828,6 +4241,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cercul culinar"
+          }
+        }
+      }
+    },
+    "Food post": {
+      "comment": "Kind of a search result",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicación de comida"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publication gourmande"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post di cibo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Postare culinară"
           }
         }
       }
@@ -3974,10 +4416,10 @@
     },
     "Get a ping when your bubbles talk to you.": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Primește un semn când bulele tale vorbesc cu tine."
+            "value": "Recibe un aviso cuando tus burbujas te hablen."
           }
         },
         "fr": {
@@ -3986,16 +4428,16 @@
             "value": "Reçois un signal quand tes bulles te parlent."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recibe un aviso cuando tus burbujas te hablen."
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Ricevi un avviso quando le tue bolle ti parlano."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primește un semn când bulele tale vorbesc cu tine."
           }
         }
       }
@@ -4065,10 +4507,10 @@
             "value": "Haha"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haha"
+            "value": "Jaja"
           }
         },
         "fr": {
@@ -4077,16 +4519,16 @@
             "value": "Haha"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jaja"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Ahah"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haha"
           }
         }
       }
@@ -4178,10 +4620,10 @@
     "Hide taken": {
       "comment": "Filter toggle hiding taken marketplace items",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ascunde ce e luat"
+            "value": "Ocultar entregados"
           }
         },
         "fr": {
@@ -4190,16 +4632,16 @@
             "value": "Masquer ce qui est parti"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ocultar entregados"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Nascondi presi"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascunde ce e luat"
           }
         }
       }
@@ -4457,6 +4899,35 @@
         }
       }
     },
+    "Item": {
+      "comment": "Kind of a search result (marketplace item)",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objeto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objet"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oggetto"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiect"
+          }
+        }
+      }
+    },
     "Join a bubble": {
       "localizations": {
         "es": {
@@ -4549,10 +5020,10 @@
     },
     "Join requests": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cereri de alăturare"
+            "value": "Solicitudes para unirse"
           }
         },
         "fr": {
@@ -4561,16 +5032,16 @@
             "value": "Demandes d'adhésion"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solicitudes para unirse"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Richieste di adesione"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cereri de alăturare"
           }
         }
       }
@@ -4752,10 +5223,10 @@
             "value": "Like"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Îmi place"
+            "value": "Me gusta"
           }
         },
         "fr": {
@@ -4764,16 +5235,16 @@
             "value": "J'aime"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Me gusta"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Mi piace"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Îmi place"
           }
         }
       }
@@ -5012,10 +5483,10 @@
             "value": "Loading preview…"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se încarcă previzualizarea…"
+            "value": "Cargando vista previa…"
           }
         },
         "fr": {
@@ -5024,16 +5495,16 @@
             "value": "Chargement de l'aperçu…"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cargando vista previa…"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Caricamento dell'anteprima…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se încarcă previzualizarea…"
           }
         }
       }
@@ -5103,10 +5574,10 @@
             "value": "Love"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ador"
+            "value": "Me encanta"
           }
         },
         "fr": {
@@ -5115,16 +5586,44 @@
             "value": "J'adore"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adoro"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ador"
+          }
+        }
+      }
+    },
+    "Make admin": {
+      "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Me encanta"
+            "value": "Hacer admin"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nommer admin"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adoro"
+            "value": "Rendi admin"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numește admin"
           }
         }
       }
@@ -5132,10 +5631,10 @@
     "Mark as": {
       "comment": "Menu heading for changing a marketplace item's availability",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Marchează ca"
+            "value": "Marcar como"
           }
         },
         "fr": {
@@ -5144,16 +5643,16 @@
             "value": "Marquer comme"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marcar como"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Segna come"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marchează ca"
           }
         }
       }
@@ -5328,10 +5827,10 @@
     },
     "Mute this bubble": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pune bula pe silențios"
+            "value": "Silenciar la burbuja"
           }
         },
         "fr": {
@@ -5340,26 +5839,26 @@
             "value": "Mettre la bulle en sourdine"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Silenciar la burbuja"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Silenzia la bolla"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pune bula pe silențios"
           }
         }
       }
     },
     "Muted until %@": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pe silențios până %@"
+            "value": "Silenciada hasta el %@"
           }
         },
         "fr": {
@@ -5368,16 +5867,16 @@
             "value": "En sourdine jusqu'au %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Silenciada hasta el %@"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Silenziata fino al %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe silențios până %@"
           }
         }
       }
@@ -5440,10 +5939,10 @@
     },
     "My request was approved": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cererea mea a fost aprobată"
+            "value": "Mi solicitud fue aprobada"
           }
         },
         "fr": {
@@ -5452,16 +5951,16 @@
             "value": "Ma demande a été acceptée"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mi solicitud fue aprobada"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "La mia richiesta è stata approvata"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cererea mea a fost aprobată"
           }
         }
       }
@@ -5636,10 +6135,10 @@
     },
     "New events": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evenimente noi"
+            "value": "Eventos nuevos"
           }
         },
         "fr": {
@@ -5648,16 +6147,16 @@
             "value": "Nouveaux événements"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eventos nuevos"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Nuovi eventi"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evenimente noi"
           }
         }
       }
@@ -5971,6 +6470,41 @@
         }
       }
     },
+    "No results for “%@”": {
+      "comment": "Empty search; the argument is the query (user text)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results for “%@”"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay resultados para «%@»"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun résultat pour « %@ »"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun risultato per «%@»"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niciun rezultat pentru „%@”"
+          }
+        }
+      }
+    },
     "Not now": {
       "localizations": {
         "es": {
@@ -6113,10 +6647,10 @@
     },
     "Notifications": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notificări"
+            "value": "Notificaciones"
           }
         },
         "fr": {
@@ -6125,26 +6659,26 @@
             "value": "Notifications"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notificaciones"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Notifiche"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificări"
           }
         }
       }
     },
     "Notifications are turned off for Boolaa in your settings.": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notificările pentru Boolaa sunt oprite din setări."
+            "value": "Las notificaciones de Boolaa están desactivadas en tus ajustes."
           }
         },
         "fr": {
@@ -6153,16 +6687,16 @@
             "value": "Les notifications de Boolaa sont désactivées dans tes réglages."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las notificaciones de Boolaa están desactivadas en tus ajustes."
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Le notifiche di Boolaa sono disattivate nelle impostazioni."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificările pentru Boolaa sunt oprite din setări."
           }
         }
       }
@@ -6223,68 +6757,96 @@
         }
       }
     },
-    "Only the bubble's owner can remove members.": {
+    "Only the owner can do that.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo el propietario de la burbuja puede quitar miembros."
+            "value": "Solo el propietario puede hacer eso."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seul le propriétaire de la bulle peut retirer des membres."
+            "value": "Seul le propriétaire peut faire ça."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo il proprietario della bolla può rimuovere i membri."
+            "value": "Solo il proprietario può farlo."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doar proprietarul bulei poate elimina membri."
+            "value": "Doar proprietarul poate face asta."
           }
         }
       }
     },
-    "Only the owner can change the invite code.": {
+    "Only the owner or an admin can change the invite code.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo el propietario puede cambiar el código de invitación."
+            "value": "Solo el propietario o un admin puede cambiar el código de invitación."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seul le propriétaire peut changer le code d'invitation."
+            "value": "Seul le propriétaire ou un admin peut changer le code d'invitation."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo il proprietario può cambiare il codice di invito."
+            "value": "Solo il proprietario o un admin può cambiare il codice di invito."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doar proprietarul poate schimba codul de invitație."
+            "value": "Doar proprietarul sau un admin poate schimba codul de invitație."
+          }
+        }
+      }
+    },
+    "Only the owner or an admin can remove members.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo el propietario o un admin puede quitar miembros."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seul le propriétaire ou un admin peut retirer des membres."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo il proprietario o un admin può rimuovere membri."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doar proprietarul sau un admin poate elimina membri."
           }
         }
       }
     },
     "Open Settings": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deschide Setările"
+            "value": "Abrir Ajustes"
           }
         },
         "fr": {
@@ -6293,16 +6855,16 @@
             "value": "Ouvrir les Réglages"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir Ajustes"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Apri Impostazioni"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide Setările"
           }
         }
       }
@@ -6645,6 +7207,34 @@
         }
       }
     },
+    "Preparing your data…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando tus datos…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparation de tes données…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stiamo preparando i tuoi dati…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Îți pregătim datele…"
+          }
+        }
+      }
+    },
     "Privacy Policy": {
       "localizations": {
         "es": {
@@ -6766,10 +7356,10 @@
             "value": "React"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reacționează"
+            "value": "Reaccionar"
           }
         },
         "fr": {
@@ -6778,16 +7368,16 @@
             "value": "Réagir"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reaccionar"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Reagisci"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reacționează"
           }
         }
       }
@@ -6928,6 +7518,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elimini %@?"
+          }
+        }
+      }
+    },
+    "Remove admin": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar el rol de admin"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer le rôle d'admin"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Togli il ruolo di admin"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retrage rolul de admin"
           }
         }
       }
@@ -7384,10 +8002,10 @@
     "Reserved": {
       "comment": "Marketplace item availability",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rezervat"
+            "value": "Reservado"
           }
         },
         "fr": {
@@ -7396,16 +8014,16 @@
             "value": "Réservé"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reservado"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Prenotato"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezervat"
           }
         }
       }
@@ -7447,19 +8065,13 @@
             "value": "Sad"
           }
         },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trist"
-          }
-        },
-        "fr": {
+        "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Triste"
           }
         },
-        "es": {
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Triste"
@@ -7469,6 +8081,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Triste"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trist"
           }
         }
       }
@@ -7553,6 +8171,128 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salută în chat, plănuiește un eveniment sau împarte niște mâncare."
+          }
+        }
+      }
+    },
+    "Search": {
+      "comment": "Title of the search sheet",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caută"
+          }
+        }
+      }
+    },
+    "Search %@": {
+      "comment": "Search field placeholder; the argument is the bubble name",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar en %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher dans %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca in %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caută în %@"
+          }
+        }
+      }
+    },
+    "Search didn't work. Try again.": {
+      "comment": "Search failed",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La búsqueda no ha funcionado. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche n'a pas marché. Réessaie."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ricerca non ha funzionato. Riprova."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Căutarea n-a mers. Încearcă din nou."
+          }
+        }
+      }
+    },
+    "Search this bubble": {
+      "comment": "Opens search for the current bubble (button label, search field label)",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar en la burbuja"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher dans la bulle"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca nella bolla"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caută în bulă"
           }
         }
       }
@@ -7867,10 +8607,10 @@
     },
     "Show message previews": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Arată previzualizarea mesajelor"
+            "value": "Mostrar vista previa de los mensajes"
           }
         },
         "fr": {
@@ -7879,16 +8619,16 @@
             "value": "Afficher l'aperçu des messages"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar vista previa de los mensajes"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Mostra l'anteprima dei messaggi"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arată previzualizarea mesajelor"
           }
         }
       }
@@ -8176,10 +8916,10 @@
     "Taken": {
       "comment": "Marketplace item availability",
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Luat"
+            "value": "Entregado"
           }
         },
         "fr": {
@@ -8188,16 +8928,16 @@
             "value": "Parti"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entregado"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Preso"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luat"
           }
         }
       }
@@ -8267,10 +9007,10 @@
             "value": "Thanks"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mulțumesc"
+            "value": "Gracias"
           }
         },
         "fr": {
@@ -8279,16 +9019,16 @@
             "value": "Merci"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gracias"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Grazie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mulțumesc"
           }
         }
       }
@@ -9169,6 +9909,34 @@
         }
       }
     },
+    "To keep it safe, we'll email you a code first. You can download your data once an hour.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por seguridad, primero te enviamos un código por correo. Puedes descargar tus datos una vez por hora."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour ta sécurité, on t'envoie d'abord un code par e-mail. Tu peux télécharger tes données une fois par heure."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per sicurezza, prima ti mandiamo un codice via email. Puoi scaricare i tuoi dati una volta all'ora."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ca să fie în siguranță, îți trimitem mai întâi un cod pe email. Poți descărca datele o dată pe oră."
+          }
+        }
+      }
+    },
     "To make sure it's you, we'll email you a 6-digit code first.": {
       "localizations": {
         "es": {
@@ -9337,6 +10105,63 @@
         }
       }
     },
+    "Transfer ownership": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceder el rol de propietario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Céder le rôle de propriétaire"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cedi il ruolo di proprietario"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cedează rolul de proprietar"
+          }
+        }
+      }
+    },
+    "Transfer ownership?": {
+      "comment": "Confirmation title before handing the bubble to another member",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Ceder el rol de propietario?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Céder le rôle de propriétaire ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cedere il ruolo di proprietario?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cedezi rolul de proprietar?"
+          }
+        }
+      }
+    },
     "Try again": {
       "localizations": {
         "es": {
@@ -9365,12 +10190,41 @@
         }
       }
     },
-    "Turn on notifications": {
+    "Try another word, or fewer letters.": {
+      "comment": "Hint under an empty search",
       "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba con otra palabra o con menos letras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essaie un autre mot ou moins de lettres."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prova un'altra parola o meno lettere."
+          }
+        },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activează notificările"
+            "value": "Încearcă alt cuvânt sau mai puține litere."
+          }
+        }
+      }
+    },
+    "Turn on notifications": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar notificaciones"
           }
         },
         "fr": {
@@ -9379,16 +10233,45 @@
             "value": "Activer les notifications"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva le notifiche"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează notificările"
+          }
+        }
+      }
+    },
+    "Type at least 2 characters.": {
+      "comment": "Search query too short",
+      "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activar notificaciones"
+            "value": "Escribe al menos 2 caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tape au moins 2 caractères."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attiva le notifiche"
+            "value": "Scrivi almeno 2 caratteri."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrie cel puțin 2 caractere."
           }
         }
       }
@@ -9479,10 +10362,10 @@
     },
     "Unmute": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reactivează notificările"
+            "value": "Reactivar"
           }
         },
         "fr": {
@@ -9491,26 +10374,26 @@
             "value": "Réactiver"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reactivar"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Riattiva"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reactivează notificările"
           }
         }
       }
     },
     "Until I turn it back on": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Până o reactivez"
+            "value": "Hasta que la reactive"
           }
         },
         "fr": {
@@ -9519,16 +10402,16 @@
             "value": "Jusqu'à ce que je la réactive"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hasta que la reactive"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Finché non la riattivo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Până o reactivez"
           }
         }
       }
@@ -9753,6 +10636,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nu am putut verifica acest dispozitiv."
+          }
+        }
+      }
+    },
+    "We couldn't find that message in the chat.": {
+      "comment": "A search result that can no longer be opened in the chat",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos encontrado ese mensaje en el chat."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de trouver ce message dans la discussion."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non abbiamo trovato quel messaggio nella chat."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am găsit mesajul în chat."
           }
         }
       }
@@ -9983,10 +10895,10 @@
     },
     "When off, notifications only say \"New message in Flatmates\", without names or text.": {
       "localizations": {
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text."
+            "value": "Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en Flatmates», sin nombres ni texto."
           }
         },
         "fr": {
@@ -9995,16 +10907,16 @@
             "value": "Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en Flatmates», sin nombres ni texto."
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text."
           }
         }
       }
@@ -10046,10 +10958,10 @@
             "value": "Wow"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uau"
+            "value": "Guau"
           }
         },
         "fr": {
@@ -10058,16 +10970,16 @@
             "value": "Waouh"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guau"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Wow"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uau"
           }
         }
       }
@@ -10124,6 +11036,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu"
+          }
+        }
+      }
+    },
+    "You can download your data once an hour. Try again later.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes descargar tus datos una vez por hora. Inténtalo más tarde."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu peux télécharger tes données une fois par heure. Réessaie plus tard."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puoi scaricare i tuoi dati una volta all'ora. Riprova più tardi."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poți descărca datele o dată pe oră. Încearcă din nou mai târziu."
           }
         }
       }
@@ -10240,6 +11180,34 @@
         }
       }
     },
+    "You get one JSON file with everything Boolaa stores about you: your profile, bubbles, messages, posts, reactions, reports, blocks and settings. Your photos are listed as links that work for 7 days. Keep the file private.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibes un archivo JSON con todo lo que Boolaa guarda sobre ti: tu perfil, burbujas, mensajes, publicaciones, reacciones, denuncias, bloqueos y ajustes. Tus fotos aparecen como enlaces válidos durante 7 días. Guarda el archivo solo para ti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu reçois un fichier JSON avec tout ce que Boolaa conserve sur toi : ton profil, tes bulles, messages, publications, réactions, signalements, blocages et réglages. Tes photos y figurent sous forme de liens valables 7 jours. Garde ce fichier pour toi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricevi un file JSON con tutto ciò che Boolaa conserva su di te: profilo, bolle, messaggi, post, reazioni, segnalazioni, blocchi e impostazioni. Le tue foto sono incluse come link validi per 7 giorni. Tieni il file per te."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primești un fișier JSON cu tot ce păstrează Boolaa despre tine: profilul, bulele, mesajele, postările, reacțiile, raportările, blocările și setările. Fotografiile tale apar ca linkuri valabile 7 zile. Păstrează fișierul doar pentru tine."
+          }
+        }
+      }
+    },
     "You reacted": {
       "comment": "Accessibility value of a reaction chip you added",
       "localizations": {
@@ -10249,10 +11217,10 @@
             "value": "You reacted"
           }
         },
-        "ro": {
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ai reacționat"
+            "value": "Has reaccionado"
           }
         },
         "fr": {
@@ -10261,16 +11229,16 @@
             "value": "Tu as réagi"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Has reaccionado"
-          }
-        },
         "it": {
           "stringUnit": {
             "state": "translated",
             "value": "Hai reagito"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai reacționat"
           }
         }
       }
@@ -10607,6 +11575,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Contul tău este suspendat, așa că nu poți face asta acum."
+          }
+        }
+      }
+    },
+    "Your data is ready.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus datos están listos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes données sont prêtes."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I tuoi dati sono pronti."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datele tale sunt gata."
           }
         }
       }

@@ -13,6 +13,7 @@ type ErrorKey =
   | "eventNotFound"
   | "chatMessageGone"
   | "onlyOwnerCanRemove"
+  | "ownerOnlyAction"
   | "cannotRemoveSelf"
   | "memberNotFound"
   | "cannotReportYourself"
@@ -48,6 +49,7 @@ type ErrorKey =
   | "oauthFailed"
   | "tooManyInviteAttempts"
   | "onlyOwnerCanRotate"
+  | "exportRateLimited"
   | "generic";
 
 /** Messages that take an argument: `codeWrong` shows how many tries are left. */
@@ -69,6 +71,15 @@ const DEVICE_CODE_ERRORS: Record<string, ErrorKey> = {
   server_error: "generic",
 };
 
+/** `data-export` Edge Function `error` codes (docs/auth-security.md, "Flow: download my data"). */
+const DATA_EXPORT_ERRORS: Record<string, ErrorKey> = {
+  unauthorized: "notAuthenticated",
+  session_not_verified: "sessionNotVerified",
+  reauthentication_required: "reauthenticationRequired",
+  export_rate_limited: "exportRateLimited",
+  server_error: "generic",
+};
+
 /** Errors that mean "this session must pass the device / age gate first" (run it again). */
 export function isGateError(e: unknown) {
   const key = errorKey(e);
@@ -87,6 +98,7 @@ export function errorKey(e: unknown): ErrorKey {
   const status = Number(err.status ?? err.statusCode ?? 0);
 
   if (err.name === "DeviceCodeError") return DEVICE_CODE_ERRORS[code] ?? "generic";
+  if (err.name === "DataExportError") return DATA_EXPORT_ERRORS[code] ?? "generic";
   // Image pipeline (lib/image.ts) and the bucket limits (20261123100000_image_limits.sql). Storage
   // answers HTTP 400 locally / 413 or 415 hosted, with statusCode "413" EntityTooLarge or "415" InvalidMimeType.
   if (err.name === "ImageError") return code === "imageTooLarge" ? "imageTooLarge" : "imageUnsupported";
@@ -121,6 +133,13 @@ export function errorKey(e: unknown): ErrorKey {
   if (msg.includes("event not found")) return "eventNotFound";
   if (msg.includes("message not found")) return "chatMessageGone";
   if (msg.includes("only the owner can remove members")) return "onlyOwnerCanRemove";
+  // Bubble roles (20261123190000_bubble_roles.sql).
+  if (
+    msg.includes("only the owner can remove admins") ||
+    msg.includes("only the owner can transfer ownership") ||
+    msg.includes("only the owner can change roles")
+  )
+    return "ownerOnlyAction";
   if (msg.includes("use leave to remove yourself")) return "cannotRemoveSelf";
   if (msg.includes("member not found")) return "memberNotFound";
   if (msg.includes("cannot report yourself")) return "cannotReportYourself";

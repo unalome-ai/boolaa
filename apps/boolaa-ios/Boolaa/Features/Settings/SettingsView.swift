@@ -40,6 +40,27 @@ final class SettingsModel {
         } catch { self.error = error.userMessage }
     }
 
+    /// Owner only: promote/demote. Returns true on success.
+    func setRole(api: BoolaaAPI, member: BubbleMember, role: MemberRole) async -> Bool {
+        do {
+            try await api.setMemberRole(bubbleID: member.bubbleId, userID: member.userId, role: role)
+            if let i = members.firstIndex(where: { $0.userId == member.userId }) { members[i].role = role }
+            return true
+        } catch { self.error = error.userMessage; return false }
+    }
+
+    /// Owner only: hand the bubble to `member`; the caller becomes an admin.
+    func transfer(api: BoolaaAPI, to member: BubbleMember, me: UUID?) async -> Bool {
+        do {
+            try await api.transferOwnership(bubbleID: member.bubbleId, newOwnerID: member.userId)
+            for i in members.indices {
+                if members[i].userId == member.userId { members[i].role = .owner }
+                else if members[i].userId == me { members[i].role = .admin }
+            }
+            return true
+        } catch { self.error = error.userMessage; return false }
+    }
+
     func load(api: BoolaaAPI, bubbleID: UUID) async {
         do {
             async let m = api.members(bubbleID: bubbleID)
@@ -66,11 +87,19 @@ struct SettingsView: View {
     @State private var confirmRotate = false
     @State private var rotating = false
     @State private var memberToRemove: BubbleMember?
+    @State private var memberToTransfer: BubbleMember?
+    @State private var notice: String?
     @State private var photoItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
     @State private var photoBusy = false
 
-    private var isOwner: Bool { session.currentRole == .owner }
+    /// My role, read from the live members list (roles change on transfer, promotion and hand-over),
+    /// falling back to my membership row. docs/boolaa-spec.md, "Roles"; the server enforces the same rules.
+    private var myRole: MemberRole? {
+        model.members.first(where: { $0.userId == session.userID })?.role ?? session.currentRole
+    }
+    private var isOwner: Bool { myRole?.canChangeRoles ?? false }
+    private var canManage: Bool { myRole?.canManage ?? false }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -91,6 +120,15 @@ struct SettingsView: View {
         ScrollView {
             if let bubble = session.currentBubble {
                 VStack(alignment: .leading, spacing: 14) {
+                    if let notice {
+                        Text(verbatim: notice)
+                            .font(.rounded(.subheadline, weight: .bold)).foregroundStyle(Hue.mint.text)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 14).padding(.vertical, 10)
+                            .background(Hue.mint.wash, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .transition(.opacity)
+                            .accessibilityIdentifier("settings-notice")
+                    }
                     infoCard(bubble)
                     inviteCard(bubble)
 
@@ -126,6 +164,13 @@ struct SettingsView: View {
                                         .font(.rounded(.caption, weight: .heavy)).foregroundStyle(Hue.sunny.onFill).lineLimit(1)
                                         .padding(.horizontal, 10).padding(.vertical, 5)
                                         .background(Hue.sunny.gradient, in: Capsule())
+                                        .accessibilityIdentifier("owner-badge")
+                                } else if member.role == .admin {
+                                    Label { Text("Admin", comment: "Badge for a bubble admin") } icon: { Image(systemName: "shield.fill") }
+                                        .font(.rounded(.caption, weight: .heavy)).foregroundStyle(Hue.sky.text).lineLimit(1)
+                                        .padding(.horizontal, 10).padding(.vertical, 5)
+                                        .background(Hue.sky.wash, in: Capsule())
+                                        .accessibilityIdentifier("admin-badge")
                                 }
                                 if member.userId != session.userID {
                                     Menu {
@@ -191,6 +236,26 @@ struct SettingsView: View {
             }
         } message: { _ in
             Text("They can ask to join again with the invite code.")
+        }
+        .confirmationDialog(
+            Text("Transfer ownership?", comment: "Confirmation title before handing the bubble to another member"),
+            isPresented: Binding(get: { memberToTransfer != nil }, set: { if !$0 { memberToTransfer = nil } }),
+            titleVisibility: .visible,
+            presenting: memberToTransfer
+        ) { member in
+            Button("Transfer ownership", role: .destructive) {
+                Task {
+                    if await model.transfer(api: session.api, to: member, me: session.userID) {
+                        show(String(localized: "\(member.user?.displayName ?? "") is now the owner.", comment: "Notice after transferring ownership; the argument is the new owner's name"))
+                        await session.reload()
+                    }
+                }
+            }
+            .accessibilityIdentifier("transfer-confirm")
+        } message: { member in
+            let name = member.user?.displayName ?? ""
+            Text("\(name) becomes the owner of \(session.currentBubble?.name ?? ""). You'll lose your owner rights and become an admin: you won't be able to change roles, remove admins or take ownership back unless \(name) gives it back.",
+                 comment: "Transfer confirmation; arguments: new owner's name, bubble name, new owner's name")
         }
         .confirmationDialog(Text("Leave “\(session.currentBubble?.name ?? "")”?", comment: "Confirmation title; the argument is the bubble name"), isPresented: $confirmLeave, titleVisibility: .visible) {
             Button("Leave bubble", role: .destructive) {
@@ -265,7 +330,7 @@ struct SettingsView: View {
                             .padding(.top, 4)
                     }
                     Spacer(minLength: 0)
-                    if isOwner {
+                    if canManage {
                         Button {
                             name = bubble.name; description = bubble.description ?? ""; editingInfo = true
                         } label: {
@@ -276,7 +341,7 @@ struct SettingsView: View {
                         .accessibilityIdentifier("edit-bubble")
                     }
                 }
-                if isOwner { photoControls(bubble) }
+                if canManage { photoControls(bubble) }
             }
         }
         .card()
@@ -288,7 +353,7 @@ struct SettingsView: View {
         }
     }
 
-    /// Owner only (can_manage_bubble): add, change or remove the bubble's photo.
+    /// Owner and admins (can_manage_bubble): add, change or remove the bubble's photo.
     private func photoControls(_ bubble: Bubble) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Bubble photo", comment: "Settings: heading of the bubble photo controls")
@@ -374,7 +439,7 @@ struct SettingsView: View {
             .strokeBorder(Theme.brandText.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [7, 6])))
     }
 
-    /// The invite link `https://boolaa.ro/join/<CODE>`: copy, share, QR code for every member; a new code for the owner.
+    /// The invite link `https://boolaa.ro/join/<CODE>`: copy, share, QR code for every member; a new code for the owner and admins.
     @ViewBuilder
     private func inviteLinkRow(_ bubble: Bubble) -> some View {
         let url = InviteLink.url(for: bubble.inviteCode)
@@ -405,7 +470,7 @@ struct SettingsView: View {
                 Label("QR code", systemImage: "qrcode").frame(maxWidth: .infinity)
             }
             .accessibilityIdentifier("invite-qr-button")
-            if isOwner {
+            if canManage {
                 Button { confirmRotate = true } label: {
                     Label("New code", systemImage: "arrow.triangle.2.circlepath").frame(maxWidth: .infinity)
                 }
@@ -424,6 +489,18 @@ struct SettingsView: View {
     @ViewBuilder
     private func memberActions(_ member: BubbleMember) -> some View {
         SafetyMenuItems(target: .member(member))
+        if isOwner && member.userId != session.userID && member.role != .owner {
+            Divider()
+            if member.role == .admin {
+                Button("Remove admin", systemImage: "shield.slash") { Task { await setRole(member, .member) } }
+                    .accessibilityIdentifier("remove-admin")
+            } else {
+                Button("Make admin", systemImage: "shield") { Task { await setRole(member, .admin) } }
+                    .accessibilityIdentifier("make-admin")
+            }
+            Button("Transfer ownership", systemImage: "crown") { memberToTransfer = member }
+                .accessibilityIdentifier("transfer-ownership")
+        }
         if canRemove(member) {
             Divider()
             Button("Remove member", systemImage: "person.badge.minus", role: .destructive) { memberToRemove = member }
@@ -431,7 +508,23 @@ struct SettingsView: View {
     }
 
     private func canRemove(_ member: BubbleMember) -> Bool {
-        isOwner && member.role != .owner && member.userId != session.userID
+        member.userId != session.userID && (myRole?.canRemove(member.role) ?? false)
+    }
+
+    private func setRole(_ member: BubbleMember, _ role: MemberRole) async {
+        guard await model.setRole(api: session.api, member: member, role: role) else { return }
+        let name = member.user?.displayName ?? ""
+        show(role == .admin
+             ? String(localized: "\(name) is now an admin.", comment: "Notice after making a member an admin")
+             : String(localized: "\(name) is no longer an admin.", comment: "Notice after removing a member's admin role"))
+    }
+
+    private func show(_ text: String) {
+        withAnimation(Motion.gentle) { notice = text }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if notice == text { withAnimation(Motion.gentle) { notice = nil } }
+        }
     }
 
     private func requestRow(_ request: JoinRequest) -> some View {

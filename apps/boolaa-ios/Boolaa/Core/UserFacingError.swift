@@ -12,7 +12,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         .codeWrong(attemptsLeft: 1), .codeWrong(attemptsLeft: 3), .codeWrongOrExpired, .codeFormat, .codeExpired,
         .noActiveCode, .tooManyCodeAttempts, .tooManyCodes, .emailSendFailed, .emailRateLimited, .samePassword,
         .oauthFailed, .accountSuspended, .userBanned, .invalidEmail, .imageTooLarge, .imageUnsupported,
-        .tooManyInviteAttempts, .ownerOnlyRotate, .chatMessageGone,
+        .tooManyInviteAttempts, .ownerOnlyRotate, .ownerOnlyAction, .chatMessageGone, .exportRateLimited,
     ]
 
     case invalidInviteCode
@@ -60,8 +60,12 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     // Invite links (20261123140000_invite_links.sql)
     case tooManyInviteAttempts
     case ownerOnlyRotate
+    // Bubble roles (20261123190000_bubble_roles.sql): remove an admin, change roles, transfer ownership
+    case ownerOnlyAction
     // Chat (20261123120000_chat_improvements.sql)
     case chatMessageGone
+    // "Download my data": data-export answers 429 export_rate_limited (one export an hour).
+    case exportRateLimited
 
     /// Classifies any error thrown by the SDK or by URLSession.
     static func classify(_ error: any Error) -> UserFacingError {
@@ -76,6 +80,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
 
     private static func classifyWithoutEvents(_ error: any Error) -> UserFacingError {
         if let code = error as? DeviceCodeError { return classify(deviceCode: code) }
+        if let export = error as? DataExportError { return classify(dataExport: export) }
         if let image = error as? ImageCompression.Failure { return image == .tooLarge ? .imageTooLarge : .imageUnsupported }
         if let storage = error as? StorageError { return classify(storage: storage) }
         if let urlError = error as? URLError {
@@ -117,6 +122,9 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             ("request not found", .requestNotFound),
             ("event not found", .eventNotFound),
             ("only the owner can remove members", .ownerOnlyRemove),
+            ("only the owner can remove admins", .ownerOnlyAction),
+            ("only the owner can transfer ownership", .ownerOnlyAction),
+            ("only the owner can change roles", .ownerOnlyAction),
             ("use leave to remove yourself", .removeSelf),
             ("member not found", .memberNotFound),
             ("message not found", .chatMessageGone),
@@ -154,6 +162,17 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         return classify(message: error.message, code: nil) ?? .generic
     }
 
+    /// The `data-export` function's `error` codes.
+    static func classify(dataExport error: DataExportError) -> UserFacingError {
+        switch error.code {
+        case "unauthorized": .notAuthenticated
+        case "session_not_verified": .sessionNotVerified
+        case "reauthentication_required": .reauthenticationRequired
+        case "export_rate_limited": .exportRateLimited
+        default: .generic
+        }
+    }
+
     /// The `device-code` function's `error` codes (docs/auth-security.md §3).
     static func classify(deviceCode error: DeviceCodeError) -> UserFacingError {
         switch error.code {
@@ -178,7 +197,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .notMember: "You're not a member of this bubble."
         case .requestNotFound: "This join request no longer exists."
         case .eventNotFound: "This event no longer exists."
-        case .ownerOnlyRemove: "Only the bubble's owner can remove members."
+        case .ownerOnlyRemove: "Only the owner or an admin can remove members."
         case .removeSelf: "To remove yourself, leave the bubble instead."
         case .memberNotFound: "This person is no longer a member of the bubble."
         case .cannotReportSelf: "You can't report your own content."
@@ -212,8 +231,10 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .imageTooLarge: "That photo is too large. Pick a smaller one."
         case .imageUnsupported: "We can't read that image. Try a different photo."
         case .tooManyInviteAttempts: "Too many tries with invalid codes. Try again in an hour."
-        case .ownerOnlyRotate: "Only the owner can change the invite code."
+        case .ownerOnlyRotate: "Only the owner or an admin can change the invite code."
+        case .ownerOnlyAction: "Only the owner can do that."
         case .chatMessageGone: "That message no longer exists."
+        case .exportRateLimited: "You can download your data once an hour. Try again later."
         }
     }
 }

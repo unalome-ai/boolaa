@@ -169,7 +169,16 @@
     "revokeBody": "Gli servirà un nuovo codice via email prima di poter rivedere le tue bolle.",
     "revokeConfirm": "Rimuovi dispositivo",
     "deleteCodeNote": "Per essere sicuri che sei tu, prima ti mandiamo un codice di 6 cifre via email.",
-    "codeSentBody": "Inserisci il codice di 6 cifre che ti abbiamo appena inviato. Il tuo account verrà eliminato subito dopo."
+    "codeSentBody": "Inserisci il codice di 6 cifre che ti abbiamo appena inviato. Il tuo account verrà eliminato subito dopo.",
+    "exportData": "Scarica i miei dati",
+    "exportTitle": "Scarica i tuoi dati",
+    "exportBody": "Ricevi un file JSON con tutto ciò che Boolaa conserva su di te: profilo, bolle, messaggi, post, reazioni, segnalazioni, blocchi e impostazioni. Le tue foto sono incluse come link validi per 7 giorni. Tieni il file per te.",
+    "exportCodeNote": "Per sicurezza, prima ti mandiamo un codice via email. Puoi scaricare i tuoi dati una volta all'ora.",
+    "exportSendCode": "Invia il codice",
+    "exportCodeSent": "Inserisci il codice di 6 cifre che ti abbiamo appena mandato via email. Il file si scarica subito dopo.",
+    "exportDownload": "Scarica",
+    "exportPreparing": "Stiamo preparando i tuoi dati…",
+    "exportDone": "I tuoi dati sono pronti."
   },
   "chat": {
     "live": "in diretta",
@@ -266,7 +275,7 @@
     "bubble": "Bolla",
     "name": "Nome",
     "noDescription": "Nessuna descrizione",
-    "ownerOnly": "Solo il proprietario può modificare questi dettagli.",
+    "ownerOnly": "Solo il proprietario e gli admin possono modificare questi dettagli.",
     "inviteCode": "Codice di invito",
     "copy": "Copia",
     "copied": "Copiato",
@@ -310,7 +319,17 @@
     "addBubblePhoto": "Aggiungi una foto",
     "changeBubblePhoto": "Cambia foto",
     "removeBubblePhoto": "Rimuovi foto",
-    "bubblePhotoHint": "La vedono tutti nella bolla. Le foto quadrate rendono meglio."
+    "bubblePhotoHint": "La vedono tutti nella bolla. Le foto quadrate rendono meglio.",
+    "admin": "Admin",
+    "makeAdmin": "Rendi admin",
+    "removeAdmin": "Togli il ruolo di admin",
+    "transferOwnership": "Cedi il ruolo di proprietario",
+    "transferTitle": "Cedere il ruolo di proprietario?",
+    "transferBody": "<strong>{name}</strong> diventa proprietario di {bubble}. Perdi i diritti di proprietario e diventi admin: non potrai più cambiare i ruoli, rimuovere gli admin né riprenderti la proprietà, a meno che {name} non te la restituisca.",
+    "transferred": "{name} ora è il proprietario.",
+    "madeAdmin": "{name} ora è admin.",
+    "removedAdmin": "{name} non è più admin.",
+    "memberActions": "Gestisci {name}"
   },
   "home": {
     "chat": "Chat",
@@ -344,7 +363,7 @@
     "imageTooLarge": "Questa foto è troppo grande. Scegline una più piccola.",
     "imageUnsupported": "Non riusciamo a leggere questa immagine. Prova con un'altra foto.",
     "generic": "Qualcosa è andato storto. Riprova.",
-    "onlyOwnerCanRemove": "Solo il proprietario può rimuovere membri.",
+    "onlyOwnerCanRemove": "Solo il proprietario o un admin può rimuovere membri.",
     "cannotRemoveSelf": "Non puoi rimuoverti da qui. Usa «Lascia la bolla».",
     "memberNotFound": "Questa persona non fa più parte della bolla.",
     "cannotReportYourself": "Non puoi segnalare te.",
@@ -366,8 +385,10 @@
     "samePassword": "La nuova password deve essere diversa da quella vecchia.",
     "oauthFailed": "Non siamo riusciti a farti accedere con quell'account. Riprova.",
     "tooManyInviteAttempts": "Troppi tentativi con codici non validi. Riprova tra un'ora.",
-    "onlyOwnerCanRotate": "Solo il proprietario può cambiare il codice di invito.",
-    "chatMessageGone": "Questo messaggio non esiste più."
+    "onlyOwnerCanRotate": "Solo il proprietario o un admin può cambiare il codice di invito.",
+    "chatMessageGone": "Questo messaggio non esiste più.",
+    "ownerOnlyAction": "Solo il proprietario può farlo.",
+    "exportRateLimited": "Puoi scaricare i tuoi dati una volta all'ora. Riprova più tardi."
   },
   "safety": {
     "moreActions": "Altre azioni",
@@ -566,5 +587,31 @@
     "react": "Reagisci",
     "chip": "{reaction}: {count, plural, one {# reazione} other {# reazioni}}",
     "reactedByYou": "Hai reagito"
+  },
+  "search": {
+    "open": "Cerca nella bolla",
+    "title": "Cerca",
+    "placeholder": "Cerca in {bubble}",
+    "clear": "Cancella la ricerca",
+    "hint": "Trova messaggi, eventi, cibo, oggetti e link.",
+    "minLength": "Scrivi almeno 2 caratteri.",
+    "noResults": "Nessun risultato per «{query}»",
+    "noResultsHint": "Prova un'altra parola o meno lettere.",
+    "error": "La ricerca non ha funzionato. Riprova.",
+    "retry": "Riprova",
+    "results": "{count, plural, one {# risultato} other {# risultati}}",
+    "kindMessage": "Messaggio",
+    "kindEvent": "Evento",
+    "kindFood": "Post di cibo",
+    "kindItem": "Oggetto",
+    "kindLink": "Link",
+    "messageUnavailable": "Non abbiamo trovato quel messaggio nella chat."
+  },
+  "appearance": {
+    "title": "Aspetto",
+    "themeSystem": "Sistema",
+    "themeLight": "Chiaro",
+    "themeDark": "Scuro",
+    "hint": "Sistema segue l'impostazione chiara o scura del tuo dispositivo."
   }
 }

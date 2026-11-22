@@ -273,13 +273,13 @@ private fun ChangeEmailSheet(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun accountEmail(): String {
+internal fun accountEmail(): String {
     val state by LocalAppContainer.current.session.state.collectAsStateWithLifecycle()
     return state.email.orEmpty()
 }
 
 @Composable
-private fun SuccessNote(text: String) {
+internal fun SuccessNote(text: String) {
     val view = LocalView.current
     LaunchedEffect(Unit) { Haptics.success(view) }
     Text(

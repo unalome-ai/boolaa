@@ -10,6 +10,7 @@ import com.boolaa.app.model.ChatMessage
 import com.boolaa.app.model.ChatUnread
 import com.boolaa.app.model.FoodPost
 import com.boolaa.app.model.JoinRequest
+import com.boolaa.app.model.MemberRole
 import com.boolaa.app.model.MarketAvailability
 import com.boolaa.app.model.MarketItem
 import com.boolaa.app.model.MarketStatus
@@ -121,7 +122,7 @@ class BoolaaApi(val client: SupabaseClient) {
         }) { filter { eq("id", id) } }
     }
 
-    /** Sets or clears the bubble's logo (owner only; the DB accepts only our own `bubble.images/<bubble id>/` URLs). */
+    /** Sets or clears the bubble's logo (owner or admin; the DB accepts only our own `bubble.images/<bubble id>/` URLs). */
     suspend fun updateBubbleLogo(id: String, logo: String?) {
         client.from("bubbles").update(buildJsonObject {
             put("logo", logo?.let(::JsonPrimitive) ?: JsonNull)
@@ -146,9 +147,31 @@ class BoolaaApi(val client: SupabaseClient) {
         client.from("bubble_members").delete { filter { eq("bubble_id", bubbleId); eq("user_id", userId) } }
     }
 
-    /** Owner-only. Raises 'only the owner can remove members', 'use leave to remove yourself', 'member not found'. */
+    /**
+     * Owner or admin; admins may remove plain members only. Raises 'only the owner can remove members',
+     * 'only the owner can remove admins', 'use leave to remove yourself', 'member not found'.
+     */
     suspend fun removeMember(bubbleId: String, userId: String) {
         client.postgrest.rpc("remove_member", buildJsonObject { put("p_bubble_id", bubbleId); put("p_user_id", userId) })
+    }
+
+    /**
+     * Owner only: hands ownership to an approved member; the caller becomes an admin. Raises
+     * 'only the owner can transfer ownership', 'already the owner', 'member not found'.
+     */
+    suspend fun transferOwnership(bubbleId: String, newOwnerId: String) {
+        client.postgrest.rpc("transfer_ownership", buildJsonObject { put("p_bubble_id", bubbleId); put("p_new_owner", newOwnerId) })
+    }
+
+    /**
+     * Owner only: [role] is ADMIN or MEMBER, never on the owner. Raises 'only the owner can change roles',
+     * 'invalid role', 'use transfer_ownership', 'member not found'.
+     */
+    suspend fun setMemberRole(bubbleId: String, userId: String, role: MemberRole) {
+        require(role != MemberRole.OWNER) { "use transferOwnership" }
+        client.postgrest.rpc("set_member_role", buildJsonObject {
+            put("p_bubble_id", bubbleId); put("p_user_id", userId); put("p_role", role.wire)
+        })
     }
 
     // Join requests
@@ -160,7 +183,7 @@ class BoolaaApi(val client: SupabaseClient) {
     suspend fun invitePreview(code: String): InvitePreview? =
         client.postgrest.rpc("get_invite_preview", buildJsonObject { put("p_code", code) }).list<InvitePreview>().firstOrNull()
 
-    /** Owner only: replaces the invite code, so every old link and QR code stops working. Returns the new code. */
+    /** Owner or admin: replaces the invite code, so every old link and QR code stops working. Returns the new code. */
     suspend fun rotateInviteCode(bubbleId: String): String =
         json.decodeFromString<String>(client.postgrest.rpc("rotate_invite_code", buildJsonObject { put("p_bubble_id", bubbleId) }).data)
 
@@ -204,6 +227,26 @@ class BoolaaApi(val client: SupabaseClient) {
             put("p_before_id", beforeId?.let(::JsonPrimitive) ?: JsonNull)
             put("p_limit", limit)
         }) { select(Columns.raw("*, ${author("sender", "sender_id")}")) }.list()
+
+    /**
+     * The chat around [messageId], newest first (a search hit opened in context): up to [ChatJump.BEFORE] older
+     * messages, the target and everything after it up to the newest. Empty when the caller can't see it.
+     */
+    suspend fun chatMessagesAround(bubbleId: String, messageId: String): List<ChatMessage> =
+        client.postgrest.rpc("chat_messages_around", buildJsonObject {
+            put("p_bubble_id", bubbleId)
+            put("p_message_id", messageId)
+        }) { select(Columns.raw("*, ${author("sender", "sender_id")}")) }.list()
+
+    // Search (docs/boolaa-spec.md "Search")
+
+    /** `search_bubble`: hits of every kind, best first (RLS decides what's visible). Callers check [SearchRules.canSearch]. */
+    suspend fun searchBubble(bubbleId: String, query: String, limit: Int = SearchRules.LIMIT): List<SearchHit> =
+        SearchRules.decode(client.postgrest.rpc("search_bubble", buildJsonObject {
+            put("p_bubble_id", bubbleId)
+            put("p_query", query)
+            put("p_limit", limit)
+        }).data)
 
     /** Newest [limit] messages that aren't deleted, newest first (Home). */
     suspend fun latestChatMessages(bubbleId: String, limit: Long): List<ChatMessage> =

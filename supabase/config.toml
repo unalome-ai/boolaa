@@ -421,6 +421,9 @@ verify_jwt = false  # called by pg_net (triggers, pg_cron) with a shared secret 
 [functions.link-preview]
 verify_jwt = false  # called by pg_net from the shared_links trigger; claims the link itself
 
+[functions.data-export]
+verify_jwt = false  # validates the user JWT itself (auth.getUser), like device-code
+
 [analytics]
 enabled = true
 port = 55327

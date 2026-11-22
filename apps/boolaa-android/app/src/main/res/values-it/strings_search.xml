@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Search inside a bubble (docs/boolaa-spec.md "Search"). -->
+<resources>
+    <string name="search_open">Cerca nella bolla</string>
+    <string name="search_placeholder">Cerca in %1$s</string>
+    <string name="search_clear">Cancella la ricerca</string>
+    <string name="search_hint">Trova messaggi, eventi, cibo, oggetti e link.</string>
+    <string name="search_min_length">Scrivi almeno 2 caratteri.</string>
+    <string name="search_no_results">Nessun risultato per «%1$s»</string>
+    <string name="search_no_results_hint">Prova un\'altra parola o meno lettere.</string>
+    <string name="search_error">La ricerca non ha funzionato. Riprova.</string>
+    <string name="search_retry">Riprova</string>
+    <plurals name="search_results">
+        <item quantity="one">%d risultato</item>
+        <item quantity="many">%d risultati</item>
+        <item quantity="other">%d risultati</item>
+    </plurals>
+    <string name="search_kind_message">Messaggio</string>
+    <string name="search_kind_event">Evento</string>
+    <string name="search_kind_food">Post di cibo</string>
+    <string name="search_kind_item">Oggetto</string>
+    <string name="search_kind_link">Link</string>
+    <string name="search_message_unavailable">Non abbiamo trovato quel messaggio nella chat.</string>
+</resources>

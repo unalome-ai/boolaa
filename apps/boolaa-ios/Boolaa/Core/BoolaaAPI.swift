@@ -51,10 +51,26 @@ struct BoolaaAPI: Sendable {
         try await client.from("bubbles").update(Patch(name: name, description: description)).eq("id", value: id).execute()
     }
 
-    /// Owner only. Raises "only the owner can remove members", "use leave to remove yourself", "member not found".
+    /// The owner removes anyone else; an admin removes plain members only. Raises "only the owner can remove
+    /// members" (caller is a plain member), "only the owner can remove admins", "use leave to remove yourself",
+    /// "member not found".
     func removeMember(bubbleID: UUID, userID: UUID) async throws {
         struct Params: Encodable { let p_bubble_id: UUID; let p_user_id: UUID }
         try await client.rpc("remove_member", params: Params(p_bubble_id: bubbleID, p_user_id: userID)).execute()
+    }
+
+    /// Owner only: make a member an admin (`.admin`) or an admin a plain member (`.member`).
+    /// Raises "only the owner can change roles", "member not found".
+    func setMemberRole(bubbleID: UUID, userID: UUID, role: MemberRole) async throws {
+        struct Params: Encodable { let p_bubble_id: UUID; let p_user_id: UUID; let p_role: String }
+        try await client.rpc("set_member_role", params: Params(p_bubble_id: bubbleID, p_user_id: userID, p_role: role.rawValue)).execute()
+    }
+
+    /// Owner only: hands the bubble to another approved member; the caller becomes an admin.
+    /// Raises "only the owner can transfer ownership", "member not found".
+    func transferOwnership(bubbleID: UUID, newOwnerID: UUID) async throws {
+        struct Params: Encodable { let p_bubble_id: UUID; let p_new_owner: UUID }
+        try await client.rpc("transfer_ownership", params: Params(p_bubble_id: bubbleID, p_new_owner: newOwnerID)).execute()
     }
 
     func leaveBubble(bubbleID: UUID, userID: UUID) async throws {

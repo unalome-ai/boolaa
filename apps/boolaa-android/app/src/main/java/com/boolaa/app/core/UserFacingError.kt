@@ -27,6 +27,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     REQUEST_NOT_FOUND(R.string.error_request_not_found),
     EVENT_NOT_FOUND(R.string.error_event_not_found),
     ONLY_OWNER_CAN_REMOVE(R.string.error_only_owner_can_remove),
+    // Bubble roles (20261123190000_bubble_roles.sql): what admins can't do (remove admins, transfer, change roles).
+    OWNER_ONLY_ACTION(R.string.error_owner_only_action),
     CANNOT_REMOVE_SELF(R.string.error_cannot_remove_self),
     MEMBER_NOT_FOUND(R.string.error_member_not_found),
     CANNOT_REPORT_SELF(R.string.error_cannot_report_self),
@@ -65,6 +67,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     // Images: ImageCompression and the bucket limits (20261123100000_image_limits.sql).
     IMAGE_TOO_LARGE(R.string.error_image_too_large),
     IMAGE_UNSUPPORTED(R.string.error_image_unsupported),
+    // "Download my data": data-export answers 429 export_rate_limited (one export an hour).
+    EXPORT_RATE_LIMITED(R.string.error_export_rate_limited),
     GENERIC(R.string.error_generic);
 
     companion object {
@@ -72,6 +76,7 @@ enum class UserFacingError(@param:StringRes val message: Int) {
         fun classify(error: Throwable): UserFacingError = when (error) {
             is CancellationException -> GENERIC
             is DeviceCodeException -> fromFunctionCode(error.code)
+            is DataExportException -> DataExport.userError(error.code)
             is SocialSignInException -> error.kind
             is ImageCompression.ImageException -> if (error.tooLarge) IMAGE_TOO_LARGE else IMAGE_UNSUPPORTED
             is StorageRestException -> fromStorage(error.statusCode, error.code, error.error, error.description)
@@ -140,6 +145,9 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 "request not found" to REQUEST_NOT_FOUND,
                 "event not found" to EVENT_NOT_FOUND,
                 "only the owner can remove members" to ONLY_OWNER_CAN_REMOVE,
+                "only the owner can remove admins" to OWNER_ONLY_ACTION,
+                "only the owner can transfer ownership" to OWNER_ONLY_ACTION,
+                "only the owner can change roles" to OWNER_ONLY_ACTION,
                 "use leave to remove yourself" to CANNOT_REMOVE_SELF,
                 "member not found" to MEMBER_NOT_FOUND,
                 "cannot report yourself" to CANNOT_REPORT_SELF,

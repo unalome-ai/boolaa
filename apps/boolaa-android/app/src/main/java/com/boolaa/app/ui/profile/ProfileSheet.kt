@@ -65,6 +65,8 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -203,6 +205,7 @@ fun ProfileSheet(onDismiss: () -> Unit) {
     var name by rememberSaveable(state.profile?.name) { mutableStateOf(state.profile?.name.orEmpty()) }
     var language by rememberSaveable { mutableStateOf(LocaleManager.current()) }
     var deleting by rememberSaveable { mutableStateOf(false) }
+    var exporting by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val view = LocalView.current
     val c = BoolaaTheme.colors
@@ -271,11 +274,16 @@ fun ProfileSheet(onDismiss: () -> Unit) {
 
         SecondaryButton(stringResource(R.string.sign_out), onClick = { onDismiss(); vm.signOut() },
             modifier = Modifier.fillMaxWidth().padding(top = 6.dp).testTag("sign-out"))
+        TextButton(onClick = { exporting = true }, modifier = Modifier.align(Alignment.CenterHorizontally).testTag("export-data")) {
+            Icon(Icons.Rounded.Download, contentDescription = null, tint = Hue.grape.text, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.profile_export_data), style = Type.chip, color = Hue.grape.text, modifier = Modifier.padding(start = 6.dp))
+        }
         TextButton(onClick = { deleting = true }, modifier = Modifier.align(Alignment.CenterHorizontally).testTag("delete-account")) {
             Icon(BoolaaIcons.Delete, contentDescription = null, tint = c.dangerText, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.delete_account), style = Type.chip, color = c.dangerText, modifier = Modifier.padding(start = 6.dp))
         }
     }
+    if (exporting) ExportDataFlow(onDismiss = { exporting = false })
     if (deleting) DeleteAccountFlow(onDismiss = { deleting = false }, onDeleted = { deleting = false; onDismiss() })
     ErrorDialogFor(vm)
 }

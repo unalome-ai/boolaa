@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Download my data" (GDPR export) in the profile sheet. -->
+<resources>
+    <string name="profile_export_data">Descarcă datele mele</string>
+    <string name="profile_export_title">Descarcă-ți datele</string>
+    <string name="profile_export_body">Primești un fișier JSON cu tot ce păstrează Boolaa despre tine: profilul, bulele, mesajele, postările, reacțiile, raportările, blocările și setările. Fotografiile tale apar ca linkuri valabile 7 zile. Păstrează fișierul doar pentru tine.</string>
+    <string name="profile_export_code_note">Ca să fie în siguranță, îți trimitem mai întâi un cod pe email. Poți descărca datele o dată pe oră.</string>
+    <string name="profile_export_preparing">Îți pregătim datele…</string>
+    <string name="profile_export_done">Datele tale sunt gata.</string>
+    <string name="error_export_rate_limited">Poți descărca datele o dată pe oră. Încearcă din nou mai târziu.</string>
+</resources>
