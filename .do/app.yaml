@@ -12,7 +12,7 @@ domains:
 services:
   - name: web
     github:
-      repo: bogdan-raduta/boolaa
+      repo: unalome-ai/boolaa
       branch: main
       deploy_on_push: true
     source_dir: apps/boolaa-web
