@@ -3,6 +3,7 @@ import SwiftUI
 /// Main shell: header with bubble switcher, the current tab, floating pill tab bar and chat button (spec §4).
 struct MainShellView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(SafetyStore.self) private var safety
     @State private var router = ShellRouter()
     @State private var appliedDebugHooks = false
 
@@ -20,8 +21,8 @@ struct MainShellView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                // Rebuild tab content when the bubble changes so every screen reloads for it.
-                .id(session.currentBubble?.id)
+                // Rebuild tab content when the bubble changes, or after a block/unblock, so every screen reloads.
+                .id("\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)")
             }
             .background(Theme.background.ignoresSafeArea())
             .overlay(alignment: .bottom) { PillTabBar(selection: $router.tab) }
@@ -41,6 +42,12 @@ struct MainShellView: View {
         .environment(router)
         .sheet(isPresented: $router.showProfile) { ProfileSheet() }
         .sheet(isPresented: $router.showAddBubble) { AddBubbleSheet() }
+        .sheet(item: Binding(get: { safety.reportTarget }, set: { safety.reportTarget = $0 })) { ReportSheet(target: $0) }
+        .errorAlert(Binding(get: { safety.error }, set: { safety.error = $0 }))
+        .task(id: session.userID) {
+            safety.reset()
+            if session.userID != nil { await safety.load() }
+        }
         .onAppear(perform: applyDebugHooks)
     }
 
@@ -51,10 +58,19 @@ struct MainShellView: View {
         switch DebugHooks.initialOpen {
         case "chat": router.open(.chat)
         case "links": router.open(.links)
-        case "profile": router.showProfile = true
+        case "profile", "blocked", "deleteAccount": router.showProfile = true
+        case "report": Task { await openDebugReport() }
         case "addBubble": router.showAddBubble = true
         default: break
         }
+    }
+
+    /// Debug hook: report the newest chat message from someone else in the current bubble.
+    private func openDebugReport() async {
+        guard let id = session.currentBubble?.id,
+              let messages = try? await session.api.chatMessages(bubbleID: id, limit: 20),
+              let message = messages.last(where: { $0.senderId != session.userID }) else { return }
+        safety.reportTarget = .message(message)
     }
 }
 

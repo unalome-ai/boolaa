@@ -59,6 +59,7 @@ struct EventsView: View {
                 ForEach(others) { event in
                     EventCard(event: event, myID: session.userID,
                               onRSVP: { Task { await model.toggleRSVP(api: session.api, event: event) } })
+                        .safetyContextMenu(.event(event))
                 }
             }
             .padding(.horizontal, 16)

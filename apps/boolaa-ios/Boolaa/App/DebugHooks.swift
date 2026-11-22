@@ -6,7 +6,8 @@ import Foundation
 ///     -UITestPassword <pw>                 defaults to the seeded password "password123"
 ///     -UITestBubble "Climbing Crew"        select this bubble by name
 ///     -UITestTab events|food|marketplace|settings|home
-///     -UITestOpen chat|links|profile|addBubble
+///     -UITestOpen chat|links|profile|addBubble|report|blocked|deleteAccount
+///     -UITestRegister YES                  start on the Create account form
 ///     -UITestSignOut YES                   start signed out
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
@@ -43,6 +44,22 @@ enum DebugHooks {
         #else
         nil
         #endif
+    }
+
+    static var startOnRegister: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "UITestRegister")
+        #else
+        false
+        #endif
+    }
+
+    /// Profile-sheet screen to open once (blocked | deleteAccount), consumed on first read.
+    @MainActor private static var profileOpenConsumed = false
+    @MainActor static func consumeProfileOpen() -> String? {
+        guard !profileOpenConsumed else { return nil }
+        profileOpenConsumed = true
+        return initialOpen
     }
 
     static var initialOpen: String? {

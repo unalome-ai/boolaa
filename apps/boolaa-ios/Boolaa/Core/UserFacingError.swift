@@ -13,6 +13,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     case ownerOnlyRemove
     case removeSelf
     case memberNotFound
+    case cannotReportSelf
+    case reportTargetNotFound
     case notAuthenticated
     case permissionDenied
     case invalidCredentials
@@ -56,6 +58,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             ("only the owner can remove members", .ownerOnlyRemove),
             ("use leave to remove yourself", .removeSelf),
             ("member not found", .memberNotFound),
+            ("cannot report yourself", .cannotReportSelf),
+            ("report target not found", .reportTargetNotFound),
             ("not authenticated", .notAuthenticated),
             ("invalid login credentials", .invalidCredentials),
             ("user already registered", .emailTaken),
@@ -78,6 +82,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .ownerOnlyRemove: "Only the bubble's owner can remove members."
         case .removeSelf: "To remove yourself, leave the bubble instead."
         case .memberNotFound: "This person is no longer a member of the bubble."
+        case .cannotReportSelf: "You can't report your own content."
+        case .reportTargetNotFound: "This was deleted or is no longer visible to you."
         case .notAuthenticated: "Your session has expired. Sign in again."
         case .permissionDenied: "You don't have permission to do that."
         case .invalidCredentials: "Wrong email or password."

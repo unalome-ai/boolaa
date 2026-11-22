@@ -48,6 +48,7 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         SupabaseURL: $(SUPABASE_URL)
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
+        WebBaseURL: $(WEB_BASE_URL)
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         NSPhotoLibraryUsageDescription: Boolaa uses your photos for avatars, food posts and marketplace items.

@@ -74,6 +74,7 @@ final class ChatModel {
 /// Bubble chat with realtime inserts and auto-scroll (spec §6).
 struct ChatView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(SafetyStore.self) private var safety
     @Environment(\.dismiss) private var dismiss
     @State private var model = ChatModel()
     @State private var draft = ""
@@ -98,6 +99,7 @@ struct ChatView: View {
                             MessageRow(message: message,
                                        isMine: message.senderId == session.userID,
                                        showAuthor: previous?.senderId != message.senderId)
+                                .safetyContextMenu(.message(message))
                         }
                         Color.clear.frame(height: 1).id(Self.bottomID)
                     }
@@ -117,7 +119,8 @@ struct ChatView: View {
         }
         .background(Theme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .task(id: session.currentBubble?.id) {
+        // Reload (and resubscribe) after a block/unblock: RLS hides or shows the other person's messages.
+        .task(id: "\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)") {
             guard let id = session.currentBubble?.id else { return }
             await model.load(api: session.api, bubbleID: id)
             await model.listen(client: session.api.client, bubbleID: id)

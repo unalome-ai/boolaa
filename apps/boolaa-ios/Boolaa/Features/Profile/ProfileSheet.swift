@@ -1,7 +1,7 @@
 import PhotosUI
 import SwiftUI
 
-/// Avatar, name, email and sign out (spec §12).
+/// Avatar, name, email, safety, legal and account actions (spec §12, Safety and account).
 struct ProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SessionStore.self) private var session
@@ -10,9 +10,14 @@ struct ProfileSheet: View {
     @State private var busy = false
     @State private var showPicker = false
     @State private var error: String?
+    @State private var path: [ProfileDestination] = []
+    @State private var legalPage: LegalPage?
+    @State private var showDeleteAccount = false
+
+    enum ProfileDestination: Hashable { case blocked }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 20) {
                     avatarPicker
@@ -37,13 +42,38 @@ struct ProfileSheet: View {
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty || name == session.profile?.name)
 
-                    LanguageRow()
+                    VStack(spacing: 10) {
+                        LanguageRow()
+                        NavigationLink(value: ProfileDestination.blocked) {
+                            ProfileRow(title: "Blocked users", icon: "hand.raised", trailing: "chevron.right")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("blocked-users-row")
+                        Button { legalPage = .privacy } label: {
+                            ProfileRow(title: LegalPage.privacy.title, icon: "lock.shield", trailing: "arrow.up.forward.square")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("privacy-row")
+                        Button { legalPage = .terms } label: {
+                            ProfileRow(title: LegalPage.terms.title, icon: "doc.text", trailing: "arrow.up.forward.square")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("terms-row")
+                    }
 
                     Button("Sign out") {
                         Task { dismiss(); await session.signOut() }
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     .accessibilityIdentifier("sign-out")
+
+                    Button(role: .destructive) { showDeleteAccount = true } label: {
+                        Label { Text("Delete account") } icon: { Image(systemName: "trash") }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.red)
+                    }
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("delete-account")
                 }
                 .padding(20)
             }
@@ -51,7 +81,19 @@ struct ProfileSheet: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .onAppear { name = session.profile?.name ?? "" }
+            .navigationDestination(for: ProfileDestination.self) { _ in BlockedUsersView() }
+            .legalPageSheet($legalPage)
+            .sheet(isPresented: $showDeleteAccount) {
+                DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() })
+            }
+            .onAppear {
+                name = session.profile?.name ?? ""
+                switch DebugHooks.consumeProfileOpen() {
+                case "blocked": path = [.blocked]
+                case "deleteAccount": showDeleteAccount = true
+                default: break
+                }
+            }
             .onChange(of: photo) { _, item in
                 guard let item else { return }
                 Task { await uploadAvatar(item) }
@@ -86,6 +128,25 @@ struct ProfileSheet: View {
             let url = try await session.api.uploadImage(jpeg, bucket: .avatars, userID: me)
             try await session.updateProfile(avatar: url)
         } catch { self.error = error.userMessage }
+    }
+}
+
+/// A tappable row styled like the other profile fields.
+struct ProfileRow: View {
+    var title: LocalizedStringResource
+    var icon: String
+    var trailing: String
+
+    var body: some View {
+        HStack {
+            Label { Text(title) } icon: { Image(systemName: icon) }
+                .foregroundStyle(.primary)
+            Spacer()
+            Image(systemName: trailing).foregroundStyle(Theme.brand)
+        }
+        .font(.body.weight(.medium))
+        .boolaaField()
+        .contentShape(Rectangle())
     }
 }
 

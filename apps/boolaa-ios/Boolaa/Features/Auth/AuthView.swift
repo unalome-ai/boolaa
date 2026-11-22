@@ -3,7 +3,9 @@ import SwiftUI
 /// Login and register (spec §1).
 struct AuthView: View {
     @Environment(SessionStore.self) private var session
-    @State private var isRegistering = false
+    @State private var isRegistering = DebugHooks.startOnRegister
+    @State private var ageConfirmed = false
+    @State private var legalPage: LegalPage?
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
@@ -12,7 +14,8 @@ struct AuthView: View {
     @State private var info: String?
 
     private var canSubmit: Bool {
-        !email.isEmpty && password.count >= 6 && (!isRegistering || !name.trimmingCharacters(in: .whitespaces).isEmpty)
+        !email.isEmpty && password.count >= 6
+            && (!isRegistering || (!name.trimmingCharacters(in: .whitespaces).isEmpty && ageConfirmed))
     }
 
     var body: some View {
@@ -52,6 +55,8 @@ struct AuthView: View {
                         .accessibilityIdentifier("auth-password")
                 }
 
+                if isRegistering { legalConsent }
+
                 if let info {
                     Text(verbatim: info).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 }
@@ -70,6 +75,28 @@ struct AuthView: View {
         .scrollDismissesKeyboard(.interactively)
         .background(Theme.background.ignoresSafeArea())
         .errorAlert($error)
+        .legalPageSheet($legalPage)
+    }
+
+    /// Terms/Privacy links and the 16+ confirmation required before Create account.
+    private var legalConsent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Toggle(isOn: $ageConfirmed) {
+                Text("I confirm I'm 16 or older").font(.subheadline.weight(.medium))
+            }
+            .tint(Theme.brand)
+            .accessibilityIdentifier("auth-age")
+            Text("By creating an account you agree to the [Terms](boolaa-legal://terms) and [Privacy Policy](boolaa-legal://privacy).",
+                 comment: "Keep the two Markdown links and their boolaa-legal:// URLs unchanged; translate only the link text")
+                .font(.footnote).foregroundStyle(.secondary)
+                .tint(Theme.brand)
+                .environment(\.openURL, OpenURLAction { url in
+                    if let page = LegalPage(link: url) { legalPage = page; return .handled }
+                    return .systemAction
+                })
+                .accessibilityIdentifier("auth-legal")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func submit() async {

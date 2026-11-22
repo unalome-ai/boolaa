@@ -775,6 +775,34 @@
         }
       }
     },
+    "Also block %@?": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blochezi și %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquer aussi %@ ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Bloquear también a %@?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloccare anche %@?"
+          }
+        }
+      }
+    },
     "An account with this email already exists.": {
       "localizations": {
         "ro": {
@@ -971,6 +999,118 @@
         }
       }
     },
+    "Block %@": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blochează %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquer %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquear a %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocca %@"
+          }
+        }
+      }
+    },
+    "Blocked": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqué"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloqueado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloccato"
+          }
+        }
+      }
+    },
+    "Blocked people can't see your messages, events, posts or links, and you won't see theirs.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persoanele blocate nu-ți văd mesajele, evenimentele, postările sau linkurile, iar tu nu le vezi pe ale lor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les personnes bloquées ne voient pas tes messages, événements, publications ou liens, et tu ne vois pas les leurs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las personas bloqueadas no ven tus mensajes, eventos, publicaciones ni enlaces, y tú no ves los suyos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le persone bloccate non vedono i tuoi messaggi, eventi, post o link, e tu non vedi i loro."
+          }
+        }
+      }
+    },
+    "Blocked users": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilizatori blocați"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisateurs bloqués"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuarios bloqueados"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utenti bloccati"
+          }
+        }
+      }
+    },
     "Bubble events": {
       "localizations": {
         "ro": {
@@ -1023,6 +1163,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nome della bolla"
+          }
+        }
+      }
+    },
+    "Bubbles you own pass to the longest-standing member. Bubbles with no one left are deleted.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulele pe care le deții trec la cel mai vechi membru. Bulele rămase fără membri sunt șterse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les bulles dont tu es propriétaire passent au membre le plus ancien. Les bulles qui n'ont plus personne sont supprimées."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las burbujas de las que eres propietario pasan al miembro más antiguo. Las burbujas que se quedan sin nadie se eliminan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bolle di cui sei proprietario passano al membro più anziano. Le bolle rimaste senza nessuno vengono eliminate."
+          }
+        }
+      }
+    },
+    "By creating an account you agree to the [Terms](boolaa-legal://terms) and [Privacy Policy](boolaa-legal://privacy).": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creând un cont, ești de acord cu [Termenii](boolaa-legal://terms) și [Politica de confidențialitate](boolaa-legal://privacy)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En créant un compte, tu acceptes les [Conditions](boolaa-legal://terms) et la [Politique de confidentialité](boolaa-legal://privacy)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al crear una cuenta, aceptas los [Términos](boolaa-legal://terms) y la [Política de privacidad](boolaa-legal://privacy)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creando un account accetti i [Termini](boolaa-legal://terms) e l'[Informativa sulla privacy](boolaa-legal://privacy)."
           }
         }
       }
@@ -1335,6 +1531,34 @@
         }
       }
     },
+    "DELETE": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ȘTERGE"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUPPRIMER"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ELIMINAR"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ELIMINA"
+          }
+        }
+      }
+    },
     "Date & time": {
       "localizations": {
         "ro": {
@@ -1387,6 +1611,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elimina"
+          }
+        }
+      }
+    },
+    "Delete account": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Șterge contul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le compte"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar cuenta"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina account"
+          }
+        }
+      }
+    },
+    "Delete account permanently": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Șterge contul definitiv"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le compte définitivement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar la cuenta definitivamente"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina l'account definitivamente"
           }
         }
       }
@@ -1475,6 +1755,34 @@
         }
       }
     },
+    "Delete your account?": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Îți ștergi contul?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer ton compte ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar tu cuenta?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminare il tuo account?"
+          }
+        }
+      }
+    },
     "Delete “%@”?": {
       "localizations": {
         "ro": {
@@ -1555,6 +1863,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Descrizione (facoltativa)"
+          }
+        }
+      }
+    },
+    "Details (optional)": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalii (opțional)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détails (facultatif)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles (opcional)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dettagli (facoltativo)"
           }
         }
       }
@@ -1979,6 +2315,62 @@
         }
       }
     },
+    "Harassment or bullying": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hărțuire sau intimidare"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harcèlement ou intimidation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acoso o intimidación"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Molestie o bullismo"
+          }
+        }
+      }
+    },
+    "Hate speech": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discurs instigator la ură"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discours haineux"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discurso de odio"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incitamento all'odio"
+          }
+        }
+      }
+    },
     "Home": {
       "localizations": {
         "ro": {
@@ -2003,6 +2395,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Home"
+          }
+        }
+      }
+    },
+    "I confirm I'm 16 or older": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm că am cel puțin 16 ani"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je confirme avoir 16 ans ou plus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo que tengo 16 años o más"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confermo di avere almeno 16 anni"
           }
         }
       }
@@ -2399,6 +2819,34 @@
         }
       }
     },
+    "Long-press a message, post or member to block someone.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ține apăsat pe un mesaj, o postare sau un membru ca să blochezi pe cineva."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuie longuement sur un message, une publication ou un membre pour bloquer quelqu'un."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantén pulsado un mensaje, una publicación o un miembro para bloquear a alguien."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tieni premuto su un messaggio, un post o un membro per bloccare qualcuno."
+          }
+        }
+      }
+    },
     "Marketplace": {
       "localizations": {
         "ro": {
@@ -2791,6 +3239,34 @@
         }
       }
     },
+    "No blocked users": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niciun utilizator blocat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun utilisateur bloqué"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay usuarios bloqueados"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun utente bloccato"
+          }
+        }
+      }
+    },
     "No description": {
       "localizations": {
         "ro": {
@@ -2955,6 +3431,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessuno è in attesa di unirsi."
+          }
+        }
+      }
+    },
+    "Not now": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu acum"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas maintenant"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora no"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non ora"
           }
         }
       }
@@ -3379,6 +3883,34 @@
         }
       }
     },
+    "Privacy Policy": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Politica de confidențialitate"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Politique de confidentialité"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Política de privacidad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informativa sulla privacy"
+          }
+        }
+      }
+    },
     "Profile": {
       "localizations": {
         "ro": {
@@ -3515,6 +4047,174 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rimuovere «%@» dalla bolla?"
+          }
+        }
+      }
+    },
+    "Report event": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează evenimentul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler l'événement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar el evento"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala evento"
+          }
+        }
+      }
+    },
+    "Report food post": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează postarea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler la publication"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar la publicación"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala post"
+          }
+        }
+      }
+    },
+    "Report item": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează anunțul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler l'objet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar el artículo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala oggetto"
+          }
+        }
+      }
+    },
+    "Report link": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează linkul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler le lien"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar el enlace"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala link"
+          }
+        }
+      }
+    },
+    "Report member": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează membrul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler le membre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar al miembro"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala membro"
+          }
+        }
+      }
+    },
+    "Report message": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează mesajul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler le message"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denunciar el mensaje"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala messaggio"
           }
         }
       }
@@ -3659,6 +4359,34 @@
         }
       }
     },
+    "Self-harm or suicide": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autovătămare sau suicid"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automutilation ou suicide"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autolesiones o suicidio"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autolesionismo o suicidio"
+          }
+        }
+      }
+    },
     "Send": {
       "localizations": {
         "ro": {
@@ -3687,6 +4415,34 @@
         }
       }
     },
+    "Send report": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trimite raportul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer le signalement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar denuncia"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia segnalazione"
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "ro": {
@@ -3711,6 +4467,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Impostazioni"
+          }
+        }
+      }
+    },
+    "Sexual content": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conținut sexual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenu sexuel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenido sexual"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contenuti sessuali"
           }
         }
       }
@@ -3911,6 +4695,34 @@
         }
       }
     },
+    "Something else": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altceva"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autre chose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra cosa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altro"
+          }
+        }
+      }
+    },
     "Something went wrong": {
       "localizations": {
         "ro": {
@@ -3963,6 +4775,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Qualcosa è andato storto. Riprova."
+          }
+        }
+      }
+    },
+    "Spam or scam": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam sau înșelătorie"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam ou arnaque"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam o estafa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam o truffa"
           }
         }
       }
@@ -4047,6 +4887,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tag, separati da virgole"
+          }
+        }
+      }
+    },
+    "Tell us what happened": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spune-ne ce s-a întâmplat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dis-nous ce qui s'est passé"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuéntanos qué ha pasado"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccontaci cos'è successo"
+          }
+        }
+      }
+    },
+    "Terms of Service": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termeni și condiții"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditions d'utilisation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Términos del servicio"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termini di servizio"
+          }
+        }
+      }
+    },
+    "Thanks for letting us know": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mulțumim că ne-ai anunțat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merci de nous avoir prévenus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gracias por avisarnos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grazie per avercelo segnalato"
           }
         }
       }
@@ -4163,6 +5087,34 @@
         }
       }
     },
+    "This can't be undone. Your profile, photos, messages, events, food posts, items and links will be permanently deleted, and you'll leave all your bubbles.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acțiunea nu poate fi anulată. Profilul, fotografiile, mesajele, evenimentele, postările cu mâncare, anunțurile și linkurile tale vor fi șterse definitiv și vei părăsi toate bulele."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C'est irréversible. Ton profil, tes photos, messages, événements, publications culinaires, objets et liens seront définitivement supprimés, et tu quitteras toutes tes bulles."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta acción no se puede deshacer. Tu perfil, fotos, mensajes, eventos, publicaciones de comida, artículos y enlaces se eliminarán para siempre, y saldrás de todas tus burbujas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'operazione non si può annullare. Il tuo profilo, le foto, i messaggi, gli eventi, i post di cibo, gli oggetti e i link verranno eliminati definitivamente e lascerai tutte le tue bolle."
+          }
+        }
+      }
+    },
     "This event no longer exists.": {
       "localizations": {
         "ro": {
@@ -4247,6 +5199,34 @@
         }
       }
     },
+    "This was deleted or is no longer visible to you.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conținutul a fost șters sau nu mai e vizibil pentru tine."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce contenu a été supprimé ou n'est plus visible pour toi."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este contenido se ha eliminado o ya no puedes verlo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo contenuto è stato eliminato o non è più visibile per te."
+          }
+        }
+      }
+    },
     "Title": {
       "localizations": {
         "ro": {
@@ -4271,6 +5251,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Titolo"
+          }
+        }
+      }
+    },
+    "To confirm, type %@ below.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pentru confirmare, scrie %@ mai jos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour confirmer, tape %@ ci-dessous."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para confirmar, escribe %@ abajo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per confermare, scrivi %@ qui sotto."
           }
         }
       }
@@ -4331,6 +5339,62 @@
         }
       }
     },
+    "Unblock": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deblochează"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Débloquer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquear"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sblocca"
+          }
+        }
+      }
+    },
+    "Unblock %@": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deblochează %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Débloquer %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desbloquear a %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sblocca %@"
+          }
+        }
+      }
+    },
     "Upcoming event": {
       "localizations": {
         "ro": {
@@ -4355,6 +5419,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evento in arrivo"
+          }
+        }
+      }
+    },
+    "Violence or threats": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violență sau amenințări"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violence ou menaces"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violencia o amenazas"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violenza o minacce"
+          }
+        }
+      }
+    },
+    "We'll review your report and take action if it breaks the rules.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vom analiza raportul și vom lua măsuri dacă încalcă regulile."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nous allons examiner ton signalement et agir s'il enfreint les règles."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisaremos tu denuncia y tomaremos medidas si incumple las normas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esamineremo la tua segnalazione e interverremo se viola le regole."
           }
         }
       }
@@ -4415,6 +5535,34 @@
         }
       }
     },
+    "Why are you reporting this?": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De ce raportezi asta?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pourquoi signales-tu ce contenu ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Por qué lo denuncias?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perché lo segnali?"
+          }
+        }
+      }
+    },
     "Wrong email or password.": {
       "localizations": {
         "ro": {
@@ -4471,6 +5619,34 @@
         }
       }
     },
+    "You can't report your own content.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu-ți poți raporta propriul conținut."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu ne peux pas signaler ton propre contenu."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No puedes denunciar tu propio contenido."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non puoi segnalare i tuoi contenuti."
+          }
+        }
+      }
+    },
     "You don't have permission to do that.": {
       "localizations": {
         "ro": {
@@ -4495,6 +5671,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Non hai il permesso di farlo."
+          }
+        }
+      }
+    },
+    "You won't see each other's messages, events, posts or links. You can unblock them in your profile.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu veți mai vedea unul altuia mesajele, evenimentele, postările sau linkurile. Poți debloca oricând din profilul tău."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous ne verrez plus les messages, événements, publications ou liens l'un de l'autre. Tu peux débloquer depuis ton profil."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya no veréis los mensajes, eventos, publicaciones ni enlaces del otro. Puedes desbloquear desde tu perfil."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vedrete più i messaggi, gli eventi, i post o i link l'uno dell'altro. Puoi sbloccare dal tuo profilo."
           }
         }
       }
@@ -4663,6 +5867,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Le tue bolle private di coinquilini, amici e club."
+          }
+        }
+      }
+    },
+    "Your report is private. %@ won't know who sent it.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportul tău e privat. %@ nu va ști cine l-a trimis."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton signalement est privé. %@ ne saura pas qui l'a envoyé."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu denuncia es privada. %@ no sabrá quién la envió."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua segnalazione è privata. %@ non saprà chi l'ha inviata."
           }
         }
       }

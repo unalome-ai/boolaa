@@ -62,6 +62,8 @@ struct ErrorMappingTests {
         ("only the owner can remove members", .ownerOnlyRemove),
         ("use leave to remove yourself", .removeSelf),
         ("member not found", .memberNotFound),
+        ("cannot report yourself", .cannotReportSelf),
+        ("report target not found", .reportTargetNotFound),
         ("new row violates row-level security policy for table \"events\"", .permissionDenied),
         ("some brand new failure", .generic),
     ])

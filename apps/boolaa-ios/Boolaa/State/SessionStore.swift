@@ -179,6 +179,15 @@ final class SessionStore {
         await applySignedOut()
     }
 
+    /// Deletes the user's files and account (delete_my_account), then signs out locally.
+    func deleteAccount() async throws {
+        guard let userID else { return }
+        try await api.deleteMyAccount(userID: userID)
+        defaults.removeObject(forKey: Self.currentBubbleKey)
+        try? await client.auth.signOut(scope: .local)
+        await applySignedOut()
+    }
+
     // MARK: Profile & bubble actions
 
     func updateProfile(name: String? = nil, avatar: String? = nil) async throws {

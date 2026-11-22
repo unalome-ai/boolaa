@@ -63,6 +63,7 @@ struct MarketplaceView: View {
                     ForEach(visible) { item in
                         Button { detail = item } label: { MarketCard(item: item, isMine: item.ownerId == session.userID) }
                             .buttonStyle(.plain)
+                            .safetyContextMenu(.market(item))
                     }
                 }
             }

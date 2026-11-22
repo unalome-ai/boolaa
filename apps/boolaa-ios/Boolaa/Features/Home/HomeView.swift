@@ -18,6 +18,17 @@ enum FeedItem: Identifiable, Hashable, Sendable {
         }
     }
 
+    /// What Report/Block act on for this card.
+    var reportTarget: ReportTarget {
+        switch self {
+        case .message(let m): .message(m)
+        case .food(let f): .food(f)
+        case .market(let i): .market(i)
+        case .event(let e): .event(e)
+        case .link(let l): .link(l)
+        }
+    }
+
     /// Recency key: when the item was posted.
     var date: Date {
         switch self {
@@ -91,6 +102,7 @@ struct HomeView: View {
                 ForEach(model.items) { item in
                     Button { open(item) } label: { FeedCard(item: item) }
                         .buttonStyle(.plain)
+                        .safetyContextMenu(item.reportTarget)
                 }
                 if !model.loaded { ProgressView().frame(maxWidth: .infinity).padding(40) }
             }

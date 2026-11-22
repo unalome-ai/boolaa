@@ -48,7 +48,7 @@ struct FoodView: View {
                 if model.loaded && others.isEmpty {
                     EmptyStateView(icon: "takeoutbag.and.cup.and.straw", title: "No food posts", message: "Posts from other members show up here.")
                 }
-                ForEach(others) { FoodCard(post: $0) }
+                ForEach(others) { FoodCard(post: $0).safetyContextMenu(.food($0)) }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, Theme.tabBarClearance)

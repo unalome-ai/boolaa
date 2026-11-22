@@ -52,6 +52,7 @@ final class SettingsModel {
 /// Settings for the current bubble (spec §11).
 struct SettingsView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(SafetyStore.self) private var safety
     @Environment(ShellRouter.self) private var router
     @State private var model = SettingsModel()
     @State private var editingInfo = false
@@ -89,13 +90,19 @@ struct SettingsView: View {
                                 Text(verbatim: member.user?.displayName ?? String(localized: "Member", comment: "Placeholder for a member without a name")).font(.body.weight(.medium)).lineLimit(1)
                                 if member.userId == session.userID { Text("(you)", comment: "Suffix after your own name in the member list").foregroundStyle(.secondary).lineLimit(1) }
                                 Spacer()
+                                if safety.isBlocked(member.userId) {
+                                    Text("Blocked", comment: "Badge on a member you blocked").font(.caption.weight(.bold)).foregroundStyle(.secondary).lineLimit(1)
+                                        .padding(.horizontal, 10).padding(.vertical, 4)
+                                        .background(Capsule().stroke(Color.secondary.opacity(0.5)))
+                                }
                                 if member.role == .owner {
                                     Text("Owner", comment: "Badge for the bubble owner").font(.caption.weight(.bold)).foregroundStyle(.white).lineLimit(1)
                                         .padding(.horizontal, 10).padding(.vertical, 4)
                                         .background(Capsule().fill(Theme.brand))
-                                } else if canRemove(member) {
+                                }
+                                if member.userId != session.userID {
                                     Menu {
-                                        Button("Remove member", systemImage: "person.badge.minus", role: .destructive) { memberToRemove = member }
+                                        memberActions(member)
                                     } label: {
                                         Image(systemName: "ellipsis").foregroundStyle(.secondary).frame(width: 32, height: 32)
                                     }
@@ -106,9 +113,7 @@ struct SettingsView: View {
                             .padding(.vertical, 8)
                             .contentShape(Rectangle())
                             .contextMenu {
-                                if canRemove(member) {
-                                    Button("Remove member", systemImage: "person.badge.minus", role: .destructive) { memberToRemove = member }
-                                }
+                                if member.userId != session.userID { memberActions(member) }
                             }
                             if member.id != model.members.last?.id { Divider() }
                         }
@@ -238,6 +243,15 @@ struct SettingsView: View {
             .foregroundStyle(Theme.brand)
         }
         .card()
+    }
+
+    @ViewBuilder
+    private func memberActions(_ member: BubbleMember) -> some View {
+        SafetyMenuItems(target: .member(member))
+        if canRemove(member) {
+            Divider()
+            Button("Remove member", systemImage: "person.badge.minus", role: .destructive) { memberToRemove = member }
+        }
     }
 
     private func canRemove(_ member: BubbleMember) -> Bool {

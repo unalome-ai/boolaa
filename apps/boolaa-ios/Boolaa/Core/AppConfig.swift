@@ -24,4 +24,13 @@ struct AppConfig: Sendable {
         }
         return AppConfig(supabaseURL: url, supabaseAnonKey: key)
     }
+
+    /// Base URL of the web app (legal pages). Falls back to production when the key is missing.
+    static var webBaseURL: URL { webBaseURL(from: .main) }
+    static func webBaseURL(from bundle: Bundle) -> URL {
+        if let raw = bundle.infoDictionary?["WebBaseURL"] as? String, let url = URL(string: raw), url.scheme != nil, url.host() != nil {
+            return url
+        }
+        return URL(string: "https://boolaa.app")!
+    }
 }

@@ -71,6 +71,30 @@ struct FeatureLogicTests {
         #expect(BoolaaAPI.storagePath(fromPublicURL: "http://h/storage/v1/object/public/avatars/a/b/c.jpg", bucket: .avatars) == nil)
     }
 
+    @Test func legalPageURLsCarryLanguage() {
+        let base = URL(string: "http://localhost:3200")!
+        #expect(LegalPage.privacy.url(base: base, language: .ro).absoluteString == "http://localhost:3200/privacy?lang=ro")
+        #expect(LegalPage.terms.url(base: base, language: .fr).absoluteString == "http://localhost:3200/terms?lang=fr")
+        #expect(LegalPage(link: URL(string: "boolaa-legal://terms")!) == .terms)
+        #expect(LegalPage(link: URL(string: "https://example.com/terms")!) == nil)
+        #expect(AppConfig.webBaseURL.host() != nil)
+    }
+
+    @Test func deleteConfirmationWord() {
+        #expect(DeleteAccountSheet.matches(" delete ", word: "DELETE"))
+        #expect(DeleteAccountSheet.matches("sterge", word: "ȘTERGE"))
+        #expect(!DeleteAccountSheet.matches("DELET", word: "DELETE"))
+        #expect(!DeleteAccountSheet.matches("", word: "DELETE"))
+    }
+
+    @Test func reportTargetsUseTheAuthor() throws {
+        let messages = try Fixture.decode([ChatMessage].self, "chat")
+        let m = try #require(messages.first)
+        let t = ReportTarget.message(m)
+        #expect(t.type.rawValue == "chat_message" && t.targetID == m.id && t.authorID == m.senderId)
+        #expect(ReportReason.allCases.map(\.rawValue) == ["spam", "harassment", "hate", "sexual", "violence", "self_harm", "other"])
+    }
+
     @Test func tagParsing() {
         #expect(SharedLink.parseTags("food, cheap ,  ,Recipes, food") == ["food", "cheap", "recipes"])
         #expect(SharedLink.parseTags("") == [])

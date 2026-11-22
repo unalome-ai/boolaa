@@ -23,6 +23,7 @@ final class LinksModel {
 /// Shared links with tags (spec §10). Pushed from Home and Settings.
 struct LinksView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(SafetyStore.self) private var safety
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var model = LinksModel()
@@ -87,6 +88,7 @@ struct LinksView: View {
                     LinkRow(link: link, isMine: link.userId == session.userID,
                             onOpen: { if let u = URL(string: link.url) { openURL(u) } },
                             onDelete: { Task { await delete(link) } })
+                        .safetyContextMenu(.link(link))
                 }
             }
             .padding(16)
@@ -94,6 +96,7 @@ struct LinksView: View {
         .background(Theme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .refreshable { await reload() }
+        .onChange(of: safety.contentVersion) { Task { await reload() } }
         .task { await reload() }
         .errorAlert($model.error)
     }

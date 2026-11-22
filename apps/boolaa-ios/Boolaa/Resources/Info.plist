@@ -48,5 +48,7 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>WebBaseURL</key>
+	<string>$(WEB_BASE_URL)</string>
 </dict>
 </plist>
