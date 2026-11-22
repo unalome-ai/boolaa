@@ -38,6 +38,20 @@ Storage: the public buckets are `avatars`, `food.images` and `market.images`. Ob
 
 Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabase status -o env` prints `ANON_KEY` / `PUBLISHABLE_KEY`. The seeded logins are `alice@boolaa.test`, `bob@boolaa.test` and `carol@boolaa.test`, all with password `password123`. Alice and Bob share the "Flatmates" bubble (invite `FLAT2026`) and "Climbing Crew" (invite `CLIMB123`). Carol has a pending request for Flatmates.
 
+### Safety and account (App Store guidelines 1.2 and 5.1.1(v))
+- **Block**: `insert into blocks (blocker_id = me, blocked_id)`, and unblock by deleting your own row. `select` returns only the user's own block list.
+  - Blocking is two-way and enforced by RLS: neither side sees the other's chat, events, food, market items or links, live updates included.
+  - Members lists still show blocked people, so you can unblock them.
+- **Report**: `report_content(p_target_type, p_target_id, p_reason, p_details)`.
+  - Target types: `user`, `chat_message`, `event`, `food_post`, `market_item`, `shared_link`.
+  - Reasons: `spam`, `harassment`, `hate`, `sexual`, `violence`, `self_harm`, `other`.
+  - The server works out the author and bubble. Errors: `cannot report yourself`, `report target not found`.
+  - Reports go to a moderation queue that only the service role can read.
+  - After reporting, offer "Also block <name>?".
+- **Delete account**: `delete_my_account()`. First list and remove every object under `<uid>/` in `avatars`, `food.images` and `market.images`, ignoring failures. Then call the RPC and sign out locally.
+  - The deletion cascades to the user's profile, memberships and all their content. Owned bubbles pass to the next member, and bubbles left empty are deleted.
+  - The UI must warn clearly that this can't be undone and ask for a confirmation step.
+
 ## Screens and flows
 
 1. **Auth**: login (email and password) and register (name, email, password), with the name passed as sign-up metadata `{ name }`. Sign out lives in the profile sheet.
