@@ -450,6 +450,65 @@ html { scroll-behavior: smooth; }
 :root { --glow-a: 30%; --glow-b: 22%; }
 @media (prefers-color-scheme: dark) { :root { --glow-a: 20%; --glow-b: 12%; } }
 
+/* Phone frame for the landing's real screenshots (components/phone.tsx). A plain rounded slab:
+   percentages keep the proportions at any width (padding and x-radius follow the width). */
+@layer components {
+.phone {
+  position: relative;
+  width: 100%;
+  padding: 3.4%;
+  border-radius: 16.5% / 7.9%;
+  background: linear-gradient(150deg, #4a3d7c, #1e1638 38%, #120d24);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(255 255 255 / 0.16),
+    0 36px 60px -28px var(--phone-shadow),
+    0 12px 24px -14px var(--phone-shadow);
+}
+.phone-screen {
+  position: relative;
+  overflow: clip;
+  aspect-ratio: 660 / 1435;
+  border-radius: 13.6% / 6.25%;
+  background: var(--app-bg);
+}
+.phone-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+/* Camera cut-out, drawn over the status bar so every screenshot has the same one. */
+.phone-island {
+  position: absolute;
+  left: 50%;
+  top: 1.75%;
+  width: 30%;
+  height: 4.4%;
+  translate: -50% 0;
+  border-radius: 999px;
+  background: #0b0814;
+}
+
+/* Phones straighten up and rise as they scroll into view (scroll-driven, no JavaScript). */
+@supports (animation-timeline: view()) {
+  .tilt-in {
+    animation: tilt-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 42%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tilt-in { animation: none !important; }
+}
+}
+@keyframes tilt-in {
+  from { transform: translateY(56px) rotate(var(--tilt, -6deg)); }
+  to { transform: translateY(0) rotate(var(--tilt-end, 0deg)); }
+}
+:root { --phone-shadow: rgb(42 27 94 / 0.5); }
+@media (prefers-color-scheme: dark) { :root { --phone-shadow: rgb(0 0 0 / 0.85); } }
+
 /* Landing floaters (bob 3 to 6 px on a 3.6 to 6 s sine) */
 @layer components {
 .float-slow { animation: bob 5.2s ease-in-out infinite; --bob: 6px; }

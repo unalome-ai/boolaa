@@ -18,6 +18,15 @@ export const SITE_URL = (() => {
 })();
 
 /**
+ * Where the landing's download buttons go. `null` means "not live yet": the button is shown as
+ * plain text with a "Coming soon" badge instead of a link.
+ *  - APP_STORE_URL: the App Store listing, once the iOS app is approved.
+ *  - ANDROID_URL: set to "/android" once that page (APK download) exists.
+ */
+export const APP_STORE_URL: string | null = null;
+export const ANDROID_URL: string | null = null;
+
+/**
  * Canonical + og:url for a page path (resolved against `metadataBase` = SITE_URL). A page-level
  * `openGraph` replaces the inherited one, so the shared social image is listed again here.
  */

@@ -65,6 +65,16 @@ struct SettingsView: View {
     private var isOwner: Bool { session.currentRole == .owner }
 
     var body: some View {
+        ScrollViewReader { proxy in
+            content
+                .onChange(of: model.loaded) {
+                    // Debug hook for screenshots: jump to the pending join requests.
+                    if DebugHooks.string("UITestScrollTo") == "requests" { proxy.scrollTo("requests", anchor: .top) }
+                }
+        }
+    }
+
+    private var content: some View {
         ScrollView {
             if let bubble = session.currentBubble {
                 VStack(alignment: .leading, spacing: 14) {
@@ -122,7 +132,7 @@ struct SettingsView: View {
                     }
                     .card()
 
-                    SectionHeader(title: "Pending join requests", count: model.requests.count)
+                    SectionHeader(title: "Pending join requests", count: model.requests.count).id("requests")
                     if model.loaded && model.requests.isEmpty {
                         Label { Text("No one is waiting to join.") } icon: { Image(systemName: "checkmark.circle.fill").foregroundStyle(Hue.mint.text) }
                             .font(.subheadline).foregroundStyle(.secondary).card(padding: 14)

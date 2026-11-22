@@ -3,10 +3,10 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowRight,
-  ArrowUp,
-  CodeXml,
   CalendarDays,
+  CodeXml,
   EyeOff,
+  Globe,
   KeyRound,
   Link2,
   Lock,
@@ -14,15 +14,21 @@ import {
   MessagesSquare,
   Plus,
   Shield,
+  Smartphone,
   Sparkles,
   Tag,
+  UsersRound,
   UtensilsCrossed,
+  Vote,
+  type LucideIcon,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
+import { isLocale, type Locale } from "@/i18n/config";
 import { CompactLocalePicker } from "@/i18n/locale-picker";
 import { AmbientBackdrop, BubbleLogo, FeatureBadge, Orb } from "@/components/orb";
+import { Phone, type Screen } from "@/components/phone";
 import { hueClass, type Hue } from "@/lib/hue";
-import { REPO_URL, localizedUrls } from "@/lib/site";
+import { ANDROID_URL, APP_STORE_URL, REPO_URL, localizedUrls } from "@/lib/site";
 
 // Signed-in users never get here: the proxy sends them to /home or /onboarding.
 
@@ -33,32 +39,49 @@ export async function generateMetadata({ searchParams }: PageProps<"/">): Promis
   return { title: { absolute: title }, description, ...localizedUrls("/", { lang, locale, title, description }) };
 }
 
-const FEATURES = [
-  { key: "Chat", nav: "chat", icon: MessagesSquare, hue: "grape" },
-  { key: "Events", nav: "events", icon: CalendarDays, hue: "coral" },
-  { key: "Food", nav: "food", icon: UtensilsCrossed, hue: "tangerine" },
-  { key: "Market", nav: "marketplace", icon: Tag, hue: "mint" },
-  { key: "Links", nav: "links", icon: Link2, hue: "sky" },
-] as const;
+type Feature = {
+  key: "Chat" | "Events" | "Food" | "Market" | "Links" | "Bubbles";
+  /** Name of the section in the app (`nav.*`); the bubbles panel has none. */
+  nav?: "chat" | "events" | "food" | "marketplace" | "links";
+  icon: LucideIcon;
+  hue: Hue;
+  screen: Screen;
+  /** Wide panels put the copy beside the phone; the others stack it above. */
+  wide?: "left" | "right";
+};
+
+// Each feature in its feature colour (docs/design-system.md 2.2), with the real screen.
+const FEATURES: Feature[] = [
+  { key: "Chat", nav: "chat", icon: MessagesSquare, hue: "grape", screen: "chat", wide: "right" },
+  { key: "Events", nav: "events", icon: CalendarDays, hue: "coral", screen: "events" },
+  { key: "Food", nav: "food", icon: UtensilsCrossed, hue: "tangerine", screen: "food" },
+  { key: "Market", nav: "marketplace", icon: Tag, hue: "mint", screen: "market", wide: "left" },
+  { key: "Links", nav: "links", icon: Link2, hue: "sky", screen: "links" },
+  { key: "Bubbles", icon: UsersRound, hue: "pink", screen: "home" },
+];
 
 const STEPS = [
-  { n: 1, hue: "grape" },
-  { n: 2, hue: "coral" },
-  { n: 3, hue: "mint" },
+  { n: 1, hue: "grape", screen: "create", alt: "altCreate" },
+  { n: 2, hue: "coral", screen: "settings", alt: "altInvite" },
+  { n: 3, hue: "mint", screen: "pending", alt: "altPending" },
 ] as const;
 
 const PROMISES = [
   { n: 1, icon: Lock },
+  { n: 4, icon: Vote },
   { n: 2, icon: Megaphone },
   { n: 3, icon: EyeOff },
 ] as const;
 
 const at = (i: number) => ({ "--i": i }) as CSSProperties;
+const tilt = (deg: number, end = 0) => ({ "--tilt": `${deg}deg`, "--tilt-end": `${end}deg` }) as CSSProperties;
 
 export default async function Landing() {
   const t = await getTranslations("landing");
   const tn = await getTranslations("nav");
   const tl = await getTranslations("legal");
+  const current = await getLocale();
+  const locale: Locale = isLocale(current) ? current : "en";
   const em = (chunks: ReactNode) => <em className="text-gradient not-italic">{chunks}</em>;
   const ghLink = (chunks: ReactNode) => (
     <a href={REPO_URL} className="font-semibold text-brand-ink underline underline-offset-2" rel="noopener">
@@ -80,10 +103,10 @@ export default async function Landing() {
       />
 
       <main>
-        {/* Hero: floating bubbles over the auth-screen gradient */}
-        <section className="relative isolate -mt-[68px] overflow-hidden pt-[68px]">
+        {/* Hero: floating bubbles over the auth-screen gradient, and the app's Home screen */}
+        <section className="relative isolate -mt-[68px] overflow-clip pt-[68px]">
           <AmbientBackdrop className="ambient-fade -z-10" />
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-24 pt-10 md:grid-cols-[1.1fr_1fr] md:pt-16 lg:gap-16">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-10 md:grid-cols-[1.1fr_1fr] md:pt-14 lg:gap-10">
             <div className="relative">
               <BubbleLogo size={72} className="mb-5" />
               <p className="mb-5 flex w-fit items-center gap-2 rounded-full bg-card/70 px-4 py-1.5 font-display text-sm font-bold text-brand-ink shadow-soft backdrop-blur">
@@ -102,75 +125,87 @@ export default async function Landing() {
                 </Link>
               </div>
               <p className="mt-4 text-sm text-muted">{t("heroNote")}</p>
+              <p className="mt-1 flex items-start gap-1.5 text-sm text-muted">
+                <Smartphone size={15} strokeWidth={2.4} className="mt-0.5 shrink-0" aria-hidden /> {t("heroApps")}
+              </p>
             </div>
-            <PhoneMockup lines={[t("mockChat1"), t("mockChat2"), t("mockChat3")]} title={tn("chat")} />
+            <HeroPhones locale={locale} alt={t("altHome")} />
           </div>
         </section>
 
-        {/* How it works */}
-        <section id="how" className="scroll-mt-24 py-20">
+        {/* Features, each in its feature colour, shown with the real screen */}
+        <section id="features" className="scroll-mt-24 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-5">
+            <h2 className="reveal text-center text-3xl font-black tracking-tight sm:text-[40px]">{t("featuresTitle")}</h2>
+            <p className="reveal mt-3 text-center text-lg text-muted">{t("featuresBody")}</p>
+            <ul className="mt-12 grid gap-5 md:grid-cols-2">
+              {FEATURES.map((f, i) => (
+                <FeaturePanel
+                  key={f.key}
+                  feature={f}
+                  index={i}
+                  locale={locale}
+                  label={f.nav ? tn(f.nav) : tn("yourBubbles")}
+                  title={t(`feature${f.key}Title`)}
+                  body={t(`feature${f.key}Body`)}
+                  alt={f.key === "Bubbles" ? "" : t(`alt${f.key}`)}
+                />
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* How it works: the three real screens you go through */}
+        <section id="how" className="scroll-mt-24 bg-landing-soft py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-5">
             <h2 className="reveal text-center text-3xl font-black tracking-tight sm:text-[40px]">{t("howTitle")}</h2>
             <ol className="mt-12 grid gap-5 md:grid-cols-3">
-              {STEPS.map(({ n, hue }, i) => (
-                <li key={n} className={`reveal lift card ${hueClass(hue)} relative p-7`} style={at(i)}>
-                  <span className="orb mb-5 flex h-14 w-14 items-center justify-center font-display text-2xl font-black" style={{ color: "var(--h-on)" }}>
-                    <span className="relative z-10">{n}</span>
-                  </span>
-                  <h3 className="text-xl font-extrabold">{t(`step${n}Title`)}</h3>
-                  <p className="mt-2 text-muted">{t(`step${n}Body`)}</p>
+              {STEPS.map(({ n, hue, screen, alt }, i) => (
+                <li key={n} className={`reveal card ${hueClass(hue)} relative flex flex-col overflow-clip`} style={at(i)}>
+                  <div className="p-7 pb-6">
+                    <span className="orb mb-5 flex h-14 w-14 items-center justify-center font-display text-2xl font-black" style={{ color: "var(--h-on)" }}>
+                      <span className="relative z-10">{n}</span>
+                    </span>
+                    <h3 className="text-xl font-extrabold">{t(`step${n}Title`)}</h3>
+                    <p className="mt-2 text-muted">{t(`step${n}Body`)}</p>
+                  </div>
+                  <div className="relative mt-auto h-[330px] overflow-clip bg-hue-wash">
+                    <span aria-hidden className="absolute -left-10 top-10 h-28 w-28 rounded-full bg-hue-wash" />
+                    <Phone locale={locale} screen={screen} alt={t(alt)} sizes="240px" className="tilt-in absolute left-1/2 top-8 !w-[240px] -translate-x-1/2" style={tilt(i === 1 ? 4 : -4)} />
+                  </div>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* Features, each in its feature colour */}
-        <section id="features" className="scroll-mt-24 bg-landing-soft py-20">
-          <div className="mx-auto max-w-6xl px-5">
-            <h2 className="reveal text-center text-3xl font-black tracking-tight sm:text-[40px]">{t("featuresTitle")}</h2>
-            <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ key, nav, icon: Icon, hue }, i) => (
-                <li
-                  key={key}
-                  data-hue={hue}
-                  className={`reveal lift group relative overflow-hidden rounded-card bg-card p-6 shadow-soft ${hueClass(hue)} ${i === 0 ? "lg:row-span-2" : ""}`}
-                  style={at(i)}
-                >
-                  <span aria-hidden className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-hue-wash transition-transform duration-500 group-hover:scale-125" />
-                  <FeatureBadge hue={hue} size={52} className="relative mb-4 transition-transform duration-300 [transition-timing-function:var(--ease-bouncy)] group-hover:-rotate-6 group-hover:scale-110">
-                    <Icon size={26} strokeWidth={2.4} />
-                  </FeatureBadge>
-                  <h3 className="relative text-xl font-extrabold text-hue-ink">{tn(nav)}</h3>
-                  <p className="relative mt-1.5 text-muted">{t(`feature${key}Body`)}</p>
-                  {i === 0 && <ChatDoodle />}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* Privacy promise */}
+        {/* Privacy promise: invite-only, and members vote newcomers in */}
         <section id="privacy" className="scroll-mt-24 px-5 py-16">
-          <div className="hue-grape relative mx-auto max-w-6xl overflow-hidden rounded-hero px-6 py-14 text-white shadow-glow sm:px-12" style={{ background: "linear-gradient(135deg, var(--grape) 0%, var(--grape-deep) 55%, var(--indigo-deep) 100%)" }}>
+          <div className="hue-grape relative mx-auto max-w-6xl overflow-clip rounded-hero px-6 py-14 text-white shadow-glow sm:px-12" style={{ background: "linear-gradient(135deg, var(--grape) 0%, var(--grape-deep) 55%, var(--indigo-deep) 100%)" }}>
             <span aria-hidden className="absolute -right-16 -top-20 h-72 w-72 rounded-full bg-white/15" />
             <span aria-hidden className="absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-white/[0.14]" />
             <span aria-hidden className="absolute right-24 top-16 h-16 w-16 rounded-full border-[3px] border-white/25" />
-            <div className="relative">
-              <Shield size={34} strokeWidth={2.4} className="reveal mb-4" />
-              <h2 className="reveal text-3xl font-black tracking-tight sm:text-[40px]">{t("privacyTitle")}</h2>
-              <p className="reveal mt-2 text-lg text-white/90">{t("privacyBody")}</p>
-              <ul className="mt-10 grid gap-5 md:grid-cols-3">
-                {PROMISES.map(({ n, icon: Icon }, i) => (
-                  <li key={n} className="reveal rounded-card bg-white/[0.13] p-6 ring-1 ring-white/20 backdrop-blur-sm" style={at(i)}>
-                    <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/20">
-                      <Icon size={22} strokeWidth={2.4} />
-                    </span>
-                    <h3 className="text-lg font-extrabold">{t(`promise${n}Title`)}</h3>
-                    <p className="mt-1.5 text-white/90">{t(`promise${n}Body`)}</p>
-                  </li>
-                ))}
-              </ul>
+            <div className="relative grid items-center gap-12 lg:grid-cols-[1.25fr_1fr]">
+              <div>
+                <Shield size={34} strokeWidth={2.4} className="reveal mb-4" />
+                <h2 className="reveal text-3xl font-black tracking-tight sm:text-[40px]">{t("privacyTitle")}</h2>
+                <p className="reveal mt-2 text-lg text-white/90">{t("privacyBody")}</p>
+                <ul className="mt-9 grid gap-4 sm:grid-cols-2">
+                  {PROMISES.map(({ n, icon: Icon }, i) => (
+                    <li key={n} className="reveal rounded-card bg-white/[0.13] p-5 ring-1 ring-white/20 backdrop-blur-sm" style={at(i)}>
+                      <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/20">
+                        <Icon size={22} strokeWidth={2.4} />
+                      </span>
+                      <h3 className="text-lg font-extrabold">{t(`promise${n}Title`)}</h3>
+                      <p className="mt-1.5 text-white/90">{t(`promise${n}Body`)}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="relative mx-auto h-[560px] w-full max-w-[430px]">
+                <Phone locale={locale} screen="join" alt={t("altJoin")} sizes="220px" className="tilt-in absolute right-0 top-0 !w-[220px] max-sm:hidden" style={tilt(12, 6)} />
+                <Phone locale={locale} screen="requests" alt={t("altRequests")} sizes="250px" className="tilt-in absolute bottom-0 left-1/2 !w-[250px] max-sm:-translate-x-1/2 sm:left-0" style={tilt(-8, -3)} />
+              </div>
             </div>
           </div>
         </section>
@@ -195,16 +230,26 @@ export default async function Landing() {
           </div>
         </section>
 
-        {/* Final call to action */}
-        <section className="px-5 pb-24">
-          <div className="reveal relative isolate mx-auto max-w-4xl overflow-hidden rounded-hero px-6 py-16 text-center shadow-soft">
+        {/* Final call to action and downloads */}
+        <section id="download" className="scroll-mt-24 px-5 pb-24">
+          <div className="reveal relative isolate mx-auto max-w-4xl overflow-clip rounded-hero px-6 py-16 text-center shadow-soft">
             <AmbientBackdrop className="-z-10" count={8} />
             <BubbleLogo size={64} className="mx-auto mb-4" />
             <h2 className="text-3xl font-black tracking-tight sm:text-[40px]">{t("finalTitle")}</h2>
             <p className="mt-2 text-lg text-muted">{t("finalBody")}</p>
-            <Link href="/register" className="btn-primary mt-8 min-h-[54px] px-7 text-[17px]">
-              {t("ctaPrimary")} <ArrowRight size={19} strokeWidth={2.6} />
-            </Link>
+            <ul className="mx-auto mt-8 grid max-w-md gap-3 sm:max-w-none sm:grid-cols-[auto_auto] sm:justify-center" data-testid="downloads">
+              <li className="sm:col-span-2 sm:justify-self-center">
+                <Link href="/register" className="btn-primary min-h-[54px] w-full px-8 text-[17px]" data-testid="download-web">
+                  <Globe size={19} strokeWidth={2.4} aria-hidden /> {t("downloadWeb")}
+                </Link>
+              </li>
+              <li>
+                <StoreButton href={APP_STORE_URL} label={t("downloadIos")} soon={t("comingSoon")} testId="download-ios" />
+              </li>
+              <li>
+                <StoreButton href={ANDROID_URL} label={t("downloadAndroid")} soon={t("comingSoon")} testId="download-android" />
+              </li>
+            </ul>
           </div>
         </section>
       </main>
@@ -252,11 +297,11 @@ function Header({ labels }: { labels: Record<"how" | "features" | "privacy" | "f
           <Logo />
         </Link>
         <nav className="ml-6 hidden items-center gap-6 font-display text-[15px] font-bold text-muted md:flex">
-          <a href="#how" className="hover:text-fg">
-            {labels.how}
-          </a>
           <a href="#features" className="hover:text-fg">
             {labels.features}
+          </a>
+          <a href="#how" className="hover:text-fg">
+            {labels.how}
           </a>
           <a href="#privacy" className="hover:text-fg">
             {labels.privacy}
@@ -270,7 +315,7 @@ function Header({ labels }: { labels: Record<"how" | "features" | "privacy" | "f
           <Link href="/login" className="press hidden rounded-full px-4 py-2 font-display text-[15px] font-bold text-brand-ink hover:bg-brand/10 sm:inline-flex" data-testid="landing-sign-in">
             {labels.signIn}
           </Link>
-          <Link href="/register" className="btn-primary min-h-10 px-4 py-2 text-sm">
+          <Link href="/register" className="btn-primary min-h-10 whitespace-nowrap px-4 py-2 text-sm">
             {labels.start}
           </Link>
         </div>
@@ -279,94 +324,79 @@ function Header({ labels }: { labels: Record<"how" | "features" | "privacy" | "f
   );
 }
 
-/**
- * Phone mock-up drawn in CSS: the chat screen of the app. The device frame is dark in both
- * colour schemes; the screen follows the scheme.
- */
-function PhoneMockup({ lines, title }: { lines: string[]; title: string }) {
+/** The app's Home screen up front, the chat peeking out behind it, and the feature badges floating around. */
+function HeroPhones({ locale, alt }: { locale: Locale; alt: string }) {
   return (
-    <div className="relative mx-auto w-full max-w-[340px]" aria-hidden>
-      <div className="float-slow relative rounded-[48px] bg-[#1e1638] p-[10px] shadow-[0_40px_80px_-30px_rgb(42_27_94/0.55)] ring-1 ring-white/10 dark:bg-[#0b0814] dark:shadow-[0_40px_80px_-30px_rgb(0_0_0/0.9)] dark:ring-white/15">
-        <div className="relative overflow-hidden rounded-[38px] bg-app">
-          <div className="hue-sky pointer-events-none absolute inset-0" style={{ background: "radial-gradient(240px 220px at 100% 0%, color-mix(in srgb, var(--h) var(--glow-a), transparent), transparent)" }} />
-          <div className="relative px-4 pb-4 pt-3">
-            <div className="mx-auto mb-4 h-6 w-24 rounded-full bg-[#1e1638] dark:bg-[#0b0814]" />
-            <div className="mb-3 flex items-center justify-between">
-              <span className="font-display text-[26px] font-black">{title}</span>
-              <span className="hue-sunny flex h-8 w-8 items-center justify-center rounded-full bg-hue-grad font-display text-xs font-black text-onfill">A</span>
-            </div>
-            <div className="mb-5 flex gap-1.5">
-              {([["Flat 4B", "sky"], ["Climbing", "tangerine"], ["Book club", "pink"]] as const).map(([b, hue], i) => (
-                <span key={b} className={`${hueClass(hue)} inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-display text-[11px] font-bold ${i === 0 ? "fill-hue" : "bg-card shadow-soft"}`}>
-                  <span className={`orb h-2.5 w-2.5 ${i === 0 ? "ring-1 ring-white" : ""}`} />
-                  {b}
-                </span>
-              ))}
-            </div>
-            <div className="space-y-3">
-              <MockMessage who="M" hue="coral" name="Mara">{lines[0]}</MockMessage>
-              <MockMessage mine>{lines[1]}</MockMessage>
-              <MockMessage who="S" hue="mint" name="Sam">{lines[2]}</MockMessage>
-            </div>
-            <div className="mt-5 flex items-center gap-2">
-              <span className="flex h-10 flex-1 items-center rounded-full bg-card px-4 text-xs text-muted shadow-soft">…</span>
-              <span className="hue-grape fill-hue flex h-10 w-10 items-center justify-center rounded-full">
-                <ArrowUp size={18} strokeWidth={3} />
-              </span>
-            </div>
-          </div>
-        </div>
+    <div className="relative mx-auto w-full max-w-[400px] pb-2 lg:max-w-[440px]">
+      <Phone locale={locale} screen="chat" alt="" sizes="250px" className="absolute right-0 top-12 !w-[56%] rotate-[7deg] max-sm:hidden" />
+      <div className="float-slow relative w-[72%] max-sm:mx-auto sm:w-[66%]">
+        <Phone locale={locale} screen="home" alt={alt} eager sizes="(min-width: 640px) 290px, 280px" className="-rotate-2" />
       </div>
-      <span className="float-slower absolute -left-7 top-28">
+      <span className="float-slower absolute -left-6 top-24 max-sm:left-0">
         <FeatureBadge hue="coral" size={54}><CalendarDays size={26} strokeWidth={2.4} /></FeatureBadge>
       </span>
-      <span className="float-slow absolute -right-5 -top-5 [animation-delay:-2s]">
+      <span className="float-slow absolute -top-3 left-[63%] [animation-delay:-2s] max-sm:-top-5 max-sm:left-auto max-sm:right-2">
         <FeatureBadge hue="tangerine" size={50}><UtensilsCrossed size={24} strokeWidth={2.4} /></FeatureBadge>
       </span>
-      <span className="float-slower absolute -right-3 bottom-20 [animation-delay:-4s]">
+      <span className="float-slower absolute bottom-24 right-0 [animation-delay:-4s]">
         <FeatureBadge hue="mint" size={46}><Tag size={22} strokeWidth={2.4} /></FeatureBadge>
       </span>
-      <span className="float-slow absolute -left-3 bottom-10 [animation-delay:-1s]">
+      <span className="float-slow absolute -left-3 bottom-10 [animation-delay:-1s] max-sm:left-2">
         <Orb hue="sunny" size={30} />
       </span>
     </div>
   );
 }
 
-function MockMessage({ who, hue, name, mine, children }: { who?: string; hue?: Hue; name?: string; mine?: boolean; children: ReactNode }) {
-  if (mine)
-    return (
-      <div className="flex justify-end">
-        <span className="hue-grape max-w-[78%] rounded-[18px] rounded-br-[6px] bg-hue-grad px-3 py-2 text-[13px] leading-snug text-white shadow-glow">{children}</span>
-      </div>
-    );
+/** One feature: a tinted panel in the feature colour with the real screen rising out of its bottom edge. */
+function FeaturePanel({ feature, index, locale, label, title, body, alt }: { feature: Feature; index: number; locale: Locale; label: string; title: string; body: string; alt: string }) {
+  const { icon: Icon, hue, screen, wide } = feature;
   return (
-    <div className={`flex items-end gap-2 ${hue ? hueClass(hue) : ""}`}>
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-hue-grad font-display text-[11px] font-black text-onfill ring-[1.5px] ring-card">{who}</span>
-      <span className="max-w-[78%]">
-        <span className="mb-0.5 block font-display text-[11px] font-extrabold text-hue-ink">{name}</span>
-        <span className="block rounded-[18px] rounded-bl-[6px] bg-card px-3 py-2 text-[13px] leading-snug shadow-soft">{children}</span>
-      </span>
-    </div>
+    <li
+      data-hue={hue}
+      className={`reveal group relative isolate flex flex-col overflow-clip rounded-hero bg-hue-wash ${hueClass(hue)} ${wide ? "md:col-span-2 md:grid md:grid-cols-2 md:items-center" : ""}`}
+      style={at(index % 2)}
+    >
+      <span aria-hidden className="absolute -right-16 -top-16 -z-10 h-56 w-56 rounded-full bg-hue-wash" />
+      <span aria-hidden className="absolute -left-10 bottom-10 -z-10 h-32 w-32 rounded-full bg-hue-wash" />
+      <div className={`p-7 pb-2 sm:p-10 sm:pb-4 ${wide ? "md:p-14" : ""} ${wide === "left" ? "md:order-2" : ""}`}>
+        <div className="mb-5 flex items-center gap-3">
+          <FeatureBadge hue={hue} size={48} className="transition-transform duration-300 [transition-timing-function:var(--ease-bouncy)] group-hover:-rotate-6 group-hover:scale-110">
+            <Icon size={24} strokeWidth={2.4} />
+          </FeatureBadge>
+          <span className="font-display text-sm font-extrabold uppercase tracking-wider text-hue-ink">{label}</span>
+        </div>
+        <h3 className={`text-balance text-2xl font-black tracking-tight sm:text-3xl ${wide ? "md:text-[40px] md:leading-[1.08]" : ""}`}>{title}</h3>
+        <p className={`mt-3 max-w-md text-pretty text-fg/75 ${wide ? "text-lg" : "text-[17px]"}`}>{body}</p>
+      </div>
+      <div className={`relative mt-auto h-[400px] ${wide ? "md:mt-0 md:h-[520px]" : "md:h-[470px]"}`}>
+        <Phone
+          locale={locale}
+          screen={screen}
+          alt={alt}
+          className={`tilt-in absolute left-1/2 top-9 !w-[270px] -translate-x-1/2 ${wide ? "md:top-12 md:!w-[300px]" : ""}`}
+          style={tilt(index % 2 ? 5 : -5)}
+        />
+      </div>
+    </li>
   );
 }
 
-/** Speech bubbles doodle for the big chat card. */
-function ChatDoodle() {
+/** A download button. Without a link yet it is plain, dimmed text with a "Coming soon" badge. */
+function StoreButton({ href, label, soon, testId }: { href: string | null; label: string; soon: string; testId: string }) {
+  const shape = "flex min-h-[54px] w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-[27px] px-6 py-2.5 font-display text-[16px] font-bold";
+  if (href)
+    return (
+      <Link href={href} className={`press ${shape} bg-card text-fg shadow-soft ring-1 ring-line`} data-testid={testId}>
+        <Smartphone size={18} strokeWidth={2.4} aria-hidden /> {label}
+      </Link>
+    );
   return (
-    <svg viewBox="0 0 220 120" className="relative mt-6 hidden w-full lg:block" aria-hidden>
-      <defs>
-        <linearGradient id="doodle" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="var(--grape)" />
-          <stop offset="1" stopColor="var(--grape-deep)" />
-        </linearGradient>
-      </defs>
-      <rect x="8" y="10" width="130" height="44" rx="22" fill="url(#doodle)" />
-      <path d="M30 54 l-8 14 l20 -14z" fill="url(#doodle)" />
-      <rect x="82" y="62" width="130" height="44" rx="22" fill="var(--app-field)" />
-      <circle cx="122" cy="84" r="5" fill="var(--grape)" />
-      <circle cx="147" cy="84" r="5" fill="var(--grape)" opacity="0.7" />
-      <circle cx="172" cy="84" r="5" fill="var(--grape)" opacity="0.4" />
-    </svg>
+    <span className={`${shape} bg-card/70 text-muted ring-1 ring-line backdrop-blur`} data-testid={testId}>
+      <span className="inline-flex items-center gap-2">
+        <Smartphone size={18} strokeWidth={2.4} className="shrink-0" aria-hidden /> {label}
+      </span>
+      <span className="hue-grape whitespace-nowrap rounded-full bg-hue-wash px-2.5 py-0.5 text-xs font-extrabold text-hue-ink">{soon}</span>
+    </span>
   );
 }

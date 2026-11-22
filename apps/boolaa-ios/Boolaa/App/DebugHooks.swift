@@ -9,6 +9,10 @@ import Foundation
 ///     -UITestOpen chat|links|profile|addBubble|report|blocked|deleteAccount
 ///     -UITestRegister YES                  start on the Create account form
 ///     -UITestSignOut YES                   start signed out
+///     -UITestOnboarding join|create        onboarding starts on this form
+///     -UITestJoinCode FLAT2026             pre-fills the invite code field
+///     -UITestBubbleName "Flat 4B"          pre-fills the Create a bubble form (with -UITestBubbleDescription)
+///     -UITestScrollTo requests             Settings scrolls to the pending join requests
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {
@@ -65,6 +69,16 @@ enum DebugHooks {
     static var initialOpen: String? {
         #if DEBUG
         UserDefaults.standard.string(forKey: "UITestOpen")
+        #else
+        nil
+        #endif
+    }
+
+    /// A string launch argument, for pre-filling forms and scrolling in marketing screenshots
+    /// (Scripts/capture-marketing.sh). Always nil in release builds.
+    static func string(_ key: String) -> String? {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: key)?.nilIfEmpty
         #else
         nil
         #endif

@@ -4,8 +4,8 @@ import SwiftUI
 struct CreateBubbleForm: View {
     @Environment(SessionStore.self) private var session
     var onDone: () -> Void = {}
-    @State private var name = ""
-    @State private var description = ""
+    @State private var name = DebugHooks.string("UITestBubbleName") ?? ""
+    @State private var description = DebugHooks.string("UITestBubbleDescription") ?? ""
     @State private var maxSize = 12
     @State private var busy = false
     @State private var error: String?
@@ -60,7 +60,7 @@ struct CreateBubbleForm: View {
 struct JoinBubbleForm: View {
     @Environment(SessionStore.self) private var session
     var onRequested: (JoinRequest) -> Void = { _ in }
-    @State private var code = ""
+    @State private var code = DebugHooks.string("UITestJoinCode") ?? ""
     @State private var busy = false
     @State private var error: String?
 

@@ -48,6 +48,17 @@ xcrun simctl launch booted com.boolaa.app -UITestAutoLogin alice@boolaa.test -UI
 # -UITestSignOut YES   -UITestRegister YES (start on Create account)
 ```
 
+## Marketing screenshots
+
+`Scripts/capture-marketing.sh` regenerates the landing page's screenshots (`apps/boolaa-web/public/screens/<locale>/<light|dark>/<screen>.webp`, 11 screens × 5 languages × 2 themes) from the simulator against the local Supabase:
+
+```sh
+SIM_UDID=<udid> Scripts/capture-marketing.sh                 # everything (about 15 minutes)
+LOCALES="ro" THEMES=dark SCREENS="home chat" SKIP_BUILD=1 Scripts/capture-marketing.sh
+```
+
+It loads fictional data per language (`Scripts/marketing/content.json`, written to SQL by `seed.py`: six `mk-*@boolaa.test` users and three bubbles with fixed ids), sets a clean 9:41 status bar, launches each screen with the debug hooks (`-UITestOnboarding`, `-UITestJoinCode`, `-UITestBubbleName`, `-UITestScrollTo requests` exist for this) and deletes the data again on exit. It refuses to run unless both the database URL and `Config/Local.xcconfig` point at the local stack. Don't run `supabase db reset` while it is capturing. Needs `cwebp` (`brew install webp`).
+
 ## Layout
 
 ```

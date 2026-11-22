@@ -128,3 +128,24 @@ test("legal pages name the controller, link the contacts, the licence and the so
   await expect(page.getByTestId("made-by")).toContainText("Apache 2.0");
   await expect(page.getByTestId("source-code")).toHaveAttribute("href", "https://github.com/unalome-ai/boolaa");
 });
+
+test("the landing shows real app screenshots in the visitor's language and colour scheme, and the downloads", async ({ page }) => {
+  for (const [lang, scheme] of [["ro", "dark"], ["en", "light"]] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto(`/?lang=${lang}`);
+    const hero = page.locator('.phone img[fetchpriority="high"]');
+    await expect(hero).toHaveCount(1);
+    await expect.poll(() => hero.evaluate((img: HTMLImageElement) => (img.complete && img.naturalWidth > 0 ? decodeURIComponent(img.currentSrc) : "")))
+      .toContain(`/screens/${lang}/${scheme}/home.webp`);
+    // One phone per feature, each with a real description; everything but the hero is lazy.
+    await expect(page.locator("#features .phone")).toHaveCount(6);
+    await expect(page.locator('#features .phone img:not([alt=""])')).toHaveCount(5);
+    await expect(page.locator('.phone img[loading="lazy"]')).toHaveCount((await page.locator(".phone img").count()) - 1);
+  }
+  // "Open in browser" works today; the store buttons are plain text until the apps are live.
+  await expect(page.getByTestId("download-web")).toHaveAttribute("href", "/register");
+  for (const id of ["download-ios", "download-android"]) {
+    await expect(page.getByTestId(id)).toContainText("Coming soon");
+    await expect(page.getByTestId(id)).not.toHaveAttribute("href", /.*/);
+  }
+});

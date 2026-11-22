@@ -3,7 +3,7 @@ import SwiftUI
 /// Shown to signed-in users with no approved bubble: create, join, or wait for approval (spec §3).
 struct OnboardingView: View {
     @Environment(SessionStore.self) private var session
-    @State private var mode: Mode = .join
+    @State private var mode: Mode = DebugHooks.string("UITestOnboarding").flatMap(Mode.init(rawValue:)) ?? .join
     @State private var error: String?
 
     enum Mode: String, CaseIterable {

@@ -1,0 +1,200 @@
+{
+  "_comment": "Fictional content for the marketing screenshots (Scripts/capture-marketing.sh). One block per language; user content is never translated by the app, so each language gets its own. Photos are from Unsplash (free licence), objects and food only.",
+  "photos": {
+    "couscous": "https://images.unsplash.com/photo-1547592180-85f173990554?w=900&q=70&auto=format&fit=crop",
+    "bread": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=900&q=70&auto=format&fit=crop",
+    "cookies": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=900&q=70&auto=format&fit=crop",
+    "armchair": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=900&q=70&auto=format&fit=crop",
+    "bike": "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=900&q=70&auto=format&fit=crop",
+    "plant": "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=900&q=70&auto=format&fit=crop",
+    "books": "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=900&q=70&auto=format&fit=crop",
+    "mugs": "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=900&q=70&auto=format&fit=crop"
+  },
+  "locales": {
+    "en": {
+      "flat": ["Flat 4B", "Our shared flat on Rose Street"],
+      "climb": ["Climbing Crew", "Tuesday bouldering"],
+      "books": ["Book club", "One book a month, plenty of snacks"],
+      "chat": [
+        ["bob", "Pizza night on Friday? 🍕"],
+        ["alice", "I'm in! I'll bring dessert"],
+        ["carol", "Yes please. I'll make the dough"],
+        ["dan", "Leftover couscous in the fridge, help yourselves 🥗"],
+        ["alice", "Dan, you're a hero"],
+        ["carol", "Who took the last oat milk? 🥛"],
+        ["bob", "Guilty. Buying more today."]
+      ],
+      "events": [
+        ["Pizza night", "Homemade dough. Bring your favourite topping.", "Our kitchen"],
+        ["Board game evening", "Whoever loses does the dishes.", "Living room"],
+        ["Sunday market run", "Fruit, veg and fresh bread for the week.", "Farmers' market"]
+      ],
+      "food": [
+        "Baked far too many cookies. They're on the kitchen table!",
+        "Fresh sourdough, still warm. Come and get a slice.",
+        "Made too much couscous salad. Two portions in the fridge."
+      ],
+      "market": [
+        ["Yellow armchair", "Comfy, needs a new home"],
+        ["City bike", "Would swap for a bigger frame"],
+        ["Little succulent", "Easy to look after"],
+        ["Paperback novels", "Swap one for one"],
+        ["Ceramic mugs", "Set of four"]
+      ],
+      "links": [
+        ["Pizza dough recipe", ["food", "friday"]],
+        ["Farmers' market map", ["weekend"]],
+        ["Looking after house plants", ["plants"]]
+      ],
+      "other": ["Same time on Tuesday?", "Bouldering session", "The climbing gym", "Next book: any ideas?"]
+    },
+    "ro": {
+      "flat": ["Apartament 4B", "Apartamentul nostru de pe strada Trandafirilor"],
+      "climb": ["Gașca de cățărat", "Bouldering în fiecare marți"],
+      "books": ["Clubul de carte", "O carte pe lună și multe gustări"],
+      "chat": [
+        ["bob", "Seară de pizza vineri? 🍕"],
+        ["alice", "Vin! Aduc eu desertul"],
+        ["carol", "Da, vă rog. Fac eu aluatul"],
+        ["dan", "A rămas cușcuș în frigider, serviți-vă 🥗"],
+        ["alice", "Dan, ești un erou"],
+        ["carol", "Cine a terminat laptele de ovăz? 🥛"],
+        ["bob", "Eu am fost. Cumpăr azi altul."]
+      ],
+      "events": [
+        ["Seară de pizza", "Aluat făcut în casă. Adu toppingul tău preferat.", "Bucătăria noastră"],
+        ["Seară de jocuri", "Cine pierde spală vasele.", "Sufragerie"],
+        ["Duminică la piață", "Fructe, legume și pâine proaspătă pentru toată săptămâna.", "Piața de legume"]
+      ],
+      "food": [
+        "Am făcut mult prea mulți biscuiți. Sunt pe masa din bucătărie!",
+        "Pâine cu maia, încă e caldă. Veniți să luați o felie.",
+        "Am făcut prea multă salată de cușcuș. Două porții în frigider."
+      ],
+      "market": [
+        ["Fotoliu galben", "Comod, își caută o casă nouă"],
+        ["Bicicletă de oraș", "Aș schimba-o cu un cadru mai mare"],
+        ["Plantă suculentă", "Ușor de îngrijit"],
+        ["Romane de buzunar", "Schimb una pe una"],
+        ["Căni de ceramică", "Set de patru"]
+      ],
+      "links": [
+        ["Rețetă de aluat de pizza", ["mâncare", "vineri"]],
+        ["Harta pieței de legume", ["weekend"]],
+        ["Cum îngrijești plantele de apartament", ["plante"]]
+      ],
+      "other": ["Tot marți, la aceeași oră?", "Sesiune de bouldering", "Sala de cățărat", "Următoarea carte: idei?"]
+    },
+    "fr": {
+      "flat": ["Coloc 4B", "Notre coloc de la rue des Roses"],
+      "climb": ["Team grimpe", "Bloc tous les mardis"],
+      "books": ["Club de lecture", "Un livre par mois et plein de snacks"],
+      "chat": [
+        ["bob", "Soirée pizza vendredi ? 🍕"],
+        ["alice", "Je viens ! J'apporte le dessert"],
+        ["carol", "Oh oui. Je m'occupe de la pâte"],
+        ["dan", "Il reste du couscous au frigo, servez-vous 🥗"],
+        ["alice", "Dan, tu es un héros"],
+        ["carol", "Qui a fini le lait d'avoine ? 🥛"],
+        ["bob", "C'est moi. J'en rachète aujourd'hui."]
+      ],
+      "events": [
+        ["Soirée pizza", "Pâte maison. Apporte ta garniture préférée.", "Notre cuisine"],
+        ["Soirée jeux de société", "Celui qui perd fait la vaisselle.", "Salon"],
+        ["Dimanche au marché", "Fruits, légumes et pain frais pour la semaine.", "Marché fermier"]
+      ],
+      "food": [
+        "J'ai fait beaucoup trop de cookies. Ils sont sur la table de la cuisine !",
+        "Pain au levain encore chaud. Venez en prendre une tranche.",
+        "J'ai fait trop de salade de couscous. Deux portions au frigo."
+      ],
+      "market": [
+        ["Fauteuil jaune", "Confortable, cherche un nouveau foyer"],
+        ["Vélo de ville", "À échanger contre un cadre plus grand"],
+        ["Petite succulente", "Facile à entretenir"],
+        ["Romans de poche", "Un contre un"],
+        ["Tasses en céramique", "Lot de quatre"]
+      ],
+      "links": [
+        ["Recette de pâte à pizza", ["cuisine", "vendredi"]],
+        ["Carte du marché fermier", ["week-end"]],
+        ["Prendre soin des plantes d'intérieur", ["plantes"]]
+      ],
+      "other": ["Mardi, même heure ?", "Séance de bloc", "La salle d'escalade", "Prochain livre : des idées ?"]
+    },
+    "es": {
+      "flat": ["Piso 4B", "Nuestro piso de la calle de las Rosas"],
+      "climb": ["Equipo de escalada", "Búlder todos los martes"],
+      "books": ["Club de lectura", "Un libro al mes y muchos aperitivos"],
+      "chat": [
+        ["bob", "¿Noche de pizza el viernes? 🍕"],
+        ["alice", "¡Me apunto! Yo llevo el postre"],
+        ["carol", "Sí, por favor. Yo hago la masa"],
+        ["dan", "Ha sobrado cuscús en la nevera, servíos 🥗"],
+        ["alice", "Dan, eres un héroe"],
+        ["carol", "¿Quién se ha acabado la leche de avena? 🥛"],
+        ["bob", "He sido yo. Hoy compro más."]
+      ],
+      "events": [
+        ["Noche de pizza", "Masa casera. Trae tu ingrediente favorito.", "Nuestra cocina"],
+        ["Tarde de juegos de mesa", "El que pierda friega los platos.", "Salón"],
+        ["Domingo de mercado", "Fruta, verdura y pan recién hecho para la semana.", "Mercado de agricultores"]
+      ],
+      "food": [
+        "He hecho demasiadas galletas. ¡Están en la mesa de la cocina!",
+        "Pan de masa madre, todavía caliente. Venid a por una rebanada.",
+        "He hecho demasiada ensalada de cuscús. Dos raciones en la nevera."
+      ],
+      "market": [
+        ["Sillón amarillo", "Cómodo, busca un nuevo hogar"],
+        ["Bici de ciudad", "La cambio por un cuadro más grande"],
+        ["Suculenta pequeña", "Fácil de cuidar"],
+        ["Novelas de bolsillo", "Cambio una por una"],
+        ["Tazas de cerámica", "Juego de cuatro"]
+      ],
+      "links": [
+        ["Receta de masa de pizza", ["comida", "viernes"]],
+        ["Mapa del mercado de agricultores", ["finde"]],
+        ["Cómo cuidar las plantas de interior", ["plantas"]]
+      ],
+      "other": ["¿El martes a la misma hora?", "Sesión de búlder", "El rocódromo", "Próximo libro: ¿ideas?"]
+    },
+    "it": {
+      "flat": ["Casa 4B", "La nostra casa in via delle Rose"],
+      "climb": ["Gruppo arrampicata", "Boulder ogni martedì"],
+      "books": ["Club del libro", "Un libro al mese e tanti snack"],
+      "chat": [
+        ["bob", "Serata pizza venerdì? 🍕"],
+        ["alice", "Ci sono! Porto io il dolce"],
+        ["carol", "Sì, grazie. L'impasto lo faccio io"],
+        ["dan", "È avanzato del cous cous in frigo, servitevi 🥗"],
+        ["alice", "Dan, sei un eroe"],
+        ["carol", "Chi ha finito il latte d'avena? 🥛"],
+        ["bob", "Sono stato io. Oggi lo ricompro."]
+      ],
+      "events": [
+        ["Serata pizza", "Impasto fatto in casa. Porta il tuo condimento preferito.", "La nostra cucina"],
+        ["Serata giochi da tavolo", "Chi perde lava i piatti.", "Soggiorno"],
+        ["Domenica al mercato", "Frutta, verdura e pane fresco per la settimana.", "Mercato contadino"]
+      ],
+      "food": [
+        "Ho fatto troppi biscotti. Sono sul tavolo della cucina!",
+        "Pane a lievitazione naturale, ancora caldo. Venite a prenderne una fetta.",
+        "Ho fatto troppa insalata di cous cous. Due porzioni in frigo."
+      ],
+      "market": [
+        ["Poltrona gialla", "Comoda, cerca una nuova casa"],
+        ["Bici da città", "La scambio con un telaio più grande"],
+        ["Piccola succulenta", "Facile da curare"],
+        ["Romanzi tascabili", "Scambio uno a uno"],
+        ["Tazze di ceramica", "Set da quattro"]
+      ],
+      "links": [
+        ["Ricetta dell'impasto per la pizza", ["cibo", "venerdì"]],
+        ["Mappa del mercato contadino", ["weekend"]],
+        ["Come curare le piante da appartamento", ["piante"]]
+      ],
+      "other": ["Martedì alla stessa ora?", "Sessione di boulder", "La palestra di arrampicata", "Prossimo libro: idee?"]
+    }
+  }
+}
