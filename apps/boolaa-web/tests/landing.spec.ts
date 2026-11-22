@@ -46,3 +46,21 @@ for (const l of LOCALES) {
     expect((await context.cookies()).find((c) => c.name === "boolaa_locale")?.value).toBe(l);
   });
 }
+
+test("canonical and Open Graph URLs always use https://boolaa.ro, also when served from www", async ({ request }) => {
+  for (const [path, expected] of [
+    ["/", /^https:\/\/boolaa\.ro\/?$/],
+    ["/login", /^https:\/\/boolaa\.ro\/login$/],
+    ["/register", /^https:\/\/boolaa\.ro\/register$/],
+    ["/privacy", /^https:\/\/boolaa\.ro\/privacy$/],
+    ["/terms", /^https:\/\/boolaa\.ro\/terms$/],
+  ] as const) {
+    const html = await (await request.get(path, { headers: { host: "www.boolaa.ro", "x-forwarded-host": "www.boolaa.ro" } })).text();
+    const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
+    const ogUrl = /<meta property="og:url" content="([^"]+)"/.exec(html)?.[1];
+    const ogImage = /<meta property="og:image" content="([^"]+)"/.exec(html)?.[1];
+    expect(canonical, path).toMatch(expected);
+    expect(ogUrl, path).toMatch(expected);
+    expect(ogImage, path).toMatch(/^https:\/\/boolaa\.ro\/opengraph-image/);
+  }
+});

@@ -225,7 +225,9 @@
     "event": "Próximo evento",
     "link": "Enlace",
     "emptyTitle": "Esto está muy tranquilo",
-    "emptyHint": "Empieza un chat, planea un evento o comparte algo."
+    "emptyHint": "Empieza un chat, planea un evento o comparte algo.",
+    "greeting": "¡Hola, {name}!",
+    "whatsNew": "Novedades"
   },
   "errors": {
     "invalidInviteCode": "Ese código de invitación no corresponde a ninguna burbuja.",

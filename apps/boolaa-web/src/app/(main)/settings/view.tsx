@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { Check, ChevronRight, Clock, Copy, Crown, Link2, LogOut, Share2, UserMinus, X } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
-import { Avatar, ErrorText, Modal, PageLoader, SectionTitle } from "@/components/ui";
+import { Avatar, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
+import { FeatureBadge } from "@/components/orb";
 import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type JoinRequest, type Member } from "@/lib/types";
 import { useTranslations } from "next-intl";
@@ -155,35 +156,38 @@ export default function SettingsPage() {
     <div className="space-y-2" data-testid="settings" data-live={live}>
       <ErrorText>{error}</ErrorText>
       {notice && (
-        <p role="status" data-testid="notice" className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
+        <p role="status" data-testid="notice" className="hue-mint anim-pop-soft rounded-field bg-hue-wash px-4 py-2.5 text-sm font-semibold text-hue-ink">
           {notice}
         </p>
       )}
 
-      <SectionTitle>{t("bubble")}</SectionTitle>
+      <SectionTitle hue="indigo">{t("bubble")}</SectionTitle>
       <BubbleDetails key={bubble.id} canEdit={isOwner} />
 
-      <SectionTitle>{t("inviteCode")}</SectionTitle>
-      <div className="card flex flex-wrap items-center gap-3 p-4">
-        <code className="min-w-0 basis-full font-mono text-2xl font-bold tracking-[0.25em] text-brand sm:basis-auto sm:flex-1" data-testid="invite-code">
-          {bubble.invite_code}
-        </code>
-        <button type="button" onClick={copyCode} className="btn-ghost px-4 py-2 text-sm">
-          {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? t("copied") : t("copy")}
+      {/* Invite "ticket" (6.3) */}
+      <div
+        className="hue-grape mt-7 flex flex-wrap items-center gap-3 rounded-card border-[1.5px] border-dashed bg-hue-wash p-4 sm:p-5"
+        style={{ borderColor: "color-mix(in srgb, var(--h-ink) 45%, transparent)" }}
+      >
+        <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
+          <h2 className="font-display text-xs font-black uppercase tracking-wide text-hue-ink">{t("inviteCode")}</h2>
+          <code className="block font-display text-[28px] font-black tracking-[3px] text-hue-ink" data-testid="invite-code">
+            {bubble.invite_code}
+          </code>
+        </div>
+        <button type="button" onClick={copyCode} className={`btn h-11 px-4 text-sm ${copied ? "hue-mint fill-hue" : "bg-brand/15 text-brand-ink"}`}>
+          {copied ? <Check size={16} strokeWidth={3} className="anim-pop" /> : <Copy size={16} strokeWidth={2.6} />} {copied ? t("copied") : t("copy")}
         </button>
-        <button type="button" onClick={share} className="btn-primary px-4 py-2 text-sm">
-          <Share2 size={16} /> {t("share")}
+        <button type="button" onClick={share} className="btn-primary h-11 px-4 text-sm">
+          <Share2 size={16} strokeWidth={2.6} /> {t("share")}
         </button>
       </div>
 
-      <SectionTitle>
+      <SectionTitle hue="indigo" count={requests.length > 0 ? requests.length : undefined}>
         {t("pendingRequests")}
-        {requests.length > 0 && (
-          <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-sm text-white">{fmt.number(requests.length)}</span>
-        )}
       </SectionTitle>
       {requests.length === 0 ? (
-        <p className="card px-4 py-5 text-sm text-muted">{t("noRequests")}</p>
+        <EmptyNote hue="indigo">{t("noRequests")}</EmptyNote>
       ) : (
         <ul className="space-y-3">
           {requests.map((r) => {
@@ -192,7 +196,7 @@ export default function SettingsPage() {
             const waiting = full && count >= needed;
             return (
               <li key={r.id} className="card flex flex-wrap items-center gap-3 p-4" data-testid="join-request">
-                <Avatar name={r.user?.name} src={r.user?.avatar} size={44} />
+                <Avatar name={r.user?.name} id={r.user_id} src={r.user?.avatar} size={44} />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{r.user?.name ?? tc("someone")}</p>
                   <p className="text-sm text-muted">
@@ -202,18 +206,18 @@ export default function SettingsPage() {
                     · {fmt.relative(r.created_at)}
                   </p>
                   {waiting && (
-                    <p className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-amber-700 dark:text-amber-400" data-testid="waiting-spot">
+                    <p className="hue-sunny mt-1.5 inline-flex items-center gap-1 rounded-full bg-hue-wash px-2.5 py-0.5 font-display text-sm font-bold text-hue-ink" data-testid="waiting-spot">
                       <Clock size={14} /> {t("waitingForSpot")}
                     </p>
                   )}
                 </div>
                 <div className="flex w-full justify-end gap-2 sm:w-auto">
                   {approved ? (
-                    <span className="chip bg-brand/10 text-brand">
+                    <span className="chip hue-mint bg-hue-wash text-hue-ink">
                       <Check size={15} /> {t("youApproved")}
                     </span>
                   ) : (
-                    <button type="button" onClick={() => approve(r)} className="btn-primary px-4 py-2 text-sm" data-testid="approve">
+                    <button type="button" onClick={() => approve(r)} className="btn-primary hue-mint px-4 py-2 text-sm" data-testid="approve">
                       <Check size={16} /> {t("approve")}
                     </button>
                   )}
@@ -227,9 +231,9 @@ export default function SettingsPage() {
         </ul>
       )}
 
-      <SectionTitle>
+      <SectionTitle hue="indigo">
         {t("members")}{" "}
-        <span className="text-base font-medium text-muted" data-testid="member-count">
+        <span className="font-sans text-base font-medium text-muted" data-testid="member-count">
           {members ? t("memberCount", { count: memberCount, max: bubble.max_size }) : ""}
         </span>
       </SectionTitle>
@@ -239,14 +243,14 @@ export default function SettingsPage() {
         <ul className="card divide-y divide-line">
           {members.map((m) => (
             <li key={m.user_id} className="flex items-center gap-3 px-4 py-3" data-testid="member" data-user-id={m.user_id} data-role={m.role}>
-              <Avatar name={m.user?.name} src={m.user?.avatar} size={40} />
+              <Avatar name={m.user?.name} id={m.user_id} src={m.user?.avatar} size={40} />
               <span className="flex-1 font-medium">
                 {m.user?.name ?? tc("someone")}
                 {m.user_id === userId && <span className="ml-1 text-muted">{tc("youSuffix")}</span>}
               </span>
               {m.role === "owner" && (
-                <span className="chip h-7 bg-brand/15 text-brand" data-testid="owner-badge">
-                  <Crown size={14} /> {t("owner")}
+                <span className="hue-sunny inline-flex h-7 items-center gap-1 rounded-full bg-hue-grad px-3 font-display text-xs font-black text-onfill shadow-glow" data-testid="owner-badge">
+                  <Crown size={14} strokeWidth={2.6} /> {t("owner")}
                 </span>
               )}
               <SafetyMenu type="user" id={m.user_id} author={{ id: m.user_id, name: m.user?.name }} />
@@ -256,7 +260,7 @@ export default function SettingsPage() {
                   onClick={() => setRemoving(m)}
                   aria-label={t("removeMemberNamed", { name: m.user?.name ?? tc("someone") })}
                   title={t("removeMember")}
-                  className="chip h-8 bg-red-500/10 text-red-600 hover:bg-red-500/15 dark:text-red-400"
+                  className="chip h-8 bg-danger/10 px-3 text-danger-ink hover:bg-danger/15"
                   data-testid="remove-member"
                 >
                   <UserMinus size={15} /> <span className="hidden sm:inline">{t("removeMember")}</span>
@@ -268,10 +272,10 @@ export default function SettingsPage() {
       )}
 
       <SectionTitle>{t("more")}</SectionTitle>
-      <Link href="/links" className="card flex items-center gap-3 p-4 hover:bg-chip">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/15 text-brand">
-          <Link2 size={20} />
-        </span>
+      <Link href="/links" className="card press flex min-h-14 items-center gap-3 rounded-[20px] px-4 py-2.5">
+        <FeatureBadge hue="sky" size={34}>
+          <Link2 size={18} strokeWidth={2.6} />
+        </FeatureBadge>
         <span className="flex-1 font-medium">{t("sharedLinks")}</span>
         <ChevronRight size={18} className="text-muted" />
       </Link>
@@ -294,7 +298,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => removing && remove(removing)}
-            className="btn flex-1 bg-red-500 text-white hover:bg-red-600"
+            className="btn-destructive flex-1"
             data-testid="remove-confirm"
           >
             {t("removeMember")}
@@ -313,7 +317,7 @@ export default function SettingsPage() {
           <button type="button" onClick={() => setLeaving(false)} className="btn-ghost flex-1">
             {tc("cancel")}
           </button>
-          <button type="button" onClick={leave} className="btn flex-1 bg-red-500 text-white hover:bg-red-600" data-testid="leave-confirm">
+          <button type="button" onClick={leave} className="btn-destructive flex-1" data-testid="leave-confirm">
             {t("leaveConfirm")}
           </button>
         </div>

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
-import { CalendarDays, Link2, MessageCircle, Sparkles, Tags, UtensilsCrossed } from "lucide-react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { CalendarDays, Link2, MessagesSquare, Sparkles, Tag, UtensilsCrossed } from "lucide-react";
+import { FeatureBadge } from "@/components/orb";
+import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, Img, PageLoader, StatusBadge } from "@/components/ui";
 import { AUTHOR, type Author, type Row } from "@/lib/types";
@@ -21,6 +23,8 @@ type FeedItem = {
 
 const LIMIT = 5;
 
+const KIND_HUE: Record<FeedItem["kind"], Hue> = { chat: "grape", food: "tangerine", market: "mint", event: "coral", link: "sky" };
+
 type FeedData = {
   chat: (Pick<Row<"chat_messages">, "id" | "content" | "created_at"> & { sender: Author | null })[];
   food: (Pick<Row<"food_posts">, "id" | "image" | "description" | "created_at"> & { user: Author | null })[];
@@ -32,7 +36,7 @@ type FeedData = {
 };
 
 export default function HomePage() {
-  const { supabase } = useBoolaa();
+  const { supabase, profile } = useBoolaa();
   const bubble = useBubble();
   const t = useTranslations();
   const fmt = useFormat();
@@ -89,20 +93,20 @@ export default function HomePage() {
       at: m.created_at,
       href: "/chat",
       kind: "chat" as const,
-      icon: <MessageCircle size={16} />,
+      icon: <MessagesSquare size={22} strokeWidth={2.4} />,
       author: m.sender,
-      body: <p className="text-[15px]">{m.content}</p>,
+      body: <p className="text-[16px] font-semibold">{m.content}</p>,
     })),
     ...data.food.map((f) => ({
       key: `food-${f.id}`,
       at: f.created_at,
       href: "/food",
       kind: "food" as const,
-      icon: <UtensilsCrossed size={16} />,
+      icon: <UtensilsCrossed size={22} strokeWidth={2.4} />,
       author: f.user,
       body: (
         <div className="flex gap-3">
-          <Img src={f.image} alt={f.description || t("food.imageAlt")} className="h-20 w-20 shrink-0 rounded-xl object-cover" />
+          <Img src={f.image} alt={f.description || t("food.imageAlt")} className="h-[60px] w-[60px] shrink-0 rounded-small object-cover" />
           <p className="text-[15px]">{f.description || t("food.sharedSomeFood")}</p>
         </div>
       ),
@@ -112,11 +116,11 @@ export default function HomePage() {
       at: i.created_at,
       href: "/marketplace",
       kind: "market" as const,
-      icon: <Tags size={16} />,
+      icon: <Tag size={22} strokeWidth={2.4} />,
       author: i.owner,
       body: (
         <div className="flex items-center gap-3">
-          <Img src={i.image} alt={i.title} className="h-20 w-20 shrink-0 rounded-xl object-cover" />
+          <Img src={i.image} alt={i.title} className="h-[60px] w-[60px] shrink-0 rounded-small object-cover" />
           <div className="space-y-1.5">
             <p className="font-semibold">{i.title}</p>
             <StatusBadge status={i.status} />
@@ -129,7 +133,7 @@ export default function HomePage() {
       at: e.created_at,
       href: "/events",
       kind: "event" as const,
-      icon: <CalendarDays size={16} />,
+      icon: <CalendarDays size={22} strokeWidth={2.4} />,
       author: e.creator,
       body: (
         <div>
@@ -146,7 +150,7 @@ export default function HomePage() {
       at: l.created_at,
       href: "/links",
       kind: "link" as const,
-      icon: <Link2 size={16} />,
+      icon: <Link2 size={22} strokeWidth={2.4} />,
       author: l.user,
       body: (
         <div>
@@ -159,30 +163,56 @@ export default function HomePage() {
     })),
   ].sort((a, b) => b.at.localeCompare(a.at));
 
+  const hue = hueFor(bubble.id);
+  const firstName = profile?.name?.split(" ")[0];
   return (
     <div>
-      {bubble.description && <p className="mb-4 text-muted">{bubble.description}</p>}
+      {/* Hero card in the bubble's colour (6.3) */}
+      <section
+        className={`${hueClass(hue)} anim-pop-soft relative mb-7 overflow-hidden rounded-hero p-5 shadow-glow sm:p-6`}
+        style={{ background: "linear-gradient(135deg, var(--h-from), var(--h-to))", color: "var(--h-on)" }}
+        data-testid="home-hero"
+      >
+        <span aria-hidden className="absolute -right-12 -top-16 h-48 w-48 rounded-full bg-white/[0.16]" />
+        <span aria-hidden className="absolute -bottom-10 right-16 h-28 w-28 rounded-full bg-white/[0.14]" />
+        <span aria-hidden className="absolute right-6 top-6 h-8 w-8 rounded-full border-2 border-white/30" />
+        <div className="relative">
+          {firstName && <p className="text-[15px] font-semibold opacity-90">{t("home.greeting", { name: firstName })}</p>}
+          <h2 className="mt-0.5 text-[28px] font-black leading-tight">{bubble.name}</h2>
+          {bubble.description && <p className="mt-1 line-clamp-3 max-w-xl text-[15px] opacity-90">{bubble.description}</p>}
+          <Link
+            href="/links"
+            className="press mt-4 inline-flex h-9 items-center gap-1.5 rounded-full px-4 font-display text-[15px] font-bold"
+            style={{ background: "color-mix(in srgb, var(--h-on) 16%, transparent)", boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--h-on) 25%, transparent)" }}
+          >
+            <Link2 size={16} strokeWidth={2.6} /> {t("nav.links")}
+          </Link>
+        </div>
+      </section>
+      <h2 className="mb-3 text-[20px] font-extrabold">{t("home.whatsNew")}</h2>
       {feed === null ? (
         <PageLoader />
       ) : feed.length === 0 ? (
-        <EmptyState icon={<Sparkles size={32} />} title={t("home.emptyTitle")} hint={t("home.emptyHint")} />
+        <EmptyState icon={<Sparkles size={30} strokeWidth={2.4} />} title={t("home.emptyTitle")} hint={t("home.emptyHint")} hue={hue} />
       ) : (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {feed.map((item) => (
-            <li key={item.key} className="min-w-0">
-              <Link href={item.href} className="card block h-full p-4 transition hover:-translate-y-0.5 hover:shadow-float" data-testid="feed-card">
-                <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand">
-                  {item.icon}
-                  <span className="truncate">{t(`home.${item.kind}`)}</span>
-                  <span className="ml-auto shrink-0 font-normal normal-case tracking-normal text-muted">{fmt.relative(item.at)}</span>
-                </div>
-                {item.body}
-                {item.author && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-muted">
-                    <Avatar name={item.author.name} src={item.author.avatar} size={22} />
-                    {item.author.name}
+          {feed.map((item, i) => (
+            <li key={item.key} className={`anim-rise min-w-0 ${hueClass(KIND_HUE[item.kind])}`} style={{ "--i": i } as CSSProperties}>
+              <Link href={item.href} className="card press flex h-full gap-3 p-4 hover:shadow-float" data-testid="feed-card">
+                <FeatureBadge hue={KIND_HUE[item.kind]}>{item.icon}</FeatureBadge>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2 font-display text-xs font-extrabold uppercase tracking-wide text-hue-ink">
+                    <span className="truncate">{t(`home.${item.kind}`)}</span>
+                    <span className="ml-auto shrink-0 font-sans text-xs font-normal normal-case tracking-normal text-muted">{fmt.relative(item.at)}</span>
                   </div>
-                )}
+                  {item.body}
+                  {item.author && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted">
+                      <Avatar name={item.author.name} id={item.author.id} src={item.author.avatar} size={22} />
+                      {item.author.name}
+                    </div>
+                  )}
+                </div>
               </Link>
             </li>
           ))}

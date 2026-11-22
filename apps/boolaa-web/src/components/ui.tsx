@@ -2,18 +2,24 @@
 
 /* eslint-disable @next/next/no-img-element -- images come from Supabase storage / Unsplash; plain <img> on purpose */
 import { useEffect, useId, useMemo, useRef, type ReactNode } from "react";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { ArrowLeftRight, Gift, ImagePlus, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { BubbleCluster } from "@/components/orb";
+import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { cx, initials } from "@/lib/utils";
 
+/** Photo, or initials on the person's hue (derived from their id, see lib/hue). */
 export function Avatar({
   name,
   src,
+  id,
   size = 40,
   className,
 }: {
   name?: string | null;
   src?: string | null;
+  /** User id, for the deterministic colour. Falls back to the name. */
+  id?: string | null;
   size?: number;
   className?: string;
 }) {
@@ -25,7 +31,7 @@ export function Avatar({
       src={src}
       alt={label}
       style={style}
-      className={cx("shrink-0 rounded-full border-2 border-brand bg-chip object-cover", className)}
+      className={cx("shrink-0 rounded-full bg-field object-cover", size < 32 ? "ring-[1.5px]" : "ring-2", "ring-card", className)}
     />
   ) : (
     <span
@@ -33,7 +39,10 @@ export function Avatar({
       aria-label={label}
       style={style}
       className={cx(
-        "inline-flex shrink-0 select-none items-center justify-center rounded-full border-2 border-brand bg-brand/15 font-semibold text-brand",
+        "inline-flex shrink-0 select-none items-center justify-center rounded-full bg-hue-grad font-display font-extrabold text-hue-on",
+        size < 32 ? "ring-[1.5px]" : "ring-2",
+        "ring-card",
+        hueClass(hueFor(id ?? name)),
         className,
       )}
     >
@@ -44,31 +53,76 @@ export function Avatar({
 
 export function Spinner({ className }: { className?: string }) {
   const t = useTranslations("common");
-  return <Loader2 className={cx("animate-spin text-brand", className)} size={22} aria-label={t("loading")} />;
+  return <Loader2 className={cx("animate-spin text-grape", className)} size={22} aria-label={t("loading")} />;
 }
 
+/** First-load skeleton: content-shaped `field` blocks with a shimmer (5.3); static under reduced motion. */
 export function PageLoader() {
+  const t = useTranslations("common");
   return (
-    <div className="flex justify-center py-16">
-      <Spinner />
+    <div role="status" aria-label={t("loading")} className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="card flex gap-3 p-4">
+          <span className="skeleton h-11 w-11 shrink-0 rounded-[14px]" />
+          <div className="flex-1 space-y-2 pt-1">
+            <span className="skeleton block h-3 w-1/3 rounded-full" />
+            <span className="skeleton block h-3.5 w-4/5 rounded-full" />
+            <span className="skeleton block h-3 w-1/2 rounded-full" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-export function EmptyState({ icon, title, hint }: { icon?: ReactNode; title: string; hint?: string }) {
+/** Feature-coloured empty block with a floating bubble cluster (6.8). */
+export function EmptyState({ icon, title, hint, hue = "grape" }: { icon?: ReactNode; title: string; hint?: string; hue?: Hue }) {
   return (
-    <div className="card flex flex-col items-center gap-2 px-6 py-10 text-center">
-      {icon && <div className="text-brand">{icon}</div>}
-      <p className="font-semibold">{title}</p>
-      {hint && <p className="text-sm text-muted">{hint}</p>}
+    <div
+      className={cx(
+        "anim-pop-soft flex flex-col items-center gap-1.5 rounded-card border-[1.5px] border-dashed px-6 py-7 text-center",
+        hueClass(hue),
+      )}
+      style={{
+        background: "color-mix(in srgb, var(--h-wash) 60%, transparent)",
+        borderColor: "color-mix(in srgb, var(--h-ink) 25%, transparent)",
+      }}
+    >
+      <div className="mb-2">
+        <BubbleCluster hue={hue} size={84}>
+          {icon}
+        </BubbleCluster>
+      </div>
+      <p className="font-display text-[17px] font-extrabold">{title}</p>
+      {hint && <p className="text-[15px] text-muted">{hint}</p>}
     </div>
   );
 }
 
-export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
+/** Small dashed note for an empty section. */
+export function EmptyNote({ hue = "grape", children }: { hue?: Hue; children: ReactNode }) {
   return (
-    <div className="mb-3 mt-6 flex items-center justify-between first:mt-0">
-      <h2 className="text-lg font-bold">{children}</h2>
+    <p
+      className={cx("rounded-card border-[1.5px] border-dashed px-4 py-5 text-center text-[15px] text-muted", hueClass(hue))}
+      style={{ background: "color-mix(in srgb, var(--h-wash) 60%, transparent)", borderColor: "color-mix(in srgb, var(--h-ink) 25%, transparent)" }}
+    >
+      {children}
+    </p>
+  );
+}
+
+/** Section header with an optional counter badge in the feature colour and a trailing action. */
+export function SectionTitle({ children, action, count, hue = "grape" }: { children: ReactNode; action?: ReactNode; count?: number; hue?: Hue }) {
+  return (
+    <div className={cx("mb-3 mt-7 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 first:mt-0", hueClass(hue))}>
+      <h2 className="flex items-center gap-2 text-[20px] font-extrabold">
+        {children}
+        {count !== undefined && (
+          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-hue-wash px-2 font-display text-xs font-extrabold tabular-nums text-hue-ink">
+            {count}
+          </span>
+        )}
+      </h2>
       {action}
     </div>
   );
@@ -77,7 +131,7 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 export function ErrorText({ children }: { children?: ReactNode }) {
   if (!children) return null;
   return (
-    <p role="alert" className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
+    <p role="alert" className="anim-pop-soft rounded-field bg-danger/10 px-4 py-2.5 text-sm font-medium text-danger-ink">
       {children}
     </p>
   );
@@ -112,13 +166,14 @@ export function Modal({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center" role="presentation">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="anim-fade absolute inset-0 bg-[#140c2e]/45 backdrop-blur-[2px]" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-app p-5 shadow-float sm:max-w-lg sm:rounded-3xl"
+        className="anim-route relative max-h-[92dvh] w-full overflow-y-auto rounded-t-hero bg-app p-5 pt-3 shadow-float sm:max-w-lg sm:rounded-hero sm:pt-5"
       >
+        <div aria-hidden className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-muted/40 sm:hidden" />
         <div className="mb-4 flex items-center justify-between">
           <h2 id={titleId} className="text-xl font-bold">
             {title}
@@ -127,7 +182,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label={t("close")}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-chip text-muted hover:text-fg"
+            className="press-round flex h-9 w-9 items-center justify-center rounded-full bg-field text-muted hover:text-fg"
           >
             <X size={18} />
           </button>
@@ -163,7 +218,7 @@ export function ImagePicker({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-card border-2 border-dashed border-brand/40 bg-brand/5 text-brand hover:bg-brand/10"
+        className="press relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-card border-[1.5px] border-dashed border-grape-ink/40 bg-brand/10 text-brand-ink hover:bg-brand/15"
       >
         {shown ? (
           <img src={shown} alt={t("selectedPhoto")} className="absolute inset-0 h-full w-full object-cover" />
@@ -197,11 +252,12 @@ export function StatusBadge({ status, className }: { status: string; className?:
       data-testid="status-badge"
       data-status={status}
       className={cx(
-        "rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide shadow-soft",
-        status === "free" ? "bg-emerald-500 text-white" : "bg-accent text-white",
+        "inline-flex items-center gap-1 rounded-full bg-hue-grad px-2.5 py-1 font-display text-xs font-black uppercase tracking-wide text-onfill shadow-glow",
+        status === "free" ? "hue-mint" : "hue-sunny",
         className,
       )}
     >
+      {status === "free" ? <Gift size={13} strokeWidth={2.6} /> : <ArrowLeftRight size={13} strokeWidth={2.6} />}
       {status === "free" ? t("free") : t("trade")}
     </span>
   );

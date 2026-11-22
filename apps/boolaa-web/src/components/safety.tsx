@@ -66,7 +66,7 @@ export function SafetyMenu({
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className={cx(
-          "flex items-center justify-center rounded-full text-muted hover:bg-chip hover:text-fg",
+          "flex items-center justify-center rounded-full text-muted hover:bg-field hover:text-fg",
           compact ? "h-6 w-6" : "h-8 w-8",
         )}
         data-testid="safety-menu"
@@ -77,7 +77,7 @@ export function SafetyMenu({
         <div
           role="menu"
           className={cx(
-            "absolute top-full z-[250] mt-1 min-w-48 overflow-hidden rounded-xl border border-line bg-card py-1 shadow-float",
+            "absolute top-full z-[250] mt-1 min-w-48 overflow-hidden rounded-field border border-line bg-card py-1 shadow-float",
             compact ? "left-0" : "right-0",
           )}
         >
@@ -88,7 +88,7 @@ export function SafetyMenu({
               setOpen(false);
               setReporting(true);
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-chip"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field"
             data-testid="report"
           >
             <Flag size={16} /> {t("report")}
@@ -101,7 +101,7 @@ export function SafetyMenu({
                 setOpen(false);
                 await unblock(author.id).catch((e) => setError(errorText(e)));
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-chip"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field"
               data-testid="unblock"
             >
               <Undo2 size={16} /> {t("unblockNamed", { name })}
@@ -114,7 +114,7 @@ export function SafetyMenu({
                 setOpen(false);
                 setBlocking(true);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-chip dark:text-red-400"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger-ink hover:bg-field"
               data-testid="block"
             >
               <Ban size={16} /> {t("blockNamed", { name })}
@@ -201,7 +201,7 @@ function ReportForm({
     return (
       <div className="space-y-4" data-testid="report-sent">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint/15 text-mint-ink">
             <ShieldCheck size={20} />
           </span>
           <div>
@@ -210,14 +210,14 @@ function ReportForm({
           </div>
         </div>
         {!blocked.has(author.id) && (
-          <div className="rounded-xl bg-chip p-4">
+          <div className="rounded-field bg-field p-4">
             <p className="font-semibold">{t("alsoBlock", { name: author.name })}</p>
             <p className="mb-3 text-sm text-muted">{t("blockHint")}</p>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={alsoBlock} disabled={busy} className="btn bg-red-500 text-white hover:bg-red-600" data-testid="also-block">
+              <button type="button" onClick={alsoBlock} disabled={busy} className="btn-destructive" data-testid="also-block">
                 <Ban size={16} /> {t("block")}
               </button>
-              <button type="button" onClick={onClose} className="btn-ghost">
+              <button type="button" onClick={onClose} className="btn-calm-ghost">
                 {t("notNow")}
               </button>
             </div>
@@ -225,7 +225,7 @@ function ReportForm({
         )}
         <ErrorText>{error}</ErrorText>
         {blocked.has(author.id) && (
-          <button type="button" onClick={onClose} className="btn-primary w-full">
+          <button type="button" onClick={onClose} className="btn-calm w-full">
             {t("done")}
           </button>
         )}
@@ -242,8 +242,8 @@ function ReportForm({
             <label
               key={r}
               className={cx(
-                "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-[15px] transition",
-                reason === r ? "border-brand bg-brand/10" : "border-line hover:bg-chip",
+                "flex cursor-pointer items-center gap-3 rounded-field border-2 px-3 py-2.5 text-[15px] transition-colors duration-200",
+                reason === r ? "border-grape bg-brand/10" : "border-line hover:bg-field",
               )}
             >
               <input
@@ -274,7 +274,7 @@ function ReportForm({
         />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy || !reason} data-testid="report-submit">
+      <button type="submit" className="btn-calm w-full" disabled={busy || !reason} data-testid="report-submit">
         <Flag size={16} /> {busy ? t("sending") : t("send")}
       </button>
     </form>
@@ -294,7 +294,7 @@ export function BlockDialog({ open, onClose, author }: { open: boolean; onClose:
       <p className="mb-5 text-muted">{t("blockHint")}</p>
       <ErrorText>{error}</ErrorText>
       <div className="flex gap-3">
-        <button type="button" onClick={onClose} className="btn-ghost flex-1">
+        <button type="button" onClick={onClose} className="btn-calm-ghost flex-1">
           {tc("cancel")}
         </button>
         <button
@@ -311,7 +311,7 @@ export function BlockDialog({ open, onClose, author }: { open: boolean; onClose:
               setBusy(false);
             }
           }}
-          className="btn flex-1 bg-red-500 text-white hover:bg-red-600"
+          className="btn-destructive flex-1"
           data-testid="block-confirm"
         >
           <Ban size={16} /> {t("block")}

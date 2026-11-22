@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { CalendarDays, Check, MapPin, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { CalendarPlus, CircleCheck, CirclePlus, Clock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { Confetti } from "@/components/confetti";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader, SectionTitle } from "@/components/ui";
@@ -37,10 +38,15 @@ export default function EventsPage() {
     void load();
   }, [load]);
 
-  async function toggleRsvp(ev: BoolaaEvent) {
+  /** Returns whether the user is going once the server has confirmed. */
+  async function toggleRsvp(ev: BoolaaEvent): Promise<boolean | null> {
     const { data, error } = await supabase.rpc("toggle_rsvp", { p_event_id: ev.id });
-    if (error) return setError(errorText(error));
+    if (error) {
+      setError(errorText(error));
+      return null;
+    }
     setEvents((prev) => prev?.map((e) => (e.id === ev.id ? { ...e, rsvp_list: data ?? [] } : e)) ?? null);
+    return (data ?? []).includes(userId);
   }
 
   async function remove(ev: BoolaaEvent) {
@@ -55,12 +61,13 @@ export default function EventsPage() {
 
   const list = (items: BoolaaEvent[], empty: string) =>
     items.length === 0 ? (
-      <p className="card px-4 py-6 text-center text-sm text-muted">{empty}</p>
+      <EmptyState icon={<CalendarPlus size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={empty} hue="coral" />
     ) : (
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {items.map((ev) => (
+        {items.map((ev, i) => (
           <EventCard
             key={ev.id}
+            index={i}
             ev={ev}
             now={now}
             mine={ev.creator_id === userId}
@@ -73,23 +80,30 @@ export default function EventsPage() {
       </ul>
     );
 
+  const newButton = (
+    <button type="button" className="btn-primary hue-coral min-h-10 px-4" data-testid="new-event" onClick={() => setEditing("new")}>
+      <Plus size={18} strokeWidth={3} /> {t("newEvent")}
+    </button>
+  );
+
   return (
     <div>
       <ErrorText>{error}</ErrorText>
-      <div className="mb-4 flex justify-end">
-        <button type="button" className="btn-primary" data-testid="new-event" onClick={() => setEditing("new")}>
-          <Plus size={18} /> {t("newEvent")}
-        </button>
-      </div>
       {events === null ? (
-        <PageLoader />
+        <>
+          <SectionTitle hue="coral" action={newButton}>{t("myEvents")}</SectionTitle>
+          <PageLoader />
+        </>
       ) : events.length === 0 ? (
-        <EmptyState icon={<CalendarDays size={32} />} title={t("emptyTitle")} hint={t("emptyHint")} />
+        <>
+          <SectionTitle hue="coral" action={newButton}>{t("myEvents")}</SectionTitle>
+          <EmptyState icon={<CalendarPlus size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="coral" />
+        </>
       ) : (
         <>
-          <SectionTitle>{t("myEvents")}</SectionTitle>
+          <SectionTitle hue="coral" count={mine.length} action={newButton}>{t("myEvents")}</SectionTitle>
           {list(mine, t("emptyMine"))}
-          <SectionTitle>{t("bubbleEvents")}</SectionTitle>
+          <SectionTitle hue="coral" count={others.length}>{t("bubbleEvents")}</SectionTitle>
           {list(others, t("emptyOthers"))}
         </>
       )}
@@ -110,6 +124,7 @@ export default function EventsPage() {
 
 function EventCard({
   ev,
+  index,
   now,
   mine,
   going,
@@ -118,10 +133,11 @@ function EventCard({
   onDelete,
 }: {
   ev: BoolaaEvent;
+  index: number;
   now: number;
   mine: boolean;
   going: boolean;
-  onRsvp: () => void;
+  onRsvp: () => Promise<boolean | null>;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -129,53 +145,67 @@ function EventCard({
   const tc = useTranslations("common");
   const fmt = useFormat();
   const past = new Date(ev.datetime).getTime() < now;
+  const [burst, setBurst] = useState(0);
   return (
-    <li className={cx("card flex flex-col gap-3 p-4", past && "opacity-60")} data-testid="event-card">
-      <div className="flex gap-3">
-        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-brand/15 text-brand">
-          <span className="text-[11px] font-semibold uppercase">{fmt.month(ev.datetime)}</span>
-          <span className="text-xl font-bold leading-none">{fmt.day(ev.datetime)}</span>
+    <li className={cx("card anim-rise flex flex-col gap-3 p-4", past && "opacity-60")} style={{ "--i": index } as CSSProperties} data-testid="event-card">
+      <div className="flex gap-3.5">
+        {/* Date tile, tilted (6.3) */}
+        <div className="hue-coral flex h-16 w-14 shrink-0 -rotate-4 flex-col overflow-hidden rounded-field bg-hue-wash shadow-soft">
+          <span className="bg-hue-grad py-0.5 text-center font-display text-[11px] font-black uppercase text-onfill">{fmt.month(ev.datetime)}</span>
+          <span className="flex flex-1 items-center justify-center font-display text-[22px] font-black leading-none text-hue-ink">{fmt.day(ev.datetime)}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold">{ev.title}</h3>
-          <p className="text-sm text-muted">{fmt.dateTime(ev.datetime)}</p>
+          <h3 className="truncate text-[17px] font-extrabold">{ev.title}</h3>
+          <p className="flex items-center gap-1.5 text-[15px] text-muted">
+            <Clock size={14} strokeWidth={2.6} className="shrink-0" /> {fmt.dateTime(ev.datetime)}
+          </p>
           {ev.location && (
-            <p className="flex items-center gap-1 text-sm text-muted">
-              <MapPin size={14} /> {ev.location}
+            <p className="flex items-center gap-1.5 text-[15px] text-muted">
+              <MapPin size={14} strokeWidth={2.6} className="shrink-0" /> {ev.location}
             </p>
           )}
         </div>
         {!mine && <SafetyMenu type="event" id={ev.id} author={{ id: ev.creator_id, name: ev.creator?.name }} />}
         {mine && (
           <div className="flex gap-1">
-            <button type="button" aria-label={t("editEvent")} onClick={onEdit} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-brand">
+            <button type="button" aria-label={t("editEvent")} onClick={onEdit} className="press-round h-9 w-9 rounded-full text-muted hover:bg-field hover:text-brand-ink">
               <Pencil size={16} className="mx-auto" />
             </button>
-            <button type="button" aria-label={t("deleteEvent")} onClick={onDelete} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-red-500">
+            <button type="button" aria-label={t("deleteEvent")} onClick={onDelete} className="press-round h-9 w-9 rounded-full text-muted hover:bg-danger/10 hover:text-danger-ink">
               <Trash2 size={16} className="mx-auto" />
             </button>
           </div>
         )}
       </div>
       {ev.description && <p className="text-[15px]">{ev.description}</p>}
-      <p className="text-sm text-muted" data-testid="rsvp-count" data-count={ev.rsvp_list.length}>
-        {t("goingCount", { count: ev.rsvp_list.length })}
-      </p>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
-          <Avatar name={ev.creator?.name} src={ev.creator?.avatar} size={24} />
+          <Avatar name={ev.creator?.name} id={ev.creator_id} src={ev.creator?.avatar} size={24} />
           <span className="truncate">{ev.creator?.name ?? tc("someone")}</span>
         </span>
-        <button
-          type="button"
-          onClick={onRsvp}
-          aria-pressed={going}
-          data-testid="rsvp-button"
-          className={cx("chip", going ? "bg-brand text-white" : "bg-chip text-brand hover:bg-brand/15")}
-        >
-          {going ? <Check size={16} /> : <Users size={16} />}
-          {going ? t("going") : t("rsvp")}
-        </button>
+        <span className="ml-auto flex items-center gap-3">
+          <span key={ev.rsvp_list.length} className="anim-fade text-sm tabular-nums text-muted" data-testid="rsvp-count" data-count={ev.rsvp_list.length}>
+            {t("goingCount", { count: ev.rsvp_list.length })}
+          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              if ((await onRsvp()) === true) setBurst((n) => n + 1);
+            }}
+            aria-pressed={going}
+            data-testid="rsvp-button"
+            className={cx(
+              "chip relative transition-[background,color,box-shadow,transform] duration-300",
+              going ? "hue-mint fill-hue" : "hue-coral bg-hue-wash text-hue-ink hover:brightness-105",
+            )}
+          >
+            {burst > 0 && <Confetti key={burst} />}
+            <span key={going ? "on" : "off"} className="anim-pop inline-flex">
+              {going ? <CircleCheck size={18} strokeWidth={2.6} /> : <CirclePlus size={18} strokeWidth={2.6} />}
+            </span>
+            {going ? t("going") : t("rsvp")}
+          </button>
+        </span>
       </div>
     </li>
   );
@@ -240,7 +270,7 @@ function EventForm({ event, onDone }: { event: BoolaaEvent | null; onDone: () =>
         <textarea id="ev-desc" className="input min-h-20" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy || !title.trim() || !when}>
+      <button type="submit" className="btn-primary hue-coral w-full" disabled={busy || !title.trim() || !when}>
         {busy ? t("common.saving") : event ? t("common.saveChanges") : t("events.create")}
       </button>
     </form>

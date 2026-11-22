@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { ExternalLink, Link2, Plus, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
@@ -64,7 +64,7 @@ export default function LinksPage() {
             type="button"
             aria-pressed={tag === null}
             onClick={() => setTag(null)}
-            className={cx("chip", tag === null ? "bg-brand text-white" : "bg-chip text-brand")}
+            className={cx("chip hue-sky transition-[background,color,box-shadow,transform]", tag === null ? "fill-hue" : "bg-field text-muted hover:text-fg")}
           >
             {t("all")}
           </button>
@@ -75,40 +75,40 @@ export default function LinksPage() {
               aria-pressed={tag === tg}
               data-testid={`tag-${tg}`}
               onClick={() => setTag(tag === tg ? null : tg)}
-              className={cx("chip", tag === tg ? "bg-brand text-white" : "bg-chip text-brand hover:bg-brand/15")}
+              className={cx("chip hue-sky transition-[background,color,box-shadow,transform]", tag === tg ? "fill-hue" : "bg-field text-muted hover:text-fg")}
             >
               #{tg}
             </button>
           ))}
         </div>
-        <button type="button" className="btn-primary shrink-0" data-testid="add-link" onClick={() => setAdding(true)}>
-          <Plus size={18} /> {t("addLink")}
+        <button type="button" className="btn-primary hue-sky min-h-10 shrink-0 px-4" data-testid="add-link" onClick={() => setAdding(true)}>
+          <Plus size={18} strokeWidth={3} /> {t("addLink")}
         </button>
       </div>
       {links === null ? (
         <PageLoader />
       ) : shown.length === 0 ? (
-        <EmptyState icon={<Link2 size={32} />} title={t("emptyTitle")} hint={t("emptyHint")} />
+        <EmptyState icon={<Link2 size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="sky" />
       ) : (
         <ul className="space-y-3">
-          {shown.map((l) => (
-            <li key={l.id} className="card flex items-center gap-3 p-4" data-testid="link-card">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
+          {shown.map((l, i) => (
+            <li key={l.id} className="card anim-rise flex items-center gap-3 p-4" style={{ "--i": i } as CSSProperties} data-testid="link-card">
+              <span className="hue-sky flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-hue-grad text-onfill shadow-glow">
                 <Link2 size={20} />
               </span>
               <div className="min-w-0 flex-1">
-                <a href={l.url} target="_blank" rel="noopener noreferrer" className="block truncate font-semibold hover:text-brand">
+                <a href={l.url} target="_blank" rel="noopener noreferrer" className="block truncate font-semibold hover:text-brand-ink">
                   {l.title || hostOf(l.url)}
                 </a>
                 <p className="truncate text-sm text-muted">{hostOf(l.url)}</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                   {l.tags.map((tg) => (
-                    <button key={tg} type="button" onClick={() => setTag(tg)} className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-medium text-brand">
+                    <button key={tg} type="button" onClick={() => setTag(tg)} className="hue-sky press rounded-full bg-hue-wash px-2 py-0.5 font-display text-xs font-bold text-hue-ink">
                       #{tg}
                     </button>
                   ))}
                   <span className="flex items-center gap-1 text-xs text-muted">
-                    <Avatar name={l.user?.name} src={l.user?.avatar} size={18} /> {l.user?.name} · {fmt.relative(l.created_at)}
+                    <Avatar name={l.user?.name} id={l.user_id} src={l.user?.avatar} size={20} /> {l.user?.name} · {fmt.relative(l.created_at)}
                   </span>
                 </div>
               </div>
@@ -117,13 +117,13 @@ export default function LinksPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("openLink")}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-brand hover:bg-chip"
+                className="hue-sky press-round flex h-[38px] w-[38px] items-center justify-center rounded-full bg-hue-wash text-hue-ink"
               >
                 <ExternalLink size={18} />
               </a>
               {l.user_id !== userId && <SafetyMenu type="shared_link" id={l.id} author={{ id: l.user_id, name: l.user?.name }} />}
               {l.user_id === userId && (
-                <button type="button" aria-label={t("deleteLink")} onClick={() => remove(l)} className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-chip hover:text-red-500">
+                <button type="button" aria-label={t("deleteLink")} onClick={() => remove(l)} className="press-round flex h-[38px] w-[38px] items-center justify-center rounded-full bg-danger/10 text-danger-ink">
                   <Trash2 size={17} />
                 </button>
               )}
@@ -195,7 +195,7 @@ function LinkForm({ onDone }: { onDone: () => void }) {
         <input id="link-tags" className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder={t("links.tagsPlaceholder")} />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy || !url.trim()}>
+      <button type="submit" className="btn-primary hue-sky w-full" disabled={busy || !url.trim()}>
         {busy ? t("common.saving") : t("links.addLink")}
       </button>
     </form>

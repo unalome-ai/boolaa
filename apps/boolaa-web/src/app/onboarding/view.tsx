@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, Hourglass, LogOut, RefreshCw } from "lucide-react";
 import { fetchMyBubbles } from "@/components/boolaa-provider";
 import { CreateJoinTabs } from "@/components/create-join";
+import { AmbientBackdrop, BubbleLogo, FeatureBadge } from "@/components/orb";
 import { ErrorText, PageLoader } from "@/components/ui";
+import { hueFor } from "@/lib/hue";
 import { getSupabase } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -129,29 +131,29 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 py-8" data-testid="onboarding" data-live={live}>
+    <main className="relative isolate min-h-dvh overflow-hidden" data-testid="onboarding" data-live={live}>
+      <AmbientBackdrop className="-z-10" />
+      <div className="anim-route mx-auto flex min-h-dvh max-w-xl flex-col px-4 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         {hasBubbles ? (
-          <Link href="/home" className="chip bg-chip text-brand">
+          <Link href="/home" className="chip bg-card text-brand-ink shadow-soft">
             <ArrowLeft size={16} /> {t("myBubbles")}
           </Link>
         ) : (
           <span className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-lg font-black text-white">
-              b
-            </span>
-            <span className="text-2xl font-black tracking-tight text-brand">boolaa</span>
+            <BubbleLogo size={34} />
+            <span className="font-display text-[26px] font-black tracking-tight">Boolaa</span>
           </span>
         )}
         <div className="flex items-center gap-2">
           <CompactLocalePicker />
-          <button type="button" onClick={signOut} className="chip bg-chip text-muted hover:text-fg">
+          <button type="button" onClick={signOut} className="chip bg-card text-muted shadow-soft hover:text-fg">
             <LogOut size={16} /> {t("signOut")}
           </button>
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold tracking-tight">{hasBubbles ? t("titleMore") : t("titleFirst")}</h1>
+      <h1 className="text-[34px] font-black leading-tight tracking-tight">{hasBubbles ? t("titleMore") : t("titleFirst")}</h1>
       <p className="mb-6 mt-1 text-muted">{t("intro")}</p>
 
       <ErrorText>{error}</ErrorText>
@@ -163,24 +165,24 @@ export default function OnboardingPage() {
           {pending.length > 0 && (
             <section aria-labelledby="pending-title" className="mb-8" data-testid="pending-list">
               <div className="mb-3 flex items-center justify-between">
-                <h2 id="pending-title" className="text-lg font-bold">
+                <h2 id="pending-title" className="text-[20px] font-extrabold">
                   {t("pendingTitle")}
                 </h2>
                 <button
                   type="button"
                   onClick={() => userId && load(userId)}
-                  className="chip bg-chip text-brand"
+                  className="chip bg-brand/15 text-brand-ink"
                   data-testid="refresh-pending"
                 >
                   <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} /> {t("refresh")}
                 </button>
               </div>
               <ul className="space-y-3">
-                {pending.map((p) => (
-                  <li key={p.id} className="card flex items-center gap-4 p-4">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
-                      <Hourglass size={22} />
-                    </span>
+                {pending.map((p, i) => (
+                  <li key={p.id} className="card anim-rise flex items-center gap-4 p-4" style={{ "--i": i } as CSSProperties}>
+                    <FeatureBadge hue={hueFor(p.bubble?.id)}>
+                      <Hourglass size={20} strokeWidth={2.6} />
+                    </FeatureBadge>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{p.bubble?.name ?? "—"}</p>
                       <p className="text-sm text-muted">
@@ -200,7 +202,7 @@ export default function OnboardingPage() {
             </section>
           )}
 
-          <div className="card p-5">
+          <div className="anim-rise rounded-hero bg-card/80 p-5 shadow-float ring-1 ring-line backdrop-blur-2xl">
             <CreateJoinTabs
               initial={pending.length > 0 ? "join" : "create"}
               onCreated={(b) => {
@@ -212,6 +214,7 @@ export default function OnboardingPage() {
           </div>
         </>
       )}
+      </div>
     </main>
   );
 }

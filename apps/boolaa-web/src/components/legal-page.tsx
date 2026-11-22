@@ -1,16 +1,17 @@
 import Link from "next/link";
+import { BubbleLogo } from "@/components/orb";
 import { Fragment, type ReactNode } from "react";
 import { FileWarning } from "lucide-react";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { localeNames, locales, type Locale } from "@/i18n/config";
 import { legalDoc, type LegalKind } from "@/lib/legal";
-import { LEGAL_UPDATED } from "@/lib/site";
+import { LEGAL_UPDATED, pageUrls } from "@/lib/site";
 
 /** Highlights "[Placeholder]" text that still has to be filled in before publishing. */
 function withPlaceholders(text: string): ReactNode {
   return text.split(/(\[[^\]]+\])/g).map((part, i) =>
     /^\[[^\]]+\]$/.test(part) ? (
-      <mark key={i} className="rounded bg-amber-300/40 px-1 text-inherit">
+      <mark key={i} className="rounded bg-sunny/40 px-1 text-inherit">
         {part}
       </mark>
     ) : (
@@ -31,7 +32,7 @@ function Body({ items }: { items: string[] }) {
   }
   return blocks.map((b, i) =>
     Array.isArray(b) ? (
-      <ul key={i} className="my-3 list-disc space-y-1.5 pl-6 marker:text-brand">
+      <ul key={i} className="my-3 list-disc space-y-1.5 pl-6 marker:text-brand-ink">
         {b.map((li, j) => (
           <li key={j}>{withPlaceholders(li)}</li>
         ))}
@@ -60,8 +61,8 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-5 py-3">
           <Link href="/" className="flex items-center gap-2" aria-label={t("home")}>
-            <span className="bg-gradient-brand flex h-8 w-8 items-center justify-center rounded-full font-black text-white">b</span>
-            <span className="text-xl font-black tracking-tight text-brand">boolaa</span>
+            <BubbleLogo size={28} animated={false} />
+            <span className="font-display text-[22px] font-black tracking-tight">Boolaa</span>
           </Link>
           <nav aria-label="Language" className="flex flex-wrap gap-1 text-sm">
             {locales.map((l) => (
@@ -72,7 +73,7 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
                 lang={l}
                 aria-current={l === locale ? "true" : undefined}
                 title={localeNames[l]}
-                className={`rounded-full px-2.5 py-1 font-semibold uppercase ${l === locale ? "bg-brand text-white" : "text-muted hover:bg-chip"}`}
+                className={`rounded-full px-2.5 py-1 font-display font-bold uppercase ${l === locale ? "bg-brand text-white" : "text-muted hover:bg-field"}`}
               >
                 {l}
               </a>
@@ -81,9 +82,9 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-5 pb-16 pt-6 text-[17px] leading-relaxed">
-        <p role="note" className="mb-6 flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-400/15 px-4 py-3 text-[15px] font-medium" data-testid="legal-draft">
-          <FileWarning size={20} className="mt-0.5 shrink-0 text-amber-600" /> {t("draft")}
+      <main className="mx-auto max-w-[44rem] px-5 pb-16 pt-6 text-[17px] leading-relaxed">
+        <p role="note" className="hue-sunny mb-6 flex items-start gap-2 rounded-field bg-hue-wash px-4 py-3 text-[15px] font-medium" data-testid="legal-draft">
+          <FileWarning size={20} className="mt-0.5 shrink-0 text-hue-ink" /> {t("draft")}
         </p>
         <h1 className="text-balance text-3xl font-black tracking-tight sm:text-4xl">{doc.title}</h1>
         <p className="mt-2 text-sm text-muted" data-testid="legal-updated">
@@ -91,14 +92,14 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
         </p>
         <p className="mt-5">{withPlaceholders(doc.intro)}</p>
 
-        <nav aria-labelledby="toc-title" className="my-8 rounded-2xl bg-landing-soft p-5">
-          <h2 id="toc-title" className="mb-2 text-sm font-bold uppercase tracking-wide text-brand">
+        <nav aria-labelledby="toc-title" className="my-8 rounded-card bg-card p-5 shadow-soft">
+          <h2 id="toc-title" className="mb-2 text-xs font-extrabold uppercase tracking-wide text-brand-ink">
             {t("contents")}
           </h2>
           <ol className="list-decimal space-y-1 pl-5 text-[16px] marker:text-muted">
             {doc.sections.map((s) => (
               <li key={s.id}>
-                <a href={`#${s.id}`} className="hover:text-brand hover:underline">
+                <a href={`#${s.id}`} className="hover:text-brand-ink hover:underline">
                   {s.title}
                 </a>
               </li>
@@ -108,7 +109,7 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
 
         {doc.sections.map((s, i) => (
           <section key={s.id} id={s.id} className="scroll-mt-6 border-t border-line pt-6 first-of-type:border-0">
-            <h2 className="text-xl font-bold sm:text-2xl">
+            <h2 className="text-xl font-extrabold sm:text-[22px]">
               {i + 1}. {s.title}
             </h2>
             <Body items={s.body} />
@@ -116,7 +117,7 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
         ))}
 
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6 text-sm">
-          <Link href={`/${other}`} className="font-semibold text-brand hover:underline">
+          <Link href={`/${other}`} className="font-semibold text-brand-ink hover:underline">
             {t(other)}
           </Link>
           <a href="#top" className="text-muted hover:text-fg">
@@ -134,6 +135,7 @@ export async function legalMetadata(kind: LegalKind) {
   return {
     title: doc.title,
     description: doc.intro.slice(0, 160),
+    openGraph: { ...pageUrls(`/${kind}`).openGraph, title: doc.title },
     alternates: {
       canonical: `/${kind}`,
       languages: Object.fromEntries(locales.map((l) => [l, `/${kind}?lang=${l}`])),

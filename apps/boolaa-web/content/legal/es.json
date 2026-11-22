@@ -39,8 +39,8 @@
         "body": [
           "El contenido que publicas en una burbuja solo lo ven sus miembros. Tu nombre y tu foto los ven las personas con las que compartes una burbuja. Las personas que bloqueas, y las que te bloquean, dejan de ver el contenido del otro.",
           "Usamos estos encargados del tratamiento, vinculados por acuerdos de tratamiento de datos:",
-          "- Supabase (base de datos, autenticación y almacenamiento de archivos), alojado en la UE.",
-          "- Nuestro proveedor de alojamiento, que sirve la web y el servidor de la app.",
+          "- Supabase (base de datos, autenticación y almacenamiento de archivos), con nuestros datos alojados en Zúrich (Suiza).",
+          "- DigitalOcean, que aloja la web y el servidor de la app en Fráncfort (Alemania).",
           "Solo compartimos datos con las autoridades cuando la ley lo exige."
         ]
       },
@@ -48,7 +48,7 @@
         "id": "transfers",
         "title": "Transferencias internacionales",
         "body": [
-          "Guardamos tus datos en la Unión Europea. Si algún encargado necesitara acceder a ellos desde fuera de la UE/EEE, nos basaríamos en las Cláusulas Contractuales Tipo (CCT) de la Comisión Europea u otro mecanismo de transferencia válido."
+          "Tus datos se guardan en Suiza (Supabase, Zúrich) y se sirven desde la UE (DigitalOcean, Fráncfort). Suiza cuenta con una decisión de adecuación de la Comisión Europea, por lo que el RGPD permite transferir datos allí sin garantías adicionales. Si algún encargado necesitara acceder a tus datos desde otro país fuera de la UE/EEE, nos basaríamos en las Cláusulas Contractuales Tipo (CCT) de la Comisión Europea u otro mecanismo de transferencia válido."
         ]
       },
       {
@@ -92,7 +92,9 @@
       {
         "id": "contact",
         "title": "Contacto",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   },
@@ -183,7 +185,9 @@
       {
         "id": "contact",
         "title": "Contacto",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   }

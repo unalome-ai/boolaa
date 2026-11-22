@@ -39,8 +39,8 @@
         "body": [
           "Conținutul publicat într-o bulă este vizibil doar membrilor acelei bule. Numele și fotografia ta sunt vizibile persoanelor cu care ai o bulă în comun. Persoanele pe care le blochezi și cele care te blochează nu mai văd conținutul celuilalt.",
           "Folosim următorii împuterniciți, care au semnat acorduri de prelucrare a datelor:",
-          "- Supabase (bază de date, autentificare și stocare de fișiere), găzduit în UE.",
-          "- Furnizorul nostru de găzduire, care servește site-ul și serverul aplicației.",
+          "- Supabase (bază de date, autentificare și stocare de fișiere); datele noastre sunt găzduite la Zurich, în Elveția.",
+          "- DigitalOcean, care găzduiește site-ul și serverul aplicației la Frankfurt, în Germania.",
           "Transmitem date autorităților doar atunci când legea o cere."
         ]
       },
@@ -48,7 +48,7 @@
         "id": "transfers",
         "title": "Transferuri internaționale",
         "body": [
-          "Păstrăm datele tale în Uniunea Europeană. Dacă un împuternicit ar avea vreodată nevoie să le acceseze din afara UE/SEE, ne bazăm pe Clauzele contractuale standard (SCC) ale Comisiei Europene sau pe un alt mecanism de transfer valid."
+          "Datele tale sunt stocate în Elveția (Supabase, Zurich) și servite din UE (DigitalOcean, Frankfurt). Elveția beneficiază de o decizie de adecvare a Comisiei Europene, așa că GDPR permite transferul datelor acolo fără garanții suplimentare. Dacă un împuternicit ar avea vreodată nevoie să le acceseze dintr-o altă țară din afara UE/SEE, ne bazăm pe Clauzele contractuale standard (SCC) ale Comisiei Europene sau pe un alt mecanism de transfer valid."
         ]
       },
       {
@@ -92,7 +92,9 @@
       {
         "id": "contact",
         "title": "Contact",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   },
@@ -183,7 +185,9 @@
       {
         "id": "contact",
         "title": "Contact",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   }

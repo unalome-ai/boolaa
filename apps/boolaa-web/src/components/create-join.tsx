@@ -70,7 +70,7 @@ export function CreateBubbleForm({ onCreated }: { onCreated: (b: Bubble) => void
           max={150}
           value={maxSize}
           onChange={(e) => setMaxSize(Number(e.target.value))}
-          className="w-full accent-[#9D78BD]"
+          className="w-full accent-[var(--grape)]"
         />
       </div>
       <ErrorText>{error}</ErrorText>
@@ -107,7 +107,7 @@ export function JoinBubbleForm({ onRequested }: { onRequested: () => void }) {
         </label>
         <input
           id="invite-code"
-          className="input font-mono uppercase tracking-[0.2em]"
+          className="input font-display font-extrabold uppercase tracking-[0.2em]"
           required
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -137,7 +137,15 @@ export function CreateJoinTabs({
   const t = useTranslations("createJoin");
   return (
     <div>
-      <div className="mb-5 grid grid-cols-2 rounded-full bg-chip p-1" role="tablist">
+      <div className="relative mb-5 grid grid-cols-2 rounded-full bg-field p-1" role="tablist">
+        <span
+          aria-hidden
+          className="slide fill-hue absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full"
+          style={{
+            transform: tab === "join" ? "translateX(100%)" : "none",
+            transition: "transform var(--dur-snappy) var(--ease-snappy)",
+          }}
+        />
         {(["create", "join"] as const).map((k) => (
           <button
             key={k}
@@ -147,15 +155,17 @@ export function CreateJoinTabs({
             data-testid={`tab-${k}`}
             onClick={() => setTab(k)}
             className={cx(
-              "rounded-full py-2 text-sm font-semibold transition",
-              tab === k ? "bg-brand text-white shadow-soft" : "text-brand",
+              "relative min-h-10 rounded-full px-2 text-[15px] font-bold transition-colors duration-200",
+              tab === k ? "text-white" : "text-muted hover:text-fg",
             )}
           >
             {k === "create" ? t("tabCreate") : t("tabJoin")}
           </button>
         ))}
       </div>
+      <div key={tab} className="anim-fade">
       {tab === "create" ? <CreateBubbleForm onCreated={onCreated} /> : <JoinBubbleForm onRequested={onRequested} />}
+      </div>
     </div>
   );
 }

@@ -71,8 +71,10 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
           aria-label={t("profile.changeAvatar")}
           disabled={busy}
         >
-          <Avatar name={profile?.name} src={profile?.avatar} size={96} />
-          <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand text-white shadow-soft">
+          <span className="block rounded-full p-[3px]" style={{ background: "conic-gradient(var(--grape), var(--pink), var(--sunny), var(--mint), var(--sky), var(--grape))" }}>
+            <Avatar name={profile?.name} id={profile?.id} src={profile?.avatar} size={112} />
+          </span>
+          <span className="hue-grape absolute bottom-0 right-0 flex h-[38px] w-[38px] items-center justify-center rounded-full bg-hue-grad text-white shadow-glow ring-2 ring-app">
             <Camera size={16} />
           </span>
         </button>
@@ -157,11 +159,11 @@ function BlockedUsers() {
       <ul className="space-y-2">
         {shown.map((r) => (
           <li key={r.blocked_id} className="flex items-center gap-3" data-testid="blocked-user">
-            <Avatar name={r.user?.name} src={r.user?.avatar} size={32} />
+            <Avatar name={r.user?.name} id={r.user?.id} src={r.user?.avatar} size={32} />
             <span className="min-w-0 flex-1 truncate">{r.user?.name ?? t("common.someone")}</span>
             <button
               type="button"
-              className="chip bg-chip text-brand hover:bg-brand/15"
+              className="chip bg-brand/15 text-brand-ink hover:bg-brand/20"
               onClick={() => unblock(r.blocked_id).catch((e) => setError(errorText(e)))}
               data-testid="unblock"
             >
@@ -222,10 +224,10 @@ function AccountSection() {
   return (
     <section className="mt-6 space-y-3 border-t border-line pt-5">
       <div className="flex flex-wrap gap-2">
-        <Link href="/privacy" className="chip bg-chip text-brand hover:bg-brand/15" target="_blank">
+        <Link href="/privacy" className="chip bg-brand/15 text-brand-ink hover:bg-brand/20" target="_blank">
           <ShieldCheck size={15} /> {t("legal.privacy")}
         </Link>
-        <Link href="/terms" className="chip bg-chip text-brand hover:bg-brand/15" target="_blank">
+        <Link href="/terms" className="chip bg-brand/15 text-brand-ink hover:bg-brand/20" target="_blank">
           <FileText size={15} /> {t("legal.terms")}
         </Link>
       </div>
@@ -234,8 +236,8 @@ function AccountSection() {
           <Trash2 size={18} /> {t("profile.deleteAccount")}
         </button>
       ) : (
-        <div className="space-y-3 rounded-2xl border border-red-500/30 bg-red-500/5 p-4" data-testid="delete-panel">
-          <p className="font-semibold text-red-600 dark:text-red-400">{t("profile.deleteTitle")}</p>
+        <div className="space-y-3 rounded-field border border-danger/30 bg-danger/5 p-4" data-testid="delete-panel">
+          <p className="font-display font-extrabold text-danger-ink">{t("profile.deleteTitle")}</p>
           <p className="text-sm text-muted">{t("profile.deleteBody")}</p>
           <label className="label" htmlFor="delete-confirm-word">
             {t("profile.deleteTypeToConfirm", { word })}
@@ -250,12 +252,12 @@ function AccountSection() {
           />
           <ErrorText>{error}</ErrorText>
           <div className="flex gap-3">
-            <button type="button" className="btn-ghost flex-1" onClick={() => setConfirming(false)} disabled={busy}>
+            <button type="button" className="btn-calm-ghost flex-1" onClick={() => setConfirming(false)} disabled={busy}>
               {t("common.cancel")}
             </button>
             <button
               type="button"
-              className="btn flex-1 bg-red-500 text-white hover:bg-red-600"
+              className="btn-destructive flex-1"
               disabled={!matches || busy}
               onClick={deleteAccount}
               data-testid="delete-confirm"

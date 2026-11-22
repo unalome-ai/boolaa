@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
@@ -60,43 +60,43 @@ export default function MarketplacePage() {
               aria-pressed={filter === f}
               data-testid={`filter-${f}`}
               onClick={() => setFilter(f)}
-              className={cx("chip", filter === f ? "bg-brand text-white" : "bg-chip text-brand hover:bg-brand/15")}
+              className={cx("chip hue-mint transition-[background,color,box-shadow,transform]", filter === f ? "fill-hue" : "bg-field text-muted hover:text-fg")}
             >
               {t(`market.${f}`)}
             </button>
           ))}
         </div>
-        <button type="button" className="btn-primary" data-testid="add-item" onClick={() => setEditing("new")}>
-          <Plus size={18} /> {t("market.addItem")}
+        <button type="button" className="btn-primary hue-mint min-h-10 px-4" data-testid="add-item" onClick={() => setEditing("new")}>
+          <Plus size={18} strokeWidth={3} /> {t("market.addItem")}
         </button>
       </div>
       {items === null ? (
         <PageLoader />
       ) : shown.length === 0 ? (
-        <EmptyState icon={<Tags size={32} />} title={t("market.emptyTitle")} hint={t("market.emptyHint")} />
+        <EmptyState icon={<Tags size={30} strokeWidth={2.4} />} title={t("market.emptyTitle")} hint={t("market.emptyHint")} hue="mint" />
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          {shown.map((item) => (
-            <li key={item.id} className="card flex min-w-0 flex-col overflow-hidden" data-testid="market-item">
+          {shown.map((item, i) => (
+            <li key={item.id} className="card anim-rise flex min-w-0 flex-col overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="market-item">
               <div className="relative">
                 <Img src={item.image} alt={item.title} className="aspect-square w-full object-cover" />
                 <StatusBadge status={item.status} className="absolute left-2 top-2" />
               </div>
               <div className="flex flex-1 flex-col gap-1 p-3">
-                <h3 className="truncate font-semibold">{item.title}</h3>
+                <h3 className="truncate text-[15px] font-extrabold">{item.title}</h3>
                 {item.description && <p className="line-clamp-2 text-sm text-muted">{item.description}</p>}
                 <div className="mt-auto flex items-center justify-between pt-2">
                   <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
-                    <Avatar name={item.owner?.name} src={item.owner?.avatar} size={22} />
+                    <Avatar name={item.owner?.name} id={item.owner_id} src={item.owner?.avatar} size={22} />
                     <span className="truncate">{item.owner?.name ?? t("common.someone")}</span>
                   </span>
                   {item.owner_id !== userId && <SafetyMenu type="market_item" id={item.id} author={{ id: item.owner_id, name: item.owner?.name }} />}
                   {item.owner_id === userId && (
                     <span className="flex">
-                      <button type="button" aria-label={t("market.editItem")} data-testid="edit-item" onClick={() => setEditing(item)} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-brand">
+                      <button type="button" aria-label={t("market.editItem")} data-testid="edit-item" onClick={() => setEditing(item)} className="press-round h-9 w-9 rounded-full text-muted hover:bg-field hover:text-brand-ink">
                         <Pencil size={15} className="mx-auto" />
                       </button>
-                      <button type="button" aria-label={t("market.deleteItem")} data-testid="delete-item" onClick={() => remove(item)} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-red-500">
+                      <button type="button" aria-label={t("market.deleteItem")} data-testid="delete-item" onClick={() => remove(item)} className="press-round h-9 w-9 rounded-full text-muted hover:bg-danger/10 hover:text-danger-ink">
                         <Trash2 size={15} className="mx-auto" />
                       </button>
                     </span>
@@ -171,7 +171,7 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
       </div>
       <div>
         <span className="label">{t("market.status")}</span>
-        <div className="grid grid-cols-2 rounded-full bg-chip p-1">
+        <div className="grid grid-cols-2 rounded-full bg-field p-1">
           {(["free", "trade"] as const).map((s) => (
             <button
               key={s}
@@ -179,7 +179,7 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
               aria-pressed={status === s}
               data-testid={`status-${s}`}
               onClick={() => setStatus(s)}
-              className={cx("rounded-full py-2 text-sm font-semibold", status === s ? "bg-brand text-white" : "text-brand")}
+              className={cx("hue-mint min-h-10 rounded-full px-2 text-[15px] font-bold transition-[background,color,box-shadow] duration-300", status === s ? "fill-hue" : "text-muted hover:text-fg")}
             >
               {t(`market.${s}`)}
             </button>
@@ -187,7 +187,7 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
         </div>
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy || !title.trim()}>
+      <button type="submit" className="btn-primary hue-mint w-full" disabled={busy || !title.trim()}>
         {busy ? t("common.saving") : item ? t("common.saveChanges") : t("market.addItem")}
       </button>
     </form>

@@ -35,7 +35,7 @@ export function LocalePicker() {
             aria-checked={locale === l}
             lang={l}
             onClick={() => locale !== l && change(l)}
-            className={cx("chip", locale === l ? "bg-brand text-white" : "bg-chip text-brand hover:bg-brand/15")}
+            className={cx("chip", locale === l ? "fill-hue" : "bg-field text-muted hover:text-fg")}
           >
             {localeNames[l]}
           </button>
@@ -51,14 +51,14 @@ export function CompactLocalePicker({ className }: { className?: string }) {
   const locale = useLocale();
   const { change, pending } = useChangeLocale();
   return (
-    <label className={cx("inline-flex items-center gap-1.5 rounded-full bg-chip px-3 py-1.5 text-sm text-brand", className)}>
+    <label className={cx("inline-flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 font-display text-sm font-bold text-brand-ink shadow-soft backdrop-blur", className)}>
       <Globe size={15} aria-hidden />
       <span className="sr-only">{t("language")}</span>
       <select
         value={locale}
         disabled={pending}
         onChange={(e) => change(e.target.value as Locale)}
-        className="cursor-pointer bg-transparent font-medium text-brand outline-none"
+        className="cursor-pointer bg-transparent font-medium text-brand-ink outline-none"
         data-testid="locale-select"
       >
         {locales.map((l) => (

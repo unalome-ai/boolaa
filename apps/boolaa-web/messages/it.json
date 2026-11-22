@@ -225,7 +225,9 @@
     "event": "Prossimo evento",
     "link": "Link",
     "emptyTitle": "Tutto tranquillo qui",
-    "emptyHint": "Inizia una chat, organizza un evento o condividi qualcosa."
+    "emptyHint": "Inizia una chat, organizza un evento o condividi qualcosa.",
+    "greeting": "Ciao, {name}!",
+    "whatsNew": "Novità"
   },
   "errors": {
     "invalidInviteCode": "Questo codice di invito non corrisponde a nessuna bolla.",

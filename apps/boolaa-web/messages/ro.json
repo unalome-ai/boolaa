@@ -225,7 +225,9 @@
     "event": "Eveniment viitor",
     "link": "Link",
     "emptyTitle": "E liniște aici",
-    "emptyHint": "Începe o discuție, plănuiește un eveniment sau împarte ceva."
+    "emptyHint": "Începe o discuție, plănuiește un eveniment sau împarte ceva.",
+    "greeting": "Salut, {name}!",
+    "whatsNew": "Noutăți"
   },
   "errors": {
     "invalidInviteCode": "Codul de invitație nu corespunde niciunei bule.",

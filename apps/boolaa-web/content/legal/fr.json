@@ -39,8 +39,8 @@
         "body": [
           "Les contenus publiés dans une bulle ne sont visibles que par ses membres. Ton nom et ta photo sont visibles par les personnes qui partagent une bulle avec toi. Les personnes que tu bloques, et celles qui te bloquent, ne voient plus vos contenus respectifs.",
           "Nous faisons appel à ces sous-traitants, liés par des accords de traitement des données :",
-          "- Supabase (base de données, authentification et stockage de fichiers), hébergé dans l'UE.",
-          "- Notre hébergeur, qui sert le site et le serveur de l'application.",
+          "- Supabase (base de données, authentification et stockage de fichiers), nos données étant hébergées à Zurich, en Suisse.",
+          "- DigitalOcean, qui héberge le site et le serveur de l'application à Francfort, en Allemagne.",
           "Nous ne transmettons des données aux autorités que lorsque la loi l'exige."
         ]
       },
@@ -48,7 +48,7 @@
         "id": "transfers",
         "title": "Transferts internationaux",
         "body": [
-          "Nous conservons tes données dans l'Union européenne. Si un sous-traitant devait y accéder depuis l'extérieur de l'UE/EEE, nous nous appuierions sur les clauses contractuelles types (CCT) de la Commission européenne ou sur un autre mécanisme de transfert valable."
+          "Tes données sont stockées en Suisse (Supabase, Zurich) et servies depuis l'UE (DigitalOcean, Francfort). La Suisse bénéficie d'une décision d'adéquation de la Commission européenne : le RGPD permet donc d'y transférer des données sans garanties supplémentaires. Si un sous-traitant devait accéder à tes données depuis un autre pays hors de l'UE/EEE, nous nous appuierions sur les clauses contractuelles types (CCT) de la Commission européenne ou sur un autre mécanisme de transfert valable."
         ]
       },
       {

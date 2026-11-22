@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [adult, setAdult] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shake, setShake] = useState(0);
   const [checkEmail, setCheckEmail] = useState(false);
 
   async function submit(e: FormEvent) {
@@ -32,6 +33,7 @@ export default function RegisterPage() {
     if (error) {
       setBusy(false);
       setError(errorText(error));
+      setShake((n) => n + 1);
       return;
     }
     if (!data.session) {
@@ -112,18 +114,18 @@ export default function RegisterPage() {
           <span>{t("ageConfirm")}</span>
         </label>
         <ErrorText>{error}</ErrorText>
-        <button type="submit" className="btn-primary w-full" disabled={busy || !adult}>
+        <button key={shake} type="submit" className={`btn-primary min-h-[54px] w-full text-[17px] ${shake ? "anim-shake" : ""}`} disabled={busy || !adult}>
           {busy ? t("creatingAccount") : t("createAccount")}
         </button>
         <p className="text-center text-xs text-muted" data-testid="terms-consent">
           {t.rich("agreeTerms", {
             terms: (chunks) => (
-              <Link href="/terms" target="_blank" className="font-medium text-brand underline-offset-2 hover:underline">
+              <Link href="/terms" target="_blank" className="font-medium text-brand-ink underline-offset-2 hover:underline">
                 {chunks}
               </Link>
             ),
             privacy: (chunks) => (
-              <Link href="/privacy" target="_blank" className="font-medium text-brand underline-offset-2 hover:underline">
+              <Link href="/privacy" target="_blank" className="font-medium text-brand-ink underline-offset-2 hover:underline">
                 {chunks}
               </Link>
             ),
@@ -132,7 +134,7 @@ export default function RegisterPage() {
       </form>
       <p className="mt-5 text-center text-sm text-muted">
         {t("haveAccount")}{" "}
-        <Link href="/login" className="font-semibold text-brand hover:underline">
+        <Link href="/login" className="font-semibold text-brand-ink hover:underline">
           {t("signInLink")}
         </Link>
       </p>

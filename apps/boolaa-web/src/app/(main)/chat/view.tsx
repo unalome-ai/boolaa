@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { MessagesSquare, Send } from "lucide-react";
+import { ArrowUp, MessagesSquare } from "lucide-react";
+import { hueClass, hueFor } from "@/lib/hue";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, PageLoader } from "@/components/ui";
@@ -28,6 +29,8 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [live, setLive] = useState(false);
+  // Messages present at first load don't animate; later ones pop in from their tail corner.
+  const [initialIds, setInitialIds] = useState<Set<string> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Load history + member directory, then subscribe to realtime INSERTs for this bubble.
@@ -53,6 +56,7 @@ export default function ChatPage() {
       if (!alive) return;
       if (hist.error) setLoadError(hist.error);
       setMessages((hist.data ?? []).reverse());
+      setInitialIds(new Set((hist.data ?? []).map((m) => m.id)));
       const dir: Record<string, Author> = {};
       members.data?.forEach((m) => m.user && (dir[m.user.id] = m.user));
       setAuthors(dir);
@@ -121,41 +125,46 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-2 flex items-center gap-2 text-sm text-muted" data-testid="chat-status" data-live={live}>
-        <span className={cx("h-2 w-2 rounded-full", live ? "bg-emerald-500" : "bg-zinc-400")} />
+      <div className="mb-2 flex items-center gap-2 px-1 font-display text-sm font-bold text-muted" data-testid="chat-status" data-live={live}>
+        <span className={cx("h-2 w-2 rounded-full transition-colors", live ? "bg-mint" : "bg-muted/50")} />
         {bubble.name} · {live ? t("live") : t("connecting")}
       </div>
-      <div className="card min-h-0 flex-1 overflow-y-auto p-4" data-testid="chat-list">
+      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto rounded-hero bg-card/50 p-4 shadow-soft backdrop-blur-xl" data-testid="chat-list">
         {messages === null ? (
           <PageLoader />
         ) : rendered.length === 0 ? (
-          <EmptyState icon={<MessagesSquare size={32} />} title={t("emptyTitle")} hint={t("emptyHint")} />
+          <EmptyState icon={<MessagesSquare size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="grape" />
         ) : (
           <ul className="space-y-3">
             {rendered.map((m, i) => {
               const mine = m.sender_id === userId;
               const prev = rendered[i - 1];
               const grouped = prev && prev.sender_id === m.sender_id;
+              const fresh = initialIds !== null && !initialIds.has(m.id);
               return (
                 <li
                   key={m.id}
                   data-testid="chat-message"
-                  className={cx("flex items-end gap-2", mine ? "flex-row-reverse" : "flex-row", grouped && "-mt-1.5")}
+                  className={cx("flex items-end gap-2", mine ? "flex-row-reverse" : "flex-row", grouped && "-mt-1.5", hueClass(hueFor(m.sender_id)))}
                 >
-                  <div className="w-8 shrink-0">
-                    {!grouped && <Avatar name={m.sender?.name} src={m.sender?.avatar} size={32} />}
-                  </div>
+                  {!mine && (
+                    <div className="w-[30px] shrink-0">
+                      {!grouped && <Avatar name={m.sender?.name} id={m.sender_id} src={m.sender?.avatar} size={30} />}
+                    </div>
+                  )}
                   <div className={cx("flex max-w-[78%] flex-col", mine ? "items-end" : "items-start")}>
                     {!grouped && (
-                      <span className="mb-0.5 px-1 text-xs font-medium text-muted">
+                      <span className={cx("mb-0.5 px-1 font-display text-xs font-extrabold", mine ? "text-muted" : "text-hue-ink")}>
                         {mine ? tc("you") : (m.sender?.name ?? tc("someone"))}
                       </span>
                     )}
                     <div
                       className={cx(
-                        "whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px]",
-                        mine ? "rounded-br-md bg-brand text-white" : "rounded-bl-md bg-brand/15 text-fg",
+                        "whitespace-pre-wrap break-words rounded-[21px] px-4 py-2.5 text-[16px] leading-snug",
+                        mine ? "hue-grape rounded-br-[6px] bg-hue-grad text-white shadow-glow" : "rounded-bl-[6px] bg-card text-fg shadow-soft",
+                        fresh && "anim-pop",
                       )}
+                      style={fresh ? { transformOrigin: mine ? "bottom right" : "bottom left" } : undefined}
                     >
                       {m.content}
                     </div>
@@ -172,9 +181,9 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
       <ErrorText>{error ?? (loadError ? errorText(loadError) : null)}</ErrorText>
-      <form onSubmit={send} className="mt-3 flex items-center gap-2">
+      <form onSubmit={send} className="mt-3 flex items-end gap-2">
         <input
-          className="input flex-1 rounded-full px-5"
+          className="min-h-12 w-full flex-1 rounded-[24px] border-2 border-transparent bg-card px-5 text-[16px] text-fg shadow-soft outline-none transition-[border-color] duration-200 placeholder:text-muted focus:border-grape"
           placeholder={t("placeholder", { bubble: bubble.name })}
           aria-label={t("messageLabel")}
           data-testid="chat-input"
@@ -187,9 +196,12 @@ export default function ChatPage() {
           aria-label={t("send")}
           data-testid="chat-send"
           disabled={sending || !text.trim()}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-soft transition hover:bg-brand-dark disabled:opacity-50"
+          className={cx(
+            "press-round flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-[background,color,box-shadow] duration-200",
+            text.trim() ? "hue-grape fill-hue" : "bg-field text-muted",
+          )}
         >
-          <Send size={20} />
+          <ArrowUp key={text.trim() ? "ready" : "idle"} size={22} strokeWidth={3} className={text.trim() ? "anim-pop" : undefined} />
         </button>
       </form>
     </div>

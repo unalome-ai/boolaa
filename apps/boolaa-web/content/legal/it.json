@@ -39,8 +39,8 @@
         "body": [
           "I contenuti pubblicati in una bolla sono visibili solo ai suoi membri. Nome e foto sono visibili alle persone con cui condividi una bolla. Le persone che blocchi, e quelle che ti bloccano, non vedono più i contenuti dell'altro.",
           "Ci avvaliamo di questi responsabili del trattamento, vincolati da accordi sul trattamento dei dati:",
-          "- Supabase (database, autenticazione e archiviazione dei file), ospitato nell'UE.",
-          "- Il nostro fornitore di hosting, che serve il sito e il server dell'app.",
+          "- Supabase (database, autenticazione e archiviazione dei file), con i nostri dati ospitati a Zurigo, in Svizzera.",
+          "- DigitalOcean, che ospita il sito e il server dell'app a Francoforte, in Germania.",
           "Condividiamo dati con le autorità solo quando la legge lo richiede."
         ]
       },
@@ -48,7 +48,7 @@
         "id": "transfers",
         "title": "Trasferimenti internazionali",
         "body": [
-          "Conserviamo i tuoi dati nell'Unione europea. Se un responsabile dovesse accedervi da fuori UE/SEE, ci baseremmo sulle Clausole contrattuali standard (SCC) della Commissione europea o su un altro meccanismo di trasferimento valido."
+          "I tuoi dati sono conservati in Svizzera (Supabase, Zurigo) e serviti dall'UE (DigitalOcean, Francoforte). La Svizzera beneficia di una decisione di adeguatezza della Commissione europea, quindi il GDPR consente di trasferirvi i dati senza garanzie aggiuntive. Se un responsabile dovesse accedere ai tuoi dati da un altro paese fuori UE/SEE, ci baseremmo sulle Clausole contrattuali standard (SCC) della Commissione europea o su un altro meccanismo di trasferimento valido."
         ]
       },
       {
@@ -92,7 +92,9 @@
       {
         "id": "contact",
         "title": "Contatti",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   },
@@ -183,7 +185,9 @@
       {
         "id": "contact",
         "title": "Contatti",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   }

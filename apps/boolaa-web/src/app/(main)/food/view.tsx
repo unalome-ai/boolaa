@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
-import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, SectionTitle } from "@/components/ui";
+import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
 import { AUTHOR, type FoodPost } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -49,17 +49,17 @@ export default function FoodPage() {
 
   const grid = (items: FoodPost[], empty: string) =>
     items.length === 0 ? (
-      <p className="card px-4 py-6 text-center text-sm text-muted">{empty}</p>
+      <EmptyNote hue="tangerine">{empty}</EmptyNote>
     ) : (
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((p) => (
-          <li key={p.id} className="card overflow-hidden" data-testid="food-card">
-            <Img src={p.image} alt={p.description || t("food.imageAlt")} className="aspect-[4/3] w-full object-cover" />
+        {items.map((p, i) => (
+          <li key={p.id} className="card anim-rise overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="food-card">
+            <Img src={p.image} alt={p.description || t("food.imageAlt")} className="h-[210px] w-full object-cover" />
             <div className="space-y-2 p-4">
               {p.description && <p className="text-[15px]">{p.description}</p>}
               <div className="flex items-center justify-between">
                 <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
-                  <Avatar name={p.user?.name} src={p.user?.avatar} size={24} />
+                  <Avatar name={p.user?.name} id={p.user_id} src={p.user?.avatar} size={24} />
                   <span className="truncate">
                     {p.user?.name ?? t("common.someone")} · {fmt.relative(p.created_at)}
                   </span>
@@ -67,10 +67,10 @@ export default function FoodPage() {
                 {p.user_id !== userId && <SafetyMenu type="food_post" id={p.id} author={{ id: p.user_id, name: p.user?.name }} />}
                 {p.user_id === userId && (
                   <span className="flex gap-1">
-                    <button type="button" aria-label={t("food.editPost")} data-testid="edit-post" onClick={() => setEditing(p)} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-brand">
+                    <button type="button" aria-label={t("food.editPost")} data-testid="edit-post" onClick={() => setEditing(p)} className="press-round h-9 w-9 rounded-full text-muted hover:bg-field hover:text-brand-ink">
                       <Pencil size={16} className="mx-auto" />
                     </button>
-                    <button type="button" aria-label={t("food.deletePost")} data-testid="delete-post" onClick={() => remove(p)} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-red-500">
+                    <button type="button" aria-label={t("food.deletePost")} data-testid="delete-post" onClick={() => remove(p)} className="press-round h-9 w-9 rounded-full text-muted hover:bg-danger/10 hover:text-danger-ink">
                       <Trash2 size={16} className="mx-auto" />
                     </button>
                   </span>
@@ -86,19 +86,19 @@ export default function FoodPage() {
     <div>
       <ErrorText>{error}</ErrorText>
       <div className="mb-4 flex justify-end">
-        <button type="button" className="btn-primary" data-testid="share-food" onClick={() => setEditing("new")}>
-          <Plus size={18} /> {t("food.share")}
+        <button type="button" className="btn-primary hue-tangerine min-h-10 px-4" data-testid="share-food" onClick={() => setEditing("new")}>
+          <Plus size={18} strokeWidth={3} /> {t("food.share")}
         </button>
       </div>
       {posts === null ? (
         <PageLoader />
       ) : posts.length === 0 ? (
-        <EmptyState icon={<UtensilsCrossed size={32} />} title={t("food.emptyTitle")} hint={t("food.emptyHint")} />
+        <EmptyState icon={<UtensilsCrossed size={30} strokeWidth={2.4} />} title={t("food.emptyTitle")} hint={t("food.emptyHint")} hue="tangerine" />
       ) : (
         <>
-          <SectionTitle>{t("food.myPosts")}</SectionTitle>
+          <SectionTitle hue="tangerine">{t("food.myPosts")}</SectionTitle>
           {grid(mine, t("food.emptyMine"))}
-          <SectionTitle>{t("food.fromBubble")}</SectionTitle>
+          <SectionTitle hue="tangerine">{t("food.fromBubble")}</SectionTitle>
           {grid(others, t("food.emptyOthers"))}
         </>
       )}
@@ -163,7 +163,7 @@ function FoodForm({ post, onDone }: { post: FoodPost | null; onDone: () => void 
         />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy}>
+      <button type="submit" className="btn-primary hue-tangerine w-full" disabled={busy}>
         {busy ? t("common.saving") : post ? t("common.saveChanges") : t("food.post")}
       </button>
     </form>

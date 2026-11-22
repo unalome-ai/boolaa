@@ -225,7 +225,9 @@
     "event": "Upcoming event",
     "link": "Link",
     "emptyTitle": "It's quiet in here",
-    "emptyHint": "Start a chat, plan an event or share something."
+    "emptyHint": "Start a chat, plan an event or share something.",
+    "greeting": "Hi, {name}!",
+    "whatsNew": "What's new"
   },
   "errors": {
     "invalidInviteCode": "That invite code doesn't match any bubble.",

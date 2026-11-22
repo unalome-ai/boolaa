@@ -39,8 +39,8 @@
         "body": [
           "Content you post in a bubble is visible only to that bubble's members. Your name and photo are visible to people who share a bubble with you. People you block, and people who block you, no longer see each other's content.",
           "We use these processors, bound by data processing agreements:",
-          "- Supabase (database, authentication and file storage), hosted in the EU.",
-          "- Our hosting provider, which serves the website and app backend.",
+          "- Supabase (database, authentication and file storage), with our data hosted in Zurich, Switzerland.",
+          "- DigitalOcean, which hosts the website and app server in Frankfurt, Germany.",
           "We share data with authorities only when the law requires it."
         ]
       },
@@ -48,7 +48,7 @@
         "id": "transfers",
         "title": "International transfers",
         "body": [
-          "We keep your data in the European Union. If a processor ever needs to access it from outside the EU/EEA, we rely on the European Commission's Standard Contractual Clauses (SCCs) or another valid transfer mechanism."
+          "Your data is stored in Switzerland (Supabase, Zurich) and served from the EU (DigitalOcean, Frankfurt). Switzerland has an adequacy decision from the European Commission, so the GDPR allows transfers there without extra safeguards. If a processor ever needs to access your data from another country outside the EU/EEA, we rely on the European Commission's Standard Contractual Clauses (SCCs) or another valid transfer mechanism."
         ]
       },
       {
@@ -92,7 +92,9 @@
       {
         "id": "contact",
         "title": "Contact",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   },
@@ -183,7 +185,9 @@
       {
         "id": "contact",
         "title": "Contact",
-        "body": ["[Company legal name], [Registered address], [Contact email]."]
+        "body": [
+          "[Company legal name], [Registered address], [Contact email]."
+        ]
       }
     ]
   }

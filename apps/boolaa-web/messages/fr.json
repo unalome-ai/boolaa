@@ -225,7 +225,9 @@
     "event": "Événement à venir",
     "link": "Lien",
     "emptyTitle": "C'est calme ici",
-    "emptyHint": "Lance une discussion, organise un événement ou partage quelque chose."
+    "emptyHint": "Lance une discussion, organise un événement ou partage quelque chose.",
+    "greeting": "Salut {name} !",
+    "whatsNew": "Quoi de neuf ?"
   },
   "errors": {
     "invalidInviteCode": "Ce code d'invitation ne correspond à aucune bulle.",
