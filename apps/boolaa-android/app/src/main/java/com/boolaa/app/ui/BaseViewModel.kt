@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 
 /** Shared error handling: failures become a translated string resource, never raw backend text. */
 abstract class BaseViewModel : ViewModel() {
@@ -25,6 +28,13 @@ abstract class BaseViewModel : ViewModel() {
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
     fun clearError() { _error.value = null }
+
+    /** Blocking hides content server-side (RLS), so content screens reload when the block list changes. */
+    protected fun reloadOnBlockChange(session: com.boolaa.app.state.SessionStore, reload: () -> Unit) {
+        viewModelScope.launch {
+            session.state.map { it.blockedIds }.distinctUntilChanged().drop(1).collect { reload() }
+        }
+    }
     protected fun showError(@StringRes res: Int) { _error.value = res }
 
     protected fun report(e: Throwable) {

@@ -40,6 +40,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
 import com.boolaa.app.model.SharedLink
+import com.boolaa.app.model.ReportTarget
+import com.boolaa.app.model.ReportTargetType
+import com.boolaa.app.ui.safety.ReportSheet
+import com.boolaa.app.ui.components.ItemMenu
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -64,7 +68,10 @@ class LinksViewModel(private val container: AppContainer, private val bubbleId: 
     private val _links = MutableStateFlow<List<SharedLink>?>(null)
     val links = _links.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        reloadOnBlockChange(container.session) { load() }
+    }
 
     fun load() = launchCatching(trackBusy = false) {
         _links.value = container.api.links(bubbleId)
@@ -98,6 +105,8 @@ fun LinksScreen(onBack: () -> Unit) {
     var tags by rememberSaveable { mutableStateOf("") }
     var tagFilter by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by remember { mutableStateOf<SharedLink?>(null) }
+    var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    val someone = stringResource(R.string.someone)
     val allTags = links.orEmpty().flatMap { it.tags }.distinct().sorted()
 
     Column(Modifier.fillMaxSize().background(BoolaaTheme.colors.background).statusBarsPadding().imePadding().testTag("links-screen")) {
@@ -149,11 +158,15 @@ fun LinksScreen(onBack: () -> Unit) {
                             Text(meta, style = MaterialTheme.typography.bodySmall, color = BoolaaTheme.colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         if (link.userId == me) OwnerMenu(onEdit = null, onDelete = { deleting = link })
+                        else ItemMenu(onEdit = null, onDelete = null, onReport = {
+                            reporting = ReportTarget(ReportTargetType.SHARED_LINK, link.id, link.userId, link.user?.name?.takeIf { it.isNotBlank() } ?: someone)
+                        })
                     }
                 }
             }
         }
     }
+    reporting?.let { ReportSheet(it, onDismiss = { reporting = null }) }
     deleting?.let { l ->
         ConfirmDialog(stringResource(R.string.delete_link_title), l.title ?: l.url, stringResource(R.string.delete),
             onConfirm = { vm.delete(l) }, onDismiss = { deleting = null })

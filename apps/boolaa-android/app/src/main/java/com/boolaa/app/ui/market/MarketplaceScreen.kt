@@ -55,6 +55,10 @@ import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.MarketInput
 import com.boolaa.app.model.MarketItem
 import com.boolaa.app.model.MarketStatus
+import com.boolaa.app.model.ReportTarget
+import com.boolaa.app.model.ReportTargetType
+import com.boolaa.app.ui.safety.ReportSheet
+import com.boolaa.app.ui.components.ItemMenu
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -91,7 +95,10 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
     private val _items = MutableStateFlow<List<MarketItem>?>(null)
     val items = _items.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        reloadOnBlockChange(container.session) { load() }
+    }
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         _items.value = container.api.marketItems(bubbleId)
@@ -132,6 +139,8 @@ fun MarketplaceScreen() {
     var editing by remember { mutableStateOf<MarketItem?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<MarketItem?>(null) }
+    var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    val someone = stringResource(R.string.someone)
 
     PullToRefreshBox(isRefreshing = busy && items != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("market-screen")) {
@@ -166,7 +175,8 @@ fun MarketplaceScreen() {
                 }
                 else -> items(list.filter(filter::matches), key = { it.id }) { item ->
                     val mine = item.ownerId == me
-                    MarketCard(item, if (mine) ({ editing = item }) else null, if (mine) ({ deleting = item }) else null)
+                    MarketCard(item, if (mine) ({ editing = item }) else null, if (mine) ({ deleting = item }) else null,
+                        if (mine) null else ({ reporting = ReportTarget(ReportTargetType.MARKET_ITEM, item.id, item.ownerId, item.owner?.name?.takeIf { it.isNotBlank() } ?: someone) }))
                 }
             }
         }
@@ -181,11 +191,12 @@ fun MarketplaceScreen() {
         ConfirmDialog(stringResource(R.string.delete_item_title), i.title, stringResource(R.string.delete),
             onConfirm = { vm.delete(i) }, onDismiss = { deleting = null })
     }
+    reporting?.let { ReportSheet(it, onDismiss = { reporting = null }) }
     ErrorDialogFor(vm)
 }
 
 @Composable
-fun MarketCard(item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?) {
+fun MarketCard(item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null) {
     Column(Modifier.boolaaCard(0.dp).testTag("market-${item.id}")) {
         Box {
             RemoteImage(item.image, Modifier.fillMaxWidth().aspectRatio(1f), item.title)
@@ -200,7 +211,7 @@ fun MarketCard(item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?)
                     Text(it, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
-            if (onDelete != null) OwnerMenu(onEdit, onDelete)
+            if (onDelete != null || onReport != null) ItemMenu(onEdit, onDelete, onReport)
         }
     }
 }

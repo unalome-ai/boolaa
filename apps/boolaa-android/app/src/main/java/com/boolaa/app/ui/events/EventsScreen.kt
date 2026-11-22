@@ -58,6 +58,10 @@ import com.boolaa.app.R
 import com.boolaa.app.core.EventInput
 import com.boolaa.app.core.Formats
 import com.boolaa.app.model.BubbleEvent
+import com.boolaa.app.model.ReportTarget
+import com.boolaa.app.model.ReportTargetType
+import com.boolaa.app.ui.safety.ReportSheet
+import com.boolaa.app.ui.components.ItemMenu
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -89,7 +93,10 @@ class EventsViewModel(private val container: AppContainer, private val bubbleId:
     private val _events = MutableStateFlow<List<BubbleEvent>?>(null)
     val events = _events.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        reloadOnBlockChange(container.session) { load() }
+    }
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         _events.value = container.api.events(bubbleId).sortedBy { it.datetime }
@@ -125,6 +132,8 @@ fun EventsScreen() {
     var editing by remember { mutableStateOf<BubbleEvent?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<BubbleEvent?>(null) }
+    var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    val someone = stringResource(R.string.someone)
 
     PullToRefreshBox(isRefreshing = busy && events != null, onRefresh = { vm.load(refresh = true) }, modifier = Modifier.fillMaxSize().testTag("events-screen")) {
         LazyColumn(
@@ -148,7 +157,11 @@ fun EventsScreen() {
             }
             item { SectionHeader(stringResource(R.string.bubble_events), others.size) }
             if (others.isEmpty()) item { Text(stringResource(R.string.bubble_events_empty), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.boolaaCard()) }
-            items(others, key = { it.id }) { e -> EventCard(e, me, onRsvp = { vm.toggleRsvp(e) }, onEdit = null, onDelete = null) }
+            items(others, key = { it.id }) { e ->
+                EventCard(e, me, onRsvp = { vm.toggleRsvp(e) }, onEdit = null, onDelete = null, onReport = {
+                    reporting = ReportTarget(ReportTargetType.EVENT, e.id, e.creatorId, e.creator?.name?.takeIf { it.isNotBlank() } ?: someone)
+                })
+            }
         }
     }
     if (creating || editing != null) {
@@ -165,17 +178,18 @@ fun EventsScreen() {
             onConfirm = { vm.delete(e) }, onDismiss = { deleting = null },
         )
     }
+    reporting?.let { ReportSheet(it, onDismiss = { reporting = null }) }
     ErrorDialogFor(vm)
 }
 
 @Composable
-fun EventCard(event: BubbleEvent, me: String, onRsvp: () -> Unit, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?) {
+fun EventCard(event: BubbleEvent, me: String, onRsvp: () -> Unit, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null) {
     val locale = LocalConfiguration.current.locales[0]
     val going = me in event.rsvpList
     Column(Modifier.boolaaCard().testTag("event-${event.id}"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(event.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            if (onDelete != null) OwnerMenu(onEdit = onEdit, onDelete = onDelete)
+            if (onDelete != null || onReport != null) ItemMenu(onEdit = onEdit, onDelete = onDelete, onReport = onReport)
         }
         IconLine(Icons.Default.Schedule, Formats.dateTime(event.datetime, locale))
         event.location?.takeIf { it.isNotBlank() }?.let { IconLine(Icons.Default.Place, it) }

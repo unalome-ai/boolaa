@@ -46,6 +46,10 @@ import com.boolaa.app.core.Formats
 import com.boolaa.app.core.FoodInput
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.model.FoodPost
+import com.boolaa.app.model.ReportTarget
+import com.boolaa.app.model.ReportTargetType
+import com.boolaa.app.ui.safety.ReportSheet
+import com.boolaa.app.ui.components.ItemMenu
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -73,7 +77,10 @@ class FoodViewModel(private val container: AppContainer, private val bubbleId: S
     private val _posts = MutableStateFlow<List<FoodPost>?>(null)
     val posts = _posts.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        reloadOnBlockChange(container.session) { load() }
+    }
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         _posts.value = container.api.foodPosts(bubbleId)
@@ -110,6 +117,8 @@ fun FoodScreen() {
     var editing by remember { mutableStateOf<FoodPost?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<FoodPost?>(null) }
+    var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    val someone = stringResource(R.string.someone)
 
     PullToRefreshBox(isRefreshing = busy && posts != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("food-screen")) {
@@ -132,7 +141,11 @@ fun FoodScreen() {
             items(mine, key = { it.id }) { p -> FoodCard(p, onEdit = { editing = p }, onDelete = { deleting = p }) }
             item { SectionHeader(stringResource(R.string.from_the_bubble), others.size) }
             if (others.isEmpty()) item { Text(stringResource(R.string.from_the_bubble_empty), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.boolaaCard()) }
-            items(others, key = { it.id }) { p -> FoodCard(p, onEdit = null, onDelete = null) }
+            items(others, key = { it.id }) { p ->
+                FoodCard(p, onEdit = null, onDelete = null, onReport = {
+                    reporting = ReportTarget(ReportTargetType.FOOD_POST, p.id, p.userId, p.user?.name?.takeIf { it.isNotBlank() } ?: someone)
+                })
+            }
         }
     }
     if (creating || editing != null) {
@@ -145,11 +158,12 @@ fun FoodScreen() {
         ConfirmDialog(stringResource(R.string.delete_post_title), p.description.orEmpty(), stringResource(R.string.delete),
             onConfirm = { vm.delete(p) }, onDismiss = { deleting = null })
     }
+    reporting?.let { ReportSheet(it, onDismiss = { reporting = null }) }
     ErrorDialogFor(vm)
 }
 
 @Composable
-fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?) {
+fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null) {
     val locale = LocalConfiguration.current.locales[0]
     Column(Modifier.boolaaCard(0.dp).testTag("food-${post.id}")) {
         RemoteImage(post.image, Modifier.fillMaxWidth().height(200.dp), post.description)
@@ -162,7 +176,7 @@ fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?) {
                     style = MaterialTheme.typography.bodySmall, color = BoolaaTheme.colors.textSecondary,
                     modifier = Modifier.padding(start = 6.dp).weight(1f),
                 )
-                if (onDelete != null) OwnerMenu(onEdit, onDelete)
+                if (onDelete != null || onReport != null) ItemMenu(onEdit, onDelete, onReport)
             }
         }
     }

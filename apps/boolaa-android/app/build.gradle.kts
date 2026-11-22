@@ -26,6 +26,8 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "SUPABASE_URL", "\"${localProp("supabase.url", "http://127.0.0.1:55321")}\"")
+        // Next.js web app serving /privacy and /terms (emulator: adb reverse tcp:3200 tcp:3200).
+        buildConfigField("String", "WEB_BASE_URL", "\"${localProp("web.baseUrl", "http://localhost:3200")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProp("supabase.anonKey", "")}\"")
     }
 
@@ -92,6 +94,7 @@ dependencies {
     implementation(libs.supabase.storage)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.okhttp) { version { strictly(libs.versions.okhttp.get()) } }
+    implementation(libs.androidx.browser)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 

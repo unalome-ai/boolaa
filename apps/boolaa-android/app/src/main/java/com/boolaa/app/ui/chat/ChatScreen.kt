@@ -53,6 +53,15 @@ import com.boolaa.app.core.BoolaaJson
 import com.boolaa.app.core.Formats
 import com.boolaa.app.model.ChatMessage
 import com.boolaa.app.model.UserProfile
+import com.boolaa.app.model.ReportTarget
+import com.boolaa.app.model.ReportTargetType
+import com.boolaa.app.ui.safety.ReportSheet
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.runtime.remember
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -100,6 +109,15 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     init {
         load()
         listen()
+        // RLS hides blocked authors; drop their messages now and reload (unblock brings them back).
+        reloadOnBlockChange(container.session) {
+            val blocked = container.session.state.value.blockedIds
+            _messages.update { it?.filterNot { m -> m.senderId in blocked } }
+            launchCatching(trackBusy = false) {
+                val fresh = container.api.chatMessages(bubbleId)
+                _messages.value = fresh.fold(emptyList()) { acc, m -> ChatMerge.merge(acc, m, authors) }
+            }
+        }
     }
 
     private fun merge(message: ChatMessage) {
@@ -169,6 +187,8 @@ fun ChatScreen(onBack: () -> Unit) {
     var draft by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
     val list = messages
+    var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    val someone = stringResource(R.string.someone)
 
     LaunchedEffect(list?.lastOrNull()?.id) {
         if (!list.isNullOrEmpty()) listState.animateScrollToItem(list.size - 1)
@@ -194,7 +214,9 @@ fun ChatScreen(onBack: () -> Unit) {
                 ) {
                     itemsIndexed(list, key = { _, m -> m.id }) { index, message ->
                         val previous = list.getOrNull(index - 1)
-                        MessageRow(message, isMine = message.senderId == me, showAuthor = previous?.senderId != message.senderId)
+                        MessageRow(message, isMine = message.senderId == me, showAuthor = previous?.senderId != message.senderId, onReport = {
+                            reporting = ReportTarget(ReportTargetType.CHAT_MESSAGE, message.id, message.senderId, message.sender?.name?.takeIf { it.isNotBlank() } ?: someone)
+                        })
                     }
                 }
             }
@@ -232,11 +254,15 @@ fun ChatScreen(onBack: () -> Unit) {
             )
         }
     }
+    reporting?.let { ReportSheet(it, onDismiss = { reporting = null }) }
     ErrorDialogFor(vm)
 }
 
+/** Long press on someone else's message opens the report sheet (also exposed as an accessibility action). */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageRow(message: ChatMessage, isMine: Boolean, showAuthor: Boolean) {
+fun MessageRow(message: ChatMessage, isMine: Boolean, showAuthor: Boolean, onReport: () -> Unit = {}) {
+    val reportLabel = stringResource(R.string.report)
     val locale = LocalConfiguration.current.locales[0]
     Row(
         Modifier.fillMaxWidth().testTag("message-${message.id}"),
@@ -260,6 +286,11 @@ fun MessageRow(message: ChatMessage, isMine: Boolean, showAuthor: Boolean) {
                 color = if (isMine) Color.White else BoolaaTheme.colors.textPrimary,
                 modifier = Modifier
                     .clip(RoundedCornerShape(18.dp))
+                    .then(
+                        if (isMine) Modifier else Modifier
+                            .combinedClickable(onClick = {}, onLongClick = onReport)
+                            .semantics { customActions = listOf(CustomAccessibilityAction(reportLabel) { onReport(); true }) },
+                    )
                     .background(if (isMine) Brand.purple else BoolaaTheme.colors.otherBubble)
                     .padding(horizontal = 14.dp, vertical = 10.dp),
             )

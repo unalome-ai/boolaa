@@ -1,6 +1,9 @@
 package com.boolaa.app.core
 
+import com.boolaa.app.model.Block
 import com.boolaa.app.model.Bubble
+import com.boolaa.app.model.ReportReason
+import com.boolaa.app.model.ReportTargetType
 import com.boolaa.app.model.BubbleEvent
 import com.boolaa.app.model.BubbleMember
 import com.boolaa.app.model.ChatMessage
@@ -281,6 +284,50 @@ class BoolaaApi(val client: SupabaseClient) {
 
     suspend fun deleteLink(id: String) {
         client.from("shared_links").delete { filter { eq("id", id) } }
+    }
+
+    // Safety: blocks, reports, account deletion (App Store 1.2 / 5.1.1(v))
+
+    /** The caller's own block list (RLS returns only rows where blocker_id = me). */
+    suspend fun blocks(): List<Block> =
+        client.from("blocks").select(Columns.raw("*, blocked:users!blocked_id($AUTHOR_COLUMNS)")) {
+            order("created_at", Order.DESCENDING)
+        }.list()
+
+    suspend fun block(me: String, userId: String) {
+        client.from("blocks").upsert(buildJsonObject { put("blocker_id", me); put("blocked_id", userId) }) { ignoreDuplicates = true }
+    }
+
+    suspend fun unblock(me: String, userId: String) {
+        client.from("blocks").delete { filter { eq("blocker_id", me); eq("blocked_id", userId) } }
+    }
+
+    /** Server resolves author and bubble. Raises 'cannot report yourself' / 'report target not found'. */
+    suspend fun report(type: ReportTargetType, targetId: String, reason: ReportReason, details: String?): String =
+        json.parseToJsonElement(
+            client.postgrest.rpc("report_content", buildJsonObject {
+                put("p_target_type", type.wire); put("p_target_id", targetId); put("p_reason", reason.wire)
+                put("p_details", details?.takeIf { it.isNotBlank() }?.let(::JsonPrimitive) ?: JsonNull)
+            }).data
+        ).jsonPrimitive.content
+
+    /**
+     * Removes every object under `<uid>/` in the three buckets (failures ignored: SQL cannot delete storage objects),
+     * then deletes the auth user, which cascades to the profile, memberships and authored content.
+     */
+    suspend fun deleteMyAccount(userId: String) {
+        val prefix = userId.lowercase()
+        for (bucket in ImageBucket.entries) {
+            runCatching {
+                val api = client.storage.from(bucket.id)
+                repeat(50) {
+                    val names = api.list(prefix).map { "$prefix/${it.name}" }
+                    if (names.isEmpty()) return@runCatching
+                    api.delete(names)
+                }
+            }
+        }
+        client.postgrest.rpc("delete_my_account")
     }
 
     // Storage

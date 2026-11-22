@@ -97,7 +97,10 @@ class HomeViewModel(private val container: AppContainer, private val bubbleId: S
     private val _items = MutableStateFlow<List<FeedItem>?>(null)
     val items = _items.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        reloadOnBlockChange(container.session) { load() }
+    }
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         val api = container.api

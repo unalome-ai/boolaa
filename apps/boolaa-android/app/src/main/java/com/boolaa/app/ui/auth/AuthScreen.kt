@@ -39,6 +39,13 @@ import com.boolaa.app.AppContainer
 import com.boolaa.app.R
 import com.boolaa.app.core.UserFacingError
 import com.boolaa.app.ui.BaseViewModel
+import com.boolaa.app.ui.safety.LegalAgreementText
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.ui.semantics.Role
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
 import com.boolaa.app.ui.components.BoolaaTextField
@@ -74,6 +81,7 @@ fun AuthScreen() {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var ageConfirmed by rememberSaveable { mutableStateOf(false) }
 
     Box(
         Modifier.fillMaxSize().background(BoolaaTheme.colors.background).statusBarsPadding().imePadding().testTag("auth-screen"),
@@ -104,16 +112,28 @@ fun AuthScreen() {
                 }
                 BoolaaTextField(email, { email = it }, stringResource(R.string.email), Modifier.testTag("email"), keyboardType = KeyboardType.Email)
                 BoolaaTextField(password, { password = it }, stringResource(R.string.password), Modifier.testTag("password"), isPassword = true)
+                if (register) {
+                    Row(
+                        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+                            .toggleable(value = ageConfirmed, role = Role.Checkbox, onValueChange = { ageConfirmed = it })
+                            .testTag("age-confirm"),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(checked = ageConfirmed, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = Brand.purple))
+                        Text(stringResource(R.string.age_confirm), modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
                 if (needsConfirmation && register) {
                     Text(stringResource(R.string.auth_check_email), color = Brand.purple, style = MaterialTheme.typography.bodyMedium)
                 }
                 PrimaryButton(
                     text = stringResource(if (register) R.string.create_account else R.string.sign_in),
                     onClick = { if (register) vm.signUp(name, email, password) else vm.signIn(email, password) },
-                    enabled = email.isNotBlank() && password.isNotBlank() && (!register || name.isNotBlank()),
+                    enabled = email.isNotBlank() && password.isNotBlank() && (!register || (name.isNotBlank() && ageConfirmed)),
                     loading = busy,
                     modifier = Modifier.testTag("auth-submit"),
                 )
+                if (register) LegalAgreementText(Modifier.fillMaxWidth())
             }
             TextButton(onClick = { register = !register }, modifier = Modifier.fillMaxWidth().testTag("auth-toggle")) {
                 Text(

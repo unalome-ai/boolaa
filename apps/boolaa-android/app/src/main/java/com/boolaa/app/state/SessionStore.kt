@@ -5,6 +5,7 @@ import com.boolaa.app.core.BoolaaApi
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.LiveTables
 import com.boolaa.app.core.TableWatch
+import com.boolaa.app.model.Block
 import com.boolaa.app.model.Bubble
 import com.boolaa.app.model.BubbleMember
 import com.boolaa.app.model.JoinRequest
@@ -39,7 +40,10 @@ data class SessionState(
     /** The caller's own pending join requests. */
     val pendingRequests: List<JoinRequest> = emptyList(),
     val storedBubbleId: String? = null,
+    /** People the caller blocked (RLS hides content both ways). */
+    val blocks: List<Block> = emptyList(),
 ) {
+    val blockedIds: Set<String> get() = blocks.mapTo(mutableSetOf()) { it.blockedId }
     val route: AppRoute get() = RouteGate.resolve(isRestoringSession, userId != null, memberships?.size)
     val bubbles: List<Bubble> get() = memberships.orEmpty().mapNotNull { it.bubble }
     val currentBubble: Bubble? get() = RouteGate.pickCurrentBubble(storedBubbleId, bubbles)
@@ -125,7 +129,7 @@ class SessionStore(
         stopLive()
         _state.update {
             it.copy(userId = null, email = null, profile = null, memberships = null,
-                pendingRequests = emptyList(), isRestoringSession = false)
+                pendingRequests = emptyList(), blocks = emptyList(), isRestoringSession = false)
         }
     }
 
@@ -137,11 +141,14 @@ class SessionStore(
                 val p = async { api.profile(userId) }
                 val m = async { api.memberships(userId) }
                 val r = async { api.myJoinRequests(userId) }
-                Triple(p.await(), m.await(), r.await())
+                val b = async { runCatching { api.blocks() }.getOrDefault(_state.value.blocks) }
+                Loaded(p.await(), m.await(), r.await(), b.await())
             }
         }.fold(
-            onSuccess = { (profile, members, requests) ->
-                _state.update { it.copy(profile = profile, memberships = members.filter { m -> m.approved }, pendingRequests = requests) }
+            onSuccess = { (profile, members, requests, blocks) ->
+                _state.update {
+                    it.copy(profile = profile, memberships = members.filter { m -> m.approved }, pendingRequests = requests, blocks = blocks)
+                }
                 _state.value.currentBubble?.let { persistBubble(it.id) }
                 null
             },
@@ -231,6 +238,31 @@ class SessionStore(
         api.updateBubble(bubble.id, name, description)
         reload()
     }
+
+    // Safety
+
+    suspend fun block(userId: String) {
+        val me = _state.value.userId ?: return
+        api.block(me, userId)
+        _state.update { it.copy(blocks = api.blocks()) }
+    }
+
+    suspend fun unblock(userId: String) {
+        val me = _state.value.userId ?: return
+        api.unblock(me, userId)
+        _state.update { it.copy(blocks = api.blocks()) }
+    }
+
+    /** Storage cleanup, delete_my_account(), then a local sign-out back to Auth. */
+    suspend fun deleteAccount() {
+        val me = _state.value.userId ?: return
+        api.deleteMyAccount(me)
+        persistBubble(null)
+        _state.update { it.copy(storedBubbleId = null) }
+        signOut()
+    }
+
+    private data class Loaded(val profile: UserProfile, val members: List<BubbleMember>, val requests: List<JoinRequest>, val blocks: List<Block>)
 
     private companion object {
         const val KEY_BUBBLE = "boolaa.currentBubbleID"

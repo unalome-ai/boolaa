@@ -154,3 +154,25 @@ data class SharedLink(
         }
     }
 }
+
+/** `public.blocks` row (own list only), with the blocked user embedded. */
+@Serializable
+data class Block(
+    @SerialName("blocker_id") val blockerId: String,
+    @SerialName("blocked_id") val blockedId: String,
+    @SerialName("created_at") val createdAt: Timestamp? = null,
+    val blocked: UserProfile? = null,
+)
+
+/** report_content target types. */
+enum class ReportTargetType(val wire: String) {
+    USER("user"), CHAT_MESSAGE("chat_message"), EVENT("event"), FOOD_POST("food_post"), MARKET_ITEM("market_item"), SHARED_LINK("shared_link")
+}
+
+/** report_content reasons, in display order. */
+enum class ReportReason(val wire: String) {
+    SPAM("spam"), HARASSMENT("harassment"), HATE("hate"), SEXUAL("sexual"), VIOLENCE("violence"), SELF_HARM("self_harm"), OTHER("other")
+}
+
+/** What the report sheet is about: the content (or user) and its author. */
+data class ReportTarget(val type: ReportTargetType, val id: String, val authorId: String, val authorName: String)

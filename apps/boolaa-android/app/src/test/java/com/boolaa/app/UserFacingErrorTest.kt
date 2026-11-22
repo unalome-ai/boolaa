@@ -19,6 +19,8 @@ class UserFacingErrorTest {
         assertEquals(UserFacingError.ONLY_OWNER_CAN_REMOVE, classify("only the owner can remove members", "P0001"))
         assertEquals(UserFacingError.CANNOT_REMOVE_SELF, classify("use leave to remove yourself", "P0001"))
         assertEquals(UserFacingError.MEMBER_NOT_FOUND, classify("member not found", "P0001"))
+        assertEquals(UserFacingError.CANNOT_REPORT_SELF, classify("cannot report yourself", "P0001"))
+        assertEquals(UserFacingError.REPORT_TARGET_NOT_FOUND, classify("report target not found", "P0001"))
     }
 
     @Test fun rls_auth_and_fallback() {

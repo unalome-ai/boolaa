@@ -43,16 +43,23 @@ fun AddRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, tr
     }
 }
 
-/** Edit / delete overflow menu for the user's own content. */
+/** Edit / delete for the user's own content (Report on everyone else's). */
 @Composable
-fun OwnerMenu(onEdit: (() -> Unit)?, onDelete: () -> Unit, modifier: Modifier = Modifier) {
+fun OwnerMenu(onEdit: (() -> Unit)?, onDelete: () -> Unit, modifier: Modifier = Modifier) =
+    ItemMenu(onEdit = onEdit, onDelete = onDelete, onReport = null, modifier = modifier)
+
+/** Overflow menu on cards: edit/delete for own content, report for others' (App Store 1.2). */
+@Composable
+fun ItemMenu(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)?, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, modifier = modifier.size(36.dp).testTag("owner-menu")) {
+    IconButton(onClick = { open = true }, modifier = modifier.size(36.dp).testTag(if (onReport != null) "item-menu" else "owner-menu")) {
         Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_actions), tint = Brand.purple)
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
         if (onEdit != null) DropdownMenuItem(text = { Text(stringResource(R.string.edit)) }, onClick = { open = false; onEdit() })
-        DropdownMenuItem(text = { Text(stringResource(R.string.delete), color = Brand.danger) }, onClick = { open = false; onDelete() })
+        if (onDelete != null) DropdownMenuItem(text = { Text(stringResource(R.string.delete), color = Brand.danger) }, onClick = { open = false; onDelete() })
+        if (onReport != null) DropdownMenuItem(text = { Text(stringResource(R.string.report)) }, onClick = { open = false; onReport() },
+            modifier = Modifier.testTag("menu-report"))
     }
 }
 

@@ -57,6 +57,10 @@ import com.boolaa.app.model.Bubble
 import com.boolaa.app.model.BubbleMember
 import com.boolaa.app.model.JoinRequest
 import com.boolaa.app.model.MemberRole
+import com.boolaa.app.model.ReportTarget
+import com.boolaa.app.model.ReportTargetType
+import com.boolaa.app.ui.safety.MemberSafetyMenu
+import com.boolaa.app.ui.safety.ReportSheet
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -122,6 +126,9 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
         load()
     }
 
+    fun block(userId: String) = launchCatching(trackBusy = false) { container.session.block(userId) }
+    fun unblock(userId: String) = launchCatching(trackBusy = false) { container.session.unblock(userId) }
+
     fun remove(member: BubbleMember) = launchCatching(trackBusy = false) {
         container.api.removeMember(bubbleId, member.userId)
         load()
@@ -153,6 +160,8 @@ fun SettingsScreen(navigator: ShellNavigator) {
     val busy by vm.busy.collectAsStateWithLifecycle()
     var confirmLeave by remember { mutableStateOf(false) }
     var removing by remember { mutableStateOf<BubbleMember?>(null) }
+    var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    var blocking by remember { mutableStateOf<BubbleMember?>(null) }
     val isOwner = state.currentRole == MemberRole.OWNER
 
     PullToRefreshBox(isRefreshing = busy, onRefresh = { vm.load(refresh = true) }, modifier = Modifier.fillMaxSize().testTag("settings-screen")) {
@@ -182,10 +191,18 @@ fun SettingsScreen(navigator: ShellNavigator) {
                             Text(displayName(m.user), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 12.dp))
                             if (m.userId == me) Text(stringResource(R.string.you_suffix), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.padding(start = 4.dp))
                             Spacer(Modifier.weight(1f))
+                            val blocked = m.userId in state.blockedIds
+                            if (blocked) StatusBadge(stringResource(R.string.blocked_badge), color = Brand.danger, modifier = Modifier.padding(end = 6.dp))
                             if (m.role == MemberRole.OWNER) StatusBadge(stringResource(R.string.owner))
                             else if (isOwner && m.userId != me) {
                                 CircleIconButton(Icons.Default.PersonRemove, stringResource(R.string.remove_member), onClick = { removing = m },
                                     tint = Brand.danger, size = 34.dp, modifier = Modifier.testTag("remove-member-${displayName(m.user)}"))
+                            }
+                            if (m.userId != me) {
+                                val name = displayName(m.user)
+                                MemberSafetyMenu(name, blocked,
+                                    onReport = { reporting = ReportTarget(ReportTargetType.USER, m.userId, m.userId, name) },
+                                    onBlock = { blocking = m }, onUnblock = { vm.unblock(m.userId) })
                             }
                         }
                         if (i < members.lastIndex) HorizontalDivider(color = BoolaaTheme.colors.divider)
@@ -205,6 +222,15 @@ fun SettingsScreen(navigator: ShellNavigator) {
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("leave-bubble"))
             }
         }
+    }
+    reporting?.let { ReportSheet(it, onDismiss = { reporting = null }) }
+    blocking?.let { m ->
+        ConfirmDialog(
+            title = stringResource(R.string.block_user_title, displayName(m.user)),
+            message = stringResource(R.string.block_explainer),
+            confirm = stringResource(R.string.block),
+            onConfirm = { vm.block(m.userId) }, onDismiss = { blocking = null },
+        )
     }
     removing?.let { m ->
         ConfirmDialog(
