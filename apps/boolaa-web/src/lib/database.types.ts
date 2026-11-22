@@ -34,6 +34,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bubble_members: {
         Row: {
           approved: boolean
@@ -333,6 +366,67 @@ export type Database = {
           },
         ]
       }
+      reports: {
+        Row: {
+          bubble_id: string | null
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_user_id: string | null
+          reporter_id: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          bubble_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_user_id?: string | null
+          reporter_id?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          bubble_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_user_id?: string | null
+          reporter_id?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_links: {
         Row: {
           bubble_id: string
@@ -424,6 +518,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      delete_my_account: { Args: never; Returns: undefined }
+      is_blocked_with: { Args: { p_user_id: string }; Returns: boolean }
       is_bubble_member: { Args: { p_bubble_id: string }; Returns: boolean }
       reject_join_request: {
         Args: { p_request_id: string }
@@ -432,6 +528,15 @@ export type Database = {
       remove_member: {
         Args: { p_bubble_id: string; p_user_id: string }
         Returns: undefined
+      }
+      report_content: {
+        Args: {
+          p_details?: string
+          p_reason: string
+          p_target_id: string
+          p_target_type: string
+        }
+        Returns: string
       }
       request_to_join: {
         Args: { p_invite_code: string }

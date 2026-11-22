@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { MessagesSquare, Send } from "lucide-react";
+import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, PageLoader } from "@/components/ui";
+import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type Author, type ChatMessage, type Row } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -13,7 +15,7 @@ import { cx } from "@/lib/utils";
 const PAGE = 200;
 
 export default function ChatPage() {
-  const { supabase, userId, profile } = useBoolaa();
+  const { supabase, userId, profile, blocked } = useBoolaa();
   const bubble = useBubble();
   const t = useTranslations("chat");
   const tc = useTranslations("common");
@@ -56,18 +58,33 @@ export default function ChatPage() {
       setAuthors(dir);
     })();
 
-    const channel = supabase
-      .channel(`chat:${bubble.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "chat_messages", filter: `bubble_id=eq.${bubble.id}` },
-        (payload) => add({ ...(payload.new as Row<"chat_messages">), sender: null }),
-      )
-      .subscribe((status) => alive && setLive(status === "SUBSCRIBED"));
+    const unsubscribe = liveChannel(
+      supabase,
+      `chat:${bubble.id}`,
+      (ch) =>
+        ch.on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "chat_messages", filter: `bubble_id=eq.${bubble.id}` },
+          (payload) => add({ ...(payload.new as Row<"chat_messages">), sender: null }),
+        ),
+      async (ready) => {
+        if (!ready) return alive && setLive(false);
+        // Streaming has started: pick up messages sent between the history load and now.
+        const { data } = await supabase
+          .from("chat_messages")
+          .select(`*, sender:users!sender_id(${AUTHOR})`)
+          .eq("bubble_id", bubble.id)
+          .order("created_at", { ascending: false })
+          .limit(PAGE);
+        if (!alive) return;
+        data?.forEach(add);
+        setLive(true);
+      },
+    );
 
     return () => {
       alive = false;
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [supabase, bubble.id]);
 
@@ -78,11 +95,11 @@ export default function ChatPage() {
   // Fill in sender info for realtime rows (payload has no joins).
   const rendered = useMemo(
     () =>
-      (messages ?? []).map((m) => ({
+      (messages ?? []).filter((m) => !blocked.has(m.sender_id)).map((m) => ({
         ...m,
         sender: m.sender ?? authors[m.sender_id] ?? (m.sender_id === userId && profile ? profile : null),
       })),
-    [messages, authors, userId, profile],
+    [messages, authors, userId, profile, blocked],
   );
 
   async function send(e: FormEvent) {
@@ -122,6 +139,7 @@ export default function ChatPage() {
               return (
                 <li
                   key={m.id}
+                  data-testid="chat-message"
                   className={cx("flex items-end gap-2", mine ? "flex-row-reverse" : "flex-row", grouped && "-mt-1.5")}
                 >
                   <div className="w-8 shrink-0">
@@ -141,7 +159,10 @@ export default function ChatPage() {
                     >
                       {m.content}
                     </div>
-                    <span className="mt-0.5 px-1 text-[11px] text-muted">{fmt.time(m.created_at)}</span>
+                    <span className={cx("mt-0.5 flex items-center gap-1 px-1 text-[11px] text-muted", mine && "flex-row-reverse")}>
+                      {fmt.time(m.created_at)}
+                      {!mine && <SafetyMenu type="chat_message" id={m.id} author={m.sender ? { id: m.sender_id, name: m.sender.name } : { id: m.sender_id, name: null }} compact />}
+                    </span>
                   </div>
                 </li>
               );

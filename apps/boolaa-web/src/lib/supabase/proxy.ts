@@ -2,8 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { isAuthApiError, isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
+import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 
 const PUBLIC_PATHS = ["/login", "/register"];
+/** Open to everyone, signed in or not (no redirects). */
+const OPEN_PATHS = ["/privacy", "/terms", "/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/manifest.webmanifest"];
 const MAIN_PATHS = ["/home", "/events", "/food", "/marketplace", "/settings", "/chat", "/links"];
 
 function matches(pathname: string, paths: string[]) {
@@ -18,6 +21,16 @@ function matches(pathname: string, paths: string[]) {
  *   signed in on /login   -> /home
  */
 export async function updateSession(request: NextRequest) {
+  // `?lang=xx` (used by the mobile apps for /privacy and /terms) overrides the locale for this
+  // render and is remembered in the locale cookie.
+  const lang = request.nextUrl.searchParams.get("lang");
+  const langOverride = lang && isLocale(lang) ? lang : null;
+  if (langOverride) request.cookies.set(LOCALE_COOKIE, langOverride);
+  const withLang = (res: NextResponse) => {
+    if (langOverride) res.cookies.set(LOCALE_COOKIE, langOverride, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+    return res;
+  };
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
@@ -51,7 +64,7 @@ export async function updateSession(request: NextRequest) {
     (isAuthApiError(error) && (error.status === 429 || (error.status ?? 0) >= 500));
   if (error && transient) {
     console.warn(`[proxy] auth check failed for ${pathname}: ${error.name} ${error.message}`);
-    return response;
+    return withLang(response);
   }
 
   // Redirects must carry any refreshed cookies, otherwise the browser loses the new session.
@@ -61,11 +74,14 @@ export async function updateSession(request: NextRequest) {
     url.search = "";
     const res = NextResponse.redirect(url);
     response.cookies.getAll().forEach((c) => res.cookies.set(c));
-    return res;
+    return withLang(res);
   };
 
+  if (matches(pathname, OPEN_PATHS)) return withLang(response);
+
   if (!userId) {
-    if (matches(pathname, PUBLIC_PATHS)) return response;
+    // Signed-out visitors get the landing page at "/".
+    if (pathname === "/" || matches(pathname, PUBLIC_PATHS)) return withLang(response);
     if (error && process.env.NODE_ENV !== "production") {
       console.warn(`[proxy] signed out on ${pathname}: ${error.name} ${error.message}`);
     }
@@ -83,5 +99,5 @@ export async function updateSession(request: NextRequest) {
     if (pathname === "/" || matches(pathname, PUBLIC_PATHS)) return redirect("/home");
   }
 
-  return response;
+  return withLang(response);
 }

@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [adult, setAdult] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -99,10 +100,35 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        <label className="flex cursor-pointer items-start gap-3 text-sm">
+          <input
+            id="age-confirm"
+            type="checkbox"
+            required
+            checked={adult}
+            onChange={(e) => setAdult(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]"
+          />
+          <span>{t("ageConfirm")}</span>
+        </label>
         <ErrorText>{error}</ErrorText>
-        <button type="submit" className="btn-primary w-full" disabled={busy}>
+        <button type="submit" className="btn-primary w-full" disabled={busy || !adult}>
           {busy ? t("creatingAccount") : t("createAccount")}
         </button>
+        <p className="text-center text-xs text-muted" data-testid="terms-consent">
+          {t.rich("agreeTerms", {
+            terms: (chunks) => (
+              <Link href="/terms" target="_blank" className="font-medium text-brand underline-offset-2 hover:underline">
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link href="/privacy" target="_blank" className="font-medium text-brand underline-offset-2 hover:underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
       </form>
       <p className="mt-5 text-center text-sm text-muted">
         {t("haveAccount")}{" "}

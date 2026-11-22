@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { CalendarDays, Check, MapPin, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader, SectionTitle } from "@/components/ui";
 import { AUTHOR, type BoolaaEvent } from "@/lib/types";
@@ -11,7 +12,7 @@ import { useFormat } from "@/i18n/format";
 import { cx, toLocalInput } from "@/lib/utils";
 
 export default function EventsPage() {
-  const { supabase, userId } = useBoolaa();
+  const { supabase, userId, blocked } = useBoolaa();
   const t = useTranslations("events");
   const errorText = useErrorText();
   const bubble = useBubble();
@@ -50,7 +51,7 @@ export default function EventsPage() {
   }
 
   const mine = events?.filter((e) => e.creator_id === userId) ?? [];
-  const others = events?.filter((e) => e.creator_id !== userId) ?? [];
+  const others = events?.filter((e) => e.creator_id !== userId && !blocked.has(e.creator_id)) ?? [];
 
   const list = (items: BoolaaEvent[], empty: string) =>
     items.length === 0 ? (
@@ -144,6 +145,7 @@ function EventCard({
             </p>
           )}
         </div>
+        {!mine && <SafetyMenu type="event" id={ev.id} author={{ id: ev.creator_id, name: ev.creator?.name }} />}
         {mine && (
           <div className="flex gap-1">
             <button type="button" aria-label={t("editEvent")} onClick={onEdit} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-brand">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ExternalLink, Link2, Plus, Trash2 } from "lucide-react";
+import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader } from "@/components/ui";
 import { AUTHOR, type SharedLink } from "@/lib/types";
@@ -19,7 +20,7 @@ function hostOf(url: string) {
 }
 
 export default function LinksPage() {
-  const { supabase, userId } = useBoolaa();
+  const { supabase, userId, blocked } = useBoolaa();
   const t = useTranslations("links");
   const errorText = useErrorText();
   const fmt = useFormat();
@@ -45,7 +46,7 @@ export default function LinksPage() {
   }, [load]);
 
   const tags = useMemo(() => [...new Set((links ?? []).flatMap((l) => l.tags))].sort(), [links]);
-  const shown = (links ?? []).filter((l) => !tag || l.tags.includes(tag));
+  const shown = (links ?? []).filter((l) => (!tag || l.tags.includes(tag)) && !blocked.has(l.user_id));
 
   async function remove(link: SharedLink) {
     if (!window.confirm(t("confirmDelete", { title: link.title || link.url }))) return;
@@ -120,6 +121,7 @@ export default function LinksPage() {
               >
                 <ExternalLink size={18} />
               </a>
+              {l.user_id !== userId && <SafetyMenu type="shared_link" id={l.id} author={{ id: l.user_id, name: l.user?.name }} />}
               {l.user_id === userId && (
                 <button type="button" aria-label={t("deleteLink")} onClick={() => remove(l)} className="flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-chip hover:text-red-500">
                   <Trash2 size={17} />

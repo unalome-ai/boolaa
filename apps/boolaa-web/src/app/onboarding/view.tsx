@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { CompactLocalePicker } from "@/i18n/locale-picker";
+import { liveChannel } from "@/lib/realtime";
 import { BUBBLE_COOKIE, hardNavigate, writeCookie } from "@/lib/utils";
 
 type Pending = {
@@ -83,29 +84,36 @@ export default function OnboardingPage() {
     // Live updates instead of polling: our own membership row appearing means we were admitted;
     // changes to our requests update the approval counts; a deleted request (rejected, cancelled,
     // or admitted) only carries its id, so it's matched against the requests on screen.
-    const channel = supabase
-      .channel(`onboarding:${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "bubble_members", filter: `user_id=eq.${userId}` },
-        (p) => {
-          const row = p.new as { bubble_id?: string; approved?: boolean };
-          if (row.approved && row.bubble_id) {
-            writeCookie(BUBBLE_COOKIE, row.bubble_id);
-            hardNavigate("/home");
-          }
-        },
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "join_requests", filter: `user_id=eq.${userId}` }, reload)
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "join_requests" }, (p) => {
-        if (pendingIds.current.has((p.old as { id?: string }).id ?? "")) reload();
-      })
-      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+    const unsubscribe = liveChannel(
+      supabase,
+      `onboarding:${userId}`,
+      (ch) =>
+        ch
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "bubble_members", filter: `user_id=eq.${userId}` },
+            (p) => {
+              const row = p.new as { bubble_id?: string; approved?: boolean };
+              if (row.approved && row.bubble_id) {
+                writeCookie(BUBBLE_COOKIE, row.bubble_id);
+                hardNavigate("/home");
+              }
+            },
+          )
+          .on("postgres_changes", { event: "*", schema: "public", table: "join_requests", filter: `user_id=eq.${userId}` }, reload)
+          .on("postgres_changes", { event: "DELETE", schema: "public", table: "join_requests" }, (p) => {
+            if (pendingIds.current.has((p.old as { id?: string }).id ?? "")) reload();
+          }),
+      (ready) => {
+        if (ready) void load(userId).then(() => setLive(true)); // catch up on anything before streaming started
+        else setLive(false);
+      },
+    );
     // Slow fallback in case an event was missed while the tab was asleep.
     window.addEventListener("focus", reload);
     return () => {
       window.removeEventListener("focus", reload);
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [userId, load, supabase]);
 

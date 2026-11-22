@@ -1,0 +1,190 @@
+{
+  "privacy": {
+    "title": "Politica de confidențialitate",
+    "intro": "Boolaa este o aplicație privată, doar pe bază de invitație, pentru grupuri mici („bule”). Această politică explică ce date personale prelucrăm când folosești aplicația și site-ul Boolaa, de ce le prelucrăm și ce drepturi ai.",
+    "sections": [
+      {
+        "id": "controller",
+        "title": "Cine suntem",
+        "body": [
+          "Operatorul de date este [Company legal name], [Registered address]. Ne poți scrie la [Contact email] pentru orice întrebare legată de datele tale.",
+          "Prelucrăm datele personale conform Regulamentului general privind protecția datelor (GDPR) și legislației române aplicabile. Autoritatea de supraveghere este Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP)."
+        ]
+      },
+      {
+        "id": "data",
+        "title": "Ce date colectăm",
+        "body": [
+          "- Datele contului: adresa de e-mail, numele și, dacă adaugi una, fotografia de profil.",
+          "- Conținutul pe care îl publici: mesaje de chat, evenimente (titlu, descriere, dată, loc, cine participă), postări cu mâncare, obiecte din piață, linkuri și imaginile pe care le încarci.",
+          "- Datele de membru: bulele pe care le creezi sau din care faci parte, rolul tău, cererile de alăturare și aprobările.",
+          "- Datele de siguranță: persoanele pe care le blochezi și rapoartele pe care le trimiți sau care te privesc.",
+          "- Datele tehnice: jurnale de server (de exemplu adresa IP, tipul dispozitivului și al browserului, ora cererilor și erorile), necesare pentru funcționarea și securitatea serviciului.",
+          "Nu cerem și nu dorim date sensibile. Te rugăm să nu publici în bule informații despre sănătate, finanțe sau altele similare."
+        ]
+      },
+      {
+        "id": "purposes",
+        "title": "De ce folosim datele și pe ce temei legal",
+        "body": [
+          "- Pentru a furniza Boolaa (contul tău, bulele tale și tot ce împărtășești în ele): executarea contractului cu tine (art. 6 alin. (1) lit. b) GDPR).",
+          "- Pentru siguranța Boolaa (gestionarea rapoartelor, blocarea, prevenirea abuzurilor și securizarea sistemelor): interesul nostru legitim pentru o comunitate sigură (art. 6 alin. (1) lit. f)).",
+          "- Pentru îndeplinirea obligațiilor legale (de exemplu răspunsul la solicitări legale ale autorităților): obligație legală (art. 6 alin. (1) lit. c)).",
+          "Nu folosim datele tale pentru publicitate, nu le vindem și nu folosim tracking sau analize de la terți."
+        ]
+      },
+      {
+        "id": "sharing",
+        "title": "Cine îți poate vedea datele",
+        "body": [
+          "Conținutul publicat într-o bulă este vizibil doar membrilor acelei bule. Numele și fotografia ta sunt vizibile persoanelor cu care ai o bulă în comun. Persoanele pe care le blochezi și cele care te blochează nu mai văd conținutul celuilalt.",
+          "Folosim următorii împuterniciți, care au semnat acorduri de prelucrare a datelor:",
+          "- Supabase (bază de date, autentificare și stocare de fișiere), găzduit în UE.",
+          "- Furnizorul nostru de găzduire, care servește site-ul și serverul aplicației.",
+          "Transmitem date autorităților doar atunci când legea o cere."
+        ]
+      },
+      {
+        "id": "transfers",
+        "title": "Transferuri internaționale",
+        "body": [
+          "Păstrăm datele tale în Uniunea Europeană. Dacă un împuternicit ar avea vreodată nevoie să le acceseze din afara UE/SEE, ne bazăm pe Clauzele contractuale standard (SCC) ale Comisiei Europene sau pe un alt mecanism de transfer valid."
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "Cât timp păstrăm datele",
+        "body": [
+          "Păstrăm datele cât timp ai un cont. Când îți ștergi contul din aplicație, ștergem profilul, conținutul și imaginile tale și te scoatem din bule.",
+          "Rapoartele trimise pot fi păstrate până la 12 luni după închidere, fără legătură cu contul tău, pentru a gestiona abuzurile repetate. Jurnalele tehnice se păstrează o perioadă scurtă (de regulă până la 30 de zile), cu excepția cazului în care sunt necesare pentru investigarea unui incident de securitate."
+        ]
+      },
+      {
+        "id": "rights",
+        "title": "Drepturile tale",
+        "body": [
+          "Ai dreptul de acces la date, de rectificare, de ștergere, de a le primi într-un format portabil, de restricționare sau de opoziție la prelucrare și de a-ți retrage oricând consimțământul.",
+          "Îți poți modifica profilul și îți poți șterge conținutul sau întregul cont direct din aplicație. Pentru orice altceva, scrie-ne la [Contact email]. Răspundem în cel mult o lună.",
+          "Ai și dreptul de a depune o plângere la ANSPDCP (www.dataprotection.ro) sau la autoritatea de supraveghere din țara în care locuiești."
+        ]
+      },
+      {
+        "id": "age",
+        "title": "Vârsta minimă",
+        "body": [
+          "Boolaa este pentru persoane de cel puțin 16 ani. Dacă aflăm că o persoană mai tânără are un cont, îl ștergem."
+        ]
+      },
+      {
+        "id": "security",
+        "title": "Securitate",
+        "body": [
+          "Datele sunt criptate în tranzit, accesul este restricționat prin securitate la nivel de rând, astfel încât doar persoanele potrivite pot citi fiecare bulă, iar parolele sunt stocate sub formă de hash. Niciun sistem nu este perfect sigur, așa că folosește o parolă puternică și unică."
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "Modificări ale acestei politici",
+        "body": [
+          "Putem actualiza această politică pe măsură ce Boolaa evoluează. Vom afișa noua dată în partea de sus și, pentru schimbări importante, te vom anunța în aplicație înainte să intre în vigoare."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contact",
+        "body": ["[Company legal name], [Registered address], [Contact email]."]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Termeni de utilizare",
+    "intro": "Acești termeni reprezintă acordul dintre tine și [Company legal name] pentru utilizarea Boolaa. Prin crearea unui cont îi accepți, împreună cu Politica noastră de confidențialitate.",
+    "sections": [
+      {
+        "id": "eligibility",
+        "title": "Cine poate folosi Boolaa",
+        "body": [
+          "Trebuie să ai cel puțin 16 ani. Ești responsabil pentru contul tău: păstrează parola în siguranță, oferă informații corecte și anunță-ne dacă bănuiești că altcineva îți folosește contul."
+        ]
+      },
+      {
+        "id": "service",
+        "title": "Serviciul",
+        "body": [
+          "Boolaa îți permite să creezi bule private, să inviți oameni cu un cod și să vorbești, să planifici evenimente, să împarți mâncare, să faci schimb de obiecte și să trimiți linkuri membrilor bulei. Serviciul este gratuit. Putem modifica, adăuga sau elimina funcții în timp."
+        ]
+      },
+      {
+        "id": "rules",
+        "title": "Utilizare acceptabilă",
+        "body": [
+          "Fii amabil. Nu ai voie să folosești Boolaa pentru a publica sau a face ceva care:",
+          "- hărțuiește, intimidează sau amenință pe cineva;",
+          "- promovează ura sau discriminarea împotriva unor persoane sau grupuri;",
+          "- conține conținut sexual care implică minori, sub orice formă (îl raportăm autorităților);",
+          "- oferă bunuri sau servicii ilegale, inclusiv în piață (de exemplu droguri, arme, bunuri furate sau contrafăcute);",
+          "- este spam, înșelătorie sau conținut înșelător;",
+          "- încalcă drepturile altcuiva, inclusiv viața privată și proprietatea intelectuală;",
+          "- încearcă să strice, să supraîncarce sau să ocolească securitatea serviciului."
+        ]
+      },
+      {
+        "id": "safety",
+        "title": "Raportare, blocare și moderare",
+        "body": [
+          "Avem toleranță zero față de conținutul inacceptabil și utilizatorii abuzivi. Poți raporta din aplicație orice mesaj, eveniment, postare, obiect, link sau membru și poți bloca pe oricine, astfel încât să nu mai vedeți conținutul celuilalt.",
+          "Verificăm rapoartele în cel mult 24 de ore. Putem elimina conținut și putem suspenda sau închide conturile celor care încalcă acești termeni, fără notificare atunci când este necesar pentru a-i proteja pe ceilalți."
+        ]
+      },
+      {
+        "id": "content",
+        "title": "Conținutul tău",
+        "body": [
+          "Ce publici îți aparține. Ne acorzi o licență neexclusivă, gratuită și valabilă în întreaga lume de a stoca, prelucra și afișa conținutul tău membrilor bulelor în care îl publici, doar pentru a face Boolaa să funcționeze. Licența încetează când ștergi conținutul sau contul.",
+          "Confirmi că ai dreptul să împărtășești ce publici."
+        ]
+      },
+      {
+        "id": "marketplace",
+        "title": "Piața",
+        "body": [
+          "Piața funcționează direct între utilizatori. Boolaa nu este parte la nicio donație sau schimb, nu verifică obiectele și nu răspunde de calitatea, siguranța sau legalitatea lor. Stabilește detaliile direct cu cealaltă persoană și ai grijă când vă întâlniți."
+        ]
+      },
+      {
+        "id": "disclaimers",
+        "title": "Limitarea răspunderii",
+        "body": [
+          "Boolaa este oferit „ca atare”. Ne străduim să fie disponibil și sigur, dar nu putem garanta că va funcționa mereu fără întreruperi sau erori.",
+          "În măsura permisă de lege, nu răspundem pentru pierderi indirecte sau pentru conținutul publicat de alți utilizatori. Nimic din acești termeni nu limitează răspunderea care nu poate fi limitată prin lege și nici drepturile tale de consumator."
+        ]
+      },
+      {
+        "id": "termination",
+        "title": "Încetarea acordului",
+        "body": [
+          "Poți înceta oricând să folosești Boolaa și îți poți șterge contul din aplicație. Putem suspenda sau închide accesul tău dacă încalci grav sau în mod repetat acești termeni ori dacă legea o cere."
+        ]
+      },
+      {
+        "id": "law",
+        "title": "Legea aplicabilă",
+        "body": [
+          "Acești termeni sunt guvernați de legea română. Litigiile sunt soluționate de instanțele competente din România, fără a aduce atingere normelor obligatorii de protecție a consumatorilor din țara în care locuiești."
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "Modificări ale termenilor",
+        "body": [
+          "Putem actualiza acești termeni. Vom afișa noua dată în partea de sus și te vom anunța în aplicație înainte ca schimbările importante să intre în vigoare. Dacă folosești în continuare Boolaa după aceea, se aplică noii termeni."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contact",
+        "body": ["[Company legal name], [Registered address], [Contact email]."]
+      }
+    ]
+  }
+}

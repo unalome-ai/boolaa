@@ -13,6 +13,8 @@ type ErrorKey =
   | "onlyOwnerCanRemove"
   | "cannotRemoveSelf"
   | "memberNotFound"
+  | "cannotReportYourself"
+  | "reportTargetNotFound"
   | "notAuthenticated"
   | "forbidden"
   | "network"
@@ -49,6 +51,8 @@ export function errorKey(e: unknown): ErrorKey {
   if (msg.includes("only the owner can remove members")) return "onlyOwnerCanRemove";
   if (msg.includes("use leave to remove yourself")) return "cannotRemoveSelf";
   if (msg.includes("member not found")) return "memberNotFound";
+  if (msg.includes("cannot report yourself")) return "cannotReportYourself";
+  if (msg.includes("report target not found") || msg.includes("invalid report target")) return "reportTargetNotFound";
   if (msg.includes("not authenticated") || msg.includes("jwt expired") || code === "PGRST301") return "notAuthenticated";
 
   // Auth (GoTrue) errors.

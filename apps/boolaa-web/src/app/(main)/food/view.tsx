@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, SectionTitle } from "@/components/ui";
 import { AUTHOR, type FoodPost } from "@/lib/types";
@@ -11,7 +12,7 @@ import { useFormat } from "@/i18n/format";
 import { removeImage, uploadImage } from "@/lib/utils";
 
 export default function FoodPage() {
-  const { supabase, userId } = useBoolaa();
+  const { supabase, userId, blocked } = useBoolaa();
   const t = useTranslations();
   const errorText = useErrorText();
   const fmt = useFormat();
@@ -44,7 +45,7 @@ export default function FoodPage() {
   }
 
   const mine = posts?.filter((p) => p.user_id === userId) ?? [];
-  const others = posts?.filter((p) => p.user_id !== userId) ?? [];
+  const others = posts?.filter((p) => p.user_id !== userId && !blocked.has(p.user_id)) ?? [];
 
   const grid = (items: FoodPost[], empty: string) =>
     items.length === 0 ? (
@@ -63,6 +64,7 @@ export default function FoodPage() {
                     {p.user?.name ?? t("common.someone")} · {fmt.relative(p.created_at)}
                   </span>
                 </span>
+                {p.user_id !== userId && <SafetyMenu type="food_post" id={p.id} author={{ id: p.user_id, name: p.user?.name }} />}
                 {p.user_id === userId && (
                   <span className="flex gap-1">
                     <button type="button" aria-label={t("food.editPost")} data-testid="edit-post" onClick={() => setEditing(p)} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-brand">

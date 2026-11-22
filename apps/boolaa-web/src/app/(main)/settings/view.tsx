@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, ChevronRight, Clock, Copy, Crown, Link2, LogOut, Share2, UserMinus, X } from "lucide-react";
+import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, ErrorText, Modal, PageLoader, SectionTitle } from "@/components/ui";
+import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type JoinRequest, type Member } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -26,8 +28,10 @@ export default function SettingsPage() {
   const [removing, setRemoving] = useState<Member | null>(null);
   const [live, setLive] = useState(false);
   const requestIds = useRef<Set<string>>(new Set());
+  const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     const [m, r] = await Promise.all([
       supabase
         .from("bubble_members")
@@ -41,6 +45,7 @@ export default function SettingsPage() {
         .eq("bubble_id", bubble.id)
         .order("created_at", { ascending: true }),
     ]);
+    if (seq !== loadSeq.current) return; // a newer load started meanwhile: don't overwrite it with older data
     if (m.error || r.error) setError(errorText(m.error ?? r.error));
     setMembers(m.data ?? []);
     setRequests(r.data ?? []);
@@ -58,24 +63,31 @@ export default function SettingsPage() {
       timer = setTimeout(() => void load(), 150); // one reload for a burst (admission = insert + delete)
     };
     const inBubble = `bubble_id=eq.${bubble.id}`;
-    const channel = supabase
-      .channel(`settings:${bubble.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "join_requests", filter: inBubble }, reload)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "join_requests", filter: inBubble }, reload)
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "join_requests" }, (p) => {
-        if (requestIds.current.has((p.old as { id?: string }).id ?? "")) reload();
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bubble_members", filter: inBubble }, reload)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubble_members", filter: inBubble }, reload)
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "bubble_members" }, (p) => {
-        if ((p.old as { bubble_id?: string }).bubble_id === bubble.id) reload();
-      })
-      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+    const unsubscribe = liveChannel(
+      supabase,
+      `settings:${bubble.id}`,
+      (ch) =>
+        ch
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "join_requests", filter: inBubble }, reload)
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "join_requests", filter: inBubble }, reload)
+          .on("postgres_changes", { event: "DELETE", schema: "public", table: "join_requests" }, (p) => {
+            if (requestIds.current.has((p.old as { id?: string }).id ?? "")) reload();
+          })
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "bubble_members", filter: inBubble }, reload)
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubble_members", filter: inBubble }, reload)
+          .on("postgres_changes", { event: "DELETE", schema: "public", table: "bubble_members" }, (p) => {
+            if ((p.old as { bubble_id?: string }).bubble_id === bubble.id) reload();
+          }),
+      (ready) => {
+        if (ready) void load().then(() => setLive(true)); // catch up on changes made before streaming started
+        else setLive(false);
+      },
+    );
     window.addEventListener("focus", reload); // fallback if an event was missed
     return () => {
       clearTimeout(timer);
       window.removeEventListener("focus", reload);
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [load, supabase, bubble.id]);
 
@@ -237,6 +249,7 @@ export default function SettingsPage() {
                   <Crown size={14} /> {t("owner")}
                 </span>
               )}
+              <SafetyMenu type="user" id={m.user_id} author={{ id: m.user_id, name: m.user?.name }} />
               {isOwner && m.role !== "owner" && m.user_id !== userId && (
                 <button
                   type="button"

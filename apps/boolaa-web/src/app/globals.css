@@ -74,3 +74,87 @@ body {
 @utility chip {
   @apply inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-medium transition;
 }
+
+/* ------------------------------------------------------------------------------------------------
+ * Landing + legal pages. Everything visual goes through these tokens so a later design pass can
+ * restyle the marketing pages without touching markup.
+ * --------------------------------------------------------------------------------------------- */
+:root {
+  --landing-ink: var(--app-fg);
+  --landing-soft: color-mix(in oklab, #9d78bd 10%, var(--app-bg));
+  --landing-surface: var(--app-card);
+  --landing-grad-from: #9d78bd;
+  --landing-grad-to: #7b61ff;
+  --landing-blob-1: color-mix(in oklab, #9d78bd 35%, transparent);
+  --landing-blob-2: color-mix(in oklab, #7b61ff 28%, transparent);
+  --landing-blob-3: color-mix(in oklab, #ffb4d9 40%, transparent);
+  --landing-radius: 28px;
+  --landing-shadow: 0 20px 60px -20px rgb(91 60 160 / 0.35);
+  --landing-reveal-distance: 24px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --landing-soft: color-mix(in oklab, #9d78bd 14%, var(--app-bg));
+    --landing-blob-1: color-mix(in oklab, #9d78bd 30%, transparent);
+    --landing-blob-2: color-mix(in oklab, #7b61ff 26%, transparent);
+    --landing-blob-3: color-mix(in oklab, #ff7ac0 18%, transparent);
+    --landing-shadow: 0 20px 60px -20px rgb(0 0 0 / 0.6);
+  }
+}
+
+@theme inline {
+  --color-landing-soft: var(--landing-soft);
+  --color-landing-surface: var(--landing-surface);
+  --radius-landing: var(--landing-radius);
+  --shadow-landing: var(--landing-shadow);
+}
+
+@utility text-gradient {
+  background: linear-gradient(100deg, var(--landing-grad-from), var(--landing-grad-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility bg-gradient-brand {
+  background: linear-gradient(135deg, var(--landing-grad-from), var(--landing-grad-to));
+}
+
+.blob {
+  position: absolute;
+  border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+  filter: blur(36px);
+  pointer-events: none;
+  animation: blob-drift 18s ease-in-out infinite alternate;
+}
+@keyframes blob-drift {
+  from { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  to { transform: translate3d(24px, -18px, 0) rotate(25deg) scale(1.08); }
+}
+.float-slow { animation: float 7s ease-in-out infinite; }
+.float-slower { animation: float 9s ease-in-out -3s infinite; }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.lift { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.lift:hover { transform: translateY(-4px); box-shadow: var(--landing-shadow); }
+
+/* Gentle reveal on scroll, with no JavaScript; browsers without scroll timelines just show content. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(var(--landing-reveal-distance)); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob, .float-slow, .float-slower, .reveal { animation: none !important; }
+  .lift, .lift:hover { transition: none; transform: none; }
+  html { scroll-behavior: auto !important; }
+}
+html { scroll-behavior: smooth; }

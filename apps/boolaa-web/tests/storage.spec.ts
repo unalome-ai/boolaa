@@ -66,7 +66,7 @@ test("old files are removed on delete and on photo replacement", async ({ browse
   await dialog.locator("#item-title").fill(`E2E item ${RUN}`);
   await dialog.locator('button[type="submit"]').click();
   const item = page.getByTestId("market-item").filter({ hasText: `E2E item ${RUN}` });
-  const market = (await item.getByRole("img").getAttribute("src"))!;
+  const market = (await item.getByRole("img", { name: `E2E item ${RUN}` }).getAttribute("src"))!;
   expect(await objectExists(page.request, market)).toBe(true);
   await item.getByTestId("delete-item").click();
   await expect(item).toHaveCount(0);

@@ -48,6 +48,11 @@ deleting uploads and auth users needs the local service-role key, which the test
 `tests/i18n.spec.ts` covers Accept-Language/cookie resolution, switching to Romanian in the profile
 sheet (reload + session kept) and a per-locale pass over `/settings` that fails on any English string.
 Selectors use ids, test ids and roles, never UI copy, so tests run in any locale (default `en-US`).
+`tests/membership.spec.ts` (three throwaway users, bubble of 2) covers live approval from the pending
+screen, "waiting for a free spot" in a full bubble, ownership hand-over and auto-admission when the
+owner leaves, and removal (bounced to onboarding, or to the next bubble with a notice).
+`tests/storage.spec.ts` checks that deleting/replacing photos removes the old files. Throwaway users
+get unique per-run names; only they are deleted (service-role key), never seeded data.
 
 ## How it fits together
 
@@ -58,6 +63,11 @@ Selectors use ids, test ids and roles, never UI copy, so tests run in any locale
   `page.tsx` is a thin server wrapper that sets the translated page title (`generateMetadata`).
   Cache Components is off: the root layout reads the locale cookie to render `<html lang>`.
 - The current bubble is stored in the `boolaa_bubble` cookie (`BoolaaProvider`).
+- Realtime (`src/lib/realtime.ts` `liveChannel`): chat, `/onboarding` pending requests, Settings
+  (requests and members) and the provider's own membership subscribe to `postgres_changes`. A channel
+  counts as live only after the server's `system` ack (not just `SUBSCRIBED`, which can precede the
+  change stream); the view reloads at that point to catch anything in between, and on window focus.
+  DELETE events carry only the primary key and can't be filtered, so they're matched client-side.
 - Routes: `/login`, `/register`, `/onboarding`, `/home`, `/chat`, `/events`, `/food`,
   `/marketplace`, `/links`, `/settings`.
 
@@ -83,3 +93,24 @@ English, Romanian, French, Spanish and Italian, with [next-intl](https://next-in
 
 To add a string: add it to `messages/en.json`, then the same key to every other file, and run
 `npm run i18n:check`.
+
+## Safety, account and public pages
+
+- **Report / block** (`src/components/safety.tsx`): a "…" menu on other people's chat messages, events,
+  food posts, market items, links and members. Report = 7 reasons + optional details via
+  `report_content`, then "Also block <name>?". Blocking inserts into `blocks`; RLS hides both sides'
+  content (live feeds too) and views also filter instantly. Blocked users + Unblock live in the
+  profile sheet.
+- **Delete account** (profile sheet): warning + typed localized confirm word, then removes every object
+  under `<uid>/` in the 3 buckets, calls `delete_my_account()`, signs out locally and goes to `/`.
+- **Landing** at `/` for signed-out visitors (signed-in users are redirected by the proxy). Styles go
+  through the `--landing-*` tokens in `globals.css`; motion uses CSS scroll timelines and is disabled
+  under `prefers-reduced-motion`. SEO: metadata/Open Graph, `icon.svg`, `opengraph-image`,
+  `sitemap.xml`, `robots.txt` (set `NEXT_PUBLIC_SITE_URL` in production).
+- **/privacy and /terms**: text in `content/legal/<locale>.json` (sections, "- " bullets, `[...]`
+  placeholders highlighted), marked as a draft pending legal review. `?lang=xx` overrides the locale
+  and sets the cookie (handled in the proxy), for links from the mobile apps.
+- `/register` requires a 16+ checkbox and links the Terms and Privacy Policy.
+
+Tests: `tests/landing.spec.ts` (landing, redirect, legal pages per locale) and `tests/safety.spec.ts`
+(report + also block, unblock, delete account incl. images and auth user), all with throwaway users.

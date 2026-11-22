@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { IntlClientProvider } from "@/i18n/client-provider";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,6 +13,8 @@ const geistSans = Geist({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
   return {
+    metadataBase: new URL(SITE_URL),
+    applicationName: "Boolaa",
     title: { template: "%s · Boolaa", default: "Boolaa" },
     description: t("description"),
   };

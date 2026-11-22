@@ -2,8 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getSupabase, type BoolaaClient } from "@/lib/supabase/client";
+import { liveChannel } from "@/lib/realtime";
 import type { Bubble, UserProfile } from "@/lib/types";
-import { BUBBLE_COOKIE, hardNavigate, readCookie, writeCookie } from "@/lib/utils";
+import { BUBBLE_COOKIE, hardNavigate, readCookie, signOutTarget, writeCookie } from "@/lib/utils";
 
 export type MyBubble = Bubble & { role: string };
 
@@ -22,6 +23,10 @@ type Ctx = {
   dismissLostBubble: () => void;
   /** Realtime membership feed is connected. */
   live: boolean;
+  /** People I blocked. Blocking is two-way on the server (RLS); views also filter instantly. */
+  blocked: Set<string>;
+  block: (userId: string) => Promise<void>;
+  unblock: (userId: string) => Promise<void>;
 };
 
 const BoolaaContext = createContext<Ctx | null>(null);
@@ -58,6 +63,7 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
   const [bubbleId, setBubbleIdState] = useState<string | null>(null);
   const [lostBubble, setLostBubble] = useState<string | null>(null);
   const [live, setLive] = useState(false);
+  const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const current = useRef<{ bubbles: MyBubble[] | null; bubbleId: string | null }>({ bubbles: null, bubbleId: null });
   useEffect(() => {
     current.current = { bubbles, bubbleId };
@@ -69,11 +75,12 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
   }, []);
 
   const refreshBubbles = useCallback(async () => {
-    if (!auth) return [];
+    if (!auth || signOutTarget.leaving) return [];
     const list = await fetchMyBubbles(supabase, auth.id);
     const prev = current.current;
     const lost = prev.bubbleId && !list.some((b) => b.id === prev.bubbleId) && prev.bubbles?.find((b) => b.id === prev.bubbleId);
     if (lost) setLostBubble(lost.name);
+    if (signOutTarget.leaving) return list;
     if (list.length === 0) {
       hardNavigate("/onboarding");
       return list;
@@ -108,7 +115,7 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       setAuth({ id: user.id, email: user.email ?? "" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") hardNavigate("/login");
+      if (event === "SIGNED_OUT") hardNavigate(signOutTarget.path);
     });
     return () => {
       alive = false;
@@ -131,23 +138,63 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
     if (!auth) return;
     const refresh = () => void refreshBubbles();
     const mine = `user_id=eq.${auth.id}`;
-    const channel = supabase
-      .channel(`membership:${auth.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bubble_members", filter: mine }, refresh)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubble_members", filter: mine }, refresh)
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "bubble_members" }, (p) => {
-        if ((p.old as { user_id?: string }).user_id === auth.id) refresh();
-      })
-      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+    const unsubscribe = liveChannel(
+      supabase,
+      `membership:${auth.id}`,
+      (ch) =>
+        ch
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "bubble_members", filter: mine }, refresh)
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubble_members", filter: mine }, refresh)
+          .on("postgres_changes", { event: "DELETE", schema: "public", table: "bubble_members" }, (p) => {
+            if ((p.old as { user_id?: string }).user_id === auth.id) refresh();
+          }),
+      (ready) => {
+        if (ready) void refreshBubbles().then(() => setLive(true));
+        else setLive(false);
+      },
+    );
     // Fallback if a realtime event was missed (tab asleep, socket reconnecting).
     window.addEventListener("focus", refresh);
     return () => {
       window.removeEventListener("focus", refresh);
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [auth, supabase, refreshBubbles]);
 
   const dismissLostBubble = useCallback(() => setLostBubble(null), []);
+
+  useEffect(() => {
+    if (!auth) return;
+    supabase
+      .from("blocks")
+      .select("blocked_id")
+      .eq("blocker_id", auth.id)
+      .then(({ data }) => setBlocked(new Set((data ?? []).map((b) => b.blocked_id))));
+  }, [auth, supabase]);
+
+  const block = useCallback(
+    async (id: string) => {
+      if (!auth) return;
+      const { error } = await supabase.from("blocks").insert({ blocker_id: auth.id, blocked_id: id });
+      if (error && error.code !== "23505") throw error; // already blocked is fine
+      setBlocked((prev) => new Set(prev).add(id));
+    },
+    [auth, supabase],
+  );
+
+  const unblock = useCallback(
+    async (id: string) => {
+      if (!auth) return;
+      const { error } = await supabase.from("blocks").delete().eq("blocker_id", auth.id).eq("blocked_id", id);
+      if (error) throw error;
+      setBlocked((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    },
+    [auth, supabase],
+  );
 
   const bubble = useMemo(() => bubbles?.find((b) => b.id === bubbleId) ?? null, [bubbles, bubbleId]);
 
@@ -168,6 +215,9 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
         lostBubble,
         dismissLostBubble,
         live,
+        blocked,
+        block,
+        unblock,
       }}
     >
       {children}

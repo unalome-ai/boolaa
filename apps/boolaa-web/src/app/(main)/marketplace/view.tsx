@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
+import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, StatusBadge } from "@/components/ui";
 import { AUTHOR, type MarketItem } from "@/lib/types";
@@ -13,7 +14,7 @@ type Status = "free" | "trade";
 const FILTERS = ["all", "free", "trade"] as const;
 
 export default function MarketplacePage() {
-  const { supabase, userId } = useBoolaa();
+  const { supabase, userId, blocked } = useBoolaa();
   const t = useTranslations();
   const errorText = useErrorText();
   const bubble = useBubble();
@@ -45,7 +46,7 @@ export default function MarketplacePage() {
     void load();
   }
 
-  const shown = items?.filter((i) => filter === "all" || i.status === filter) ?? [];
+  const shown = items?.filter((i) => (filter === "all" || i.status === filter) && !blocked.has(i.owner_id)) ?? [];
 
   return (
     <div>
@@ -89,6 +90,7 @@ export default function MarketplacePage() {
                     <Avatar name={item.owner?.name} src={item.owner?.avatar} size={22} />
                     <span className="truncate">{item.owner?.name ?? t("common.someone")}</span>
                   </span>
+                  {item.owner_id !== userId && <SafetyMenu type="market_item" id={item.id} author={{ id: item.owner_id, name: item.owner?.name }} />}
                   {item.owner_id === userId && (
                     <span className="flex">
                       <button type="button" aria-label={t("market.editItem")} data-testid="edit-item" onClick={() => setEditing(item)} className="h-8 w-8 rounded-full text-muted hover:bg-chip hover:text-brand">

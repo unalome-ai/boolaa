@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../src/lib/database.types";
 import { expect, type APIRequestContext, type Browser, type BrowserContextOptions, type Page } from "@playwright/test";
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -65,10 +66,13 @@ export function throwaway(role: string, run: string): TestUser {
 export async function register(browser: Browser, who: TestUser) {
   const context = await browser.newContext();
   const page = await context.newPage();
+  if (process.env.RT_DEBUG)
+    page.on("console", (m) => m.text().startsWith("[rt]") && console.log(`${Date.now() % 100000} ${who.name}: ${m.text()}`));
   await page.goto("/register");
   await page.locator("#name").fill(who.name);
   await page.locator("#email").fill(who.email);
   await page.locator("#password").fill(PASSWORD);
+  await page.locator("#age-confirm").check();
   await page.locator('form button[type="submit"]').click();
   await expect(page).toHaveURL(/\/onboarding$/);
   return page;
@@ -89,4 +93,16 @@ export async function deleteUsers(key: string, emails: string[]) {
 export async function objectExists(request: APIRequestContext, url: string) {
   const res = await request.get(url, { headers: { "cache-control": "no-cache" } });
   return res.ok();
+}
+
+/** Signs up (or signs in) a throwaway user through the API and returns their Supabase client. */
+export async function apiUser(who: TestUser) {
+  const sb = createClient<Database>(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+  const up = await sb.auth.signUp({ email: who.email, password: PASSWORD, options: { data: { name: who.name } } });
+  if (up.error) {
+    const { error } = await sb.auth.signInWithPassword({ email: who.email, password: PASSWORD });
+    if (error) throw error;
+  }
+  const { data } = await sb.auth.getUser();
+  return { sb, id: data.user!.id };
 }

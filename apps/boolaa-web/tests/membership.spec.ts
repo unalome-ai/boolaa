@@ -47,22 +47,24 @@ test("live approvals, waiting for a free spot, ownership hand-over and removal",
   await live(o, "settings");
   const code = (await o.getByTestId("invite-code").textContent())!.trim();
 
-  // Member asks to join; the request appears live in the owner's Settings; approval lets them in
-  // from the pending screen without a reload.
+  // Two people ask to join while there is still a seat (request_to_join refuses a full bubble);
+  // the requests appear live in the owner's Settings.
   const m = await register(browser, member);
   await requestToJoin(m, code);
   const mReq = o.getByTestId("join-request").filter({ hasText: member.name });
   await expect(mReq).toBeVisible(LIVE);
+  const j = await register(browser, joiner);
+  await requestToJoin(j, code);
+  const jReq = o.getByTestId("join-request").filter({ hasText: joiner.name });
+  await expect(jReq).toBeVisible(LIVE);
+
+  // Approving the member lets them in from the pending screen without a reload.
   await mReq.getByTestId("approve").click();
   await expect(m).toHaveURL(/\/home$/, LIVE);
   await expect(o.getByTestId("member")).toHaveCount(2, LIVE);
   await expect(o.getByTestId("member-count")).toContainText("2"); // 2 of 2: full
 
-  // A third person asks; both members approve; the bubble is full, so the request waits.
-  const j = await register(browser, joiner);
-  await requestToJoin(j, code);
-  const jReq = o.getByTestId("join-request").filter({ hasText: joiner.name });
-  await expect(jReq).toBeVisible(LIVE);
+  // Now the bubble is full. Both members approve the second request, so it waits for a seat.
   await jReq.getByTestId("approve").click();
   await expect(jReq.getByTestId("approvals-progress")).toHaveText("1 of 2 approvals", LIVE);
   await expect(jReq.getByTestId("waiting-spot")).toHaveCount(0);
@@ -125,7 +127,9 @@ test("a removed member with another bubble is moved to it live, with a notice", 
     await expect(guest).toHaveURL(/\/home$/);
     await guest.goto("/onboarding");
     await requestToJoin(guest, code);
-    await host.getByTestId("join-request").filter({ hasText: b.name }).getByTestId("approve").click();
+    const req = host.getByTestId("join-request").filter({ hasText: b.name });
+    await expect(req).toBeVisible(LIVE); // arrives live in the host's Settings
+    await req.getByTestId("approve").click();
     await expect(guest).toHaveURL(/\/home$/, LIVE);
     await expect(guest.getByTestId("bubble-switcher").getByRole("button", { name: `E2E shared ${run}`, exact: true })).toHaveAttribute(
       "aria-pressed",
@@ -133,7 +137,9 @@ test("a removed member with another bubble is moved to it live, with a notice", 
     );
     await live(guest, "app-shell");
 
-    await host.getByTestId("member").filter({ hasText: b.name }).getByTestId("remove-member").click();
+    const guestRow = host.getByTestId("member").filter({ hasText: b.name });
+    await expect(guestRow).toBeVisible(LIVE);
+    await guestRow.getByTestId("remove-member").click();
     await host.getByTestId("remove-confirm").click();
     const own = guest.getByTestId("bubble-switcher").getByRole("button", { name: `E2E own ${run}`, exact: true });
     await expect(own).toHaveAttribute("aria-pressed", "true", LIVE);

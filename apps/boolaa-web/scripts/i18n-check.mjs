@@ -7,6 +7,7 @@
 //   - lacks a plural category the language needs for whole numbers (ro: one/few/other, …)
 //   - contains Romanian cedilla letters ş/ţ instead of comma-below ș/ț
 //   - leaves a value identical to English, unless allow-listed below (words that are the same)
+// and that content/legal/<locale>.json (privacy + terms) exists and matches English's structure.
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,10 +18,10 @@ const LOCALES = ["en", "ro", "fr", "es", "it"];
 
 // Values that are legitimately identical to English in a given language.
 const SAME_AS_EN = {
-  ro: ["nav.chat", "home.chat", "home.link", "auth.email", "links.url"],
-  fr: ["common.description", "common.photo", "chat.messageLabel", "nav.sidebar", "links.url"],
-  es: ["nav.chat", "home.chat", "links.url"],
-  it: ["nav.home", "nav.chat", "home.chat", "nav.links", "home.link", "settings.sharedLinks", "auth.email", "auth.password", "links.url"],
+  ro: ["landing.copyright", "safety.reasons.spam", "nav.chat", "home.chat", "home.link", "auth.email", "links.url"],
+  fr: ["landing.copyright", "landing.navFaq", "safety.reasons.spam", "common.description", "common.photo", "chat.messageLabel", "nav.sidebar", "links.url"],
+  es: ["landing.copyright", "safety.reasons.spam", "nav.chat", "home.chat", "links.url"],
+  it: ["landing.copyright", "landing.navFaq", "landing.navPrivacy", "safety.reasons.spam", "nav.home", "nav.chat", "home.chat", "nav.links", "home.link", "settings.sharedLinks", "auth.email", "auth.password", "links.url"],
 };
 
 const errors = [];
@@ -118,8 +119,45 @@ for (const locale of LOCALES) {
   }
 }
 
+// Long-form legal pages: content/legal/<locale>.json must exist for every locale, with the same
+// documents and sections (same ids, same order) as English, no empty text, the same "[...]"
+// placeholders, and correct Romanian diacritics.
+const legalDir = path.join(dir, "..", "content", "legal");
+const loadLegal = (l) => {
+  try {
+    return JSON.parse(readFileSync(path.join(legalDir, `${l}.json`), "utf8"));
+  } catch (e) {
+    fail(`content/legal/${l}.json: missing or invalid (${e.message})`);
+    return null;
+  }
+};
+const placeholders = (doc) => [...new Set(JSON.stringify(doc).match(/\[[^\]"]+\]/g) ?? [])].sort().join(" ");
+const legalEn = loadLegal("en");
+for (const locale of LOCALES) {
+  const legal = locale === "en" ? legalEn : loadLegal(locale);
+  if (!legal || !legalEn) continue;
+  for (const kind of ["privacy", "terms"]) {
+    const doc = legal[kind];
+    const ref = legalEn[kind];
+    if (!doc) {
+      fail(`legal ${locale}: missing document "${kind}"`);
+      continue;
+    }
+    if (!doc.title?.trim() || !doc.intro?.trim()) fail(`legal ${locale}/${kind}: empty title or intro`);
+    const ids = (doc.sections ?? []).map((x) => x.id).join(",");
+    const refIds = ref.sections.map((x) => x.id).join(",");
+    if (ids !== refIds) fail(`legal ${locale}/${kind}: sections [${ids}] differ from en [${refIds}]`);
+    for (const sec of doc.sections ?? []) {
+      if (!sec.title?.trim() || !Array.isArray(sec.body) || sec.body.length === 0 || sec.body.some((b) => typeof b !== "string" || !b.trim()))
+        fail(`legal ${locale}/${kind}#${sec.id}: empty title or body`);
+    }
+    if (placeholders(doc) !== placeholders(ref)) fail(`legal ${locale}/${kind}: placeholders differ from en`);
+    if (locale === "ro" && /[şţŞŢ]/.test(JSON.stringify(doc))) fail(`legal ro/${kind}: uses cedilla ş/ţ`);
+  }
+}
+
 if (errors.length) {
   console.error(`i18n check failed (${errors.length}):\n  ` + errors.join("\n  "));
   process.exit(1);
 }
-console.log(`i18n check passed: ${LOCALES.length} locales × ${en.size} keys in sync, ICU valid.`);
+console.log(`i18n check passed: ${LOCALES.length} locales × ${en.size} keys in sync, ICU valid; legal pages complete.`);

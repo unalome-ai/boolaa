@@ -59,3 +59,10 @@ export async function removeImage(supabase: BoolaaClient, bucket: ImageBucket, p
 export function hardNavigate(path: string) {
   window.location.assign(new URL(path, window.location.origin).toString());
 }
+
+/**
+ * Where the app goes after a sign-out event (account deletion goes to the landing page instead).
+ * `leaving` is set while the user is signing out or deleting their account, so live membership
+ * changes caused by that (e.g. cascaded bubble_members deletes) do not trigger their own navigation.
+ */
+export const signOutTarget: { path: string; leaving: boolean } = { path: "/login", leaving: false };

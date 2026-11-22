@@ -1,0 +1,190 @@
+{
+  "privacy": {
+    "title": "Política de privacidad",
+    "intro": "Boolaa es una app privada, solo por invitación, para grupos pequeños («burbujas»). Esta política explica qué datos personales tratamos cuando usas la app y la web de Boolaa, por qué y cuáles son tus derechos.",
+    "sections": [
+      {
+        "id": "controller",
+        "title": "Quiénes somos",
+        "body": [
+          "El responsable del tratamiento es [Company legal name], [Registered address]. Puedes escribirnos a [Contact email] para cualquier cuestión sobre tus datos.",
+          "Tratamos los datos personales conforme al Reglamento General de Protección de Datos (RGPD) y la legislación rumana aplicable. La autoridad de control es la Autoridad Nacional de Supervisión del Tratamiento de Datos Personales de Rumanía (ANSPDCP)."
+        ]
+      },
+      {
+        "id": "data",
+        "title": "Qué datos recogemos",
+        "body": [
+          "- Datos de la cuenta: tu correo electrónico, tu nombre y, si la añades, tu foto de perfil.",
+          "- Contenido que publicas: mensajes de chat, eventos (título, descripción, fecha, lugar, quién va), publicaciones de comida, artículos del mercadillo, enlaces y las imágenes que subes.",
+          "- Datos de membresía: las burbujas que creas o a las que perteneces, tu rol, las solicitudes para unirse y las aprobaciones.",
+          "- Datos de seguridad: las personas que bloqueas y las denuncias que envías o que te afectan.",
+          "- Datos técnicos: registros del servidor (por ejemplo dirección IP, tipo de dispositivo y navegador, hora de las solicitudes y errores) necesarios para que el servicio funcione y sea seguro.",
+          "No pedimos ni queremos datos sensibles. Por favor, no publiques información de salud, financiera o similar en tus burbujas."
+        ]
+      },
+      {
+        "id": "purposes",
+        "title": "Para qué usamos tus datos y con qué base legal",
+        "body": [
+          "- Para prestar Boolaa (tu cuenta, tus burbujas y todo lo que compartes en ellas): ejecución del contrato contigo (art. 6.1.b RGPD).",
+          "- Para mantener Boolaa seguro (gestionar denuncias y bloqueos, prevenir abusos y proteger nuestros sistemas): nuestro interés legítimo en una comunidad segura (art. 6.1.f).",
+          "- Para cumplir obligaciones legales (por ejemplo, responder a requerimientos legales de las autoridades): obligación legal (art. 6.1.c).",
+          "No usamos tus datos para publicidad, no los vendemos y no usamos rastreo ni analítica de terceros."
+        ]
+      },
+      {
+        "id": "sharing",
+        "title": "Quién puede ver tus datos",
+        "body": [
+          "El contenido que publicas en una burbuja solo lo ven sus miembros. Tu nombre y tu foto los ven las personas con las que compartes una burbuja. Las personas que bloqueas, y las que te bloquean, dejan de ver el contenido del otro.",
+          "Usamos estos encargados del tratamiento, vinculados por acuerdos de tratamiento de datos:",
+          "- Supabase (base de datos, autenticación y almacenamiento de archivos), alojado en la UE.",
+          "- Nuestro proveedor de alojamiento, que sirve la web y el servidor de la app.",
+          "Solo compartimos datos con las autoridades cuando la ley lo exige."
+        ]
+      },
+      {
+        "id": "transfers",
+        "title": "Transferencias internacionales",
+        "body": [
+          "Guardamos tus datos en la Unión Europea. Si algún encargado necesitara acceder a ellos desde fuera de la UE/EEE, nos basaríamos en las Cláusulas Contractuales Tipo (CCT) de la Comisión Europea u otro mecanismo de transferencia válido."
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "Cuánto tiempo guardamos los datos",
+        "body": [
+          "Guardamos tus datos mientras tengas una cuenta. Cuando eliminas tu cuenta desde la app, borramos tu perfil, tu contenido y tus imágenes, y te sacamos de tus burbujas.",
+          "Las denuncias que enviaste pueden conservarse hasta 12 meses tras cerrarse, desvinculadas de tu cuenta, para gestionar abusos reiterados. Los registros técnicos se guardan poco tiempo (normalmente hasta 30 días), salvo que sean necesarios para investigar un incidente de seguridad."
+        ]
+      },
+      {
+        "id": "rights",
+        "title": "Tus derechos",
+        "body": [
+          "Tienes derecho a acceder a tus datos, rectificarlos, suprimirlos, recibirlos en un formato portable, limitar u oponerte a su tratamiento y retirar tu consentimiento en cualquier momento.",
+          "Puedes editar tu perfil y eliminar tu contenido o toda tu cuenta directamente desde la app. Para cualquier otra cosa, escribe a [Contact email]. Respondemos en el plazo de un mes.",
+          "También puedes presentar una reclamación ante la ANSPDCP (www.dataprotection.ro) o ante la autoridad de control del país donde vives."
+        ]
+      },
+      {
+        "id": "age",
+        "title": "Edad mínima",
+        "body": [
+          "Boolaa es para personas de 16 años o más. Si sabemos que alguien menor tiene una cuenta, la eliminaremos."
+        ]
+      },
+      {
+        "id": "security",
+        "title": "Seguridad",
+        "body": [
+          "Los datos se cifran en tránsito, el acceso está restringido mediante seguridad a nivel de fila para que solo las personas adecuadas puedan leer cada burbuja, y las contraseñas se guardan cifradas con hash. Ningún sistema es totalmente seguro, así que usa una contraseña fuerte y única."
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "Cambios en esta política",
+        "body": [
+          "Podemos actualizar esta política a medida que Boolaa cambie. Mostraremos la nueva fecha arriba y, si los cambios son importantes, te avisaremos en la app antes de que entren en vigor."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contacto",
+        "body": ["[Company legal name], [Registered address], [Contact email]."]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Términos de uso",
+    "intro": "Estos términos son el acuerdo entre tú y [Company legal name] para usar Boolaa. Al crear una cuenta los aceptas, junto con nuestra Política de privacidad.",
+    "sections": [
+      {
+        "id": "eligibility",
+        "title": "Quién puede usar Boolaa",
+        "body": [
+          "Debes tener al menos 16 años. Eres responsable de tu cuenta: guarda bien tu contraseña, da información correcta y avísanos si crees que otra persona está usando tu cuenta."
+        ]
+      },
+      {
+        "id": "service",
+        "title": "El servicio",
+        "body": [
+          "Boolaa te permite crear burbujas privadas, invitar a gente con un código y chatear, organizar eventos, compartir comida, intercambiar cosas y compartir enlaces con los miembros de tu burbuja. El servicio es gratuito. Podemos cambiar, añadir o quitar funciones con el tiempo."
+        ]
+      },
+      {
+        "id": "rules",
+        "title": "Uso aceptable",
+        "body": [
+          "Sé amable. No puedes usar Boolaa para publicar o hacer nada que:",
+          "- acose, intimide o amenace a alguien;",
+          "- promueva el odio o la discriminación contra personas o grupos;",
+          "- contenga contenido sexual que involucre a menores, en cualquier forma (lo denunciamos a las autoridades);",
+          "- ofrezca bienes o servicios ilegales, también en el mercadillo (por ejemplo drogas, armas, objetos robados o falsificados);",
+          "- sea spam, una estafa o engañoso;",
+          "- vulnere los derechos de otras personas, incluida la privacidad y la propiedad intelectual;",
+          "- intente romper, sobrecargar o eludir la seguridad del servicio."
+        ]
+      },
+      {
+        "id": "safety",
+        "title": "Denuncias, bloqueos y moderación",
+        "body": [
+          "Tenemos tolerancia cero con el contenido inaceptable y los usuarios abusivos. Desde la app puedes denunciar cualquier mensaje, evento, publicación, artículo, enlace o miembro, y bloquear a cualquiera para dejar de ver el contenido del otro.",
+          "Revisamos las denuncias en un plazo de 24 horas. Podemos retirar contenido y suspender o cerrar las cuentas de quienes incumplan estos términos, sin previo aviso cuando sea necesario para proteger a los demás."
+        ]
+      },
+      {
+        "id": "content",
+        "title": "Tu contenido",
+        "body": [
+          "Lo que publicas es tuyo. Nos concedes una licencia no exclusiva, gratuita y mundial para almacenar, tratar y mostrar tu contenido a los miembros de las burbujas donde lo publicas, solo para hacer funcionar Boolaa. La licencia termina cuando eliminas el contenido o tu cuenta.",
+          "Confirmas que tienes derecho a compartir lo que publicas."
+        ]
+      },
+      {
+        "id": "marketplace",
+        "title": "Mercadillo",
+        "body": [
+          "El mercadillo funciona entre particulares. Boolaa no es parte de ningún regalo ni intercambio, no revisa los artículos y no responde de su calidad, seguridad o legalidad. Acuerda los detalles directamente con la otra persona y ten cuidado al quedar."
+        ]
+      },
+      {
+        "id": "disclaimers",
+        "title": "Exenciones y responsabilidad",
+        "body": [
+          "Boolaa se ofrece «tal cual». Trabajamos para que esté disponible y sea seguro, pero no podemos garantizar que funcione siempre sin interrupciones ni errores.",
+          "En la medida en que lo permita la ley, no respondemos de pérdidas indirectas ni del contenido publicado por otros usuarios. Nada en estos términos limita la responsabilidad que la ley no permite limitar ni tus derechos como consumidor."
+        ]
+      },
+      {
+        "id": "termination",
+        "title": "Fin del acuerdo",
+        "body": [
+          "Puedes dejar de usar Boolaa y eliminar tu cuenta en cualquier momento desde la app. Podemos suspender o cancelar tu acceso si incumples estos términos de forma grave o reiterada, o si la ley lo exige."
+        ]
+      },
+      {
+        "id": "law",
+        "title": "Ley aplicable",
+        "body": [
+          "Estos términos se rigen por la ley rumana. Los litigios se someten a los tribunales competentes de Rumanía, sin perjuicio de las normas imperativas de protección de los consumidores del país donde vives."
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "Cambios en estos términos",
+        "body": [
+          "Podemos actualizar estos términos. Mostraremos la nueva fecha arriba y te avisaremos en la app antes de que entren en vigor los cambios importantes. Si sigues usando Boolaa después, se aplicarán los nuevos términos."
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contacto",
+        "body": ["[Company legal name], [Registered address], [Contact email]."]
+      }
+    ]
+  }
+}
