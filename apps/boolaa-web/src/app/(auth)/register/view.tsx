@@ -8,10 +8,14 @@ import { getSupabase } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { hardNavigate } from "@/lib/utils";
+import { OAuthButtons, OrDivider } from "@/components/oauth-buttons";
+import { TERMS_VERSION } from "@/lib/device";
+import { useLocale } from "next-intl";
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
   const errorText = useErrorText();
+  const locale = useLocale();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +32,9 @@ export default function RegisterPage() {
     const { data, error } = await getSupabase().auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { name: name.trim() } },
+      // The sign-up trigger stores age_confirmed_at and the terms version (docs/auth-security.md §6);
+      // locale picks the language of every auth email.
+      options: { data: { name: name.trim(), locale, age_confirmed: true, terms_version: TERMS_VERSION } },
     });
     if (error) {
       setBusy(false);
@@ -42,7 +48,7 @@ export default function RegisterPage() {
       setCheckEmail(true);
       return;
     }
-    hardNavigate("/onboarding");
+    hardNavigate("/verify?next=%2Fonboarding");
   }
 
   if (checkEmail) {
@@ -57,6 +63,8 @@ export default function RegisterPage() {
 
   return (
     <AuthCard title={t("registerTitle")} subtitle={t("registerSubtitle")}>
+      <OAuthButtons />
+      <OrDivider />
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="label" htmlFor="name">

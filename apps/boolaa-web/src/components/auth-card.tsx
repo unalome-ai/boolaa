@@ -9,7 +9,10 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
   return (
     <main className="relative isolate flex min-h-dvh items-center justify-center overflow-hidden px-4 py-16">
       <AmbientBackdrop className="-z-10" />
-      <CompactLocalePicker className="absolute right-4 top-4" />
+      {/* The picker's own root is `relative`, so position a wrapper (a class on it would be overridden). */}
+      <div className="absolute right-4 top-4 z-10">
+        <CompactLocalePicker />
+      </div>
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center">
           <Link href="/" aria-label="Boolaa" className="anim-rise" style={step(0)}>

@@ -5,6 +5,7 @@ import { getSupabase, type BoolaaClient } from "@/lib/supabase/client";
 import { liveChannel } from "@/lib/realtime";
 import type { Bubble, UserProfile } from "@/lib/types";
 import { BUBBLE_COOKIE, hardNavigate, readCookie, signOutTarget, writeCookie } from "@/lib/utils";
+import { gateState } from "@/lib/device";
 
 export type MyBubble = Bubble & { role: string };
 
@@ -113,6 +114,15 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
         return;
       }
       setAuth({ id: user.id, email: user.email ?? "" });
+      // Session restore: start_device_check on every load (docs/auth-security.md §8). The proxy
+      // already sent unverified sessions to /verify, so this runs alongside the data load; it keeps
+      // the device's trust fresh and catches a revocation that happened since.
+      gateState(supabase)
+        .then((state) => {
+          if (alive && state !== "ok" && !signOutTarget.leaving)
+            hardNavigate(`/verify?next=${encodeURIComponent(window.location.pathname)}`);
+        })
+        .catch(() => undefined);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") hardNavigate(signOutTarget.path);

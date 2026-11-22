@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { LOCALE_COOKIE, localeNames, locales, type Locale } from "@/i18n/config";
+import { getSupabase } from "@/lib/supabase/client";
 import { cx, writeCookie } from "@/lib/utils";
 
 /** Sets the locale cookie and re-renders server components; auth cookies are untouched. */
@@ -14,8 +15,19 @@ export function useChangeLocale() {
   const change = (next: Locale) => {
     writeCookie(LOCALE_COOKIE, next);
     startTransition(() => router.refresh());
+    // Auth emails and codes are sent in user_metadata.locale (docs/auth-security.md §5).
+    void syncAccountLocale(next);
   };
   return { change, pending };
+}
+
+/** Stores the language on the signed-in account (no-op when signed out or already set). */
+export async function syncAccountLocale(locale: Locale) {
+  const supabase = getSupabase();
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+  if (!user || user.user_metadata?.locale === locale) return;
+  await supabase.auth.updateUser({ data: { locale } });
 }
 
 /** Full list (profile sheet): every language in its own name. */

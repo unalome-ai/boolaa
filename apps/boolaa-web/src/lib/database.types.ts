@@ -34,6 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          age_confirmation_required: boolean
+          device_verification_enforced: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          age_confirmation_required?: boolean
+          device_verification_enforced?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          age_confirmation_required?: boolean
+          device_verification_enforced?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_id: string
@@ -185,6 +221,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_challenges: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          device_hash: string | null
+          expires_at: string
+          id: string
+          purpose: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          device_hash?: string | null
+          expires_at: string
+          id?: string
+          purpose: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          device_hash?: string | null
+          expires_at?: string
+          id?: string
+          purpose?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       events: {
         Row: {
@@ -366,11 +441,56 @@ export type Database = {
           },
         ]
       }
+      moderation_actions: {
+        Row: {
+          action: string
+          admin_id: string
+          bubble_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          note: string | null
+          report_id: string | null
+          target_id: string | null
+          target_type: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          bubble_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          note?: string | null
+          report_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          bubble_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          note?: string | null
+          report_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
+          alert_sent_at: string | null
           bubble_id: string | null
           created_at: string
           details: string | null
+          handled_at: string | null
+          handled_note: string | null
           id: string
           reason: string
           reported_user_id: string | null
@@ -380,9 +500,12 @@ export type Database = {
           target_type: string
         }
         Insert: {
+          alert_sent_at?: string | null
           bubble_id?: string | null
           created_at?: string
           details?: string | null
+          handled_at?: string | null
+          handled_note?: string | null
           id?: string
           reason: string
           reported_user_id?: string | null
@@ -392,9 +515,12 @@ export type Database = {
           target_type: string
         }
         Update: {
+          alert_sent_at?: string | null
           bubble_id?: string | null
           created_at?: string
           details?: string | null
+          handled_at?: string | null
+          handled_note?: string | null
           id?: string
           reason?: string
           reported_user_id?: string | null
@@ -472,24 +598,84 @@ export type Database = {
           },
         ]
       }
+      trusted_devices: {
+        Row: {
+          created_at: string
+          device_hash: string
+          label: string | null
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_hash: string
+          label?: string | null
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_hash?: string
+          label?: string | null
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
+          age_confirmed_at: string | null
           avatar: string | null
           created_at: string
           id: string
           name: string
+          status: string
+          status_changed_at: string | null
+          status_reason: string | null
+          status_until: string | null
+          terms_version: string | null
         }
         Insert: {
+          age_confirmed_at?: string | null
           avatar?: string | null
           created_at?: string
           id: string
           name?: string
+          status?: string
+          status_changed_at?: string | null
+          status_reason?: string | null
+          status_until?: string | null
+          terms_version?: string | null
         }
         Update: {
+          age_confirmed_at?: string | null
           avatar?: string | null
           created_at?: string
           id?: string
           name?: string
+          status?: string
+          status_changed_at?: string | null
+          status_reason?: string | null
+          status_until?: string | null
+          terms_version?: string | null
+        }
+        Relationships: []
+      }
+      verified_sessions: {
+        Row: {
+          created_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          session_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -498,7 +684,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_find_users: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: Json
+      }
+      admin_get_report: { Args: { p_report_id: string }; Returns: Json }
+      admin_list_reports: {
+        Args: { p_limit?: number; p_offset?: number; p_status?: string }
+        Returns: Json
+      }
+      admin_report_json: {
+        Args: { r: Database["public"]["Tables"]["reports"]["Row"] }
+        Returns: Json
+      }
+      admin_resolve_report: {
+        Args: {
+          p_action: string
+          p_days?: number
+          p_note?: string
+          p_report_id: string
+        }
+        Returns: Json
+      }
+      admin_unsuspend: {
+        Args: { p_note?: string; p_user_id: string }
+        Returns: Json
+      }
       approve_join_request: { Args: { p_request_id: string }; Returns: boolean }
+      attempt_email_challenge: {
+        Args: {
+          p_device_hash: string
+          p_purpose: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      claim_report_alert: { Args: { p_report_id: string }; Returns: Json }
+      complete_email_challenge: {
+        Args: { p_challenge_id: string; p_label: string; p_session_id: string }
+        Returns: Json
+      }
+      confirm_age: { Args: { p_terms_version: string }; Returns: string }
       create_bubble: {
         Args: { p_description?: string; p_max_size?: number; p_name: string }
         Returns: {
@@ -518,9 +745,41 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_session_id: { Args: never; Returns: string }
       delete_my_account: { Args: never; Returns: undefined }
+      device_hash_of: { Args: { p_device_id: string }; Returns: string }
+      hook_before_user_created: { Args: { event: Json }; Returns: Json }
+      is_account_active: { Args: never; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
+      is_age_confirmed: { Args: never; Returns: boolean }
+      is_amr_proven_session: { Args: never; Returns: boolean }
       is_blocked_with: { Args: { p_user_id: string }; Returns: boolean }
       is_bubble_member: { Args: { p_bubble_id: string }; Returns: boolean }
+      is_device_verified: { Args: never; Returns: boolean }
+      is_session_verified: { Args: never; Returns: boolean }
+      issue_email_challenge: {
+        Args: {
+          p_code_hash: string
+          p_device_hash: string
+          p_purpose: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      list_my_devices: {
+        Args: never
+        Returns: {
+          created_at: string
+          device_hash: string
+          label: string
+          last_seen_at: string
+        }[]
+      }
+      mark_session_verified: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: undefined
+      }
       reject_join_request: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -538,6 +797,10 @@ export type Database = {
         }
         Returns: string
       }
+      report_target_snapshot: {
+        Args: { p_target_id: string; p_target_type: string }
+        Returns: Json
+      }
       request_to_join: {
         Args: { p_invite_code: string }
         Returns: {
@@ -554,12 +817,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      require_admin: { Args: never; Returns: undefined }
+      require_verified_session: { Args: never; Returns: undefined }
+      revoke_device: { Args: { p_device_hash: string }; Returns: boolean }
+      set_account_status: {
+        Args: {
+          p_reason: string
+          p_status: string
+          p_until: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       shares_bubble_with: { Args: { p_user_id: string }; Returns: boolean }
+      start_device_check: {
+        Args: { p_device_id: string; p_label?: string }
+        Returns: Json
+      }
       toggle_rsvp: { Args: { p_event_id: string }; Returns: string[] }
+      trust_device: {
+        Args: { p_device_hash: string; p_label: string; p_user_id: string }
+        Returns: undefined
+      }
       try_admit_join_request: {
         Args: { p_request_id: string }
         Returns: boolean
       }
+      verified_amr_methods: { Args: never; Returns: string[] }
     }
     Enums: {
       [_ in never]: never

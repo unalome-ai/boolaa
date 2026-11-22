@@ -5,8 +5,18 @@ import type { Database } from "@/lib/database.types";
 import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 
 const PUBLIC_PATHS = ["/login", "/register"];
-/** Open to everyone, signed in or not (no redirects). */
-const OPEN_PATHS = ["/privacy", "/terms", "/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/manifest.webmanifest"];
+/**
+ * Open to everyone, signed in or not (no redirects). `/auth/callback` exchanges OAuth / email-link
+ * codes; `/forgot-password` keeps its fresh recovery session on the page until the new password is set.
+ */
+const OPEN_PATHS = ["/privacy", "/terms", "/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/manifest.webmanifest", "/auth", "/forgot-password"];
+/** Device / age gate (docs/auth-security.md §8): signed-in only, never bounced elsewhere. */
+const GATE_PATH = "/verify";
+/**
+ * Moderation (docs/moderation.md): /admin answers 404 by itself to anyone who isn't an admin (a
+ * redirect would reveal it); /suspended is the screen for suspended or banned accounts.
+ */
+const MODERATION_PATHS = ["/admin", "/suspended"];
 const MAIN_PATHS = ["/home", "/events", "/food", "/marketplace", "/settings", "/chat", "/links"];
 
 function matches(pathname: string, paths: string[]) {
@@ -17,8 +27,11 @@ function matches(pathname: string, paths: string[]) {
  * Refreshes the Supabase session (writing rotated auth cookies onto the response)
  * and gates routes:
  *   signed out            -> /login
+ *   signed in, unverified -> /verify (device code or 16+ screen; RLS would show nothing anyway)
  *   signed in, 0 bubbles  -> /onboarding (main routes only)
  *   signed in on /login   -> /home
+ * The device id lives only in the browser, so the proxy can't run start_device_check itself; it
+ * asks is_session_verified() (device check + age) and leaves the rest to the /verify page.
  */
 export async function updateSession(request: NextRequest) {
   // `?lang=xx` (used by the mobile apps for /privacy and /terms) overrides the locale for this
@@ -68,16 +81,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirects must carry any refreshed cookies, otherwise the browser loses the new session.
-  const redirect = (to: string) => {
+  const redirect = (to: string, search = "") => {
     const url = request.nextUrl.clone();
     url.pathname = to;
-    url.search = "";
+    url.search = search;
     const res = NextResponse.redirect(url);
     response.cookies.getAll().forEach((c) => res.cookies.set(c));
     return withLang(res);
   };
 
-  if (matches(pathname, OPEN_PATHS)) return withLang(response);
+  if (matches(pathname, OPEN_PATHS) || matches(pathname, MODERATION_PATHS)) return withLang(response);
 
   if (!userId) {
     // Signed-out visitors get the landing page at "/".
@@ -88,6 +101,28 @@ export async function updateSession(request: NextRequest) {
     return redirect("/login");
   }
 
+  if (matches(pathname, [GATE_PATH])) return withLang(response);
+
+  // An unverified session reads nothing (RLS), so it looks like "no bubbles": check the gate
+  // only then (with enforcement off, or once verified, this costs nothing extra).
+  const verified = async () => {
+    const { data, error } = await supabase.rpc("is_session_verified");
+    return error ? true : data !== false; // a failed check falls back to the client-side gate
+  };
+  // A suspended or banned account also fails is_session_verified() (but may read its own row):
+  // it goes to /suspended instead of the device gate.
+  const suspended = async () => {
+    const { data } = await supabase.from("users").select("status, status_until").eq("id", userId).maybeSingle();
+    if (!data || data.status === "active") return false;
+    return data.status === "banned" || !data.status_until || new Date(data.status_until).getTime() > Date.now();
+  };
+  const toGate = async () =>
+    (await suspended())
+      ? redirect("/suspended")
+      : redirect(GATE_PATH, `?next=${encodeURIComponent(pathname === "/" || matches(pathname, PUBLIC_PATHS) ? "/home" : pathname)}`);
+
+  if (matches(pathname, ["/onboarding"]) && !(await verified())) return toGate();
+
   if (pathname === "/" || matches(pathname, PUBLIC_PATHS) || matches(pathname, MAIN_PATHS)) {
     const { count } = await supabase
       .from("bubble_members")
@@ -95,6 +130,7 @@ export async function updateSession(request: NextRequest) {
       .eq("user_id", userId)
       .eq("approved", true);
     const hasBubble = (count ?? 0) > 0;
+    if (!hasBubble && !(await verified())) return toGate();
     if (!hasBubble) return redirect("/onboarding");
     if (pathname === "/" || matches(pathname, PUBLIC_PATHS)) return redirect("/home");
   }

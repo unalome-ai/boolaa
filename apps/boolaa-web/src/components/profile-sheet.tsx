@@ -8,7 +8,9 @@ import { Avatar, ErrorText, Modal } from "@/components/ui";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { LocalePicker } from "@/i18n/locale-picker";
-import { hardNavigate, removeImage, signOutTarget, uploadImage } from "@/lib/utils";
+import { hardNavigate, removeImage, uploadImage } from "@/lib/utils";
+import { AccountSecurity } from "@/components/account-security";
+import { DeleteAccountPanel } from "@/components/delete-account";
 
 export function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("profile");
@@ -121,6 +123,7 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
         </button>
       </div>
     </form>
+    <AccountSecurity />
     <BlockedUsers />
     <AccountSection />
     </>
@@ -177,49 +180,11 @@ function BlockedUsers() {
   );
 }
 
-const BUCKETS = ["avatars", "food.images", "market.images"] as const;
-
 /** Legal links and account deletion (App Store 5.1.1(v)). */
 function AccountSection() {
   const { supabase, userId } = useBoolaa();
   const t = useTranslations();
-  const errorText = useErrorText();
   const [confirming, setConfirming] = useState(false);
-  const [typed, setTyped] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const word = t("profile.deleteWord");
-  const matches = typed.trim().toLocaleUpperCase() === word.toLocaleUpperCase();
-
-  async function deleteAccount() {
-    setBusy(true);
-    setError(null);
-    try {
-      // Storage objects can't be deleted from SQL: remove everything under <uid>/ first (best effort).
-      for (const bucket of BUCKETS) {
-        for (;;) {
-          const { data } = await supabase.storage.from(bucket).list(userId, { limit: 100 });
-          const paths = (data ?? []).filter((f) => f.id).map((f) => `${userId}/${f.name}`);
-          if (paths.length === 0) break;
-          const { data: removed, error } = await supabase.storage.from(bucket).remove(paths);
-          if (error || !removed?.length) break; // never spin if nothing could be removed
-        }
-      }
-      // Set before the RPC: the cascade deletes this user's memberships, and the provider's live
-      // membership handler must not race us to /onboarding (which would bounce to /login).
-      signOutTarget.leaving = true;
-      signOutTarget.path = "/";
-      const { error } = await supabase.rpc("delete_my_account");
-      if (error) throw error;
-      await supabase.auth.signOut({ scope: "local" });
-      hardNavigate("/");
-    } catch (e) {
-      signOutTarget.leaving = false;
-      signOutTarget.path = "/login";
-      setError(errorText(e));
-      setBusy(false);
-    }
-  }
 
   return (
     <section className="mt-6 space-y-3 border-t border-line pt-5">
@@ -236,36 +201,7 @@ function AccountSection() {
           <Trash2 size={18} /> {t("profile.deleteAccount")}
         </button>
       ) : (
-        <div className="space-y-3 rounded-field border border-danger/30 bg-danger/5 p-4" data-testid="delete-panel">
-          <p className="font-display font-extrabold text-danger-ink">{t("profile.deleteTitle")}</p>
-          <p className="text-sm text-muted">{t("profile.deleteBody")}</p>
-          <label className="label" htmlFor="delete-confirm-word">
-            {t("profile.deleteTypeToConfirm", { word })}
-          </label>
-          <input
-            id="delete-confirm-word"
-            className="input"
-            autoComplete="off"
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-            data-testid="delete-word"
-          />
-          <ErrorText>{error}</ErrorText>
-          <div className="flex gap-3">
-            <button type="button" className="btn-calm-ghost flex-1" onClick={() => setConfirming(false)} disabled={busy}>
-              {t("common.cancel")}
-            </button>
-            <button
-              type="button"
-              className="btn-destructive flex-1"
-              disabled={!matches || busy}
-              onClick={deleteAccount}
-              data-testid="delete-confirm"
-            >
-              {busy ? t("profile.deleting") : t("profile.deleteConfirm")}
-            </button>
-          </div>
-        </div>
+        <DeleteAccountPanel supabase={supabase} userId={userId} onCancel={() => setConfirming(false)} />
       )}
     </section>
   );

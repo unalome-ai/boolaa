@@ -31,7 +31,16 @@ export function serviceRoleKey(): string | undefined {
 // Selectors avoid UI text (ids, test ids, roles with user-content names) so the same tests work in
 // every locale.
 
+/** Seeded logins (alice, bob, carol) send the pre-trusted local test device id (docs/auth-security.md §2). */
+export const TEST_DEVICE_ID = "boolaa-test-device";
+const SEEDED = /^(alice|bob|carol)@boolaa\.test$/;
+
+export async function setDeviceId(page: Page, id: string) {
+  await page.addInitScript((value) => window.localStorage.setItem("boolaa_device_id", value), id);
+}
+
 export async function login(page: Page, email: string) {
+  if (SEEDED.test(email)) await setDeviceId(page, TEST_DEVICE_ID);
   await page.goto("/login");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(PASSWORD);
@@ -105,4 +114,69 @@ export async function apiUser(who: TestUser) {
   }
   const { data } = await sb.auth.getUser();
   return { sb, id: data.user!.id };
+}
+
+// ---- Auth security helpers (local stack only) ----------------------------------------------------
+
+export const MAILPIT = process.env.MAILPIT_URL ?? "http://127.0.0.1:55324";
+
+/** Emails already handed to a test, so a quick second code never returns the previous email. */
+const seenMail = new Set<string>();
+
+type MailSummary = { ID: string; Created: string; Subject: string; To: { Address: string }[] };
+
+/** Newest email to `to` created after `since` (ms), polled from Mailpit's API. */
+export async function waitForEmail(to: string, since: number, timeout = 20_000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const res = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}&limit=20`);
+    if (res.ok) {
+      const { messages } = (await res.json()) as { messages: MailSummary[] };
+      const hit = messages
+        .filter((m) => !seenMail.has(m.ID) && new Date(m.Created).getTime() >= since - 1000)
+        .sort((a, b) => new Date(b.Created).getTime() - new Date(a.Created).getTime())[0];
+      if (hit) {
+        seenMail.add(hit.ID);
+        const full = await (await fetch(`${MAILPIT}/api/v1/message/${hit.ID}`)).json();
+        return { subject: hit.Subject as string, text: String(full.Text ?? ""), html: String(full.HTML ?? "") };
+      }
+    }
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  throw new Error(`no email to ${to} since ${new Date(since).toISOString()}`);
+}
+
+/** The 6-digit code from the newest email to `to` sent after `since`. */
+export async function emailCode(to: string, since: number) {
+  return codeIn(await waitForEmail(to, since));
+}
+
+export function codeIn(mail: { subject: string; text: string }) {
+  const code = /:\s*(\d{6})\b/.exec(mail.text)?.[1] ?? /\b(\d{6})\b/.exec(mail.text)?.[1];
+  if (!code) throw new Error(`no code in "${mail.subject}"`);
+  return code;
+}
+
+/** Types a code into the six-box input (the first box takes the whole code, like autofill). */
+export async function typeCode(page: Page, code: string) {
+  const first = page.getByTestId("code-digit").first();
+  await first.click();
+  await page.keyboard.type(code);
+}
+
+export function adminClient(key: string) {
+  return createClient<Database>(SUPABASE_URL, key, { auth: { persistSession: false } });
+}
+
+export type Flags = { device_verification_enforced: boolean; age_confirmation_required: boolean };
+
+/** Reads and sets the rollout flags (public.app_settings, one row). Tests restore what they read. */
+export async function getFlags(key: string): Promise<Flags> {
+  const { data, error } = await adminClient(key).from("app_settings").select("device_verification_enforced, age_confirmation_required").eq("id", true).single();
+  if (error) throw error;
+  return data;
+}
+export async function setFlags(key: string, flags: Partial<Flags>) {
+  const { error } = await adminClient(key).from("app_settings").update({ ...flags, updated_at: new Date().toISOString() }).eq("id", true);
+  if (error) throw error;
 }

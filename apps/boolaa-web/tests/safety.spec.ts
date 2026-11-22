@@ -1,7 +1,7 @@
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
-import { SUPABASE_URL, apiUser, deleteUsers, login, objectExists, register, serviceRoleKey, throwaway } from "./helpers";
+import { SUPABASE_URL, apiUser, deleteUsers, emailCode, login, objectExists, register, serviceRoleKey, throwaway, typeCode } from "./helpers";
 
 /**
  * Report + block + unblock between two throwaway users, and in-app account deletion.
@@ -119,7 +119,11 @@ test("delete account removes the user's images and the auth user", async ({ brow
   await page.getByTestId("delete-word").fill("nope");
   await expect(page.getByTestId("delete-confirm")).toBeDisabled();
   await page.getByTestId("delete-word").fill("delete");
+  // Then an emailed sensitive-action code (always, docs/auth-security.md §2); the right code deletes.
+  const sentAt = Date.now();
   await page.getByTestId("delete-confirm").click();
+  await expect(page.getByTestId("delete-code-sent")).toBeVisible();
+  await typeCode(page, await emailCode(leaver.email, sentAt));
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByTestId("landing")).toBeVisible();
 
