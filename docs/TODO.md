@@ -35,10 +35,15 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
   - Apple Developer account, bundle ID, signing and the App Store Connect record.
   - Privacy "nutrition labels" and the `PrivacyInfo.xcprivacy` manifest.
   - TestFlight, then submission.
-- ⬜ **Android**:
-  - Play Console, signing key, AAB build and the Data safety form.
-  - Internal testing track, then production.
-- ⬜ **App icons, splash screen, store screenshots and store descriptions** in all 5 languages.
+- 🔄 **Android: direct download from boolaa.ro (no Play Store)**:
+  - ✅ Release signing key: `~/.boolaa-signing/boolaa-release.jks` (alias `boolaa`), password in the Keychain as `boolaa-android-keystore`. **Back up both** (e.g. 1Password). Losing the key means existing installs can never be updated.
+  - ⬜ A second Google OAuth Android client with the release SHA-1 `59:E9:05:80:E4:E7:05:75:D7:5B:CD:20:3F:09:5A:70:19:58:AF:9F`.
+  - ⬜ Gradle `release` signing config (reads the Keychain/env, never committed), R8/minify, `versionCode` from CI.
+  - ⬜ Download page `boolaa.ro/android`: the APK, version, size, SHA-256 of the file and of the signing certificate, and "allow installs from your browser" instructions in 5 languages. Host the APK on GitHub Releases or DO Spaces, not in the web build.
+  - ⬜ In-app update check: the app reads `https://boolaa.ro/android/latest.json` (versionCode, url, sha256, minSupported) and prompts to download. Force an update below `minSupported`.
+  - ⬜ Google **developer verification** for sideloaded apps: Google is phasing in a requirement that apps installed outside the Play Store come from a verified developer, country by country. Check the Romania/EU timeline and register in the Android Developer Console before it applies.
+  - ⬜ Push via FCM still works (needs Google Play services on the device); no Play Console needed.
+- ⬜ **App icons, splash screen, App Store screenshots and descriptions** in all 5 languages (iOS only; Android gets the download page instead).
 - ⬜ **Error reporting** (Sentry or Crashlytics) and basic product analytics. Both must be covered by consent and by the privacy policy.
 
 ## P1: Core experience expected of a social app
