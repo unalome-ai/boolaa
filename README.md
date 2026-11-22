@@ -1,65 +1,48 @@
-# Mobile Apps Monorepo
+# Boolaa
 
-This monorepo contains two Expo (React Native) apps powered by Supabase:
+**Your people, in one cosy bubble.** Boolaa is a small, private, invite-only space for flatmates, friends and clubs. It has chat, events, a Food Circle for sharing leftovers, a marketplace for swapping things, and shared links. Everything lives inside a *bubble* of people you actually know.
 
-- **Unalome**: A 7-day AI-powered journaling journey (apps/unalome)
-- **Boolaa**: Private social networking with invite-only group chats (apps/boolaa)
+- **Free.** No ads, no fees, no tracking. User data is never sold or used to train AI.
+- **Private.** Bubbles are invite-only. New members are admitted by majority vote, and access control is enforced in the database with row-level security.
+- **In 5 languages:** English, Română, Français, Español, Italiano.
+- Made with joy by Bogdan Raduta as a non-profit, personal project. Live at **[boolaa.ro](https://boolaa.ro)**.
 
-## Prerequisites
-- [Node.js](https://nodejs.org/) (18+ recommended)
-- [Yarn](https://classic.yarnpkg.com/en/docs/install/)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- [Supabase](https://supabase.com/) project (free tier is fine)
+## Apps
 
-## Setup
-1. **Clone the repo**
-2. **Install dependencies**
-   ```sh
-   yarn install
-   ```
-3. **Configure Supabase**
-   - Copy `.env.example` to `.env` in each app and fill in your Supabase project URL and anon key.
-   - Run the SQL in `supabase/schema.sql` in your Supabase SQL editor to set up tables and policies.
+| Path | What | Stack |
+|---|---|---|
+| `apps/boolaa-web` | Landing page and web app (boolaa.ro) | Next.js, TypeScript, Tailwind, next-intl, Playwright |
+| `apps/boolaa-ios` | Native iOS app | SwiftUI, supabase-swift, String Catalogs (xcodegen) |
+| `apps/boolaa-android` | Native Android app (downloaded from boolaa.ro) | Kotlin, Jetpack Compose, supabase-kt |
+| `supabase/` | Backend: schema, RLS, RPCs, Edge Functions, tests | Supabase (Postgres, Auth, Storage, Realtime) |
+| `apps/boolaa` | Legacy Expo prototype, kept as a reference only | Expo / React Native |
 
-4. **Start an app**
-   ```sh
-   cd apps/unalome   # or cd apps/boolaa
-   yarn start        # or npm run start
-   ```
+## Docs
 
-## Environment Variables
-Each app expects a `.env` file with:
-```
-SUPABASE_URL=your-supabase-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
-```
+- [`docs/boolaa-spec.md`](docs/boolaa-spec.md): product spec and backend contract
+- [`docs/design-system.md`](docs/design-system.md): the "Soft pop" design system
+- [`docs/auth-security.md`](docs/auth-security.md): emailed device codes, OTP reset, OAuth, age confirmation
+- [`docs/moderation.md`](docs/moderation.md): reports and moderation alerts
+- [`docs/i18n-glossary.md`](docs/i18n-glossary.md): translation glossary
+- [`docs/TODO.md`](docs/TODO.md): launch to-do list
+- [`CLAUDE.md`](CLAUDE.md): developer notes (commands, local setup, gotchas)
 
-## Project Structure
-```
-mobile_apps/
-  apps/
-    unalome/    # Journaling app
-    boolaa/     # Social app
-  packages/
-    supabase-config/  # Shared Supabase client/types
-  supabase/
-    schema.sql  # Database schema for both apps
+## Run it locally
+
+You need Node 20+, the [Supabase CLI](https://supabase.com/docs/guides/cli) and Docker.
+
+```sh
+supabase start            # local stack on ports 553xx (API http://127.0.0.1:55321)
+supabase db reset         # apply migrations and seed data
+cd apps/boolaa-web && cp .env.example .env.local && npm install && npm run dev -- -p 3100
 ```
 
-## Supabase Setup
-- Create a project at [supabase.com](https://supabase.com/)
-- Get your project URL and anon key from Project Settings > API
-- Run the SQL in `supabase/schema.sql` in the SQL editor
-- Enable email auth in Supabase Auth settings
+Seeded logins (local only): `alice@boolaa.test`, `bob@boolaa.test` and `carol@boolaa.test`, password `password123`. For iOS and Android setup, see `CLAUDE.md` and each app's README.
 
-## Development
-- Both apps use TypeScript, React Navigation, and Supabase-js
-- Shared Supabase config/types are in `packages/supabase-config`
-- Use Expo Go or a simulator to run the apps
+## Security
 
-## Expanding
-- See code comments for where to add features (AI, chat, feeds, etc.)
-- Each screen is scaffolded for rapid development
+Please report vulnerabilities privately to **privacy@boolaa.ro**, not in public issues.
 
----
-MIT License 
+## License
+
+[Apache License 2.0](LICENSE). Copyright 2026 Bogdan Raduta.
