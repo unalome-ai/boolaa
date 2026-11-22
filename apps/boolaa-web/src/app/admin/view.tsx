@@ -218,8 +218,16 @@ function ReportCard({ r, now, linked, onDone }: { r: Report; now: number; linked
       setError(errorNode(error));
       return;
     }
-    const closed = Number((data as { duplicates_closed?: number } | null)?.duplicates_closed ?? 0);
-    onDone(A.done[pending.action] + A.duplicatesClosed(closed));
+    const res = data as { duplicates_closed?: number; image_bucket?: string; image_path?: string } | null;
+    const closed = Number(res?.duplicates_closed ?? 0);
+    // The image buckets are public: remove the deleted post's photo too (policy in
+    // 20261122210000_moderation_image_cleanup.sql allows exactly this object).
+    let imageNote = "";
+    if (res?.image_bucket && res.image_path) {
+      const { data: removed, error: rmError } = await supabase.storage.from(res.image_bucket).remove([res.image_path]);
+      imageNote = rmError || !removed?.length ? A.imageNotRemoved(res.image_bucket, res.image_path) : A.imageRemoved;
+    }
+    onDone(A.done[pending.action] + imageNote + A.duplicatesClosed(closed));
   };
 
   const actionBtn = "inline-flex min-h-9 items-center rounded-field bg-field px-3 text-sm font-bold text-fg transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40";

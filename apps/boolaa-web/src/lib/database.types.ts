@@ -142,6 +142,42 @@ export type Database = {
           },
         ]
       }
+      bubble_mutes: {
+        Row: {
+          bubble_id: string
+          created_at: string
+          until: string | null
+          user_id: string
+        }
+        Insert: {
+          bubble_id: string
+          created_at?: string
+          until?: string | null
+          user_id: string
+        }
+        Update: {
+          bubble_id?: string
+          created_at?: string
+          until?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bubble_mutes_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bubble_mutes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bubbles: {
         Row: {
           created_at: string
@@ -483,6 +519,246 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_outbox: {
+        Row: {
+          actor_id: string | null
+          attempts: number
+          bubble_id: string | null
+          claimed_at: string | null
+          claimed_until: string | null
+          collapse_key: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: number
+          last_error: string | null
+          next_attempt_at: string
+          payload: Json
+          recipient_id: string
+          sent_at: string | null
+          status: string
+          target_id: string | null
+          token_ids: string[] | null
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          attempts?: number
+          bubble_id?: string | null
+          claimed_at?: string | null
+          claimed_until?: string | null
+          collapse_key?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: never
+          last_error?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          recipient_id: string
+          sent_at?: string | null
+          status?: string
+          target_id?: string | null
+          token_ids?: string[] | null
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          attempts?: number
+          bubble_id?: string | null
+          claimed_at?: string | null
+          claimed_until?: string | null
+          collapse_key?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: never
+          last_error?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          recipient_id?: string
+          sent_at?: string | null
+          status?: string
+          target_id?: string | null
+          token_ids?: string[] | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_outbox_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_outbox_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_prefs: {
+        Row: {
+          approvals: boolean
+          chat: boolean
+          enabled: boolean
+          event_reminders: boolean
+          food: boolean
+          join_requests: boolean
+          market: boolean
+          new_events: boolean
+          preview_content: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approvals?: boolean
+          chat?: boolean
+          enabled?: boolean
+          event_reminders?: boolean
+          food?: boolean
+          join_requests?: boolean
+          market?: boolean
+          new_events?: boolean
+          preview_content?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approvals?: boolean
+          chat?: boolean
+          enabled?: boolean
+          event_reminders?: boolean
+          food?: boolean
+          join_requests?: boolean
+          market?: boolean
+          new_events?: boolean
+          preview_content?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_debug_log: {
+        Row: {
+          body: string | null
+          collapse_key: string | null
+          created_at: string
+          id: number
+          outbox_id: number | null
+          provider: string
+          request: Json | null
+          simulated: string | null
+          title: string | null
+          token: string
+        }
+        Insert: {
+          body?: string | null
+          collapse_key?: string | null
+          created_at?: string
+          id?: never
+          outbox_id?: number | null
+          provider: string
+          request?: Json | null
+          simulated?: string | null
+          title?: string | null
+          token: string
+        }
+        Update: {
+          body?: string | null
+          collapse_key?: string | null
+          created_at?: string
+          id?: never
+          outbox_id?: number | null
+          provider?: string
+          request?: Json | null
+          simulated?: string | null
+          title?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          apns_env: string | null
+          app_version: string | null
+          auth: string | null
+          created_at: string
+          device_hash: string | null
+          endpoint: string | null
+          id: string
+          last_seen_at: string
+          locale: string | null
+          p256dh: string | null
+          platform: string
+          session_id: string | null
+          token: string
+          user_id: string
+        }
+        Insert: {
+          apns_env?: string | null
+          app_version?: string | null
+          auth?: string | null
+          created_at?: string
+          device_hash?: string | null
+          endpoint?: string | null
+          id?: string
+          last_seen_at?: string
+          locale?: string | null
+          p256dh?: string | null
+          platform: string
+          session_id?: string | null
+          token: string
+          user_id: string
+        }
+        Update: {
+          apns_env?: string | null
+          app_version?: string | null
+          auth?: string | null
+          created_at?: string
+          device_hash?: string | null
+          endpoint?: string | null
+          id?: string
+          last_seen_at?: string
+          locale?: string | null
+          p256dh?: string | null
+          platform?: string
+          session_id?: string | null
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_device_hash_fkey"
+            columns: ["user_id", "device_hash"]
+            isOneToOne: false
+            referencedRelation: "trusted_devices"
+            referencedColumns: ["user_id", "device_hash"]
+          },
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           alert_sent_at: string | null
@@ -706,6 +982,15 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_resolve_report_core: {
+        Args: {
+          p_action: string
+          p_days?: number
+          p_note?: string
+          p_report_id: string
+        }
+        Returns: Json
+      }
       admin_unsuspend: {
         Args: { p_note?: string; p_user_id: string }
         Returns: Json
@@ -720,10 +1005,16 @@ export type Database = {
         }
         Returns: Json
       }
+      bubble_member_ids: { Args: { p_bubble_id: string }; Returns: string[] }
+      claim_push_batch: { Args: { p_limit?: number }; Returns: Json }
       claim_report_alert: { Args: { p_report_id: string }; Returns: Json }
       complete_email_challenge: {
         Args: { p_challenge_id: string; p_label: string; p_session_id: string }
         Returns: Json
+      }
+      complete_push_batch: {
+        Args: { p_invalid_token_ids?: string[]; p_results: Json }
+        Returns: undefined
       }
       confirm_age: { Args: { p_terms_version: string }; Returns: string }
       create_bubble: {
@@ -748,6 +1039,7 @@ export type Database = {
       current_session_id: { Args: never; Returns: string }
       delete_my_account: { Args: never; Returns: undefined }
       device_hash_of: { Args: { p_device_id: string }; Returns: string }
+      enqueue_event_reminders: { Args: never; Returns: number }
       hook_before_user_created: { Args: { event: Json }; Returns: Json }
       is_account_active: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
@@ -756,6 +1048,10 @@ export type Database = {
       is_blocked_with: { Args: { p_user_id: string }; Returns: boolean }
       is_bubble_member: { Args: { p_bubble_id: string }; Returns: boolean }
       is_device_verified: { Args: never; Returns: boolean }
+      is_moderated_photo: {
+        Args: { p_bucket: string; p_name: string }
+        Returns: boolean
+      }
       is_session_verified: { Args: never; Returns: boolean }
       issue_email_challenge: {
         Args: {
@@ -779,6 +1075,49 @@ export type Database = {
       mark_session_verified: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: undefined
+      }
+      prune_push_outbox: { Args: never; Returns: undefined }
+      push_enqueue: {
+        Args: {
+          p_actor: string
+          p_bubble_id: string
+          p_collapse_key?: string
+          p_dedupe_key?: string
+          p_payload?: Json
+          p_recipients: string[]
+          p_target_id: string
+          p_type: string
+        }
+        Returns: number
+      }
+      push_kick: { Args: never; Returns: undefined }
+      push_kick_if_due: { Args: never; Returns: boolean }
+      push_should_notify: {
+        Args: {
+          p_actor: string
+          p_bubble_id: string
+          p_recipient: string
+          p_type: string
+        }
+        Returns: boolean
+      }
+      push_type_enabled: {
+        Args: { p_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      register_push_token: {
+        Args: {
+          p_apns_env?: string
+          p_app_version?: string
+          p_auth?: string
+          p_device_id?: string
+          p_endpoint?: string
+          p_locale?: string
+          p_p256dh?: string
+          p_platform: string
+          p_token?: string
+        }
+        Returns: string
       }
       reject_join_request: {
         Args: { p_request_id: string }
@@ -834,6 +1173,10 @@ export type Database = {
         Args: { p_device_id: string; p_label?: string }
         Returns: Json
       }
+      storage_path_from_url: {
+        Args: { p_bucket: string; p_url: string }
+        Returns: string
+      }
       toggle_rsvp: { Args: { p_event_id: string }; Returns: string[] }
       trust_device: {
         Args: { p_device_hash: string; p_label: string; p_user_id: string }
@@ -843,6 +1186,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: boolean
       }
+      unregister_push_token: { Args: { p_token: string }; Returns: boolean }
       verified_amr_methods: { Args: never; Returns: string[] }
     }
     Enums: {

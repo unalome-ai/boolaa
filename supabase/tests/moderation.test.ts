@@ -118,6 +118,36 @@ for (const on of FLAG_STATES) {
       assertEq([res.data?.status, res.data?.rows_deleted], ["actioned", 1], `delete ${res.error?.message}`);
       assertEq((await s.owner.c.from("chat_messages").select("id").eq("id", s.msgId)).data?.length, 0, "message deleted");
 
+      // delete_content on a food post also lets the admin delete its photo (public bucket), and only that one
+      {
+        const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+        const up = async (name: string) => {
+          const path = `${s.troll.id}/${name}-${tag}.png`;
+          const { error } = await s.troll.c.storage.from("food.images").upload(path, png, { contentType: "image/png" });
+          assert(!error, `upload: ${error?.message}`);
+          return path;
+        };
+        const photo = await up("photo");
+        const other = await up("other");
+        const url = s.troll.c.storage.from("food.images").getPublicUrl(photo).data.publicUrl;
+        const { data: post, error: pe } = await s.troll.c.from("food_posts")
+          .insert({ bubble_id: s.bubble.id, user_id: s.troll.id, image: url, description: "x" }).select("id").single();
+        assert(!pe, `food post: ${pe?.message}`);
+        const rep = await s.owner.c.rpc("report_content", { p_target_type: "food_post", p_target_id: post!.id, p_reason: "sexual" });
+        assert(!rep.error, `report food: ${rep.error?.message}`);
+        res = await mod.rpc("admin_resolve_report", { p_report_id: rep.data, p_action: "delete_content" });
+        assertEq([res.data?.status, res.data?.image_bucket, res.data?.image_path], ["actioned", "food.images", photo], `delete food ${res.error?.message}`);
+        const audit = await sql`select details from public.moderation_actions where report_id = ${rep.data as string}`;
+        assertEq(audit[0].details.image_path, photo, "audit row names the photo");
+        const denied = await mod.storage.from("food.images").remove([other]);
+        assertEq(denied.data?.length ?? 0, 0, "admin can't delete an unrelated photo");
+        const removed = await mod.storage.from("food.images").remove([photo]);
+        assertEq(removed.data?.length, 1, `photo removed ${removed.error?.message}`);
+        const left = await sql`select name from storage.objects where bucket_id = 'food.images' and name in (${photo}, ${other})`;
+        assertEq(left.map((x) => x.name), [other], "only the moderated photo is gone");
+        await admin.storage.from("food.images").remove([other]);
+      }
+
       // remove_from_bubble (owner check skipped; trigger cleanup runs)
       s = await scene(`r-${tag}`);
       id = await s.report();

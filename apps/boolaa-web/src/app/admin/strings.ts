@@ -71,7 +71,7 @@ export const A = {
     go: "Confirm",
     working: "Working…",
     dismiss: (who: string) => `Dismiss this report about ${who}? It and the other open reports on the same target are closed without action.`,
-    delete_content: (what: string) => `Delete this ${what.toLowerCase()} for everyone? This can't be undone. Uploaded images stay in storage (see docs/moderation.md).`,
+    delete_content: (what: string) => `Delete this ${what.toLowerCase()} for everyone? This can't be undone. Its photo is deleted too.`,
     remove_from_bubble: (who: string, bubble: string) =>
       `Remove ${who} from ${bubble}? If they own it, ownership passes to the longest-standing member. They can only come back by invite.`,
     suspend: (who: string, days: number) =>
@@ -88,6 +88,8 @@ export const A = {
     ban: "User banned.",
     unsuspend: "Access restored.",
   } as Record<string, string>,
+  imageRemoved: " Photo deleted.",
+  imageNotRemoved: (bucket: string, path: string) => ` The photo could not be deleted: remove ${bucket}/${path} in the Supabase dashboard (Storage).`,
   duplicatesClosed: (n: number) => (n > 0 ? ` ${n} duplicate report${n === 1 ? "" : "s"} closed too.` : ""),
   users: {
     search: "Search by name or user id",

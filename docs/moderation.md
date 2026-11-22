@@ -76,7 +76,7 @@ Migration `20261122180000_moderation_admin.sql`; web UI at **`/admin`** (`apps/b
 | Action | Effect |
 |---|---|
 | Dismiss | Nothing changes; report `dismissed`. |
-| Delete content | Deletes the message / event / food post / item / link row. Not for profile reports. Uploaded images are **not** deleted (SQL can't delete storage objects); the row no longer points to them. Delete them in the dashboard (Storage) if the image itself is the problem. |
+| Delete content | Deletes the message / event / food post / item / link row. Not for profile reports. The uploaded photo (food post, marketplace item) is deleted too: the RPC records its bucket and path in the audit row and returns them, and the admin view removes the object through the Storage API (a storage policy allows an admin to delete exactly the objects named by a `delete_content` audit row). If that removal fails, the view names the object to delete by hand in the dashboard (Storage). |
 | Remove from bubble | Deletes the membership; the usual trigger hands ownership on, deletes an empty bubble, strips votes and admits queued requests. No owner needed. |
 | Suspend 1 / 7 / 30 days | `users.status = 'suspended'`, `status_until`, `status_reason` = the report reason; `auth.users.banned_until` = the same moment. |
 | Ban | `status = 'banned'`, GoTrue ban for 100 years, and the user is removed from every bubble (so they don't hold a seat or a vote forever). |
