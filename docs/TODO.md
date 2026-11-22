@@ -16,7 +16,7 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ⬜ **Suspended/banned accounts** (`users.status`): blocked at sign-in and hidden from everyone.
 - ✅ **Privacy Policy and Terms of Service pages** (web, all 5 languages), linked from register, the profile/settings screens and the store listings.
 - ⬜ **Legal review** of the Privacy Policy and Terms. Fill in the controller's company name, address, contact email and DPO (if any).
-- ⬜ **Age rating.** Decide on 13+ or 16+ (the GDPR digital-consent age in Romania is 16), add an age confirmation at sign-up, and fill in the App Store and Play Store questionnaires.
+- 🔄 **Age rating: 16+** (decided; matches the GDPR digital-consent age in Romania). ✅ "I'm 16 or older" checkbox at sign-up on web, iOS and Android, and the 16+ clause in Privacy and Terms, in all 5 languages. ⬜ Store questionnaires: App Store age rating **16+**, Google Play target audience **16+** only (no under-16 groups, so the Families policy doesn't apply).
 
 ### Auth
 - ⬜ **Forgot password and reset**, by email link, with a deep link into the apps.

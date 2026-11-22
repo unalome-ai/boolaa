@@ -54,7 +54,7 @@ Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabas
 
 ## Screens and flows
 
-1. **Auth**: login (email and password) and register (name, email, password), with the name passed as sign-up metadata `{ name }`. Sign out lives in the profile sheet.
+1. **Auth**: login (email and password) and register (name, email, password), with the name passed as sign-up metadata `{ name }`. Register requires the **"I'm 16 or older"** checkbox and links to Terms and Privacy: Boolaa is rated **16+**. Sign out lives in the profile sheet.
 2. **Routing gate**: signed out goes to Auth. Signed in with 0 approved bubbles goes to Onboarding. Otherwise the user lands in Main.
 3. **Onboarding**:
    - **Create a bubble**: name, description, max size.
