@@ -127,3 +127,7 @@ insert into public.reports (id, reporter_id, bubble_id, target_type, target_id, 
 -- no push tokens, so nothing above was queued.
 select vault.create_secret('http://kong:8000/functions/v1/push-dispatch', 'push_dispatch_url');
 select vault.create_secret('local-push-dispatch-secret-change-me', 'push_dispatch_secret');
+
+-- Link previews (docs/boolaa-spec.md, "Link previews"): local URL of the link-preview function.
+-- No link_preview_secret locally (the function only requires one when LINK_PREVIEW_SECRET is set).
+select vault.create_secret('http://kong:8000/functions/v1/link-preview', 'link_preview_url');

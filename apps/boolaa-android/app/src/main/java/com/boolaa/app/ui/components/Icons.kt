@@ -10,6 +10,10 @@ import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AddReaction
+import androidx.compose.material.icons.rounded.BookmarkAdded
+import androidx.compose.material.icons.rounded.EventAvailable
+import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.ArrowOutward
 import androidx.compose.material.icons.rounded.ArrowUpward
@@ -55,6 +59,7 @@ import androidx.compose.ui.unit.dp
 
 /** The icon vocabulary (design-system.md §4.4): Material's rounded, filled set; outlined only for inactive tabs. */
 object BoolaaIcons {
+    val AddReaction = Icons.Rounded.AddReaction
     val Home = Icons.Rounded.Home
     val HomeOutline = Icons.Outlined.Home
     val Events = Icons.Rounded.CalendarMonth
@@ -100,6 +105,9 @@ object BoolaaIcons {
     val Sparkles = Icons.Rounded.AutoAwesome
     val Takeout = Icons.Rounded.TakeoutDining
     val NewEvent = Icons.Rounded.EditCalendar
+    val AddToCalendar = Icons.Rounded.EventAvailable
+    val Reserved = Icons.Rounded.BookmarkAdded
+    val Taken = Icons.Rounded.TaskAlt
     val RemoveMember = Icons.Rounded.PersonRemove
 
     /** Owner crown (Material Symbols "crown" is not in the icons artifact, so it is drawn here). */

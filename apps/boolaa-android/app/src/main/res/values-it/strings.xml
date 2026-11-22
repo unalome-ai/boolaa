@@ -345,4 +345,16 @@
         <item quantity="other">%d messaggi non letti</item>
     </plurals>
     <string name="error_chat_message_gone">Questo messaggio non esiste più.</string>
+
+    <!-- Marketplace availability + "Ask in chat", events "Add to calendar" (docs/boolaa-spec.md) -->
+    <string name="market_availability">Disponibilità</string>
+    <string name="market_available">Disponibile</string>
+    <string name="market_reserved">Prenotato</string>
+    <string name="market_taken">Preso</string>
+    <string name="market_hide_taken">Nascondi presi</string>
+    <string name="market_mark_as">Segna come %1$s</string>
+    <string name="market_ask_in_chat">Chiedi in chat</string>
+    <string name="market_ask_draft">\@%1$s, «%2$s» è ancora disponibile?</string>
+    <string name="events_add_to_calendar">Aggiungi al calendario</string>
+    <string name="events_no_calendar_app">Nessuna app di calendario trovata.</string>
 </resources>

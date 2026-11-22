@@ -291,6 +291,12 @@ struct BoolaaAPI: Sendable {
         try await client.from("market_items").update(input).eq("id", value: id).execute()
     }
 
+    /// Owner only (RLS `market_update_own`); a non-owner's update matches no row.
+    func setMarketAvailability(id: UUID, _ availability: MarketAvailability) async throws {
+        struct Patch: Encodable, Sendable { let availability: MarketAvailability }
+        try await client.from("market_items").update(Patch(availability: availability)).eq("id", value: id).execute()
+    }
+
     func deleteMarketItem(id: UUID) async throws {
         try await client.from("market_items").delete().eq("id", value: id).execute()
     }

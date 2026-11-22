@@ -29,18 +29,28 @@ struct SafetyMenuItems: View {
 
 private struct SafetyContextMenu: ViewModifier {
     var target: ReportTarget
+    var react: ((ReactionKind) -> Void)?
     @Environment(SessionStore.self) private var session
 
     func body(content: Content) -> some View {
         if target.authorID == session.userID {
-            content
+            if let react {
+                content.contextMenu { ReactSubmenu(onPick: react) }
+            } else {
+                content
+            }
         } else {
-            content.contextMenu { SafetyMenuItems(target: target) }
+            content.contextMenu {
+                if let react { ReactSubmenu(onPick: react) }
+                SafetyMenuItems(target: target)
+            }
         }
     }
 }
 
 extension View {
-    /// Long press offers Report and Block for someone else's content.
-    func safetyContextMenu(_ target: ReportTarget) -> some View { modifier(SafetyContextMenu(target: target)) }
+    /// Long press offers Report and Block for someone else's content, and "React" when `react` is set.
+    func safetyContextMenu(_ target: ReportTarget, react: ((ReactionKind) -> Void)? = nil) -> some View {
+        modifier(SafetyContextMenu(target: target, react: react))
+    }
 }

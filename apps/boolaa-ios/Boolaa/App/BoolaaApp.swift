@@ -3,6 +3,8 @@ import SwiftUI
 
 @main
 struct BoolaaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
     @State private var session: SessionStore
     @State private var safety: SafetyStore
     @State private var unread: UnreadStore
@@ -13,6 +15,7 @@ struct BoolaaApp: App {
         _session = State(initialValue: session)
         _safety = State(initialValue: SafetyStore(session: session))
         _unread = State(initialValue: UnreadStore(session: session))
+        PushCenter.shared.session = session
     }
 
     var body: some Scene {
@@ -21,10 +24,19 @@ struct BoolaaApp: App {
                 .environment(session)
                 .environment(safety)
                 .environment(unread)
+                .environment(PushCenter.shared)
                 .tint(Theme.brandText)
                 .task {
                     session.start()
                     await DebugHooks.applyAutoLogin(session: session)
+                }
+                // Push token: registered on every start and sign-in once the gate is open, re-checked when the
+                // app comes back (the user may have allowed notifications in iOS Settings meanwhile).
+                .task(id: "\(session.userID?.uuidString ?? "")|\(session.route == .main || session.route == .onboarding)") {
+                    await PushCenter.shared.sessionBecameReady()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active { Task { await PushCenter.shared.sessionBecameReady() } }
                 }
                 .onOpenURL { url in
                     // Google Sign-In's redirect, an invite link (boolaa://join/…, ro.boolaa.app://join/…, or a

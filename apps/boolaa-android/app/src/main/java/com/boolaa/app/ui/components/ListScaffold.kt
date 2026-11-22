@@ -21,15 +21,21 @@ import com.boolaa.app.ui.theme.BoolaaTheme
 import com.boolaa.app.ui.theme.Radius
 import com.boolaa.app.ui.theme.Type
 
-/** Overflow menu on cards: edit/delete for own content, report for others' (App Store 1.2). */
+/** An extra entry in [ItemMenu] (e.g. "Mark as Taken"), already localized. */
+data class MenuExtra(val title: String, val tag: String, val onClick: () -> Unit)
+
+/** Overflow menu on cards: edit/delete for own content, report for others' (App Store 1.2), plus [extra] entries first. */
 @Composable
-fun ItemMenu(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun ItemMenu(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)?, modifier: Modifier = Modifier, extra: List<MenuExtra> = emptyList()) {
     val c = BoolaaTheme.colors
     var open by remember { mutableStateOf(false) }
     IconButton(onClick = { open = true }, modifier = modifier.size(44.dp).testTag(if (onReport != null) "item-menu" else "owner-menu")) {
         Icon(BoolaaIcons.More, contentDescription = stringResource(R.string.more_actions), tint = c.textSecondary)
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = c.card) {
+        extra.forEach { e ->
+            DropdownMenuItem(text = { Text(e.title, style = Type.body) }, onClick = { open = false; e.onClick() }, modifier = Modifier.testTag(e.tag))
+        }
         if (onEdit != null) DropdownMenuItem(
             text = { Text(stringResource(R.string.edit), style = Type.body) }, onClick = { open = false; onEdit() },
             leadingIcon = { Icon(BoolaaIcons.Edit, contentDescription = null) },

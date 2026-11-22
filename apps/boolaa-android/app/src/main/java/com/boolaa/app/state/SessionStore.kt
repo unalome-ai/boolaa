@@ -121,6 +121,11 @@ class SessionStore(
     private var authJob: Job? = null
     private var live: LiveTables? = null
 
+    /** Runs before `auth.signOut()` (push: `unregister_push_token` while the session still exists). */
+    var beforeSignOut: (suspend () -> Unit)? = null
+    /** After the app language changed (push: register the token again with the new locale). */
+    var onLocaleChanged: (() -> Unit)? = null
+
     /** Listens to auth state for the lifetime of the app. */
     fun start() {
         if (authJob != null) return
@@ -320,6 +325,7 @@ class SessionStore(
     /** `updateUser({ data: { locale } })`: on a language change and once after the first OAuth sign-in. */
     suspend fun updateLocale(tag: String) {
         if (_state.value.userId == null) return
+        onLocaleChanged?.invoke()
         auth.updateUser { data { put("locale", tag) } }
     }
 
@@ -464,6 +470,7 @@ class SessionStore(
     }
 
     suspend fun signOut() {
+        if (_state.value.userId != null) runCatching { beforeSignOut?.invoke() }
         runCatching { auth.signOut() }
         clearInvite()
         applySignedOut()

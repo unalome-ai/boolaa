@@ -206,6 +206,23 @@ enum MarketStatus: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// Whether a market item can still be had (`market_items.availability`, migration
+/// 20261123170000). Who it is reserved for is deliberately not stored (docs/boolaa-spec.md).
+enum MarketAvailability: String, Codable, CaseIterable, Sendable {
+    case available, reserved, taken
+    var label: LocalizedStringResource {
+        switch self {
+        case .available: LocalizedStringResource("Available", comment: "Marketplace item availability")
+        case .reserved: LocalizedStringResource("Reserved", comment: "Marketplace item availability")
+        case .taken: LocalizedStringResource("Taken", comment: "Marketplace item availability")
+        }
+    }
+    /// Unknown future values read as available rather than failing the whole list.
+    init(from decoder: any Decoder) throws {
+        self = MarketAvailability(rawValue: try decoder.singleValueContainer().decode(String.self)) ?? .available
+    }
+}
+
 /// `public.market_items`
 struct MarketItem: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
@@ -215,14 +232,41 @@ struct MarketItem: Codable, Identifiable, Hashable, Sendable {
     var title: String
     var description: String?
     var status: MarketStatus
+    var availability: MarketAvailability = .available
     var createdAt: Date
     var owner: UserProfile?
 
     enum CodingKeys: String, CodingKey {
-        case id, image, title, description, status, owner
+        case id, image, title, description, status, availability, owner
         case bubbleId = "bubble_id"
         case ownerId = "owner_id"
         case createdAt = "created_at"
+    }
+}
+
+extension MarketItem {
+    /// `availability` defaults to available when a payload predates the column.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        bubbleId = try c.decode(UUID.self, forKey: .bubbleId)
+        ownerId = try c.decode(UUID.self, forKey: .ownerId)
+        image = try c.decode(String.self, forKey: .image)
+        title = try c.decode(String.self, forKey: .title)
+        description = try c.decodeIfPresent(String.self, forKey: .description)
+        status = try c.decode(MarketStatus.self, forKey: .status)
+        availability = try c.decodeIfPresent(MarketAvailability.self, forKey: .availability) ?? .available
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        owner = try c.decodeIfPresent(UserProfile.self, forKey: .owner)
+    }
+
+    /// The "Ask in chat" draft for someone else's item that isn't taken; nil for your own or taken items.
+    func chatDraft(me: UUID?, bundle: Bundle = .main, locale: Locale = .current) -> String? {
+        guard ownerId != me, availability != .taken else { return nil }
+        let name = owner?.displayName ?? String(localized: "Someone", bundle: bundle, locale: locale,
+                                                comment: "Placeholder for a user without a name")
+        return String(localized: "@\(name), is “\(title)” still available?", bundle: bundle, locale: locale,
+                      comment: "Prefilled chat message asking about a marketplace item; arguments are the owner's name and the item title")
     }
 }
 
@@ -236,12 +280,41 @@ struct SharedLink: Codable, Identifiable, Hashable, Sendable {
     var tags: [String]
     var createdAt: Date
     var user: UserProfile?
+    // Link preview, written by the server only (docs/boolaa-spec.md, "Link previews").
+    var previewStatus: String? = nil
+    var previewTitle: String? = nil
+    var previewDescription: String? = nil
+    var previewSiteName: String? = nil
+    var previewImagePath: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case id, url, title, tags, user
         case bubbleId = "bubble_id"
         case userId = "user_id"
         case createdAt = "created_at"
+        case previewStatus = "preview_status"
+        case previewTitle = "preview_title"
+        case previewDescription = "preview_description"
+        case previewSiteName = "preview_site_name"
+        case previewImagePath = "preview_image_path"
+    }
+
+    enum PreviewState: Equatable { case none, loading, ready }
+
+    /// `ready` shows the card; `pending` / `fetching` the plain link with "Loading preview…";
+    /// anything else (`none`, `failed`, missing) the plain link.
+    var previewState: PreviewState {
+        switch previewStatus {
+        case "ready": (previewTitle?.nilIfEmpty != nil || previewDescription?.nilIfEmpty != nil || previewImagePath != nil) ? .ready : .none
+        case "pending", "fetching": .loading
+        default: .none
+        }
+    }
+
+    /// The host without "www.", lowercased (e.g. "https://WWW.Example.com/a" → "example.com").
+    static func displayDomain(_ url: String) -> String? {
+        guard let host = URL(string: url.trimmingCharacters(in: .whitespaces))?.host()?.lowercased(), !host.isEmpty else { return nil }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 
     /// Parses "food, cheap ,  ,Recipes" into ["food", "cheap", "recipes"].
@@ -313,7 +386,8 @@ struct MarketInput: Encodable, Sendable {
     var title: String
     var description: String?
     var status: MarketStatus
-    enum CodingKeys: String, CodingKey { case image, title, description, status; case bubbleId = "bubble_id"; case ownerId = "owner_id" }
+    var availability: MarketAvailability = .available
+    enum CodingKeys: String, CodingKey { case image, title, description, status, availability; case bubbleId = "bubble_id"; case ownerId = "owner_id" }
     func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encodeIfPresent(bubbleId, forKey: .bubbleId)
@@ -322,6 +396,7 @@ struct MarketInput: Encodable, Sendable {
         try c.encode(title, forKey: .title)
         try c.encode(description, forKey: .description)
         try c.encode(status, forKey: .status)
+        try c.encode(availability, forKey: .availability)
     }
 }
 

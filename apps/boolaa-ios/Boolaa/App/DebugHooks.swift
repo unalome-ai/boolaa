@@ -15,6 +15,7 @@ import Foundation
 ///     -UITestScrollTo requests             Settings scrolls to the pending join requests
 ///     -UITestDeviceID boolaa-test-device   use this device id instead of the Keychain one (the seed trusts it)
 ///     -UITestOpen security                 opens Profile → Sign-in & security
+///     -UITestOpen notifications            opens Profile → Notifications
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {

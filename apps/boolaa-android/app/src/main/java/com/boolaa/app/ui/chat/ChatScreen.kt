@@ -85,6 +85,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -195,6 +196,7 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     val imageUrls = container.chatImages.urls
     private val authors = mutableMapOf<String, UserProfile>()
     private var markedId: String? = null
+    val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.CHAT_MESSAGE, _messages) { it.id }
 
     init {
         load()
@@ -207,7 +209,10 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         reloadOnBlockChange(container.session) {
             val blocked = container.session.state.value.blockedIds
             _messages.update { it?.filterNot { m -> m.senderId in blocked } }
-            launchCatching(trackBusy = false) { mergeNewestPage() }
+            launchCatching(trackBusy = false) {
+                mergeNewestPage()
+                reactions.refresh(liveIds())
+            }
         }
     }
 
@@ -215,6 +220,12 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         message.sender?.let { authors[it.id] = it }
         _messages.update { ChatMerge.merge(it.orEmpty(), message, authors) }
     }
+
+    /** Messages that can carry reactions (deleted ones lost theirs). */
+    private fun liveIds() = _messages.value.orEmpty().filterNot { it.isDeleted }.map { it.id }
+
+    fun react(messageId: String, kind: com.boolaa.app.model.ReactionKind) =
+        toggleReaction(reactions, messageId, kind, container.session.state.value.userId)
 
     private suspend fun mergeNewestPage() {
         val page = api.chatPage(bubbleId, null)
@@ -236,6 +247,7 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
             _lastReadAt.value = marker.await()
             _hasMore.value = loaded.size >= BoolaaApi.CHAT_PAGE_SIZE
             _messages.update { current -> ChatMerge.mergePage(current.orEmpty(), loaded, authors) }
+            reactions.refresh(liveIds())
         }
     }.also { it.invokeOnCompletion { if (_messages.value == null) _messages.value = emptyList() } }
 
@@ -271,6 +283,8 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
             table = "chat_messages"
             filter("bubble_id", FilterOperator.EQ, bubbleId)
         }
+        // Reactions ride on the same channel: INSERT by bubble, DELETE by id (docs/boolaa-spec.md "Reactions").
+        val reactionListeners = reactions.listenOn(ch)
         fun decode(record: kotlinx.serialization.json.JsonObject) =
             runCatching { BoolaaJson.json.decodeFromJsonElement(ChatMessage.serializer(), record) }
                 .onFailure { Log.w("Boolaa", "bad realtime chat record", it) }.getOrNull()
@@ -289,9 +303,11 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
                         // Only rows we hold: an UPDATE of an older, unloaded message would open a gap in the pages.
                         val held = _messages.value?.firstOrNull { it.id == m.id } ?: return@collect
                         if (held.imagePath != null && m.imagePath == null) container.chatImages.forget(held.imagePath)
+                        if (m.isDeleted) reactions.dropTarget(m.id)
                         merge(m)
                     }
                 }
+                reactionListeners(this)
                 runCatching { ch.subscribe(blockUntilSubscribed = true) }
                     .onSuccess { if (_messages.value != null) runCatching { mergeNewestPage() } }
                     .onFailure { Log.w("Boolaa", "realtime subscribe chat failed", it) }
@@ -336,6 +352,7 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     fun delete(message: ChatMessage, me: String) = launchCatching(trackBusy = false) {
         val path = api.deleteChatMessage(message.id)
         _messages.update { list -> list?.map { if (it.id == message.id && !it.isDeleted) ChatMerge.deleted(it, Instant.now()) else it } }
+        reactions.dropTarget(message.id)
         message.imagePath?.let { container.chatImages.forget(it) }
         api.removeChatImage(path, me)
     }
@@ -365,7 +382,7 @@ private sealed class ChatRow(val key: String) {
  * deletion, photos from the private bucket, read marker and the "New messages" divider.
  */
 @Composable
-fun ChatScreen(onBack: () -> Unit) {
+fun ChatScreen(onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: () -> Unit = {}) {
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val bubble = state.currentBubble ?: return
@@ -376,7 +393,16 @@ fun ChatScreen(onBack: () -> Unit) {
     val lastReadAt by vm.lastReadAt.collectAsStateWithLifecycle()
     val imageUrls by vm.imageUrls.collectAsStateWithLifecycle()
     val sending by vm.busy.collectAsStateWithLifecycle()
+    val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
+    val reactionsByMessage = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     var draft by rememberSaveable { mutableStateOf("") }
+    // A prefilled text ("Ask in chat"): put in the composer, never sent automatically; kept after what was typed.
+    LaunchedEffect(pendingDraft) {
+        if (pendingDraft != null) {
+            draft = if (draft.isBlank()) pendingDraft else "${draft.trimEnd()}\n$pendingDraft"
+            onDraftTaken()
+        }
+    }
     var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
     val listState = rememberLazyListState()
     val list = messages
@@ -397,6 +423,11 @@ fun ChatScreen(onBack: () -> Unit) {
     val lifecycleState by lifecycle.currentStateFlow.collectAsStateWithLifecycle()
     val visible = lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
     LaunchedEffect(visible, newestId) { if (visible && newestId != null) vm.markRead(newestId) }
+    // Push: no banner for this chat while it's on screen, and its delivered notification goes away.
+    DisposableEffect(visible, bubble.id) {
+        if (visible) container.push.setVisibleChat(bubble.id)
+        onDispose { if (container.push.visibleChatBubble == bubble.id) container.push.setVisibleChat(null) }
+    }
 
     // A new newest message scrolls into view when the list was at (or next to) the bottom, or when it is ours.
     LaunchedEffect(newestId) {
@@ -454,6 +485,8 @@ fun ChatScreen(onBack: () -> Unit) {
                                             message.sender?.name?.takeIf { it.isNotBlank() } ?: someone)
                                     }) else null,
                                     onDelete = if (mine && !message.isDeleted) ({ deleting = message }) else null,
+                                    reactions = reactionsByMessage[message.id].orEmpty(),
+                                    onReact = if (!message.isDeleted) ({ kind -> vm.react(message.id, kind) }) else null,
                                 )
                             }
                             ChatRow.Divider -> NewMessagesDivider()
@@ -589,8 +622,12 @@ private val TheirsShape = RoundedCornerShape(21.dp, 21.dp, 21.dp, 6.dp)
 fun MessageRow(
     message: ChatMessage, isMine: Boolean, showAuthor: Boolean, popIn: Boolean = false, imageUrl: String? = null,
     onReport: (() -> Unit)? = null, onDelete: (() -> Unit)? = null,
+    reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
 ) {
     val reportLabel = stringResource(R.string.report)
+    val reactLabel = stringResource(R.string.reaction_react)
+    val picker = com.boolaa.app.ui.components.rememberReactionPicker()
+    val menu = com.boolaa.app.ui.components.rememberReactionPicker()
     val deleteLabel = stringResource(R.string.chat_delete_message)
     val locale = LocalConfiguration.current.locales[0]
     val c = BoolaaTheme.colors
@@ -632,12 +669,28 @@ fun MessageRow(
                         .clip(shape)
                         .then(if (isMine) Modifier.background(Hue.grape.gradient) else Modifier.background(c.otherBubble).border(1.dp, c.hairline, shape))
                         .then(
-                            if (action != null) Modifier
-                                .combinedClickable(onClick = {}, onLongClick = action)
-                                .semantics { customActions = listOf(CustomAccessibilityAction(actionLabel) { action(); true }) }
+                            // Long press: the reactions row plus Delete (own) or Report (others) below it.
+                            if (action != null || onReact != null) Modifier
+                                .combinedClickable(onClick = {}, onLongClick = { if (onReact != null) menu.value = true else action?.invoke() })
+                                .semantics {
+                                    customActions = listOfNotNull(
+                                        onReact?.let { CustomAccessibilityAction(reactLabel) { menu.value = true; true } },
+                                        action?.let { CustomAccessibilityAction(actionLabel) { it(); true } },
+                                    )
+                                }
                             else Modifier,
                         ),
                 ) {
+                    if (onReact != null) {
+                        com.boolaa.app.ui.components.ReactionPickerMenu(menu.value, onDismiss = { menu.value = false },
+                            onPick = { menu.value = false; onReact(it) }, tag = "reactions-${message.id}") {
+                            if (action != null) androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(actionLabel, style = Type.body, color = if (onDelete != null) c.dangerText else c.textPrimary) },
+                                onClick = { menu.value = false; action() },
+                                modifier = Modifier.testTag(if (onDelete != null) "menu-delete-message" else "menu-report"),
+                            )
+                        }
+                    }
                     if (message.imagePath != null) {
                         val context = LocalContext.current
                         // Signed URLs change every hour; cache the pixels by object path instead.
@@ -660,6 +713,9 @@ fun MessageRow(
                         )
                     }
                 }
+            }
+            if (onReact != null && reactions.isNotEmpty()) {
+                com.boolaa.app.ui.components.ReactionBar(reactions, onReact, hue = Hue.grape, picker = picker, tag = "reactions-${message.id}")
             }
             Text(Formats.time(message.createdAt, locale), style = Type.caption2, color = c.textSecondary, modifier = Modifier.padding(horizontal = 6.dp))
         }

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Push (docs/push-notifications.md §8): asked only after a user action (Settings → Notifications, Home card). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".BoolaaApplication"
@@ -57,6 +59,21 @@
                 <data android:scheme="${authScheme}" android:host="join" />
             </intent-filter>
         </activity>
+
+        <!-- Push (FCM). No Google Analytics: firebase-analytics isn't a dependency, and collection is off in case a
+             transitive library ever pulls it in. Background pushes are drawn by the system with these defaults. -->
+        <service
+            android:name=".push.BoolaaMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
+        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="bubble" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_boolaa" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/brand_purple" />
 
         <!-- Persists the per-app language below API 33 (AppCompatDelegate.setApplicationLocales). -->
         <service

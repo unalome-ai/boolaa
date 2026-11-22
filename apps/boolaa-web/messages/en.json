@@ -208,7 +208,8 @@
     "goingCount": "{count, plural, =0 {Nobody is going yet} one {# person going} other {# people going}}",
     "dateTime": "Date & time",
     "location": "Location",
-    "create": "Create event"
+    "create": "Create event",
+    "addToCalendar": "Add to calendar"
   },
   "food": {
     "share": "Share food",
@@ -237,7 +238,15 @@
     "deleteItem": "Delete item",
     "emptyTitle": "Nothing here yet",
     "emptyHint": "Give away or trade things with your bubble.",
-    "confirmDelete": "Delete “{title}”?"
+    "confirmDelete": "Delete “{title}”?",
+    "availability": "Availability",
+    "available": "Available",
+    "reserved": "Reserved",
+    "taken": "Taken",
+    "hideTaken": "Hide taken",
+    "markAs": "Mark as",
+    "askInChat": "Ask in chat",
+    "askDraft": "@{name}, is “{title}” still available?"
   },
   "links": {
     "filter": "Filter by tag",
@@ -250,7 +259,8 @@
     "confirmDelete": "Delete “{title}”?",
     "url": "URL",
     "tags": "Tags (comma-separated)",
-    "tagsPlaceholder": "food, cheap"
+    "tagsPlaceholder": "food, cheap",
+    "previewLoading": "Loading preview…"
   },
   "settings": {
     "bubble": "Bubble",
@@ -512,5 +522,49 @@
     "invalidBody": "The link may be old or the code was changed. Ask a member for a new one.",
     "requestSent": "Request sent",
     "getApp": "Get the app"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enabled": "Allow notifications",
+    "chat": "Chat messages",
+    "joinRequests": "Join requests",
+    "approvals": "My request was approved",
+    "newEvents": "New events",
+    "eventReminders": "Event reminders (1 hour before)",
+    "food": "Food Circle",
+    "market": "Marketplace",
+    "preview": "Show message previews",
+    "previewHint": "When off, notifications only say \"New message in Flatmates\", without names or text.",
+    "blocked": "Notifications are turned off for Boolaa in your settings.",
+    "blockedHint": "To turn them back on, click the icon left of the address bar, allow notifications for this site, then reload the page.",
+    "ask": "Turn on notifications",
+    "askHint": "Get a ping when your bubbles talk to you.",
+    "on": "On for this browser",
+    "turnOff": "Turn off on this browser",
+    "unsupported": "This browser can't receive notifications. On iPhone and iPad, add Boolaa to your Home Screen first.",
+    "allBubbles": "These settings apply to all your bubbles."
+  },
+  "mute": {
+    "title": "Mute this bubble",
+    "hint": "No notifications from this bubble, reminders included.",
+    "1h": "1 hour",
+    "8h": "8 hours",
+    "1w": "1 week",
+    "forever": "Until I turn it back on",
+    "until": "Muted until {date}",
+    "mutedForever": "Muted until you turn it back on",
+    "unmute": "Unmute"
+  },
+  "reactions": {
+    "like": "Like",
+    "love": "Love",
+    "laugh": "Haha",
+    "wow": "Wow",
+    "sad": "Sad",
+    "thanks": "Thanks",
+    "addReaction": "Add a reaction",
+    "react": "React",
+    "chip": "{reaction}: {count, plural, one {# reaction} other {# reactions}}",
+    "reactedByYou": "You reacted"
   }
 }

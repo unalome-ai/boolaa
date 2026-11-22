@@ -46,6 +46,25 @@ abstract class BaseViewModel : ViewModel() {
         _error.value = kind.message
     }
 
+    /**
+     * A [ReactionStore] for the rows of [list] (docs/boolaa-spec.md "Reactions"): reactions are fetched for ids as
+     * they appear (live rows, older pages). After a full load, call [ReactionStore.refresh] with every id held.
+     */
+    protected fun <T> reactionStore(
+        api: com.boolaa.app.core.BoolaaApi, bubbleId: String, target: com.boolaa.app.model.ReactionTarget,
+        list: StateFlow<List<T>?>, id: (T) -> String,
+    ): com.boolaa.app.core.ReactionStore {
+        val store = com.boolaa.app.core.ReactionStore(api, bubbleId, target) { t -> list.value?.any { id(it) == t } == true }
+        viewModelScope.launch { list.map { l -> l?.map(id).orEmpty() }.distinctUntilChanged().collect { store.sync(it) } }
+        return store
+    }
+
+    /** Toggles [me]'s [kind] on [targetId]; failures show the generic error. */
+    protected fun toggleReaction(store: com.boolaa.app.core.ReactionStore, targetId: String, kind: com.boolaa.app.model.ReactionKind, me: String?) {
+        if (me == null) return
+        launchCatching(trackBusy = false) { store.toggle(targetId, kind, me) }
+    }
+
     /** Runs [block], mapping failures to [error]; [onSuccess] runs only when it completes. */
     protected fun launchCatching(trackBusy: Boolean = true, onSuccess: () -> Unit = {}, block: suspend () -> Unit): Job =
         viewModelScope.launch {

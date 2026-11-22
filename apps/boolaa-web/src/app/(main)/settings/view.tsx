@@ -14,12 +14,14 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { inviteUrl } from "@/lib/invite";
+import { BubbleMute, NotificationSettings } from "@/components/notification-settings";
 
 export default function SettingsPage() {
   const { supabase, userId, refreshBubbles } = useBoolaa();
   const bubble = useBubble();
   const t = useTranslations("settings");
   const tc = useTranslations("common");
+  const tn = useTranslations("notifications");
   const errorText = useErrorText();
   const fmt = useFormat();
   const [members, setMembers] = useState<Member[] | null>(null);
@@ -327,6 +329,12 @@ export default function SettingsPage() {
           ))}
         </ul>
       )}
+
+      <SectionTitle hue="indigo">{tn("title")}</SectionTitle>
+      <div className="space-y-3" id="notifications">
+        <BubbleMute key={bubble.id} />
+        <NotificationSettings />
+      </div>
 
       <SectionTitle>{t("more")}</SectionTitle>
       <Link href="/links" className="card press flex min-h-14 items-center gap-3 rounded-[20px] px-4 py-2.5">

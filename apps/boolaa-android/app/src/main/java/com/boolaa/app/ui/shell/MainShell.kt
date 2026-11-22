@@ -1,5 +1,6 @@
 package com.boolaa.app.ui.shell
 
+import com.boolaa.app.ui.settings.NotificationsScreen
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -121,17 +122,25 @@ enum class MainTab(val route: String, @param:StringRes val title: Int, val icon:
 object ShellRoutes {
     const val CHAT = "chat"
     const val LINKS = "links"
+    const val NOTIFICATIONS = "notifications"
 }
 
 /** Navigation actions the tab screens use (deep links from Home cards, Links from Settings). */
 class ShellNavigator(private val nav: NavHostController) {
+    /** Text to prefill (not send) in the chat composer, e.g. "Ask in chat" on a market item. Consumed by the chat. */
+    var chatDraft by mutableStateOf<String?>(null)
+
     fun openTab(tab: MainTab) = nav.navigate(tab.route) {
         popUpTo(MainTab.HOME.route) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }
-    fun openChat() = nav.navigate(ShellRoutes.CHAT) { launchSingleTop = true }
+    fun openChat(draft: String? = null) {
+        if (draft != null) chatDraft = draft
+        nav.navigate(ShellRoutes.CHAT) { launchSingleTop = true }
+    }
     fun openLinks() = nav.navigate(ShellRoutes.LINKS) { launchSingleTop = true }
+    fun openNotifications() = nav.navigate(ShellRoutes.NOTIFICATIONS) { launchSingleTop = true }
     fun back() = nav.popBackStack()
 }
 
@@ -161,6 +170,8 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
             "addBubble" -> showAddBubble = true
         }
     }
+    // A tapped notification: switch bubble and open its screen.
+    PushRouter(navigator)
 
     Box(Modifier.fillMaxSize().background(BoolaaTheme.colors.background)) {
         BubbleGlow(Hue.forId(state.currentBubble?.id))
@@ -180,13 +191,18 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                 composable(MainTab.HOME.route) { HomeScreen(navigator) }
                 composable(MainTab.EVENTS.route) { EventsScreen() }
                 composable(MainTab.FOOD.route) { FoodScreen() }
-                composable(MainTab.MARKETPLACE.route) { MarketplaceScreen() }
+                composable(MainTab.MARKETPLACE.route) { MarketplaceScreen(onAskInChat = { navigator.openChat(it) }) }
                 composable(MainTab.SETTINGS.route) { SettingsScreen(navigator) }
                 // Pushed screens slide in from the trailing edge, the platform's own idiom.
                 val push = fadeIn(tween(200)) + slideInHorizontally(Motion.gentle()) { it / 5 }
                 val pop = fadeOut(tween(160)) + slideOutHorizontally(Motion.gentle()) { it / 5 }
-                composable(ShellRoutes.CHAT, enterTransition = { push }, popExitTransition = { pop }) { ChatScreen(onBack = { navigator.back() }) }
+                composable(ShellRoutes.CHAT, enterTransition = { push }, popExitTransition = { pop }) {
+                    ChatScreen(onBack = { navigator.back() }, pendingDraft = navigator.chatDraft, onDraftTaken = { navigator.chatDraft = null })
+                }
                 composable(ShellRoutes.LINKS, enterTransition = { push }, popExitTransition = { pop }) { LinksScreen(onBack = { navigator.back() }) }
+                composable(ShellRoutes.NOTIFICATIONS, enterTransition = { push }, popExitTransition = { pop }) {
+                    NotificationsScreen(onBack = { navigator.back() })
+                }
             }
         }
         AnimatedVisibility(

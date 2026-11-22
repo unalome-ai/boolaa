@@ -143,6 +143,16 @@ enum class MarketStatus { @SerialName("free") FREE, @SerialName("trade") TRADE;
     val wire: String get() = name.lowercase()
 }
 
+/**
+ * `market_items.availability` (20261123170000_market_status_calendar.sql): owner-only, independent of Free/Trade.
+ * Who it is reserved for is deliberately not stored. Missing or unknown values decode as [AVAILABLE]
+ * (`coerceInputValues`).
+ */
+@Serializable
+enum class MarketAvailability { @SerialName("available") AVAILABLE, @SerialName("reserved") RESERVED, @SerialName("taken") TAKEN;
+    val wire: String get() = name.lowercase()
+}
+
 /** `public.market_items` */
 @Serializable
 data class MarketItem(
@@ -153,6 +163,7 @@ data class MarketItem(
     val title: String,
     val description: String? = null,
     val status: MarketStatus = MarketStatus.FREE,
+    val availability: MarketAvailability = MarketAvailability.AVAILABLE,
     @SerialName("created_at") val createdAt: Timestamp,
     val owner: UserProfile? = null,
 )
@@ -168,8 +179,23 @@ data class SharedLink(
     val tags: List<String> = emptyList(),
     @SerialName("created_at") val createdAt: Timestamp,
     val user: UserProfile? = null,
+    /** Server-written Open Graph preview (docs/boolaa-spec.md "Link previews"): none, pending, fetching, ready, failed. */
+    @SerialName("preview_status") val previewStatus: String = "none",
+    @SerialName("preview_title") val previewTitle: String? = null,
+    @SerialName("preview_description") val previewDescription: String? = null,
+    @SerialName("preview_site_name") val previewSiteName: String? = null,
+    /** Object path in the public bucket `link.previews` (a server-made copy: clients never load third-party images). */
+    @SerialName("preview_image_path") val previewImagePath: String? = null,
 ) {
+    val previewReady: Boolean get() = previewStatus == "ready"
+    val previewLoading: Boolean get() = previewStatus == "pending" || previewStatus == "fetching"
+    /** Host without `www.` for the card, or null for an unparsable URL. */
+    val domain: String? get() = domainOf(url)
+
     companion object {
+        fun domainOf(url: String): String? =
+            runCatching { java.net.URI(url.trim()).host }.getOrNull()?.lowercase()?.removePrefix("www.")?.takeIf { it.isNotEmpty() }
+
         /** Parses "food, cheap ,  ,Recipes" into ["food", "cheap", "recipes"]. */
         fun parseTags(raw: String): List<String> =
             raw.split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.distinct()
@@ -200,6 +226,40 @@ enum class ReportTargetType(val wire: String) {
 enum class ReportReason(val wire: String) {
     SPAM("spam"), HARASSMENT("harassment"), HATE("hate"), SEXUAL("sexual"), VIOLENCE("violence"), SELF_HARM("self_harm"), OTHER("other")
 }
+
+/** The fixed reaction set, in display order (docs/boolaa-spec.md "Reactions"); stored as keys, never as emoji. */
+enum class ReactionKind(val wire: String, val emoji: String) {
+    LIKE("like", "👍"), LOVE("love", "❤️"), LAUGH("laugh", "😂"), WOW("wow", "😮"), SAD("sad", "😢"), THANKS("thanks", "🙏");
+
+    companion object {
+        fun of(wire: String): ReactionKind? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+/** What a reaction is on: the same names as report targets. */
+enum class ReactionTarget(val wire: String) {
+    CHAT_MESSAGE("chat_message"), EVENT("event"), FOOD_POST("food_post"), MARKET_ITEM("market_item"), SHARED_LINK("shared_link")
+}
+
+/** `public.reactions` row (select id, target_type, target_id, reaction, user_id; realtime INSERT records carry more). */
+@Serializable
+data class Reaction(
+    val id: String,
+    @SerialName("target_type") val targetType: String,
+    @SerialName("target_id") val targetId: String,
+    val reaction: String,
+    @SerialName("user_id") val userId: String,
+)
+
+/** `toggle_reaction` result: [reacted] is the new state, [id] the row added or removed. */
+@Serializable
+data class ReactionToggle(
+    val id: String,
+    val reacted: Boolean,
+    val reaction: String,
+    @SerialName("target_type") val targetType: String,
+    @SerialName("target_id") val targetId: String,
+)
 
 /** What the report sheet is about: the content (or user) and its author. */
 data class ReportTarget(val type: ReportTargetType, val id: String, val authorId: String, val authorName: String)

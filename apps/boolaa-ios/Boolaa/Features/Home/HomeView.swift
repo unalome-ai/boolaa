@@ -85,6 +85,8 @@ struct HomeView: View {
                     }
                     .popIn(0)
                 }
+                // After the first bubble: explain, then (on tap) the iOS prompt. Never at launch.
+                PushPermissionCard(showsDismiss: true).transition(.opacity)
 
                 if model.loaded && model.items.isEmpty {
                     EmptyStateView(icon: "sparkles", title: "Nothing here yet",

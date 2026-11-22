@@ -56,7 +56,8 @@ object FeedSpecs {
     )
     val market = FeedSpec(
         "market_items", author("owner", "owner_id"), MarketItem.serializer(), { it.id }, { it.owner }, { i, a -> i.copy(owner = a) },
-        newestFirst({ it.createdAt }, { it.id }),
+        // Taken items sink to the bottom, so a live "taken" UPDATE moves the tile (com.boolaa.app.ui.market.MarketRules).
+        com.boolaa.app.ui.market.MarketRules.order,
     )
     val links = FeedSpec(
         "shared_links", author("user", "user_id"), SharedLink.serializer(), { it.id }, { it.user }, { l, a -> l.copy(user = a) },
@@ -101,7 +102,10 @@ suspend fun <T> BoolaaApi.feedRow(spec: FeedSpec<T>, id: String): T? {
  * New rows are fetched once with their author (RLS decides again). [reload] runs once subscribed, to catch changes
  * made while connecting.
  */
-suspend fun <T> BoolaaApi.keepFeedLive(spec: FeedSpec<T>, bubbleId: String, rows: MutableStateFlow<List<T>?>, reload: suspend () -> Unit) {
+suspend fun <T> BoolaaApi.keepFeedLive(
+    spec: FeedSpec<T>, bubbleId: String, rows: MutableStateFlow<List<T>?>,
+    reactions: ReactionStore? = null, reload: suspend () -> Unit,
+) {
     val ch = client.channel("${spec.table}:$bubbleId:${UUID.randomUUID()}")
     val inserts = ch.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
         table = spec.table
@@ -112,6 +116,8 @@ suspend fun <T> BoolaaApi.keepFeedLive(spec: FeedSpec<T>, bubbleId: String, rows
         filter("bubble_id", FilterOperator.EQ, bubbleId)
     }
     val deletes = ch.postgresChangeFlow<PostgresAction.Delete>(schema = "public") { table = spec.table }
+    // Reactions on this feed's rows ride on the same channel (docs/boolaa-spec.md "Reactions").
+    val reactionListeners = reactions?.listenOn(ch)
 
     suspend fun fetchAndMerge(id: String) {
         runCatching { feedRow(spec, id) }
@@ -134,8 +140,11 @@ suspend fun <T> BoolaaApi.keepFeedLive(spec: FeedSpec<T>, bubbleId: String, rows
                 }
             }
             launch(start = CoroutineStart.UNDISPATCHED) {
-                deletes.collect { action -> idOf(action.oldRecord)?.let { id -> rows.update { FeedMerge.remove(it, id, spec) } } }
+                deletes.collect { action ->
+                    idOf(action.oldRecord)?.let { id -> rows.update { FeedMerge.remove(it, id, spec) }; reactions?.dropTarget(id) }
+                }
             }
+            reactionListeners?.invoke(this)
             runCatching { ch.subscribe(blockUntilSubscribed = true) }
                 .onSuccess { reload() }
                 .onFailure { Log.w("Boolaa", "realtime subscribe ${spec.table} failed", it) } // pull-to-refresh still works

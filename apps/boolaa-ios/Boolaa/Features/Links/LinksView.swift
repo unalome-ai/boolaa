@@ -6,10 +6,12 @@ final class LinksModel {
     var links: [SharedLink] = []
     var loaded = false
     var error: String?
+    let reactions = ReactionStore(.sharedLink)
 
     func load(api: BoolaaAPI, bubbleID: UUID) async {
         do { links = try await api.links(bubbleID: bubbleID) } catch { self.error = error.userMessage }
         loaded = true
+        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: links.map(\.id))
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -17,7 +19,8 @@ final class LinksModel {
         await LiveFeed.observe(SharedLink.self, api: api, bubbleID: bubbleID,
                                rows: { [weak self] in self?.links ?? [] },
                                apply: { [weak self] in self?.links = $0 },
-                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) },
+                               reactions: reactions)
     }
 
     var allTags: [String] { Array(Set(links.flatMap(\.tags))).sorted() }
@@ -98,9 +101,12 @@ struct LinksView: View {
                 }
                 ForEach(Array(visible.enumerated()), id: \.element.id) { index, link in
                     LinkRow(link: link, isMine: link.userId == session.userID,
+                            previewImageURL: session.api.linkPreviewImageURL(path: link.previewImagePath),
+                            reactions: model.reactions.summary(for: link.id, me: session.userID),
+                            onReact: { react(link, $0) },
                             onOpen: { if let u = URL(string: link.url) { openURL(u) } },
                             onDelete: { Task { await delete(link) } })
-                        .safetyContextMenu(.link(link))
+                        .safetyContextMenu(.link(link), react: { react(link, $0) })
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                         .popIn(index)
                 }
@@ -141,6 +147,12 @@ struct LinksView: View {
         } catch { model.error = error.userMessage }
     }
 
+    private func react(_ link: SharedLink, _ kind: ReactionKind) {
+        Task {
+            if let e = await model.reactions.toggle(api: session.api, target: link.id, kind: kind, me: session.userID) { model.error = e }
+        }
+    }
+
     private func delete(_ link: SharedLink) async {
         do {
             try await session.api.deleteLink(id: link.id)
@@ -152,39 +164,61 @@ struct LinksView: View {
 struct LinkRow: View {
     var link: SharedLink
     var isMine: Bool
+    var previewImageURL: URL? = nil
+    var reactions: [ReactionSummary] = []
+    var onReact: ((ReactionKind) -> Void)? = nil
     var onOpen: () -> Void
     var onDelete: () -> Void
     @State private var confirmDelete = false
 
     var body: some View {
         let hue = Feature.links.hue
-        HStack(alignment: .top, spacing: 12) {
-            FeatureBadge(icon: Feature.links.icon, hue: hue)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: link.title?.nilIfEmpty ?? link.url).font(.rounded(.headline)).lineLimit(2)
-                Text(verbatim: URL(string: link.url)?.host() ?? link.url).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                if !link.tags.isEmpty {
-                    Text(verbatim: link.tags.map { "#" + $0 }.joined(separator: " ")).font(.rounded(.caption)).foregroundStyle(hue.text)
-                }
-                HStack(spacing: 6) {
-                    AvatarView(user: link.user, size: 20)
-                    Text(verbatim: link.user?.displayName ?? "").font(.caption).foregroundStyle(.secondary)
-                }
-                .padding(.top, 2)
-            }
-            Spacer(minLength: 4)
-            VStack(spacing: 8) {
-                Button(action: onOpen) { CircleIcon(systemName: "arrow.up.right", hue: hue, size: 38) }
-                    .accessibilityLabel("Open link")
-                if isMine {
-                    Button { confirmDelete = true } label: {
-                        Image(systemName: "trash.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.dangerText)
-                            .frame(width: 38, height: 38).background(Circle().fill(Theme.danger.opacity(0.12)))
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                FeatureBadge(icon: Feature.links.icon, hue: hue)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: link.title?.nilIfEmpty ?? link.url).font(.rounded(.headline)).lineLimit(2)
+                    Text(verbatim: URL(string: link.url)?.host() ?? link.url).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    if !link.tags.isEmpty {
+                        Text(verbatim: link.tags.map { "#" + $0 }.joined(separator: " ")).font(.rounded(.caption)).foregroundStyle(hue.text)
                     }
-                    .accessibilityLabel("Delete link")
+                    HStack(spacing: 6) {
+                        AvatarView(user: link.user, size: 20)
+                        Text(verbatim: link.user?.displayName ?? "").font(.caption).foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 2)
                 }
+                Spacer(minLength: 4)
+                VStack(spacing: 8) {
+                    Button(action: onOpen) { CircleIcon(systemName: "arrow.up.right", hue: hue, size: 38) }
+                        .accessibilityLabel("Open link")
+                    if isMine {
+                        Button { confirmDelete = true } label: {
+                            Image(systemName: "trash.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.dangerText)
+                                .frame(width: 38, height: 38).background(Circle().fill(Theme.danger.opacity(0.12)))
+                        }
+                        .accessibilityLabel("Delete link")
+                    }
+                }
+                .buttonStyle(.squishIcon)
             }
-            .buttonStyle(.squishIcon)
+            switch link.previewState {
+            case .ready:
+                LinkPreviewCard(link: link, imageURL: previewImageURL, onOpen: onOpen)
+            case .loading:
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Loading preview…", comment: "Shown while the server fetches a shared link's preview")
+                }
+                .font(.caption).foregroundStyle(.secondary)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("link-preview-loading")
+            case .none:
+                EmptyView()
+            }
+            if let onReact {
+                ReactionBar(summaries: reactions, hue: hue, onToggle: onReact)
+            }
         }
         .card()
         .contentShape(Rectangle())
@@ -192,5 +226,60 @@ struct LinkRow: View {
         .confirmationDialog("Delete this link?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive, action: onDelete)
         }
+    }
+}
+
+/// Open Graph card under a shared link (docs/boolaa-spec.md, "Link previews"). The image is the
+/// server's re-encoded copy in our own Storage, never the third-party host; it is decorative for VoiceOver.
+struct LinkPreviewCard: View {
+    var link: SharedLink
+    var imageURL: URL?
+    var onOpen: () -> Void
+
+    var body: some View {
+        let domain = SharedLink.displayDomain(link.url)
+        Button(action: onOpen) {
+            VStack(alignment: .leading, spacing: 0) {
+                if let imageURL {
+                    Color.clear
+                        .aspectRatio(1.91, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .overlay { RemoteImage(url: imageURL.absoluteString, hue: Feature.links.hue) }
+                        .clipped()
+                        .accessibilityHidden(true)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    if let title = link.previewTitle?.nilIfEmpty {
+                        Text(verbatim: title).font(.rounded(.subheadline, weight: .bold)).lineLimit(2)
+                            .foregroundStyle(Color.primary)
+                    }
+                    if let description = link.previewDescription?.nilIfEmpty {
+                        Text(verbatim: description).font(.footnote).foregroundStyle(.secondary).lineLimit(2)
+                    }
+                    let source = [domain, link.previewSiteName?.nilIfEmpty].compactMap { $0 }
+                    if !source.isEmpty {
+                        Text(verbatim: source.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(Feature.links.hue.text).lineLimit(1)
+                    }
+                }
+                .multilineTextAlignment(.leading)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(Theme.field)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.squish)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("link-preview-\(link.id.uuidString)")
+    }
+}
+
+extension BoolaaAPI {
+    /// Public URL of a preview image in the `link.previews` bucket.
+    func linkPreviewImageURL(path: String?) -> URL? {
+        guard let path, !path.isEmpty else { return nil }
+        return try? client.storage.from("link.previews").getPublicURL(path: path)
     }
 }

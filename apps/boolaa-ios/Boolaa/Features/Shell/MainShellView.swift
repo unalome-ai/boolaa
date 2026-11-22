@@ -5,6 +5,7 @@ struct MainShellView: View {
     @Environment(SessionStore.self) private var session
     @Environment(SafetyStore.self) private var safety
     @Environment(UnreadStore.self) private var unread
+    @Environment(PushCenter.self) private var push
     @Environment(\.scenePhase) private var scenePhase
     @State private var router = ShellRouter()
     @State private var appliedDebugHooks = false
@@ -68,6 +69,28 @@ struct MainShellView: View {
             Task { await unread.refresh() }
         }
         .onAppear(perform: applyDebugHooks)
+        // A tapped notification (docs/push-notifications.md §5), also one that launched the app.
+        .task(id: push.pendingRoute?.id) { applyPushRoute() }
+    }
+
+    /// Switches to the bubble in the payload and opens its screen; a bubble the user is no longer in opens Home.
+    private func applyPushRoute() {
+        guard let route = push.pendingRoute else { return }
+        push.pendingRoute = nil
+        let target = route.resolve(joined: Set(session.bubbles.map(\.id)))
+        router.showProfile = false
+        router.showAddBubble = false
+        router.path = []
+        if let bubble = target.bubble { session.selectBubble(bubble) }
+        router.highlight = target.highlight
+        switch target.destination {
+        case .home: router.tab = .home
+        case .chat: router.open(.chat)
+        case .joinRequests: router.scrollToRequests = true; router.tab = .settings
+        case .events: router.tab = .events
+        case .food: router.tab = .food
+        case .marketplace: router.tab = .marketplace
+        }
     }
 
     /// New content rises in with a little swell; old content just fades.
@@ -83,7 +106,7 @@ struct MainShellView: View {
         switch DebugHooks.initialOpen {
         case "chat": router.open(.chat)
         case "links": router.open(.links)
-        case "profile", "blocked", "deleteAccount", "security": router.showProfile = true
+        case "profile", "blocked", "deleteAccount", "security", "notifications": router.showProfile = true
         case "report": Task { await openDebugReport() }
         case "addBubble": router.showAddBubble = true
         default: break

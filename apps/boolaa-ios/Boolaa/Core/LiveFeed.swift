@@ -33,7 +33,12 @@ extension MarketItem: FeedRow {
     static let table = "market_items"
     static let selectColumns = "*, owner:users!owner_id(\(BoolaaAPI.authorColumns))"
     var author: UserProfile? { get { owner } set { owner = newValue } }
-    static func precedes(_ a: Self, _ b: Self) -> Bool { FeedMerge.newestFirst(a.createdAt, a.id, b.createdAt, b.id) }
+    /// Taken items sink to the end; otherwise newest first (docs/boolaa-spec.md, Marketplace).
+    static func precedes(_ a: Self, _ b: Self) -> Bool {
+        let aTaken = a.availability == .taken, bTaken = b.availability == .taken
+        if aTaken != bTaken { return bTaken }
+        return FeedMerge.newestFirst(a.createdAt, a.id, b.createdAt, b.id)
+    }
 }
 
 extension SharedLink: FeedRow {
@@ -82,7 +87,8 @@ enum LiveFeed {
         bubbleID: UUID,
         rows: @escaping @MainActor @Sendable () -> [T],
         apply: @escaping @MainActor @Sendable ([T]) -> Void,
-        reload: @escaping @MainActor @Sendable () async -> Void
+        reload: @escaping @MainActor @Sendable () async -> Void,
+        reactions: ReactionStore? = nil
     ) async {
         let client = api.client
         let channel = client.realtimeV2.channel("\(T.table):\(bubbleID.uuidString.lowercased())")
@@ -90,6 +96,9 @@ enum LiveFeed {
         let inserts = channel.postgresChange(InsertAction.self, schema: "public", table: T.table, filter: filter)
         let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: T.table, filter: filter)
         let deletes = channel.postgresChange(DeleteAction.self, schema: "public", table: T.table)
+        // Reactions on this screen's rows ride on the same channel (docs/boolaa-spec.md, "Reactions").
+        let reactionStreams = await reactions?.streams(on: channel, bubbleID: bubbleID,
+                                                       holds: { id in rows().contains { $0.id == id } })
 
         @Sendable func fetchAndMerge(_ id: UUID) async {
             guard let row = try? await api.feedRow(T.self, id: id) else { return }
@@ -104,6 +113,7 @@ enum LiveFeed {
             // Pull-to-refresh still works when realtime is unavailable.
         }
         await withTaskGroup(of: Void.self) { group in
+            if let reactionStreams { group.addTask { await reactionStreams() } }
             group.addTask {
                 for await action in inserts {
                     if let id = LiveChanges.id(of: action.record) { await fetchAndMerge(id) }

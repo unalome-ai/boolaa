@@ -46,8 +46,26 @@ final class ShellRouter {
     var path: [ShellDestination] = []
     var showProfile = false
     var showAddBubble = false
+    /// A row a tapped notification points at (event, food post, market item): scrolled to and highlighted.
+    var highlight: UUID?
+    /// A join-request notification: Settings scrolls to the pending requests.
+    var scrollToRequests = false
+    /// Text the chat composer picks up once when it opens ("Ask in chat" on a market item). Never sent automatically.
+    var chatDraft: String?
 
     func open(_ destination: ShellDestination) {
         if path.last != destination { path.append(destination) }
+    }
+
+    /// Opens the bubble chat with `draft` in the composer.
+    func openChat(draft: String) {
+        chatDraft = draft
+        open(.chat)
+    }
+
+    /// Hands the pending draft to the composer exactly once.
+    func takeChatDraft() -> String? {
+        defer { chatDraft = nil }
+        return chatDraft
     }
 }

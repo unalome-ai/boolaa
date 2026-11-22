@@ -6,10 +6,12 @@ final class EventsModel {
     var events: [BubbleEvent] = []
     var loaded = false
     var error: String?
+    let reactions = ReactionStore(.event)
 
     func load(api: BoolaaAPI, bubbleID: UUID) async {
         do { events = try await api.events(bubbleID: bubbleID) } catch { self.error = error.userMessage }
         loaded = true
+        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: events.map(\.id))
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -17,7 +19,8 @@ final class EventsModel {
         await LiveFeed.observe(BubbleEvent.self, api: api, bubbleID: bubbleID,
                                rows: { [weak self] in self?.events ?? [] },
                                apply: { [weak self] in self?.events = $0 },
-                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) },
+                               reactions: reactions)
     }
 
     func toggleRSVP(api: BoolaaAPI, event: BubbleEvent) async {
@@ -40,6 +43,7 @@ struct EventsView: View {
     @Environment(SessionStore.self) private var session
     @State private var model = EventsModel()
     @State private var editing: EventEditorTarget?
+    @State private var exporting: BubbleEvent?
 
     private var mine: [BubbleEvent] { model.events.filter { $0.creatorId == session.userID }.sorted { $0.datetime < $1.datetime } }
     private var others: [BubbleEvent] { model.events.filter { $0.creatorId != session.userID }.sorted { $0.datetime < $1.datetime } }
@@ -57,9 +61,14 @@ struct EventsView: View {
                 ForEach(Array(mine.enumerated()), id: \.element.id) { index, event in
                     EventCard(event: event, myID: session.userID,
                               onRSVP: { Task { await model.toggleRSVP(api: session.api, event: event) } },
+                              onAddToCalendar: { addToCalendar(event) },
+                              reactions: model.reactions.summary(for: event.id, me: session.userID),
+                              onReact: { react(event, $0) },
                               onEdit: { editing = .edit(event) },
                               onDelete: { Task { await model.delete(api: session.api, event: event) } })
+                        .safetyContextMenu(.event(event), react: { react(event, $0) })
                         .popIn(index)
+                        .pushHighlightTarget(event.id)
                 }
 
                 SectionHeader(title: "Bubble events", count: others.count, hue: hue)
@@ -68,9 +77,13 @@ struct EventsView: View {
                 }
                 ForEach(Array(others.enumerated()), id: \.element.id) { index, event in
                     EventCard(event: event, myID: session.userID,
-                              onRSVP: { Task { await model.toggleRSVP(api: session.api, event: event) } })
-                        .safetyContextMenu(.event(event))
+                              onRSVP: { Task { await model.toggleRSVP(api: session.api, event: event) } },
+                              onAddToCalendar: { addToCalendar(event) },
+                              reactions: model.reactions.summary(for: event.id, me: session.userID),
+                              onReact: { react(event, $0) })
+                        .safetyContextMenu(.event(event), react: { react(event, $0) })
                         .popIn(index + mine.count)
+                        .pushHighlightTarget(event.id)
                 }
             }
             .padding(.horizontal, 16)
@@ -78,6 +91,7 @@ struct EventsView: View {
             .padding(.bottom, Theme.tabBarClearance)
             .animation(Motion.gentle, value: model.events.map(\.id))
         }
+        .scrollsToPushHighlight(model.events.map(\.id))
         .refreshFeedback { await reload() }
         .task {
             await reload()
@@ -86,10 +100,28 @@ struct EventsView: View {
         .sheet(item: $editing) { target in
             EventEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
+        .sheet(item: $exporting) { event in
+            AddToCalendarSheet(fields: CalendarEventFields(event)) { exporting = nil }.ignoresSafeArea()
+        }
         .errorAlert($model.error)
     }
 
     private var hue: Hue { Feature.events.hue }
+
+    private func react(_ event: BubbleEvent, _ kind: ReactionKind) {
+        Task {
+            if let e = await model.reactions.toggle(api: session.api, target: event.id, kind: kind, me: session.userID) { model.error = e }
+        }
+    }
+
+    private func addToCalendar(_ event: BubbleEvent) {
+        if BubbleEvent.calendarExportBlocked {
+            model.error = String(localized: "Allow calendar access in Settings to add events.",
+                                 comment: "Error when calendar access is restricted")
+        } else {
+            exporting = event
+        }
+    }
 
     private func reload() async {
         guard let id = session.currentBubble?.id else { return }
@@ -107,6 +139,9 @@ struct EventCard: View {
     var event: BubbleEvent
     var myID: UUID?
     var onRSVP: () -> Void
+    var onAddToCalendar: (() -> Void)? = nil
+    var reactions: [ReactionSummary] = []
+    var onReact: ((ReactionKind) -> Void)? = nil
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
     @State private var confirmDelete = false
@@ -188,6 +223,15 @@ struct EventCard: View {
                     HStack(alignment: .top) {
                         Text(verbatim: event.title).font(.rounded(.headline))
                         Spacer()
+                        if let onAddToCalendar {
+                            Button(action: onAddToCalendar) {
+                                Image(systemName: "calendar.badge.plus").font(.body.weight(.semibold))
+                                    .foregroundStyle(Feature.events.hue.text).frame(width: 32, height: 28)
+                            }
+                            .buttonStyle(.squish)
+                            .accessibilityLabel(Text("Add to calendar", comment: "Button adding an event to the phone's calendar"))
+                            .accessibilityIdentifier("add-to-calendar-\(event.title)")
+                        }
                         if onEdit != nil {
                             Menu {
                                 Button("Edit", systemImage: "pencil") { onEdit?() }
@@ -225,6 +269,9 @@ struct EventCard: View {
                     }
                     rsvpButton
                 }
+            }
+            if let onReact {
+                ReactionBar(summaries: reactions, hue: hue, onToggle: onReact)
             }
         }
         .card()

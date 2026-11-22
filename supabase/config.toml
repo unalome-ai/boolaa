@@ -418,6 +418,9 @@ verify_jwt = false  # called by the reports trigger with a shared secret header
 [functions.push-dispatch]
 verify_jwt = false  # called by pg_net (triggers, pg_cron) with a shared secret header
 
+[functions.link-preview]
+verify_jwt = false  # called by pg_net from the shared_links trigger; claims the link itself
+
 [analytics]
 enabled = true
 port = 55327

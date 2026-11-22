@@ -64,6 +64,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Boolaa adds the events you pick to your calendar.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Boolaa adds the events you pick to your calendar.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Boolaa uses your photos for avatars, food posts and marketplace items.</string>
 	<key>SupabaseAnonKey</key>

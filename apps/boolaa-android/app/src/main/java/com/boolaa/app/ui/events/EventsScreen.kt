@@ -1,5 +1,11 @@
 package com.boolaa.app.ui.events
 
+import com.boolaa.app.ui.shell.pushHighlight
+import com.boolaa.app.ui.shell.PushHighlightScroll
+import android.content.ActivityNotFoundException
+import android.widget.Toast
+import com.boolaa.app.core.CalendarExport
+
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
@@ -125,6 +131,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.boolaa.app.ui.components.AddButton
+import com.boolaa.app.ui.components.longPressToReact
 import com.boolaa.app.ui.components.Avatar
 import com.boolaa.app.ui.components.BoolaaChip
 import com.boolaa.app.ui.components.BoolaaIcons
@@ -176,6 +183,7 @@ import com.boolaa.app.ui.theme.Type
 class EventsViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
     private val _events = MutableStateFlow<List<BubbleEvent>?>(null)
     val events = _events.asStateFlow()
+    val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.EVENT, _events) { it.id }
 
     init {
         load()
@@ -183,10 +191,15 @@ class EventsViewModel(private val container: AppContainer, private val bubbleId:
     }
 
     /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
-    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.events, bubbleId, _events) { load().join() }
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.events, bubbleId, _events, reactions) { load().join() }
+
+    fun react(eventId: String, kind: com.boolaa.app.model.ReactionKind) =
+        toggleReaction(reactions, eventId, kind, container.session.state.value.userId)
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
-        _events.value = container.api.events(bubbleId).sortedBy { it.datetime }
+        val loaded = container.api.events(bubbleId).sortedBy { it.datetime }
+        _events.value = loaded
+        reactions.refresh(loaded.map { it.id })
     }.also { it.invokeOnCompletion { if (_events.value == null) _events.value = emptyList() } }
 
     fun save(existing: BubbleEvent?, input: EventInput, userId: String, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
@@ -216,6 +229,8 @@ fun EventsScreen() {
     LaunchedEffect(vm) { vm.keepLive() }
     val events by vm.events.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
+    val reactionsByEvent = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     var editing by remember { mutableStateOf<BubbleEvent?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<BubbleEvent?>(null) }
@@ -223,6 +238,7 @@ fun EventsScreen() {
     val someone = stringResource(R.string.someone)
     val hue = Feature.EVENTS.hue
     val listState = rememberLazyListState()
+    PushHighlightScroll(listState, loaded = events != null)
     val confetti = remember { ConfettiState() }
 
     Box(Modifier.fillMaxSize()) {
@@ -253,7 +269,8 @@ fun EventsScreen() {
                 }
                 itemsIndexed(mine, key = { _, e -> e.id }) { index, e ->
                     EventCard(e, me, onRsvp = { vm.toggleRsvp(e) }, onEdit = { editing = e }, onDelete = { deleting = e }, confetti = confetti,
-                        modifier = Modifier.scrollFade(listState, e.id).popIn(index + 1))
+                        reactions = reactionsByEvent[e.id].orEmpty(), onReact = { vm.react(e.id, it) },
+                        modifier = Modifier.pushHighlight(e.id).scrollFade(listState, e.id).popIn(index + 1))
                 }
                 item(key = "bubble-header") { SectionHeader(stringResource(R.string.bubble_events), others.size, hue = hue) }
                 if (others.isEmpty()) item(key = "bubble-empty") {
@@ -261,7 +278,8 @@ fun EventsScreen() {
                 }
                 itemsIndexed(others, key = { _, e -> e.id }) { index, e ->
                     EventCard(e, me, onRsvp = { vm.toggleRsvp(e) }, onEdit = null, onDelete = null, confetti = confetti,
-                        modifier = Modifier.scrollFade(listState, e.id).popIn(mine.size + index + 2),
+                        reactions = reactionsByEvent[e.id].orEmpty(), onReact = { vm.react(e.id, it) },
+                        modifier = Modifier.pushHighlight(e.id).scrollFade(listState, e.id).popIn(mine.size + index + 2),
                         onReport = {
                             reporting = ReportTarget(ReportTargetType.EVENT, e.id, e.creatorId, e.creator?.name?.takeIf { it.isNotBlank() } ?: someone)
                         })
@@ -315,15 +333,19 @@ private fun DateTile(instant: Instant, locale: java.util.Locale) {
 fun EventCard(
     event: BubbleEvent, me: String, onRsvp: () -> Unit, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?,
     modifier: Modifier = Modifier, confetti: ConfettiState? = null, onReport: (() -> Unit)? = null,
+    reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val c = BoolaaTheme.colors
     val going = me in event.rsvpList
+    val picker = com.boolaa.app.ui.components.rememberReactionPicker()
     Column(modifier.boolaaCard().testTag("event-${event.id}"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.Top) {
             // The date is already in the time row below, so the tile is decoration for screen readers.
             DateTile(event.datetime, locale)
-            Column(Modifier.weight(1f).padding(start = 14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            // Long press on the details opens the reaction picker.
+            Column(Modifier.weight(1f).then(if (onReact != null) Modifier.longPressToReact(picker) else Modifier).padding(start = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(event.title, style = Type.headline, color = c.textPrimary)
                 IconLine(BoolaaIcons.Time, Formats.dateTime(event.datetime, locale))
                 event.location?.takeIf { it.isNotBlank() }?.let { IconLine(BoolaaIcons.Place, it) }
@@ -344,9 +366,33 @@ fun EventCard(
                     Text(pluralStringResource(R.plurals.going_count, it, it), style = Type.caption, color = c.textSecondary, maxLines = 1)
                 }
             }
-            RsvpPill(going, onRsvp, confetti, Modifier.testTag("rsvp-${event.id}"))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                AddToCalendarButton(event)
+                RsvpPill(going, onRsvp, confetti, Modifier.testTag("rsvp-${event.id}"))
+            }
+        }
+        if (onReact != null) {
+            com.boolaa.app.ui.components.ReactionBar(reactions, onReact, hue = Feature.EVENTS.hue, picker = picker, tag = "reactions-${event.id}")
         }
     }
+}
+
+/** Opens the calendar app's prefilled "new event" screen (no permission; the user confirms there). */
+@Composable
+private fun AddToCalendarButton(event: BubbleEvent) {
+    val context = LocalContext.current
+    val missing = stringResource(R.string.events_no_calendar_app)
+    CircleIconButton(
+        BoolaaIcons.AddToCalendar, stringResource(R.string.events_add_to_calendar),
+        onClick = {
+            try {
+                context.startActivity(CalendarExport.intent(CalendarExport.draft(event)))
+            } catch (_: ActivityNotFoundException) {
+                Toast.makeText(context, missing, Toast.LENGTH_SHORT).show()
+            }
+        },
+        hue = Feature.EVENTS.hue, modifier = Modifier.testTag("calendar-${event.id}"),
+    )
 }
 
 /**

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push notifications (docs/push-notifications.md §9): settings, per-bubble mute and the Android channel names. -->
+<resources>
+    <string name="notifications_title">Notificări</string>
+    <string name="notifications_enabled">Permite notificările</string>
+    <string name="notifications_chat">Mesaje din chat</string>
+    <string name="notifications_join_requests">Cereri de alăturare</string>
+    <string name="notifications_approvals">Cererea mea a fost aprobată</string>
+    <string name="notifications_new_events">Evenimente noi</string>
+    <string name="notifications_event_reminders">Mementouri pentru evenimente (cu o oră înainte)</string>
+    <string name="notifications_food">Cercul culinar</string>
+    <string name="notifications_market">Piață</string>
+    <string name="notifications_preview">Arată previzualizarea mesajelor</string>
+    <string name="notifications_preview_hint">Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text.</string>
+    <string name="notifications_blocked">Notificările pentru Boolaa sunt oprite din setări.</string>
+    <string name="notifications_ask">Activează notificările</string>
+    <string name="notifications_ask_hint">Primește un semn când bulele tale vorbesc cu tine.</string>
+    <string name="notifications_open_settings">Deschide setările</string>
+    <string name="notifications_not_now">Nu acum</string>
+    <string name="notifications_unavailable">Notificările nu sunt disponibile pe acest dispozitiv.</string>
+    <string name="mute_title">Pune bula pe silențios</string>
+    <string name="mute_1h">O oră</string>
+    <string name="mute_8h">8 ore</string>
+    <string name="mute_1w">O săptămână</string>
+    <string name="mute_forever">Până o reactivez</string>
+    <string name="mute_until">Pe silențios până %1$s</string>
+    <string name="mute_muted_forever">Pe silențios până o reactivezi</string>
+    <string name="mute_unmute">Reactivează notificările</string>
+    <string name="push_channel_chat">Chat</string>
+    <string name="push_channel_bubble">Activitate în bule</string>
+    <string name="push_channel_events">Evenimente</string>
+</resources>

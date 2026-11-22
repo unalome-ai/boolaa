@@ -11,6 +11,9 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { cx } from "@/lib/utils";
+import { useReactions } from "@/lib/reactions";
+import { ReactionBar } from "@/components/reactions";
+import type { BoolaaClient } from "@/lib/supabase/client";
 
 function hostOf(url: string) {
   try {
@@ -47,7 +50,19 @@ export default function LinksPage() {
   }, [load]);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
-  useLiveFeed<SharedLink>({ supabase, table: "shared_links", bubbleId: bubble.id, select: `*, user:users!user_id(${AUTHOR})`, rows: links, setRows: setLinks, compare: byCreatedDesc, reload: load });
+  // The server fills in the preview later; it arrives as an UPDATE of the row (merged with all its columns).
+  const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "shared_link", targetIds: links?.map((l) => l.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
+  useLiveFeed<SharedLink>({
+    supabase,
+    table: "shared_links",
+    bubbleId: bubble.id,
+    select: `*, user:users!user_id(${AUTHOR})`,
+    rows: links,
+    setRows: setLinks,
+    compare: byCreatedDesc,
+    reload: () => Promise.all([load(), reactions.reload()]),
+    extend: reactions.bind,
+  });
 
   const tags = useMemo(() => [...new Set((links ?? []).flatMap((l) => l.tags))].sort(), [links]);
   const shown = (links ?? []).filter((l) => (!tag || l.tags.includes(tag)) && !blocked.has(l.user_id));
@@ -96,7 +111,8 @@ export default function LinksPage() {
       ) : (
         <ul className="space-y-3">
           {shown.map((l, i) => (
-            <li key={l.id} className="card anim-rise flex items-center gap-3 p-4" style={{ "--i": i } as CSSProperties} data-testid="link-card">
+            <li key={l.id} className="card anim-rise flex flex-col gap-3 p-4" style={{ "--i": i } as CSSProperties} data-testid="link-card" data-item-id={l.id} data-preview={l.preview_status}>
+              <div className="flex items-center gap-3">
               <span className="hue-sky flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-hue-grad text-onfill shadow-glow">
                 <Link2 size={20} />
               </span>
@@ -131,6 +147,9 @@ export default function LinksPage() {
                   <Trash2 size={17} />
                 </button>
               )}
+              </div>
+              <LinkPreview supabase={supabase} link={l} />
+              <ReactionBar state={reactions} targetId={l.id} className="hue-sky" />
             </li>
           ))}
         </ul>
@@ -146,6 +165,46 @@ export default function LinksPage() {
         )}
       </Modal>
     </div>
+  );
+}
+
+/**
+ * Open Graph card fetched and stored by the server (docs/boolaa-spec.md, "Link previews"). The image
+ * is our own re-encoded copy in Storage, never the third-party host, so opening the list leaks nothing.
+ */
+function LinkPreview({ supabase, link }: { supabase: BoolaaClient; link: SharedLink }) {
+  const t = useTranslations("links");
+  if (link.preview_status === "pending" || link.preview_status === "fetching") {
+    return (
+      <p className="text-xs text-muted" data-testid="link-preview-loading">
+        {t("previewLoading")}
+      </p>
+    );
+  }
+  if (link.preview_status !== "ready" || !(link.preview_title || link.preview_description || link.preview_image_path)) return null;
+  const image = link.preview_image_path ? supabase.storage.from("link.previews").getPublicUrl(link.preview_image_path).data.publicUrl : null;
+  const host = hostOf(link.url);
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-testid="link-preview"
+      className="hue-sky lift block overflow-hidden rounded-field border border-line bg-field/60 hover:border-[var(--h)]"
+    >
+      {image && (
+        /* eslint-disable-next-line @next/next/no-img-element -- public Storage URL of our own copy */
+        <img src={image} alt="" loading="lazy" data-testid="link-preview-image" className="aspect-[1.91/1] w-full object-cover" />
+      )}
+      <div className="space-y-0.5 p-3">
+        {link.preview_title && <p className="line-clamp-2 font-bold" data-testid="link-preview-title">{link.preview_title}</p>}
+        {link.preview_description && <p className="line-clamp-2 text-sm text-muted">{link.preview_description}</p>}
+        <p className="truncate text-xs font-bold text-hue-ink" data-testid="link-preview-domain">
+          {host}
+          {link.preview_site_name && link.preview_site_name.toLowerCase() !== host.toLowerCase() ? ` · ${link.preview_site_name}` : ""}
+        </p>
+      </div>
+    </a>
   );
 }
 

@@ -208,7 +208,8 @@
     "goingCount": "{count, plural, =0 {Nu participă nimeni deocamdată} one {# persoană participă} few {# persoane participă} other {# de persoane participă}}",
     "dateTime": "Data și ora",
     "location": "Locație",
-    "create": "Creează evenimentul"
+    "create": "Creează evenimentul",
+    "addToCalendar": "Adaugă în calendar"
   },
   "food": {
     "share": "Împarte mâncare",
@@ -237,7 +238,15 @@
     "deleteItem": "Șterge obiectul",
     "emptyTitle": "Nimic aici deocamdată",
     "emptyHint": "Dă sau schimbă lucruri cu bula ta.",
-    "confirmDelete": "Ștergi „{title}”?"
+    "confirmDelete": "Ștergi „{title}”?",
+    "availability": "Disponibilitate",
+    "available": "Disponibil",
+    "reserved": "Rezervat",
+    "taken": "Luat",
+    "hideTaken": "Ascunde ce e luat",
+    "markAs": "Marchează ca",
+    "askInChat": "Întreabă în chat",
+    "askDraft": "@{name}, mai e disponibil „{title}”?"
   },
   "links": {
     "filter": "Filtrează după etichetă",
@@ -250,7 +259,8 @@
     "confirmDelete": "Ștergi „{title}”?",
     "url": "URL",
     "tags": "Etichete (separate prin virgulă)",
-    "tagsPlaceholder": "mâncare, ieftin"
+    "tagsPlaceholder": "mâncare, ieftin",
+    "previewLoading": "Se încarcă previzualizarea…"
   },
   "settings": {
     "bubble": "Bulă",
@@ -512,5 +522,49 @@
     "invalidBody": "Linkul poate fi vechi sau codul a fost schimbat. Cere unui membru unul nou.",
     "requestSent": "Cerere trimisă",
     "getApp": "Descarcă aplicația"
+  },
+  "notifications": {
+    "title": "Notificări",
+    "enabled": "Permite notificările",
+    "chat": "Mesaje din chat",
+    "joinRequests": "Cereri de alăturare",
+    "approvals": "Cererea mea a fost aprobată",
+    "newEvents": "Evenimente noi",
+    "eventReminders": "Mementouri pentru evenimente (cu o oră înainte)",
+    "food": "Cercul culinar",
+    "market": "Piață",
+    "preview": "Arată previzualizarea mesajelor",
+    "previewHint": "Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text.",
+    "blocked": "Notificările pentru Boolaa sunt oprite din setări.",
+    "blockedHint": "Ca să le reactivezi, apasă pe pictograma din stânga barei de adrese, permite notificările pentru acest site, apoi reîncarcă pagina.",
+    "ask": "Activează notificările",
+    "askHint": "Primește un semn când bulele tale vorbesc cu tine.",
+    "on": "Activate în acest browser",
+    "turnOff": "Dezactivează în acest browser",
+    "unsupported": "Acest browser nu poate primi notificări. Pe iPhone și iPad, adaugă mai întâi Boolaa pe ecranul principal.",
+    "allBubbles": "Aceste setări se aplică tuturor bulelor tale."
+  },
+  "mute": {
+    "title": "Pune bula pe silențios",
+    "hint": "Nicio notificare din această bulă, nici mementourile.",
+    "1h": "O oră",
+    "8h": "8 ore",
+    "1w": "O săptămână",
+    "forever": "Până o reactivez",
+    "until": "Pe silențios până {date}",
+    "mutedForever": "Pe silențios până o reactivezi",
+    "unmute": "Reactivează notificările"
+  },
+  "reactions": {
+    "like": "Îmi place",
+    "love": "Ador",
+    "laugh": "Haha",
+    "wow": "Uau",
+    "sad": "Trist",
+    "thanks": "Mulțumesc",
+    "addReaction": "Adaugă o reacție",
+    "react": "Reacționează",
+    "chip": "{reaction}: {count, plural, one {# reacție} few {# reacții} other {# de reacții}}",
+    "reactedByYou": "Ai reacționat"
   }
 }

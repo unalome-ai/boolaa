@@ -1,5 +1,7 @@
 "use client";
 
+import { useReactions, type Reactions } from "@/lib/reactions";
+import { ReactionBar } from "@/components/reactions";
 import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { CalendarPlus, CircleCheck, CirclePlus, Clock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { Confetti } from "@/components/confetti";
@@ -12,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { cx, toLocalInput } from "@/lib/utils";
+import { downloadIcs } from "@/lib/ics";
 
 export default function EventsPage() {
   const { supabase, userId, blocked } = useBoolaa();
@@ -40,7 +43,18 @@ export default function EventsPage() {
   }, [load]);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
-  useLiveFeed<BoolaaEvent>({ supabase, table: "events", bubbleId: bubble.id, select: `*, creator:users!creator_id(${AUTHOR})`, rows: events, setRows: setEvents, compare: byDatetimeAsc, reload: load });
+  const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "event", targetIds: events?.map((e) => e.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
+  useLiveFeed<BoolaaEvent>({
+    supabase,
+    table: "events",
+    bubbleId: bubble.id,
+    select: `*, creator:users!creator_id(${AUTHOR})`,
+    rows: events,
+    setRows: setEvents,
+    compare: byDatetimeAsc,
+    reload: () => Promise.all([load(), reactions.reload()]),
+    extend: reactions.bind,
+  });
 
   /** Returns whether the user is going once the server has confirmed. */
   async function toggleRsvp(ev: BoolaaEvent): Promise<boolean | null> {
@@ -79,6 +93,7 @@ export default function EventsPage() {
             onRsvp={() => toggleRsvp(ev)}
             onEdit={() => setEditing(ev)}
             onDelete={() => remove(ev)}
+            reactions={reactions}
           />
         ))}
       </ul>
@@ -135,6 +150,7 @@ function EventCard({
   onRsvp,
   onEdit,
   onDelete,
+  reactions,
 }: {
   ev: BoolaaEvent;
   index: number;
@@ -144,6 +160,7 @@ function EventCard({
   onRsvp: () => Promise<boolean | null>;
   onEdit: () => void;
   onDelete: () => void;
+  reactions: Reactions;
 }) {
   const t = useTranslations("events");
   const tc = useTranslations("common");
@@ -151,7 +168,7 @@ function EventCard({
   const past = new Date(ev.datetime).getTime() < now;
   const [burst, setBurst] = useState(0);
   return (
-    <li className={cx("card anim-rise flex flex-col gap-3 p-4", past && "opacity-60")} style={{ "--i": index } as CSSProperties} data-testid="event-card">
+    <li className={cx("card anim-rise flex flex-col gap-3 p-4", past && "opacity-60")} style={{ "--i": index } as CSSProperties} data-testid="event-card" data-item-id={ev.id}>
       <div className="flex gap-3.5">
         {/* Date tile, tilted (6.3) */}
         <div className="hue-coral flex h-16 w-14 shrink-0 -rotate-4 flex-col overflow-hidden rounded-field bg-hue-wash shadow-soft">
@@ -188,6 +205,16 @@ function EventCard({
           <span className="truncate">{ev.creator?.name ?? tc("someone")}</span>
         </span>
         <span className="ml-auto flex items-center gap-3">
+          <button
+            type="button"
+            aria-label={t("addToCalendar")}
+            title={t("addToCalendar")}
+            data-testid="add-to-calendar"
+            onClick={() => downloadIcs({ id: ev.id, title: ev.title, start: ev.datetime, description: ev.description, location: ev.location })}
+            className="press-round hue-coral h-9 w-9 rounded-full text-muted hover:bg-hue-wash hover:text-hue-ink"
+          >
+            <CalendarPlus size={17} strokeWidth={2.4} className="mx-auto" />
+          </button>
           <span key={ev.rsvp_list.length} className="anim-fade text-sm tabular-nums text-muted" data-testid="rsvp-count" data-count={ev.rsvp_list.length}>
             {t("goingCount", { count: ev.rsvp_list.length })}
           </span>
@@ -211,6 +238,7 @@ function EventCard({
           </button>
         </span>
       </div>
+      <ReactionBar state={reactions} targetId={ev.id} className="hue-coral" />
     </li>
   );
 }

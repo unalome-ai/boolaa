@@ -46,6 +46,9 @@ targets:
         com.apple.developer.applesignin: [Default]
         # Universal links for invite links https://boolaa.ro/join/<CODE> (AASA served by the web app).
         com.apple.developer.associated-domains: ["applinks:boolaa.ro"]
+        # Push Notifications capability (docs/push-notifications.md §8). Archive/export with a distribution
+        # profile turns this into `production`; Debug builds from Xcode use the APNs sandbox.
+        aps-environment: development
     info:
       path: Boolaa/Resources/Info.plist
       properties:
@@ -75,6 +78,9 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         NSPhotoLibraryUsageDescription: Boolaa uses your photos for avatars, food posts and marketplace items.
+        # "Add to calendar" (EKEventEditViewController): write-only on iOS 17+, legacy key for completeness.
+        NSCalendarsWriteOnlyAccessUsageDescription: Boolaa adds the events you pick to your calendar.
+        NSCalendarsUsageDescription: Boolaa adds the events you pick to your calendar.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ro.boolaa.app

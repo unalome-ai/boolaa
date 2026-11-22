@@ -56,6 +56,11 @@ fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
             runCatching { session.signIn(login, debugHooks.password) }
         }
     }
+    // A tapped "you're in" push while still on the waiting screen: reload, so the new bubble moves the user to Main.
+    val pushOpen by LocalAppContainer.current.push.pendingOpen.collectAsStateWithLifecycle()
+    LaunchedEffect(pushOpen, state.route) {
+        if (pushOpen != null && state.route == AppRoute.ONBOARDING) session.reload()
+    }
     LaunchedEffect(state.bubbles, debugHooks.bubble) {
         val wanted = debugHooks.bubble ?: return@LaunchedEffect
         state.bubbles.firstOrNull { it.name == wanted }?.let { if (state.storedBubbleId != it.id) session.selectBubble(it.id) }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification small icon: the launcher's three bubbles, white on transparent (status bar tints it). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="72" android:viewportHeight="72">
+    <group android:translateX="-18" android:translateY="-18">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M48,56m-16,0a16,16 0,1 1,32 0a16,16 0,1 1,-32 0" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M68,44m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M66,70m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0" />
+    </group>
+</vector>

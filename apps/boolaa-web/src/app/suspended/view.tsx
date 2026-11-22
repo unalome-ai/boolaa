@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react";
 import { BubbleLogo } from "@/components/orb";
 import { PageLoader } from "@/components/ui";
 import { getSupabase } from "@/lib/supabase/client";
+import { unregisterPush } from "@/lib/push";
 import { hardNavigate, signOutTarget } from "@/lib/utils";
 
 type State =
@@ -43,6 +44,7 @@ export default function SuspendedPage() {
   const signOut = async () => {
     signOutTarget.leaving = true;
     signOutTarget.path = "/login";
+    await unregisterPush(getSupabase()); // works for suspended accounts too
     await getSupabase().auth.signOut({ scope: "local" });
     hardNavigate("/login");
   };

@@ -116,6 +116,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.boolaa.app.ui.components.AddButton
+import com.boolaa.app.ui.components.longPressToReact
 import com.boolaa.app.ui.components.Avatar
 import com.boolaa.app.ui.components.BoolaaChip
 import com.boolaa.app.ui.components.BoolaaIcons
@@ -167,6 +168,7 @@ import com.boolaa.app.ui.theme.Type
 class LinksViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
     private val _links = MutableStateFlow<List<SharedLink>?>(null)
     val links = _links.asStateFlow()
+    val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.SHARED_LINK, _links) { it.id }
 
     init {
         load()
@@ -174,10 +176,17 @@ class LinksViewModel(private val container: AppContainer, private val bubbleId: 
     }
 
     /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
-    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.links, bubbleId, _links) { load().join() }
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.links, bubbleId, _links, reactions) { load().join() }
+
+    fun react(linkId: String, kind: com.boolaa.app.model.ReactionKind) =
+        toggleReaction(reactions, linkId, kind, container.session.state.value.userId)
+
+    fun previewImageUrl(path: String?): String? = container.api.linkPreviewImageUrl(path)
 
     fun load() = launchCatching(trackBusy = false) {
-        _links.value = container.api.links(bubbleId)
+        val loaded = container.api.links(bubbleId)
+        _links.value = loaded
+        reactions.refresh(loaded.map { it.id })
     }.also { it.invokeOnCompletion { if (_links.value == null) _links.value = emptyList() } }
 
     fun add(url: String, title: String, tags: String, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
@@ -203,6 +212,8 @@ fun LinksScreen(onBack: () -> Unit) {
     LaunchedEffect(vm) { vm.keepLive() }
     val links by vm.links.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
+    val reactionsByLink = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     val uriHandler = LocalUriHandler.current
     var url by rememberSaveable { mutableStateOf("") }
     var title by rememberSaveable { mutableStateOf("") }
@@ -252,10 +263,14 @@ fun LinksScreen(onBack: () -> Unit) {
                 }
                 else -> itemsIndexed(list.filter { tagFilter == null || tagFilter in it.tags }, key = { _, it -> it.id }) { index, link ->
                     val open = { runCatching { uriHandler.openUri(link.url) }; Unit }
-                    Row(
+                    val picker = com.boolaa.app.ui.components.rememberReactionPicker()
+                    Column(
                         Modifier.animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()).popIn(index + 1)
-                            .boolaaCard(0.dp).clickableRipple(onClick = open).padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 8.dp)
-                            .testTag("link-${link.id}"),
+                            .boolaaCard(0.dp).testTag("link-${link.id}"),
+                    ) {
+                    // Tap opens the link; long press opens the reaction picker.
+                    Row(
+                        Modifier.longPressToReact(picker, onClick = open).padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         FeatureBadge(BoolaaIcons.Link, hue)
@@ -276,6 +291,10 @@ fun LinksScreen(onBack: () -> Unit) {
                             reporting = ReportTarget(ReportTargetType.SHARED_LINK, link.id, link.userId, link.user?.name?.takeIf { it.isNotBlank() } ?: someone)
                         })
                     }
+                    LinkPreview(link, vm.previewImageUrl(link.previewImagePath), open, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
+                    com.boolaa.app.ui.components.ReactionBar(reactionsByLink[link.id].orEmpty(), { vm.react(link.id, it) },
+                        Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp), hue = hue, picker = picker, tag = "reactions-${link.id}")
+                    }
                 }
             }
         }
@@ -286,4 +305,40 @@ fun LinksScreen(onBack: () -> Unit) {
             onConfirm = { vm.delete(l) }, onDismiss = { deleting = null })
     }
     ErrorDialogFor(vm)
+}
+
+/**
+ * The server-made Open Graph card (docs/boolaa-spec.md "Link previews"): image (our Storage copy, decorative for screen
+ * readers), title, description, domain and site name; "Loading preview…" while pending; nothing for none/failed.
+ */
+@Composable
+fun LinkPreview(link: SharedLink, imageUrl: String?, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+    val c = BoolaaTheme.colors
+    when {
+        link.previewReady -> {
+            val title = link.previewTitle?.takeIf { it.isNotBlank() }
+            val description = link.previewDescription?.takeIf { it.isNotBlank() }
+            val source = listOfNotNull(link.domain, link.previewSiteName?.takeIf { it.isNotBlank() && !it.equals(link.domain, ignoreCase = true) })
+                .joinToString(" · ")
+            val shape = RoundedCornerShape(Radius.field)
+            Column(
+                modifier.fillMaxWidth().clip(shape).background(c.field).border(1.dp, c.hairline, shape)
+                    .clickableRipple(onClick = onOpen).testTag("link-preview-${link.id}"),
+            ) {
+                if (imageUrl != null) {
+                    RemoteImage(imageUrl, Modifier.fillMaxWidth().aspectRatio(1.91f).testTag("link-preview-image-${link.id}"), contentDescription = null)
+                }
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    if (title != null) Text(title, style = Type.headline, color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (description != null) Text(description, style = Type.subheadline, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (source.isNotEmpty()) Text(source, style = Type.caption, color = Feature.LINKS.hue.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+        link.previewLoading -> Text(
+            stringResource(R.string.link_preview_loading), style = Type.caption2, color = c.textSecondary,
+            modifier = modifier.testTag("link-preview-loading-${link.id}"),
+        )
+        else -> Unit
+    }
 }

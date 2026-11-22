@@ -1,5 +1,6 @@
 package com.boolaa.app.ui.home
 
+import com.boolaa.app.ui.settings.NotificationsAskCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -152,6 +153,8 @@ fun HomeScreen(navigator: ShellNavigator) {
             item(key = "hero-${bubble.id}") {
                 BubbleHero(bubble, firstName, onLinks = navigator::openLinks, modifier = Modifier.scrollFade(listState, "hero-${bubble.id}").popIn(0))
             }
+            // Push: the permission is asked from this card's button, never at launch.
+            item(key = "notifications-ask") { NotificationsAskCard() }
             val list = items
             when {
                 list == null -> item(key = "loading") { SkeletonList(Modifier.padding(top = 8.dp)) }

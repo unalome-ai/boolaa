@@ -1,5 +1,8 @@
 package com.boolaa.app.ui.market
 
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import com.boolaa.app.ui.shell.pushHighlight
+import com.boolaa.app.ui.shell.PushHighlightScroll
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -10,6 +13,7 @@ import com.boolaa.app.core.FeedSpecs
 import com.boolaa.app.core.keepFeedLive
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.MarketInput
+import com.boolaa.app.model.MarketAvailability
 import com.boolaa.app.model.MarketItem
 import com.boolaa.app.model.MarketStatus
 import com.boolaa.app.model.ReportTarget
@@ -121,6 +125,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.boolaa.app.ui.components.AddButton
+import com.boolaa.app.ui.components.longPressToReact
 import com.boolaa.app.ui.components.Avatar
 import com.boolaa.app.ui.components.BoolaaChip
 import com.boolaa.app.ui.components.BoolaaIcons
@@ -138,6 +143,7 @@ import com.boolaa.app.ui.components.FitText
 import com.boolaa.app.ui.components.Haptics
 import com.boolaa.app.ui.components.HintCard
 import com.boolaa.app.ui.components.ItemMenu
+import com.boolaa.app.ui.components.MenuExtra
 import com.boolaa.app.ui.components.MorphIcon
 import com.boolaa.app.ui.components.PhotoField
 import com.boolaa.app.ui.components.PrimaryButton
@@ -169,17 +175,10 @@ import com.boolaa.app.ui.theme.Motion
 import com.boolaa.app.ui.theme.Radius
 import com.boolaa.app.ui.theme.Type
 
-enum class MarketFilter { ALL, FREE, TRADE;
-    fun matches(item: MarketItem) = when (this) {
-        ALL -> true
-        FREE -> item.status == MarketStatus.FREE
-        TRADE -> item.status == MarketStatus.TRADE
-    }
-}
-
 class MarketViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
     private val _items = MutableStateFlow<List<MarketItem>?>(null)
     val items = _items.asStateFlow()
+    val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.MARKET_ITEM, _items) { it.id }
 
     init {
         load()
@@ -187,20 +186,31 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
     }
 
     /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
-    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.market, bubbleId, _items) { load().join() }
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.market, bubbleId, _items, reactions) { load().join() }
+
+    fun react(itemId: String, kind: com.boolaa.app.model.ReactionKind) =
+        toggleReaction(reactions, itemId, kind, container.session.state.value.userId)
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
-        _items.value = container.api.marketItems(bubbleId)
+        val loaded = container.api.marketItems(bubbleId).sortedWith(MarketRules.order)
+        _items.value = loaded
+        reactions.refresh(loaded.map { it.id })
     }.also { it.invokeOnCompletion { if (_items.value == null) _items.value = emptyList() } }
 
     fun save(existing: MarketItem?, picked: Uri?, title: String, description: String, status: MarketStatus,
-             resolver: ContentResolver, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
+             availability: MarketAvailability, resolver: ContentResolver, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
         val image = picked?.let { uploadPicked(container, resolver, it, ImageBucket.MARKET) } ?: existing?.image ?: return@launchCatching
-        val input = MarketInput(image, title.trim(), description.trim().ifEmpty { null }, status)
+        val input = MarketInput(image, title.trim(), description.trim().ifEmpty { null }, status, availability)
         val userId = container.session.state.value.userId ?: return@launchCatching
         if (existing == null) container.api.createMarketItem(bubbleId, userId, input) else container.api.updateMarketItem(existing.id, input)
         if (existing != null && existing.image != image) container.api.deleteImage(existing.image, ImageBucket.MARKET, userId)
         load()
+    }
+
+    /** Owner only. Applied locally at once; everyone else gets the UPDATE live. */
+    fun setAvailability(item: MarketItem, availability: MarketAvailability) = launchCatching {
+        container.api.setMarketAvailability(item.id, availability)
+        _items.update { list -> list?.map { if (it.id == item.id) it.copy(availability = availability) else it }?.sortedWith(MarketRules.order) }
     }
 
     fun delete(item: MarketItem) = launchCatching {
@@ -213,10 +223,17 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
 @Composable
 fun statusLabel(status: MarketStatus) = stringResource(if (status == MarketStatus.FREE) R.string.status_free else R.string.status_trade)
 
+@Composable
+fun availabilityLabel(a: MarketAvailability) = stringResource(when (a) {
+    MarketAvailability.AVAILABLE -> R.string.market_available
+    MarketAvailability.RESERVED -> R.string.market_reserved
+    MarketAvailability.TAKEN -> R.string.market_taken
+})
+
 /** Grid with a Free/Trade badge and All/Free/Trade filter chips (spec §9). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MarketplaceScreen() {
+fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val bubble = state.currentBubble ?: return
@@ -226,24 +243,30 @@ fun MarketplaceScreen() {
     val items by vm.items.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     var filter by rememberSaveable { mutableStateOf(MarketFilter.ALL) }
+    var hideTaken by remember { mutableStateOf(false) }
+    val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
+    val reactionsByItem = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     var editing by remember { mutableStateOf<MarketItem?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<MarketItem?>(null) }
     var reporting by remember { mutableStateOf<ReportTarget?>(null) }
     val someone = stringResource(R.string.someone)
     val hue = Feature.MARKET.hue
+    val gridState = rememberLazyGridState()
+    PushHighlightScroll(gridState, loaded = items != null)
 
     BoolaaRefreshBox(isRefreshing = busy && items != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("market-screen")) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
+            state = gridState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = dockClearance()),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
             val list = items
-            val visible = list.orEmpty().filter(filter::matches)
+            val visible = MarketRules.visible(list.orEmpty(), filter, hideTaken)
             item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     FlowRow(
@@ -260,6 +283,8 @@ fun MarketplaceScreen() {
                                 BoolaaChip(label, active = filter == f, onClick = { filter = f }, hue = hue, modifier = Modifier.testTag("filter-${f.name.lowercase()}"))
                             }
                         }
+                        BoolaaChip(stringResource(R.string.market_hide_taken), active = hideTaken, onClick = { hideTaken = !hideTaken }, hue = hue,
+                            modifier = Modifier.testTag("filter-hide-taken"))
                         AddButton(stringResource(R.string.new_item), onClick = { creating = true }, hue = hue)
                     }
                     if (list != null && visible.isNotEmpty()) {
@@ -277,17 +302,22 @@ fun MarketplaceScreen() {
                 // Filter change: tiles leaving fade out, arriving ones pop in, the rest slide to their new place.
                 else -> gridItemsIndexed(visible, key = { _, it -> it.id }) { index, item ->
                     val mine = item.ownerId == me
+                    val ownerName = item.owner?.name?.takeIf { it.isNotBlank() } ?: someone
+                    val askDraft = stringResource(R.string.market_ask_draft, ownerName, item.title)
                     MarketCard(item, if (mine) ({ editing = item }) else null, if (mine) ({ deleting = item }) else null,
-                        if (mine) null else ({ reporting = ReportTarget(ReportTargetType.MARKET_ITEM, item.id, item.ownerId, item.owner?.name?.takeIf { it.isNotBlank() } ?: someone) }),
-                        modifier = Modifier.animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()).popIn(index))
+                        if (mine) null else ({ reporting = ReportTarget(ReportTargetType.MARKET_ITEM, item.id, item.ownerId, ownerName) }),
+                        onMark = if (mine) ({ a -> vm.setAvailability(item, a) }) else null,
+                        onAsk = if (MarketRules.canAskOwner(item, me)) ({ onAskInChat(askDraft) }) else null,
+                        reactions = reactionsByItem[item.id].orEmpty(), onReact = { vm.react(item.id, it) },
+                        modifier = Modifier.pushHighlight(item.id).animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()).popIn(index))
                 }
             }
         }
     }
     if (creating || editing != null) {
         val resolver = LocalContext.current.contentResolver
-        MarketEditor(editing, busy, onDismiss = { creating = false; editing = null }) { picked, title, description, status ->
-            vm.save(editing, picked, title, description, status, resolver) { creating = false; editing = null }
+        MarketEditor(editing, busy, onDismiss = { creating = false; editing = null }) { picked, title, description, status, availability ->
+            vm.save(editing, picked, title, description, status, availability, resolver) { creating = false; editing = null }
         }
     }
     deleting?.let { i ->
@@ -305,13 +335,42 @@ fun MarketBadge(status: MarketStatus, modifier: Modifier = Modifier) {
     StatusBadge(statusLabel(status), modifier, hue = if (free) Hue.mint else Hue.sunny, icon = if (free) BoolaaIcons.Free else BoolaaIcons.Trade)
 }
 
+/** Shown only for Reserved (sunny) and Taken (muted grey); Available needs no badge. */
 @Composable
-fun MarketCard(item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+fun AvailabilityBadge(availability: MarketAvailability, modifier: Modifier = Modifier) {
     val c = BoolaaTheme.colors
+    when (availability) {
+        MarketAvailability.AVAILABLE -> Unit
+        MarketAvailability.RESERVED -> StatusBadge(availabilityLabel(availability), modifier.testTag("availability-reserved"), hue = Hue.tangerine,
+            icon = BoolaaIcons.Reserved)
+        MarketAvailability.TAKEN -> Row(
+            modifier.clip(CircleShape).background(c.textSecondary.copy(alpha = 0.92f)).padding(horizontal = 10.dp, vertical = 4.dp)
+                .testTag("availability-taken"),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(BoolaaIcons.Taken, contentDescription = null, tint = c.card, modifier = Modifier.size(13.dp))
+            Text(availabilityLabel(availability).uppercase(), style = Type.caption2.copy(fontWeight = FontWeight.Black), color = c.card, maxLines = 1)
+        }
+    }
+}
+
+@Composable
+fun MarketCard(
+    item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null,
+    onMark: ((MarketAvailability) -> Unit)? = null, onAsk: (() -> Unit)? = null, modifier: Modifier = Modifier,
+    reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
+) {
+    val c = BoolaaTheme.colors
+    val taken = item.availability == MarketAvailability.TAKEN
+    val picker = com.boolaa.app.ui.components.rememberReactionPicker()
     Column(modifier.boolaaCard(0.dp).testTag("market-${item.id}")) {
-        Box {
-            RemoteImage(item.image, Modifier.fillMaxWidth().height(140.dp), item.title)
-            MarketBadge(item.status, Modifier.align(Alignment.TopStart).padding(8.dp))
+        // Long press on the photo opens the reaction picker.
+        Box(if (onReact != null) Modifier.longPressToReact(picker) else Modifier) {
+            RemoteImage(item.image, Modifier.fillMaxWidth().height(140.dp).graphicsLayer { alpha = if (taken) 0.45f else 1f }, item.title)
+            Column(Modifier.align(Alignment.TopStart).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                MarketBadge(item.status)
+                AvailabilityBadge(item.availability)
+            }
         }
         Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f).padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -324,24 +383,48 @@ fun MarketCard(item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?,
                     Text(displayName(item.owner), style = Type.caption2, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            if (onDelete != null || onReport != null) ItemMenu(onEdit, onDelete, onReport) else Spacer(Modifier.width(12.dp))
+            if (onDelete != null || onReport != null) {
+                ItemMenu(onEdit, onDelete, onReport, extra = onMark?.let { mark ->
+                    MarketAvailability.entries.filter { it != item.availability }.map { a ->
+                        MenuExtra(stringResource(R.string.market_mark_as, availabilityLabel(a)), "mark-${a.wire}") { mark(a) }
+                    }
+                }.orEmpty())
+            } else Spacer(Modifier.width(12.dp))
+        }
+        if (onReact != null) {
+            com.boolaa.app.ui.components.ReactionBar(reactions, onReact, Modifier.padding(start = 12.dp, end = 12.dp, bottom = 10.dp),
+                hue = Feature.MARKET.hue, picker = picker, tag = "reactions-${item.id}")
+        }
+        if (onAsk != null) {
+            Row(
+                Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 12.dp).clip(CircleShape).background(Feature.MARKET.hue.wash)
+                    .clickableRipple(onClick = onAsk).padding(vertical = 8.dp).testTag("ask-${item.id}"),
+                horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(BoolaaIcons.Chat, contentDescription = null, tint = Feature.MARKET.hue.text, modifier = Modifier.size(16.dp))
+                Text(stringResource(R.string.market_ask_in_chat), style = Type.caption.copy(fontWeight = FontWeight.Bold), color = Feature.MARKET.hue.text,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 6.dp))
+            }
         }
     }
 }
 
 @Composable
-fun MarketEditor(existing: MarketItem?, busy: Boolean, onDismiss: () -> Unit, onSave: (Uri?, String, String, MarketStatus) -> Unit) {
+fun MarketEditor(existing: MarketItem?, busy: Boolean, onDismiss: () -> Unit, onSave: (Uri?, String, String, MarketStatus, MarketAvailability) -> Unit) {
     var picked by remember { mutableStateOf<Uri?>(null) }
     var title by rememberSaveable { mutableStateOf(existing?.title.orEmpty()) }
     var description by rememberSaveable { mutableStateOf(existing?.description.orEmpty()) }
     var status by rememberSaveable { mutableStateOf(existing?.status ?: MarketStatus.FREE) }
+    var availability by rememberSaveable { mutableStateOf(existing?.availability ?: MarketAvailability.AVAILABLE) }
     val hue = Feature.MARKET.hue
     BoolaaSheet(onDismiss, stringResource(if (existing == null) R.string.new_item else R.string.edit_item), spacing = 12.dp) {
         PhotoField(existing?.image, picked, onPick = { picked = it }, hue = hue)
         BoolaaTextField(title, { title = it.take(120) }, stringResource(R.string.title))
         BoolaaTextField(description, { description = it }, stringResource(R.string.description), singleLine = false, minLines = 2)
         SegmentedPill(MarketStatus.entries.map { it to statusLabel(it) }, status, { status = it }, hue = hue)
-        PrimaryButton(stringResource(R.string.save), onClick = { onSave(picked, title, description, status) },
+        Text(stringResource(R.string.market_availability), style = Type.subheadline, color = BoolaaTheme.colors.textSecondary)
+        SegmentedPill(MarketAvailability.entries.map { it to availabilityLabel(it) }, availability, { availability = it }, hue = hue)
+        PrimaryButton(stringResource(R.string.save), onClick = { onSave(picked, title, description, status, availability) },
             enabled = title.isNotBlank() && (picked != null || existing != null), loading = busy, hue = hue, modifier = Modifier.padding(top = 4.dp))
     }
 }

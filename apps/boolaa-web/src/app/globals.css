@@ -529,3 +529,10 @@ html { scroll-behavior: smooth; }
 @keyframes shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; background-image: none; } }
 }
+
+/* Item opened from a notification (src/components/deep-link.tsx): a brief brand ring. */
+[data-highlight="true"] {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 3px;
+  transition: outline-color 0.6s ease;
+}

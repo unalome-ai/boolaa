@@ -14,6 +14,7 @@ final class ChatModel {
     private(set) var dividerID: UUID?
     var error: String?
     let images = ChatImageURLs()
+    let reactions = ReactionStore(.chatMessage)
     private var authors: [UUID: UserProfile] = [:]
     private var api: BoolaaAPI?
     private var bubbleID: UUID?
@@ -34,6 +35,17 @@ final class ChatModel {
     /// UPDATE (a deletion): replace in place.
     func update(_ message: ChatMessage) {
         messages = ChatTimeline.applyUpdate(messages, withAuthor(message))
+        if message.isDeleted { reactions.dropTarget(message.id) }
+    }
+
+    private func loadReactions(of rows: [ChatMessage]) async {
+        guard let api, let bubbleID else { return }
+        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: rows.filter { !$0.isDeleted }.map(\.id))
+    }
+
+    func react(_ message: ChatMessage, _ kind: ReactionKind, me: UUID?) async {
+        guard let api, !message.isDeleted else { return }
+        if let e = await reactions.toggle(api: api, target: message.id, kind: kind, me: me) { error = e }
     }
 
     private func signPhotos(of messages: [ChatMessage]) {
@@ -56,6 +68,7 @@ final class ChatModel {
             reachedStart = ChatTimeline.reachedStart(pageCount: rows.count)
             dividerID = ChatTimeline.dividerID(rows, lastReadAt: marker, me: me)
             signPhotos(of: rows)
+            await loadReactions(of: rows)
         } catch {
             self.error = error.userMessage
         }
@@ -74,6 +87,7 @@ final class ChatModel {
             messages = ChatTimeline.prepend(messages, olderPage: page)
             onPrepended(anchor)
             signPhotos(of: page)
+            await loadReactions(of: page)
         } catch {
             self.error = error.userMessage
         }
@@ -85,6 +99,8 @@ final class ChatModel {
         let filter = RealtimePostgresFilter.eq("bubble_id", value: bubbleID)
         let inserts = channel.postgresChange(InsertAction.self, schema: "public", table: "chat_messages", filter: filter)
         let updates = channel.postgresChange(UpdateAction.self, schema: "public", table: "chat_messages", filter: filter)
+        let reactionStreams = reactions.streams(on: channel, bubbleID: bubbleID,
+                                                holds: { [weak self] id in self?.messages.contains { $0.id == id } ?? false })
         do {
             try await channel.subscribeWithError()
             await catchUp()
@@ -95,6 +111,7 @@ final class ChatModel {
             }
         }
         await withTaskGroup(of: Void.self) { group in
+            group.addTask { await reactionStreams() }
             group.addTask { [weak self] in
                 for await action in inserts {
                     if let message = try? action.decodeRecord(as: ChatMessage.self, decoder: BoolaaJSON.decoder) {
@@ -117,6 +134,7 @@ final class ChatModel {
     private func catchUp() async {
         guard let api, let bubbleID, let rows = try? await api.chatPage(bubbleID: bubbleID, beforeID: nil) else { return }
         for row in rows { merge(row) }
+        await loadReactions(of: rows)
     }
 
     /// Sends text, a photo (`jpeg` from ImageCompression for `.chat`) or both. The photo is uploaded first;
@@ -163,6 +181,7 @@ struct ChatView: View {
     @Environment(SessionStore.self) private var session
     @Environment(SafetyStore.self) private var safety
     @Environment(UnreadStore.self) private var unread
+    @Environment(ShellRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -209,9 +228,19 @@ struct ChatView: View {
                                            endsGroup: next?.senderId != message.senderId,
                                            photoURL: model.images.url(for: message.imagePath),
                                            onPhotoTap: { url in viewing = ViewedPhoto(url: url) })
-                                    .modifier(ChatMessageMenu(message: message, isMine: isMine) { pendingDelete = message })
+                                    .reactionAccessibilityActions(enabled: !message.isDeleted) { react(message, $0) }
+                                    .modifier(ChatMessageMenu(message: message, isMine: isMine,
+                                                              onReact: { react(message, $0) }) { pendingDelete = message })
                                     .modifier(MessagePop(enabled: initialIDs.map { !$0.contains(message.id) } ?? false,
                                                          anchor: isMine ? .bottomTrailing : .bottomLeading))
+                                if !message.isDeleted {
+                                    let chips = model.reactions.summary(for: message.id, me: session.userID)
+                                    if !chips.isEmpty {
+                                        ReactionBar(summaries: chips, hue: .grape, addOnlyWithChips: true) { react(message, $0) }
+                                            .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
+                                            .padding(isMine ? .trailing : .leading, isMine ? 4 : 38)
+                                    }
+                                }
                             }
                         }
                         Color.clear.frame(height: 1).id(Self.bottomID)
@@ -258,8 +287,17 @@ struct ChatView: View {
             await markRead()
             await model.listen(client: session.api.client, bubbleID: id)
         }
-        .onAppear { visible = true; Task { await markRead() } }
+        .onAppear {
+            visible = true
+            if let pending = router.takeChatDraft() {
+                draft = draft.isEmpty ? pending : draft + " " + pending
+                composerFocused = true
+            }
+            Task { await markRead() }
+        }
         .onDisappear { visible = false }
+        // No banner for this chat's pushes while it's on screen; clear the ones already delivered.
+        .reportsVisibleChat(session.currentBubble?.id)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await markRead() } }
         }
@@ -427,6 +465,10 @@ struct ChatView: View {
         }
     }
 
+    private func react(_ message: ChatMessage, _ kind: ReactionKind) {
+        Task { await model.react(message, kind, me: session.userID) }
+    }
+
     private func delete(_ message: ChatMessage) async {
         guard let me = session.userID else { return }
         await model.delete(message, api: session.api, userID: me)
@@ -446,6 +488,7 @@ struct ChatView: View {
 private struct ChatMessageMenu: ViewModifier {
     var message: ChatMessage
     var isMine: Bool
+    var onReact: (ReactionKind) -> Void
     var onDelete: () -> Void
 
     func body(content: Content) -> some View {
@@ -453,13 +496,14 @@ private struct ChatMessageMenu: ViewModifier {
             content
         } else if isMine {
             content.contextMenu {
+                ReactSubmenu(onPick: onReact)
                 Button(role: .destructive, action: onDelete) {
                     Label("Delete message", systemImage: "trash")
                 }
                 .accessibilityIdentifier("chat-delete")
             }
         } else {
-            content.safetyContextMenu(.message(message))
+            content.safetyContextMenu(.message(message), react: onReact)
         }
     }
 }

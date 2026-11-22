@@ -6,6 +6,13 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Push (docs/push-notifications.md §8): google-services.json is never committed (git-ignored). With the file present
+// (local: copied from ~/.boolaa-signing/, CI: decoded from GOOGLE_SERVICES_JSON_B64) the plugin wires Firebase and FCM
+// works; without it the app still builds and runs, and push is simply off (PushManager sees no FirebaseApp).
+val hasGoogleServices = file("google-services.json").isFile
+if (hasGoogleServices) apply(plugin = libs.plugins.google.services.get().pluginId)
+else logger.lifecycle("boolaa: app/google-services.json not found, building without FCM (push disabled)")
+
 // Supabase URL and anon key come from local.properties (gitignored), see README.
 val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
@@ -114,6 +121,9 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     // QR codes for invite links (encoder only, no camera; ~0.5 MB jar before R8).
     implementation(libs.zxing.core)
+    // FCM only (no firebase-analytics; collection is also deactivated in the manifest).
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

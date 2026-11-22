@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reactions and link previews (docs/boolaa-spec.md "Reactions", "Link previews"). -->
+<resources>
+    <string name="reaction_like">Like</string>
+    <string name="reaction_love">Love</string>
+    <string name="reaction_laugh">Haha</string>
+    <string name="reaction_wow">Wow</string>
+    <string name="reaction_sad">Sad</string>
+    <string name="reaction_thanks">Thanks</string>
+    <string name="reaction_add">Add a reaction</string>
+    <string name="reaction_react">React</string>
+    <string name="reaction_by_you">You reacted</string>
+    <plurals name="reaction_chip">
+        <item quantity="one">%1$s: %2$d reaction</item>
+        <item quantity="other">%1$s: %2$d reactions</item>
+    </plurals>
+    <string name="link_preview_loading">Loading preview…</string>
+</resources>

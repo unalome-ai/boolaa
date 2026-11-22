@@ -1,6 +1,6 @@
 {
   "nodeModulesDir": "none",
   "tasks": {
-    "test": "deno test -A --no-check auth_security.test.ts && deno test -A --no-check moderation.test.ts && deno test -A --no-check push_unit.test.ts push.test.ts && deno test -A --no-check realtime_feeds.test.ts && deno test -A --no-check invite_links.test.ts && deno test -A --no-check bubble_cover.test.ts && deno test -A --no-check chat.test.ts"
+    "test": "deno test -A --no-check auth_security.test.ts && deno test -A --no-check moderation.test.ts && deno test -A --no-check push_unit.test.ts push.test.ts && deno test -A --no-check realtime_feeds.test.ts && deno test -A --no-check invite_links.test.ts && deno test -A --no-check bubble_cover.test.ts && deno test -A --no-check chat.test.ts && deno test -A --no-check market_status.test.ts && deno test -A --no-check link_preview_unit.test.ts reactions_link_previews.test.ts"
   }
 }

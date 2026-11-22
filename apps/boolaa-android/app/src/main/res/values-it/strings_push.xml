@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push notifications (docs/push-notifications.md §9): settings, per-bubble mute and the Android channel names. -->
+<resources>
+    <string name="notifications_title">Notifiche</string>
+    <string name="notifications_enabled">Consenti le notifiche</string>
+    <string name="notifications_chat">Messaggi in chat</string>
+    <string name="notifications_join_requests">Richieste di adesione</string>
+    <string name="notifications_approvals">La mia richiesta è stata approvata</string>
+    <string name="notifications_new_events">Nuovi eventi</string>
+    <string name="notifications_event_reminders">Promemoria degli eventi (1 ora prima)</string>
+    <string name="notifications_food">Cerchio del cibo</string>
+    <string name="notifications_market">Mercatino</string>
+    <string name="notifications_preview">Mostra l\'anteprima dei messaggi</string>
+    <string name="notifications_preview_hint">Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo.</string>
+    <string name="notifications_blocked">Le notifiche di Boolaa sono disattivate nelle impostazioni.</string>
+    <string name="notifications_ask">Attiva le notifiche</string>
+    <string name="notifications_ask_hint">Ricevi un avviso quando le tue bolle ti parlano.</string>
+    <string name="notifications_open_settings">Apri le impostazioni</string>
+    <string name="notifications_not_now">Non ora</string>
+    <string name="notifications_unavailable">Le notifiche non sono disponibili su questo dispositivo.</string>
+    <string name="mute_title">Silenzia la bolla</string>
+    <string name="mute_1h">1 ora</string>
+    <string name="mute_8h">8 ore</string>
+    <string name="mute_1w">1 settimana</string>
+    <string name="mute_forever">Finché non la riattivo</string>
+    <string name="mute_until">Silenziata fino al %1$s</string>
+    <string name="mute_muted_forever">Silenziata finché non la riattivi</string>
+    <string name="mute_unmute">Riattiva</string>
+    <string name="push_channel_chat">Chat</string>
+    <string name="push_channel_bubble">Attività delle bolle</string>
+    <string name="push_channel_events">Eventi</string>
+</resources>

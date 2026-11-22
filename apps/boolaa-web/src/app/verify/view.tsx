@@ -14,6 +14,7 @@ import { syncAccountLocale } from "@/i18n/locale-picker";
 import { safeNext } from "@/lib/auth-next";
 import { RESEND_COOLDOWN_S, TERMS_VERSION, gateState, lastSent, markSent, sendDeviceCode, verifyDeviceCode } from "@/lib/device";
 import { getSupabase } from "@/lib/supabase/client";
+import { unregisterPush } from "@/lib/push";
 import { cx, hardNavigate } from "@/lib/utils";
 
 type Stage = "checking" | "code" | "age" | "error";
@@ -71,6 +72,7 @@ export default function VerifyPage() {
   }, [supabase, evaluate, errorText, locale]);
 
   async function useAnotherAccount() {
+    await unregisterPush(supabase);
     await supabase.auth.signOut({ scope: "local" });
     hardNavigate("/login");
   }

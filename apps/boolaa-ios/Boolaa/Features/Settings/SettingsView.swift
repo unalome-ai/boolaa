@@ -78,6 +78,11 @@ struct SettingsView: View {
                 .onChange(of: model.loaded) {
                     // Debug hook for screenshots: jump to the pending join requests.
                     if DebugHooks.string("UITestScrollTo") == "requests" { proxy.scrollTo("requests", anchor: .top) }
+                    // A join-request notification was tapped.
+                    if router.scrollToRequests {
+                        router.scrollToRequests = false
+                        withAnimation(Motion.gentle) { proxy.scrollTo("requests", anchor: .top) }
+                    }
                 }
         }
     }
@@ -100,6 +105,8 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.squish)
                     .accessibilityIdentifier("settings-links")
+
+                    BubbleMuteCard(bubbleID: bubble.id)
 
                     SectionHeader(title: "Members", count: model.members.count)
                     VStack(spacing: 0) {

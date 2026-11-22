@@ -6,6 +6,8 @@ import { liveChannel } from "@/lib/realtime";
 import type { Bubble, UserProfile } from "@/lib/types";
 import { BUBBLE_COOKIE, hardNavigate, readCookie, signOutTarget, writeCookie } from "@/lib/utils";
 import { gateState } from "@/lib/device";
+import { syncPush } from "@/lib/push";
+import { useLocale } from "next-intl";
 
 export type MyBubble = Bubble & { role: string };
 
@@ -84,6 +86,11 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
   const [live, setLive] = useState(false);
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const current = useRef<{ bubbles: MyBubble[] | null; bubbleId: string | null }>({ bubbles: null, bubbleId: null });
+  const locale = useLocale();
+  const [verified, setVerified] = useState(false);
+  // Deep link from a notification (docs/push-notifications.md §5): `?bubble=<id>` on first load
+  // switches to that bubble if it's still one of mine, otherwise opens Home without switching.
+  const deepLinkBubble = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     current.current = { bubbles, bubbleId };
   }, [bubbles, bubbleId]);
@@ -104,9 +111,24 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       hardNavigate("/onboarding");
       return list;
     }
+    if (deepLinkBubble.current === undefined)
+      deepLinkBubble.current = new URLSearchParams(window.location.search).get("bubble");
+    const linked = deepLinkBubble.current;
+    deepLinkBubble.current = null;
+    if (linked && !list.some((b) => b.id === linked) && window.location.pathname !== "/home") {
+      hardNavigate("/home");
+      return list;
+    }
+    const pick = linked && list.some((b) => b.id === linked) ? linked : null;
+    if (linked) {
+      // Applied once: drop it from the address bar so the bubble switcher stays in charge.
+      const url = new URL(window.location.href);
+      url.searchParams.delete("bubble");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
     setBubbles(list);
     setBubbleIdState((cur) => {
-      const wanted = cur ?? readCookie(BUBBLE_COOKIE);
+      const wanted = pick ?? cur ?? readCookie(BUBBLE_COOKIE);
       const next = list.find((b) => b.id === wanted)?.id ?? list[0]!.id;
       if (next !== readCookie(BUBBLE_COOKIE)) writeCookie(BUBBLE_COOKIE, next);
       return next;
@@ -139,6 +161,7 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
         .then((state) => {
           if (alive && state !== "ok" && !signOutTarget.leaving)
             hardNavigate(`/verify?next=${encodeURIComponent(window.location.pathname)}`);
+          else if (alive && state === "ok") setVerified(true);
         })
         .catch(() => undefined);
     });
@@ -192,6 +215,13 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       unsubscribe();
     };
   }, [auth, supabase, refreshBubbles]);
+
+  // Push: once the session is verified, register this browser's subscription again on every start
+  // and whenever the language changes (never prompts; docs/push-notifications.md §8).
+  useEffect(() => {
+    if (!verified || signOutTarget.leaving) return;
+    syncPush(supabase, locale).catch(() => undefined);
+  }, [verified, locale, supabase]);
 
   const dismissLostBubble = useCallback(() => setLostBubble(null), []);
 

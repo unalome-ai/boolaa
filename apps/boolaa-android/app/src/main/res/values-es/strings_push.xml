@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push notifications (docs/push-notifications.md §9): settings, per-bubble mute and the Android channel names. -->
+<resources>
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_enabled">Permitir notificaciones</string>
+    <string name="notifications_chat">Mensajes del chat</string>
+    <string name="notifications_join_requests">Solicitudes para unirse</string>
+    <string name="notifications_approvals">Mi solicitud fue aprobada</string>
+    <string name="notifications_new_events">Eventos nuevos</string>
+    <string name="notifications_event_reminders">Recordatorios de eventos (1 hora antes)</string>
+    <string name="notifications_food">Círculo de comida</string>
+    <string name="notifications_market">Mercadillo</string>
+    <string name="notifications_preview">Mostrar vista previa de los mensajes</string>
+    <string name="notifications_preview_hint">Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en Flatmates», sin nombres ni texto.</string>
+    <string name="notifications_blocked">Las notificaciones de Boolaa están desactivadas en tus ajustes.</string>
+    <string name="notifications_ask">Activar notificaciones</string>
+    <string name="notifications_ask_hint">Recibe un aviso cuando tus burbujas te hablen.</string>
+    <string name="notifications_open_settings">Abrir ajustes</string>
+    <string name="notifications_not_now">Ahora no</string>
+    <string name="notifications_unavailable">Las notificaciones no están disponibles en este dispositivo.</string>
+    <string name="mute_title">Silenciar la burbuja</string>
+    <string name="mute_1h">1 hora</string>
+    <string name="mute_8h">8 horas</string>
+    <string name="mute_1w">1 semana</string>
+    <string name="mute_forever">Hasta que la reactive</string>
+    <string name="mute_until">Silenciada hasta el %1$s</string>
+    <string name="mute_muted_forever">Silenciada hasta que la reactives</string>
+    <string name="mute_unmute">Reactivar</string>
+    <string name="push_channel_chat">Chat</string>
+    <string name="push_channel_bubble">Actividad de las burbujas</string>
+    <string name="push_channel_events">Eventos</string>
+</resources>

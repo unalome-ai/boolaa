@@ -9,6 +9,7 @@ import { AmbientBackdrop, BubbleLogo, FeatureBadge } from "@/components/orb";
 import { BubblePhoto, ErrorText, PageLoader } from "@/components/ui";
 import { hueFor } from "@/lib/hue";
 import { getSupabase } from "@/lib/supabase/client";
+import { unregisterPush } from "@/lib/push";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
@@ -136,6 +137,7 @@ export default function OnboardingPage() {
   }
 
   async function signOut() {
+    await unregisterPush(supabase);
     await supabase.auth.signOut();
     hardNavigate("/login");
   }

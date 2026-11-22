@@ -90,3 +90,43 @@ Web keys under `chat.*` (`errors.chatMessageGone`); iOS and Android use the same
 | `chatMessageGone` (error `message not found`) | That message no longer exists. | Mesajul nu mai există. | Ce message n'existe plus. | Ese mensaje ya no existe. | Questo messaggio non esiste più. |
 
 The badge shows the number up to 99 and "99+" above (the server caps the count at 100).
+
+## Marketplace availability and calendar (docs/boolaa-spec.md, "Marketplace availability", "Add to calendar")
+
+Web keys under `market.*` / `events.addToCalendar`; iOS uses the English text as the key; Android `market_*` / `events_*` resources. `{name}` is the owner's name, `{title}` the item title (user content, not translated).
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| `availability` (form label) | Availability | Disponibilitate | Disponibilité | Disponibilidad | Disponibilità |
+| `available` | Available | Disponibil | Disponible | Disponible | Disponibile |
+| `reserved` (badge) | Reserved | Rezervat | Réservé | Reservado | Prenotato |
+| `taken` (badge) | Taken | Luat | Parti | Entregado | Preso |
+| `hideTaken` (filter chip) | Hide taken | Ascunde ce e luat | Masquer ce qui est parti | Ocultar entregados | Nascondi presi |
+| `markAs` (owner menu) | Mark as | Marchează ca | Marquer comme | Marcar como | Segna come |
+| `askInChat` (button) | Ask in chat | Întreabă în chat | Demander dans la discussion | Preguntar en el chat | Chiedi in chat |
+| `askDraft` (prefilled, unsent) | @{name}, is “{title}” still available? | @{name}, mai e disponibil „{title}”? | @{name}, « {title} » est toujours disponible ? | @{name}, ¿sigue disponible «{title}»? | @{name}, «{title}» è ancora disponibile? |
+| `addToCalendar` | Add to calendar | Adaugă în calendar | Ajouter au calendrier | Añadir al calendario | Aggiungi al calendario |
+| iOS calendar usage string | Boolaa adds the events you pick to your calendar. | Boolaa adaugă în calendarul tău evenimentele pe care le alegi. | Boolaa ajoute à ton calendrier les événements que tu choisis. | Boolaa añade a tu calendario los eventos que elijas. | Boolaa aggiunge al tuo calendario gli eventi che scegli. |
+| iOS: calendar unavailable | Allow calendar access in Settings to add events. | Permite accesul la calendar din Setări ca să adaugi evenimente. | Autorise l'accès au calendrier dans Réglages pour ajouter des événements. | Permite el acceso al calendario en Ajustes para añadir eventos. | Consenti l'accesso al calendario nelle Impostazioni per aggiungere eventi. |
+| Android: no calendar app | No calendar app found. | Nu am găsit nicio aplicație de calendar. | Aucune application de calendrier trouvée. | No se ha encontrado ninguna app de calendario. | Nessuna app di calendario trovata. |
+
+"Taken" means given away or traded, not sold (items are free or traded), hence es "Entregado" rather than "Vendido". These were drafted by AI like the rest and are in the native-speaker review.
+
+
+## Reactions and link previews (docs/boolaa-spec.md, "Reactions", "Link previews")
+
+Web keys under `reactions.*` and `links.previewLoading`; Android `reaction_*` (plurals `reaction_chip`) and `link_preview_loading`; iOS the same English texts. The reaction names are also the accessibility labels of the emoji. Errors from `toggle_reaction` use the generic error.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| `like` | Like | Îmi place | J'aime | Me gusta | Mi piace |
+| `love` | Love | Ador | J'adore | Me encanta | Adoro |
+| `laugh` | Haha | Haha | Haha | Jaja | Ahah |
+| `wow` | Wow | Uau | Waouh | Guau | Wow |
+| `sad` | Sad | Trist | Triste | Triste | Triste |
+| `thanks` | Thanks | Mulțumesc | Merci | Gracias | Grazie |
+| `addReaction` | Add a reaction | Adaugă o reacție | Ajouter une réaction | Añadir una reacción | Aggiungi una reazione |
+| `react` (menu) | React | Reacționează | Réagir | Reaccionar | Reagisci |
+| `chip` | {reaction}: {count, plural, one {# reaction} other {# reactions}} | {reaction}: {count, plural, one {# reacție} few {# reacții} other {# de reacții}} | {reaction} : {count, plural, one {# réaction} other {# réactions}} | {reaction}: {count, plural, one {# reacción} other {# reacciones}} | {reaction}: {count, plural, one {# reazione} other {# reazioni}} |
+| `reactedByYou` | You reacted | Ai reacționat | Tu as réagi | Has reaccionado | Hai reagito |
+| `linkPreviewLoading` | Loading preview… | Se încarcă previzualizarea… | Chargement de l'aperçu… | Cargando vista previa… | Caricamento dell'anteprima… |

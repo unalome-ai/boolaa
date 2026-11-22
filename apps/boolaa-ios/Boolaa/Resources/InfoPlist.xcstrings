@@ -37,6 +37,76 @@
         }
       }
     },
+    "NSCalendarsUsageDescription": {
+      "comment": "Calendar permission prompt (Add to calendar)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa adds the events you pick to your calendar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa adaugă în calendarul tău evenimentele pe care le alegi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa ajoute à ton calendrier les événements que tu choisis."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa añade a tu calendario los eventos que elijas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa aggiunge al tuo calendario gli eventi che scegli."
+          }
+        }
+      }
+    },
+    "NSCalendarsWriteOnlyAccessUsageDescription": {
+      "comment": "Calendar permission prompt (Add to calendar)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa adds the events you pick to your calendar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa adaugă în calendarul tău evenimentele pe care le alegi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa ajoute à ton calendrier les événements que tu choisis."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa añade a tu calendario los eventos que elijas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa aggiunge al tuo calendario gli eventi che scegli."
+          }
+        }
+      }
+    },
     "NSPhotoLibraryUsageDescription": {
       "comment": "Photo library permission prompt",
       "localizations": {

@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { LocalePicker } from "@/i18n/locale-picker";
 import { hardNavigate, removeImage, uploadImage } from "@/lib/utils";
+import { unregisterPush } from "@/lib/push";
 import { AccountSecurity } from "@/components/account-security";
 import { DeleteAccountPanel } from "@/components/delete-account";
 
@@ -58,6 +59,7 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
   }
 
   async function signOut() {
+    await unregisterPush(supabase); // docs/push-notifications.md §8: unregister, then sign out
     await supabase.auth.signOut();
     hardNavigate("/login");
   }

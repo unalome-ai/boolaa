@@ -10,6 +10,7 @@ import { Avatar, EmptyState, Img, PageLoader, StatusBadge } from "@/components/u
 import { AUTHOR, type Author, type Row } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useFormat } from "@/i18n/format";
+import { PushCard } from "@/components/notification-settings";
 
 type FeedItem = {
   key: string;
@@ -168,6 +169,7 @@ export default function HomePage() {
   const firstName = profile?.name?.split(" ")[0];
   return (
     <div>
+      <PushCard />
       {/* Hero card in the bubble's colour (6.3) */}
       <section
         className={`${hueClass(hue)} anim-pop-soft relative mb-7 overflow-hidden rounded-hero p-5 shadow-glow sm:p-6`}

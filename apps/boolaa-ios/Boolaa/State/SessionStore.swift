@@ -374,6 +374,8 @@ final class SessionStore {
     }
 
     func signOut() async {
+        // This device stops getting pushes for this account (docs/push-notifications.md §8, step 3).
+        await PushCenter.shared.unregisterBeforeSignOut(api: api)
         // Local only: other devices keep their sessions (revoking them is "Your devices").
         try? await client.auth.signOut(scope: .local)
         await applySignedOut()
@@ -499,6 +501,8 @@ final class SessionStore {
     func deleteAccount() async throws {
         guard let userID else { return }
         try await api.deleteMyAccount(userID: userID)
+        // Push tokens, prefs and mutes went with the account (cascade).
+        PushCenter.shared.forgetRegistration()
         defaults.removeObject(forKey: Self.currentBubbleKey)
         try? await client.auth.signOut(scope: .local)
         await applySignedOut()

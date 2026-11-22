@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push notifications (docs/push-notifications.md §9): settings, per-bubble mute and the Android channel names. -->
+<resources>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_enabled">Allow notifications</string>
+    <string name="notifications_chat">Chat messages</string>
+    <string name="notifications_join_requests">Join requests</string>
+    <string name="notifications_approvals">My request was approved</string>
+    <string name="notifications_new_events">New events</string>
+    <string name="notifications_event_reminders">Event reminders (1 hour before)</string>
+    <string name="notifications_food">Food Circle</string>
+    <string name="notifications_market">Marketplace</string>
+    <string name="notifications_preview">Show message previews</string>
+    <string name="notifications_preview_hint">When off, notifications only say \"New message in Flatmates\", without names or text.</string>
+    <string name="notifications_blocked">Notifications are turned off for Boolaa in your settings.</string>
+    <string name="notifications_ask">Turn on notifications</string>
+    <string name="notifications_ask_hint">Get a ping when your bubbles talk to you.</string>
+    <string name="notifications_open_settings">Open settings</string>
+    <string name="notifications_not_now">Not now</string>
+    <string name="notifications_unavailable">Notifications aren\'t available on this device.</string>
+    <string name="mute_title">Mute this bubble</string>
+    <string name="mute_1h">1 hour</string>
+    <string name="mute_8h">8 hours</string>
+    <string name="mute_1w">1 week</string>
+    <string name="mute_forever">Until I turn it back on</string>
+    <string name="mute_until">Muted until %1$s</string>
+    <string name="mute_muted_forever">Muted until you turn it back on</string>
+    <string name="mute_unmute">Unmute</string>
+    <string name="push_channel_chat">Chat</string>
+    <string name="push_channel_bubble">Bubble activity</string>
+    <string name="push_channel_events">Events</string>
+</resources>

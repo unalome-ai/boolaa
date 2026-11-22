@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push notifications (docs/push-notifications.md §9): settings, per-bubble mute and the Android channel names. -->
+<resources>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_enabled">Autoriser les notifications</string>
+    <string name="notifications_chat">Messages de discussion</string>
+    <string name="notifications_join_requests">Demandes d\'adhésion</string>
+    <string name="notifications_approvals">Ma demande a été acceptée</string>
+    <string name="notifications_new_events">Nouveaux événements</string>
+    <string name="notifications_event_reminders">Rappels d\'événements (1 heure avant)</string>
+    <string name="notifications_food">Cercle gourmand</string>
+    <string name="notifications_market">Marché</string>
+    <string name="notifications_preview">Afficher l\'aperçu des messages</string>
+    <string name="notifications_preview_hint">Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte.</string>
+    <string name="notifications_blocked">Les notifications de Boolaa sont désactivées dans tes réglages.</string>
+    <string name="notifications_ask">Activer les notifications</string>
+    <string name="notifications_ask_hint">Reçois un signal quand tes bulles te parlent.</string>
+    <string name="notifications_open_settings">Ouvrir les réglages</string>
+    <string name="notifications_not_now">Pas maintenant</string>
+    <string name="notifications_unavailable">Les notifications ne sont pas disponibles sur cet appareil.</string>
+    <string name="mute_title">Mettre la bulle en sourdine</string>
+    <string name="mute_1h">1 heure</string>
+    <string name="mute_8h">8 heures</string>
+    <string name="mute_1w">1 semaine</string>
+    <string name="mute_forever">Jusqu\'à ce que je la réactive</string>
+    <string name="mute_until">En sourdine jusqu\'au %1$s</string>
+    <string name="mute_muted_forever">En sourdine jusqu\'à ce que tu la réactives</string>
+    <string name="mute_unmute">Réactiver</string>
+    <string name="push_channel_chat">Discussion</string>
+    <string name="push_channel_bubble">Activité des bulles</string>
+    <string name="push_channel_events">Événements</string>
+</resources>

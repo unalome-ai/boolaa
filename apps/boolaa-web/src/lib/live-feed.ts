@@ -1,4 +1,5 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { BoolaaClient } from "@/lib/supabase/client";
 import { liveChannel } from "@/lib/realtime";
 
@@ -55,6 +56,8 @@ export function useLiveFeed<T extends Identified>(opts: {
   compare: (a: T, b: T) => number;
   /** Full reload, run once the stream is live to catch changes made while connecting. */
   reload: () => unknown;
+  /** More listeners on the same channel (reactions). Read once per subscription; keep it stable. */
+  extend?: (channel: RealtimeChannel) => RealtimeChannel;
 }) {
   const ref = useRef(opts);
   useEffect(() => {
@@ -74,7 +77,7 @@ export function useLiveFeed<T extends Identified>(opts: {
       supabase,
       `${table}:${bubbleId}`,
       (ch) =>
-        ch
+        (ref.current.extend ?? ((c: RealtimeChannel) => c))(ch)
           .on("postgres_changes", { event: "INSERT", schema: "public", table, filter }, (p) => void fetchOne((p.new as T).id))
           .on("postgres_changes", { event: "UPDATE", schema: "public", table, filter }, (p) => {
             const row = p.new as T;

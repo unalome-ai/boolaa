@@ -208,7 +208,8 @@
     "goingCount": "{count, plural, =0 {Ancora nessun partecipante} one {# partecipante} other {# partecipanti}}",
     "dateTime": "Data e ora",
     "location": "Luogo",
-    "create": "Crea evento"
+    "create": "Crea evento",
+    "addToCalendar": "Aggiungi al calendario"
   },
   "food": {
     "share": "Condividi cibo",
@@ -237,7 +238,15 @@
     "deleteItem": "Elimina oggetto",
     "emptyTitle": "Ancora niente qui",
     "emptyHint": "Regala o scambia oggetti con la tua bolla.",
-    "confirmDelete": "Eliminare «{title}»?"
+    "confirmDelete": "Eliminare «{title}»?",
+    "availability": "Disponibilità",
+    "available": "Disponibile",
+    "reserved": "Prenotato",
+    "taken": "Preso",
+    "hideTaken": "Nascondi presi",
+    "markAs": "Segna come",
+    "askInChat": "Chiedi in chat",
+    "askDraft": "@{name}, «{title}» è ancora disponibile?"
   },
   "links": {
     "filter": "Filtra per tag",
@@ -250,7 +259,8 @@
     "confirmDelete": "Eliminare «{title}»?",
     "url": "URL",
     "tags": "Tag (separati da virgole)",
-    "tagsPlaceholder": "cibo, economico"
+    "tagsPlaceholder": "cibo, economico",
+    "previewLoading": "Caricamento dell'anteprima…"
   },
   "settings": {
     "bubble": "Bolla",
@@ -512,5 +522,49 @@
     "invalidBody": "Il link potrebbe essere vecchio o il codice è cambiato. Chiedine uno nuovo a un membro.",
     "requestSent": "Richiesta inviata",
     "getApp": "Scarica l'app"
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "enabled": "Consenti le notifiche",
+    "chat": "Messaggi in chat",
+    "joinRequests": "Richieste di adesione",
+    "approvals": "La mia richiesta è stata approvata",
+    "newEvents": "Nuovi eventi",
+    "eventReminders": "Promemoria degli eventi (1 ora prima)",
+    "food": "Cerchio del cibo",
+    "market": "Mercatino",
+    "preview": "Mostra l'anteprima dei messaggi",
+    "previewHint": "Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo.",
+    "blocked": "Le notifiche di Boolaa sono disattivate nelle impostazioni.",
+    "blockedHint": "Per riattivarle, fai clic sull'icona a sinistra della barra degli indirizzi, consenti le notifiche per questo sito e ricarica la pagina.",
+    "ask": "Attiva le notifiche",
+    "askHint": "Ricevi un avviso quando le tue bolle ti parlano.",
+    "on": "Attive su questo browser",
+    "turnOff": "Disattiva su questo browser",
+    "unsupported": "Questo browser non può ricevere notifiche. Su iPhone e iPad, aggiungi prima Boolaa alla schermata Home.",
+    "allBubbles": "Queste impostazioni valgono per tutte le tue bolle."
+  },
+  "mute": {
+    "title": "Silenzia la bolla",
+    "hint": "Nessuna notifica da questa bolla, promemoria compresi.",
+    "1h": "1 ora",
+    "8h": "8 ore",
+    "1w": "1 settimana",
+    "forever": "Finché non la riattivo",
+    "until": "Silenziata fino al {date}",
+    "mutedForever": "Silenziata finché non la riattivi",
+    "unmute": "Riattiva"
+  },
+  "reactions": {
+    "like": "Mi piace",
+    "love": "Adoro",
+    "laugh": "Ahah",
+    "wow": "Wow",
+    "sad": "Triste",
+    "thanks": "Grazie",
+    "addReaction": "Aggiungi una reazione",
+    "react": "Reagisci",
+    "chip": "{reaction}: {count, plural, one {# reazione} other {# reazioni}}",
+    "reactedByYou": "Hai reagito"
   }
 }

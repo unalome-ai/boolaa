@@ -22,6 +22,7 @@ import { useChatUnread } from "@/components/chat-unread";
 import { badgeText } from "@/lib/chat";
 import { CreateJoinTabs } from "@/components/create-join";
 import { ProfileSheet } from "@/components/profile-sheet";
+import { DeepLinkTarget } from "@/components/deep-link";
 import { BubbleLogo } from "@/components/orb";
 import { Avatar, Modal } from "@/components/ui";
 import { FEATURE_HUE, HUES, hueClass, hueFor, type Hue } from "@/lib/hue";
@@ -310,6 +311,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="isolate min-h-dvh lg:pl-64" data-testid="app-shell" data-live={live}>
       <BubbleGlow hue={hue} />
+      <DeepLinkTarget />
       <Sidebar pathname={pathname} />
       <div className={cx("mx-auto flex max-w-4xl flex-col px-4", isChat ? "h-dvh" : "min-h-dvh")}>
         <header className="shrink-0 pb-3 pt-6 lg:pt-8">

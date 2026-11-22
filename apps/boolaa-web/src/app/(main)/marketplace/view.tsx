@@ -1,7 +1,10 @@
 "use client";
 
+import { useReactions } from "@/lib/reactions";
+import { ReactionBar } from "@/components/reactions";
 import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CircleSlash, EyeOff, Hourglass, MessageCircle, Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
@@ -10,6 +13,8 @@ import { AUTHOR, type MarketItem } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { cx, removeImage, uploadImage } from "@/lib/utils";
+import { AVAILABILITIES, availabilityOf, canAskOwner, visibleItems, type Availability } from "@/lib/market";
+import { setChatDraft } from "@/lib/chat-draft";
 
 type Status = "free" | "trade";
 const FILTERS = ["all", "free", "trade"] as const;
@@ -21,6 +26,8 @@ export default function MarketplacePage() {
   const bubble = useBubble();
   const [items, setItems] = useState<MarketItem[] | null>(null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
+  const [hideTaken, setHideTaken] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<MarketItem | "new" | null>(null);
 
@@ -40,7 +47,18 @@ export default function MarketplacePage() {
   }, [load]);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
-  useLiveFeed<MarketItem>({ supabase, table: "market_items", bubbleId: bubble.id, select: `*, owner:users!owner_id(${AUTHOR})`, rows: items, setRows: setItems, compare: byCreatedDesc, reload: load });
+  const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "market_item", targetIds: items?.map((i) => i.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
+  useLiveFeed<MarketItem>({
+    supabase,
+    table: "market_items",
+    bubbleId: bubble.id,
+    select: `*, owner:users!owner_id(${AUTHOR})`,
+    rows: items,
+    setRows: setItems,
+    compare: byCreatedDesc,
+    reload: () => Promise.all([load(), reactions.reload()]),
+    extend: reactions.bind,
+  });
 
   async function remove(item: MarketItem) {
     if (!window.confirm(t("market.confirmDelete", { title: item.title }))) return;
@@ -50,7 +68,23 @@ export default function MarketplacePage() {
     void load();
   }
 
-  const shown = items?.filter((i) => (filter === "all" || i.status === filter) && !blocked.has(i.owner_id)) ?? [];
+  /** Owner only (RLS: market_update_own). Shown at once; others get the UPDATE live. */
+  async function setAvailability(item: MarketItem, availability: Availability) {
+    setItems((prev) => prev?.map((i) => (i.id === item.id ? { ...i, availability } : i)) ?? null);
+    const { error } = await supabase.from("market_items").update({ availability }).eq("id", item.id);
+    if (error) {
+      setError(errorText(error));
+      void load();
+    }
+  }
+
+  /** Opens the bubble chat with an unsent message to the owner (the app has group chat, no DMs). */
+  function askOwner(item: MarketItem) {
+    setChatDraft(bubble.id, t("market.askDraft", { name: item.owner?.name ?? t("common.someone"), title: item.title }));
+    router.push("/chat");
+  }
+
+  const shown = items ? visibleItems(items, { filter, hideTaken, blocked }) : [];
 
   return (
     <div>
@@ -69,6 +103,15 @@ export default function MarketplacePage() {
               {t(`market.${f}`)}
             </button>
           ))}
+          <button
+            type="button"
+            aria-pressed={hideTaken}
+            data-testid="filter-hide-taken"
+            onClick={() => setHideTaken((v) => !v)}
+            className={cx("chip hue-mint transition-[background,color,box-shadow,transform]", hideTaken ? "fill-hue" : "bg-field text-muted hover:text-fg")}
+          >
+            <EyeOff size={15} strokeWidth={2.6} /> {t("market.hideTaken")}
+          </button>
         </div>
         <button type="button" className="btn-primary hue-mint min-h-10 px-4" data-testid="add-item" onClick={() => setEditing("new")}>
           <Plus size={18} strokeWidth={3} /> {t("market.addItem")}
@@ -81,14 +124,37 @@ export default function MarketplacePage() {
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {shown.map((item, i) => (
-            <li key={item.id} className="card anim-rise flex min-w-0 flex-col overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="market-item">
+            <li key={item.id} className="card anim-rise flex min-w-0 flex-col overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="market-item" data-item-id={item.id} data-availability={availabilityOf(item)}>
               <div className="relative">
-                <Img src={item.image} alt={item.title} className="aspect-square w-full object-cover" />
+                <Img src={item.image} alt={item.title} className={cx("aspect-square w-full object-cover transition-[filter,opacity] duration-300", availabilityOf(item) === "taken" && "opacity-55 grayscale")} />
                 <StatusBadge status={item.status} className="absolute left-2 top-2" />
+                <AvailabilityBadge availability={availabilityOf(item)} className="absolute right-2 top-2" />
               </div>
               <div className="flex flex-1 flex-col gap-1 p-3">
                 <h3 className="truncate text-[15px] font-extrabold">{item.title}</h3>
                 {item.description && <p className="line-clamp-2 text-sm text-muted">{item.description}</p>}
+                {item.owner_id === userId && (
+                  <label className="mt-1 flex items-center gap-2 text-xs font-bold text-muted">
+                    <span className="shrink-0">{t("market.markAs")}</span>
+                    <select
+                      className="hue-mint min-h-8 min-w-0 flex-1 rounded-full bg-field px-2 text-[13px] font-bold text-fg outline-none focus:ring-2 focus:ring-[var(--h)]"
+                      value={availabilityOf(item)}
+                      data-testid="availability-select"
+                      onChange={(e) => setAvailability(item, e.target.value as Availability)}
+                    >
+                      {AVAILABILITIES.map((a) => (
+                        <option key={a} value={a}>
+                          {t(`market.${a}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {canAskOwner(item, userId) && (
+                  <button type="button" data-testid="ask-owner" onClick={() => askOwner(item)} className="chip hue-grape mt-1 self-start bg-hue-wash text-hue-ink hover:brightness-105">
+                    <MessageCircle size={15} strokeWidth={2.6} /> {t("market.askInChat")}
+                  </button>
+                )}
                 <div className="mt-auto flex items-center justify-between pt-2">
                   <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
                     <Avatar name={item.owner?.name} id={item.owner_id} src={item.owner?.avatar} size={22} />
@@ -106,6 +172,7 @@ export default function MarketplacePage() {
                     </span>
                   )}
                 </div>
+                <ReactionBar state={reactions} targetId={item.id} className="hue-mint pt-1" />
               </div>
             </li>
           ))}
@@ -135,6 +202,7 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
   const [title, setTitle] = useState(item?.title ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [status, setStatus] = useState<Status>((item?.status as Status) ?? "free");
+  const [availability, setAvailability] = useState<Availability>(item ? availabilityOf(item) : "available");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -145,7 +213,7 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
     setError(null);
     try {
       const image = file ? await uploadImage(supabase, "market.images", userId, file) : item!.image;
-      const fields = { image, title: title.trim(), description: description.trim() || null, status };
+      const fields = { image, title: title.trim(), description: description.trim() || null, status, availability };
       const { error } = item
         ? await supabase.from("market_items").update(fields).eq("id", item.id)
         : await supabase.from("market_items").insert({ ...fields, bubble_id: bubble.id, owner_id: userId });
@@ -190,10 +258,50 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
           ))}
         </div>
       </div>
+      {item && (
+        <div>
+          <span className="label">{t("market.availability")}</span>
+          <div className="grid grid-cols-3 rounded-full bg-field p-1">
+            {AVAILABILITIES.map((a) => (
+              <button
+                key={a}
+                type="button"
+                aria-pressed={availability === a}
+                data-testid={`availability-${a}`}
+                onClick={() => setAvailability(a)}
+                className={cx("hue-mint min-h-10 rounded-full px-2 text-[15px] font-bold transition-[background,color,box-shadow] duration-300", availability === a ? "fill-hue" : "text-muted hover:text-fg")}
+              >
+                {t(`market.${a}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <ErrorText>{error}</ErrorText>
       <button type="submit" className="btn-primary hue-mint w-full" disabled={busy || !title.trim()}>
         {busy ? t("common.saving") : item ? t("common.saveChanges") : t("market.addItem")}
       </button>
     </form>
+  );
+}
+
+/** Shown only when an item is no longer simply available. */
+function AvailabilityBadge({ availability, className }: { availability: Availability; className?: string }) {
+  const t = useTranslations("market");
+  if (availability === "available") return null;
+  const reserved = availability === "reserved";
+  return (
+    <span
+      data-testid="availability-badge"
+      data-availability={availability}
+      className={cx(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-display text-xs font-black uppercase tracking-wide shadow-glow",
+        reserved ? "hue-tangerine bg-hue-grad text-onfill" : "bg-black/70 text-white",
+        className,
+      )}
+    >
+      {reserved ? <Hourglass size={13} strokeWidth={2.6} /> : <CircleSlash size={13} strokeWidth={2.6} />}
+      {t(availability)}
+    </span>
   );
 }

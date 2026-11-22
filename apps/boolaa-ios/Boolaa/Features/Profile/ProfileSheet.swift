@@ -14,7 +14,7 @@ struct ProfileSheet: View {
     @State private var legalPage: LegalPage?
     @State private var showDeleteAccount = false
 
-    enum ProfileDestination: Hashable { case blocked, security }
+    enum ProfileDestination: Hashable { case blocked, security, notifications }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -48,6 +48,12 @@ struct ProfileSheet: View {
                         }
                         .buttonStyle(.squish)
                         .accessibilityIdentifier("security-row")
+                        NavigationLink(value: ProfileDestination.notifications) {
+                            ProfileRow(title: LocalizedStringResource("Notifications", comment: "Screen title"),
+                                       icon: "bell.fill", trailing: "chevron.right", hue: .grape)
+                        }
+                        .buttonStyle(.squish)
+                        .accessibilityIdentifier("notifications-row")
                         LanguageRow()
                         NavigationLink(value: ProfileDestination.blocked) {
                             ProfileRow(title: "Blocked users", icon: "hand.raised.fill", trailing: "chevron.right", hue: .coral)
@@ -91,6 +97,7 @@ struct ProfileSheet: View {
                 switch destination {
                 case .blocked: BlockedUsersView()
                 case .security: SecurityView()
+                case .notifications: NotificationsView()
                 }
             }
             .legalPageSheet($legalPage)
@@ -102,6 +109,7 @@ struct ProfileSheet: View {
                 switch DebugHooks.consumeProfileOpen() {
                 case "blocked": path = [.blocked]
                 case "security": path = [.security]
+                case "notifications": path = [.notifications]
                 case "deleteAccount": showDeleteAccount = true
                 default: break
                 }

@@ -1,5 +1,7 @@
 package com.boolaa.app.ui.food
 
+import com.boolaa.app.ui.shell.pushHighlight
+import com.boolaa.app.ui.shell.PushHighlightScroll
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -121,6 +123,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.boolaa.app.ui.components.AddButton
+import com.boolaa.app.ui.components.longPressToReact
 import com.boolaa.app.ui.components.Avatar
 import com.boolaa.app.ui.components.BoolaaChip
 import com.boolaa.app.ui.components.BoolaaIcons
@@ -172,6 +175,7 @@ import com.boolaa.app.ui.theme.Type
 class FoodViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
     private val _posts = MutableStateFlow<List<FoodPost>?>(null)
     val posts = _posts.asStateFlow()
+    val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.FOOD_POST, _posts) { it.id }
 
     init {
         load()
@@ -179,10 +183,15 @@ class FoodViewModel(private val container: AppContainer, private val bubbleId: S
     }
 
     /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
-    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.food, bubbleId, _posts) { load().join() }
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.food, bubbleId, _posts, reactions) { load().join() }
+
+    fun react(postId: String, kind: com.boolaa.app.model.ReactionKind) =
+        toggleReaction(reactions, postId, kind, container.session.state.value.userId)
 
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
-        _posts.value = container.api.foodPosts(bubbleId)
+        val loaded = container.api.foodPosts(bubbleId)
+        _posts.value = loaded
+        reactions.refresh(loaded.map { it.id })
     }.also { it.invokeOnCompletion { if (_posts.value == null) _posts.value = emptyList() } }
 
     fun save(existing: FoodPost?, picked: Uri?, description: String, resolver: ContentResolver, onDone: () -> Unit) =
@@ -213,6 +222,8 @@ fun FoodScreen() {
     LaunchedEffect(vm) { vm.keepLive() }
     val posts by vm.posts.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
+    val reactionsByPost = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     var editing by remember { mutableStateOf<FoodPost?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<FoodPost?>(null) }
@@ -220,6 +231,7 @@ fun FoodScreen() {
     val someone = stringResource(R.string.someone)
     val hue = Feature.FOOD.hue
     val listState = rememberLazyListState()
+    PushHighlightScroll(listState, loaded = posts != null)
 
     BoolaaRefreshBox(isRefreshing = busy && posts != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("food-screen")) {
@@ -245,14 +257,16 @@ fun FoodScreen() {
                 EmptyState(BoolaaIcons.Food, stringResource(R.string.food_empty_title), stringResource(R.string.my_posts_empty), hue = hue)
             }
             itemsIndexed(mine, key = { _, p -> p.id }) { index, p ->
-                FoodCard(p, onEdit = { editing = p }, onDelete = { deleting = p }, modifier = Modifier.scrollFade(listState, p.id).popIn(index + 1))
+                FoodCard(p, onEdit = { editing = p }, onDelete = { deleting = p }, modifier = Modifier.pushHighlight(p.id).scrollFade(listState, p.id).popIn(index + 1),
+                    reactions = reactionsByPost[p.id].orEmpty(), onReact = { vm.react(p.id, it) })
             }
             item(key = "bubble-header") { SectionHeader(stringResource(R.string.from_the_bubble), others.size, hue = hue) }
             if (others.isEmpty()) item(key = "bubble-empty") {
                 EmptyState(BoolaaIcons.Takeout, stringResource(R.string.food_empty_title), stringResource(R.string.from_the_bubble_empty), hue = hue)
             }
             itemsIndexed(others, key = { _, p -> p.id }) { index, p ->
-                FoodCard(p, onEdit = null, onDelete = null, modifier = Modifier.scrollFade(listState, p.id).popIn(mine.size + index + 2), onReport = {
+                FoodCard(p, onEdit = null, onDelete = null, modifier = Modifier.pushHighlight(p.id).scrollFade(listState, p.id).popIn(mine.size + index + 2),
+                    reactions = reactionsByPost[p.id].orEmpty(), onReact = { vm.react(p.id, it) }, onReport = {
                     reporting = ReportTarget(ReportTargetType.FOOD_POST, p.id, p.userId, p.user?.name?.takeIf { it.isNotBlank() } ?: someone)
                 })
             }
@@ -274,11 +288,16 @@ fun FoodScreen() {
 
 /** Full-width photo with the author pill floating bottom-left; description and the overflow menu below. */
 @Composable
-fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, modifier: Modifier = Modifier, onReport: (() -> Unit)? = null) {
+fun FoodCard(
+    post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, modifier: Modifier = Modifier, onReport: (() -> Unit)? = null,
+    reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
+) {
     val locale = LocalConfiguration.current.locales[0]
     val c = BoolaaTheme.colors
+    val picker = com.boolaa.app.ui.components.rememberReactionPicker()
     Column(modifier.boolaaCard(0.dp).testTag("food-${post.id}")) {
-        Box {
+        // Long press on the photo opens the reaction picker.
+        Box(if (onReact != null) Modifier.longPressToReact(picker) else Modifier) {
             RemoteImage(post.image, Modifier.fillMaxWidth().height(210.dp), post.description)
             Row(
                 Modifier.align(Alignment.BottomStart).padding(10.dp).clip(CircleShape).background(c.card.copy(alpha = 0.9f))
@@ -297,6 +316,10 @@ fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, mod
                 Text(description.orEmpty(), style = Type.body.copy(fontWeight = FontWeight.Medium), color = c.textPrimary, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
                 if (hasMenu) ItemMenu(onEdit, onDelete, onReport)
             }
+        }
+        if (onReact != null) {
+            com.boolaa.app.ui.components.ReactionBar(reactions, onReact, Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp, top = 2.dp),
+                hue = Feature.FOOD.hue, picker = picker, tag = "reactions-${post.id}")
         }
     }
 }

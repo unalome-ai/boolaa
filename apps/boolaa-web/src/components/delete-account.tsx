@@ -8,6 +8,7 @@ import { useErrorText } from "@/i18n/errors";
 import { RESEND_COOLDOWN_S, markSent, sendSensitiveCode, verifySensitiveCode } from "@/lib/device";
 import type { BoolaaClient } from "@/lib/supabase/client";
 import { hardNavigate, signOutTarget } from "@/lib/utils";
+import { unregisterPush } from "@/lib/push";
 
 const BUCKETS = ["avatars", "food.images", "market.images", "chat.images"] as const;
 
@@ -78,6 +79,8 @@ export function DeleteAccountPanel({ supabase, userId, onCancel }: { supabase: B
       signOutTarget.path = "/";
       const { error } = await supabase.rpc("delete_my_account");
       if (error) throw error;
+      // The server already dropped the push tokens with the account; drop the browser subscription.
+      await unregisterPush(supabase, { server: false });
       await supabase.auth.signOut({ scope: "local" });
       hardNavigate("/");
     } catch (e) {

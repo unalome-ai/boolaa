@@ -10,6 +10,7 @@ import com.boolaa.app.model.ChatMessage
 import com.boolaa.app.model.ChatUnread
 import com.boolaa.app.model.FoodPost
 import com.boolaa.app.model.JoinRequest
+import com.boolaa.app.model.MarketAvailability
 import com.boolaa.app.model.MarketItem
 import com.boolaa.app.model.MarketStatus
 import com.boolaa.app.model.SharedLink
@@ -42,7 +43,10 @@ import kotlin.time.Duration.Companion.seconds
 /** Inputs for the editable bubble content. */
 data class EventInput(val title: String, val description: String?, val datetime: Instant, val location: String?)
 data class FoodInput(val image: String, val description: String?)
-data class MarketInput(val image: String, val title: String, val description: String?, val status: MarketStatus)
+data class MarketInput(
+    val image: String, val title: String, val description: String?, val status: MarketStatus,
+    val availability: MarketAvailability = MarketAvailability.AVAILABLE,
+)
 
 enum class ImageBucket(val id: String) {
     AVATARS("avatars"), FOOD("food.images"), MARKET("market.images"),
@@ -340,6 +344,7 @@ class BoolaaApi(val client: SupabaseClient) {
         put("image", image); put("title", title)
         put("description", description?.let(::JsonPrimitive) ?: JsonNull)
         put("status", status.wire)
+        put("availability", availability.wire)
     }
 
     suspend fun createMarketItem(bubbleId: String, ownerId: String, input: MarketInput) {
@@ -349,6 +354,11 @@ class BoolaaApi(val client: SupabaseClient) {
 
     suspend fun updateMarketItem(id: String, input: MarketInput) {
         client.from("market_items").update(input.toJson()) { filter { eq("id", id) } }
+    }
+
+    /** Owner-only (RLS `market_update_own`); a non-owner's update matches no row. */
+    suspend fun setMarketAvailability(id: String, availability: MarketAvailability) {
+        client.from("market_items").update(buildJsonObject { put("availability", availability.wire) }) { filter { eq("id", id) } }
     }
 
     suspend fun deleteMarketItem(id: String) {
@@ -371,6 +381,10 @@ class BoolaaApi(val client: SupabaseClient) {
             putJsonArray("tags") { tags.forEach { add(JsonPrimitive(it)) } }
         })
     }
+
+    /** Public URL of a server-made preview image (bucket `link.previews`, docs/boolaa-spec.md "Link previews"). */
+    fun linkPreviewImageUrl(path: String?): String? =
+        path?.takeIf { it.isNotBlank() && ".." !in it }?.let { client.storage.from(LINK_PREVIEWS_BUCKET).publicUrl(it) }
 
     suspend fun deleteLink(id: String) {
         client.from("shared_links").delete { filter { eq("id", id) } }
@@ -439,6 +453,8 @@ class BoolaaApi(val client: SupabaseClient) {
 
     companion object {
         const val AUTHOR_COLUMNS = "id, name, avatar"
+        /** Server-written link preview images; not user-owned, so not in [ImageBucket]. */
+        const val LINK_PREVIEWS_BUCKET = "link.previews"
         const val CHAT_PAGE_SIZE = 50
         /** Signed chat photo URLs live an hour. */
         const val CHAT_URL_TTL_SECONDS = 3600L

@@ -11,6 +11,8 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { removeImage, uploadImage } from "@/lib/utils";
+import { useReactions } from "@/lib/reactions";
+import { ReactionBar } from "@/components/reactions";
 
 export default function FoodPage() {
   const { supabase, userId, blocked } = useBoolaa();
@@ -38,7 +40,18 @@ export default function FoodPage() {
   }, [load]);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
-  useLiveFeed<FoodPost>({ supabase, table: "food_posts", bubbleId: bubble.id, select: `*, user:users!user_id(${AUTHOR})`, rows: posts, setRows: setPosts, compare: byCreatedDesc, reload: load });
+  const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "food_post", targetIds: posts?.map((p) => p.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
+  useLiveFeed<FoodPost>({
+    supabase,
+    table: "food_posts",
+    bubbleId: bubble.id,
+    select: `*, user:users!user_id(${AUTHOR})`,
+    rows: posts,
+    setRows: setPosts,
+    compare: byCreatedDesc,
+    reload: () => Promise.all([load(), reactions.reload()]),
+    extend: reactions.bind,
+  });
 
   async function remove(p: FoodPost) {
     if (!window.confirm(t("food.confirmDelete"))) return;
@@ -57,7 +70,7 @@ export default function FoodPage() {
     ) : (
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((p, i) => (
-          <li key={p.id} className="card anim-rise overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="food-card">
+          <li key={p.id} className="card anim-rise overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="food-card" data-item-id={p.id}>
             <Img src={p.image} alt={p.description || t("food.imageAlt")} className="h-[210px] w-full object-cover" />
             <div className="space-y-2 p-4">
               {p.description && <p className="text-[15px]">{p.description}</p>}
@@ -80,6 +93,7 @@ export default function FoodPage() {
                   </span>
                 )}
               </div>
+              <ReactionBar state={reactions} targetId={p.id} className="hue-tangerine" />
             </div>
           </li>
         ))}

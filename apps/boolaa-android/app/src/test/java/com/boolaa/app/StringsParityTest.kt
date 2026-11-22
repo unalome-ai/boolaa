@@ -36,13 +36,22 @@ class StringsParityTest {
         return Parsed(strings, plurals, fixed)
     }
 
+    /** strings.xml plus feature files such as strings_push.xml: each must exist in every locale with the same keys. */
+    private val files = File(res, "values").listFiles { f -> f.name.startsWith("strings") && f.extension == "xml" }!!.map { it.name }.sorted()
+
     @Test fun locales_match_default() {
-        val base = parse(File(res, "values/strings.xml"))
-        assertTrue(base.strings.size > 50)
+        assertTrue(parse(File(res, "values/strings.xml")).strings.size > 50)
+        val problems = mutableListOf<String>()
+        for (name in files) problems += parityProblems(name)
+        if (problems.isNotEmpty()) fail(problems.joinToString("\n"))
+    }
+
+    private fun parityProblems(name: String): List<String> {
+        val base = parse(File(res, "values/$name"))
         val problems = mutableListOf<String>()
         base.plurals.forEach { (k, q) -> if (!q.containsAll(requiredQuantities.getValue("en"))) problems += "en plural $k has $q" }
         for (lang in locales) {
-            val file = File(res, "values-$lang/strings.xml")
+            val file = File(res, "values-$lang/$name")
             if (!file.exists()) { problems += "missing $file"; continue }
             val p = parse(file)
             (base.strings.keys - p.strings.keys).forEach { problems += "$lang missing string $it" }
@@ -61,11 +70,11 @@ class StringsParityTest {
                     problems += "$lang placeholders differ in $k"
             }
         }
-        if (problems.isNotEmpty()) fail(problems.joinToString("\n"))
+        return problems
     }
 
     @Test fun romanian_uses_comma_below_diacritics() {
-        val text = File(res, "values-ro/strings.xml").readText()
+        val text = File(res, "values-ro").listFiles()!!.filter { it.extension == "xml" }.joinToString("\n") { it.readText() }
         assertTrue("Romanian must use ș/ț (comma below), not ş/ţ", listOf('ş', 'ţ', 'Ş', 'Ţ').none { it in text })
     }
 }

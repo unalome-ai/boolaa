@@ -6,10 +6,12 @@ final class MarketModel {
     var items: [MarketItem] = []
     var loaded = false
     var error: String?
+    let reactions = ReactionStore(.marketItem)
 
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do { items = try await api.marketItems(bubbleID: bubbleID) } catch { self.error = error.userMessage }
+        do { items = try await api.marketItems(bubbleID: bubbleID).sorted(by: MarketItem.precedes) } catch { self.error = error.userMessage }
         loaded = true
+        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: items.map(\.id))
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -17,7 +19,8 @@ final class MarketModel {
         await LiveFeed.observe(MarketItem.self, api: api, bubbleID: bubbleID,
                                rows: { [weak self] in self?.items ?? [] },
                                apply: { [weak self] in self?.items = $0 },
-                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) },
+                               reactions: reactions)
     }
 
     func delete(api: BoolaaAPI, item: MarketItem) async {
@@ -28,10 +31,21 @@ final class MarketModel {
         } catch { self.error = error.userMessage }
     }
 
-    /// nil filter = All.
-    nonisolated static func filter(_ items: [MarketItem], by status: MarketStatus?) -> [MarketItem] {
-        guard let status else { return items }
-        return items.filter { $0.status == status }
+    /// Owner only. Applied locally at once; other members get the UPDATE live.
+    func setAvailability(api: BoolaaAPI, item: MarketItem, _ availability: MarketAvailability) async {
+        guard item.availability != availability else { return }
+        do {
+            try await api.setMarketAvailability(id: item.id, availability)
+            if let idx = items.firstIndex(where: { $0.id == item.id }) {
+                items[idx].availability = availability
+                items.sort(by: MarketItem.precedes)
+            }
+        } catch { self.error = error.userMessage }
+    }
+
+    /// nil filter = All. `hideTaken` drops taken items; the rest keep their order (taken last).
+    nonisolated static func filter(_ items: [MarketItem], by status: MarketStatus?, hideTaken: Bool = false) -> [MarketItem] {
+        items.filter { (status == nil || $0.status == status) && !(hideTaken && $0.availability == .taken) }
     }
 }
 
@@ -40,6 +54,8 @@ struct MarketplaceView: View {
     @Environment(SessionStore.self) private var session
     @State private var model = MarketModel()
     @State private var filter: MarketStatus?
+    @State private var hideTaken = false
+    @Environment(ShellRouter.self) private var router
     @State private var editing: MarketEditorTarget?
     @State private var detail: MarketItem?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -60,7 +76,7 @@ struct MarketplaceView: View {
                         AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }
                     }
                 }
-                let visible = MarketModel.filter(model.items, by: filter)
+                let visible = MarketModel.filter(model.items, by: filter, hideTaken: hideTaken)
                 if model.loaded && !visible.isEmpty {
                     Text("\(visible.count) items", comment: "Number of marketplace items shown")
                         .font(.rounded(.subheadline, weight: .semibold)).monospacedDigit().foregroundStyle(.secondary)
@@ -80,11 +96,17 @@ struct MarketplaceView: View {
                 }
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(Array(visible.enumerated()), id: \.element.id) { index, item in
-                        Button { detail = item } label: { MarketCard(item: item, isMine: item.ownerId == session.userID) }
+                        Button { detail = item } label: {
+                            MarketCard(item: item, isMine: item.ownerId == session.userID,
+                                       reactions: model.reactions.summary(for: item.id, me: session.userID))
+                        }
                             .buttonStyle(.squish)
-                            .safetyContextMenu(.market(item))
+                            .safetyContextMenu(.market(item), react: item.ownerId == session.userID ? nil : { react(item, $0) })
+                            .modifier(OwnerAvailabilityMenu(item: item, isMine: item.ownerId == session.userID,
+                                                            onReact: { react(item, $0) }) { setAvailability(item, $0) })
                             .transition(.scale(scale: 0.85).combined(with: .opacity))
                             .popIn(index)
+                            .pushHighlightTarget(item.id)
                     }
                 }
             }
@@ -92,8 +114,11 @@ struct MarketplaceView: View {
             .padding(.top, 4)
             .padding(.bottom, Theme.tabBarClearance)
             .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: filter)
+            .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: hideTaken)
+            .animation(Motion.gentle, value: model.items.map(\.availability))
             .animation(Motion.gentle, value: model.items.map(\.id))
         }
+        .scrollsToPushHighlight(model.items.map(\.id))
         .refreshFeedback { await reload() }
         .task {
             await reload()
@@ -104,9 +129,16 @@ struct MarketplaceView: View {
             MarketEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
         .sheet(item: $detail) { item in
-            MarketDetail(item: item, isMine: item.ownerId == session.userID,
-                         onEdit: { detail = nil; editing = .edit(item) },
-                         onDelete: { detail = nil; Task { await model.delete(api: session.api, item: item) } })
+            // The live row, so a status change made meanwhile shows in the open sheet.
+            let live = model.items.first { $0.id == item.id } ?? item
+            MarketDetail(item: live, isMine: live.ownerId == session.userID,
+                         chatDraft: live.chatDraft(me: session.userID),
+                         onEdit: { detail = nil; editing = .edit(live) },
+                         onDelete: { detail = nil; Task { await model.delete(api: session.api, item: live) } },
+                         onAvailability: { setAvailability(live, $0) },
+                         onAskInChat: { draft in detail = nil; router.openChat(draft: draft) },
+                         reactions: model.reactions.summary(for: live.id, me: session.userID),
+                         onReact: { react(live, $0) })
                 .boolaaSheet()
         }
         .errorAlert($model.error)
@@ -116,9 +148,26 @@ struct MarketplaceView: View {
         filterChip(String(localized: "All", comment: "Filter chip showing every item"), id: "all", nil).fixedSize()
         filterChip(String(localized: MarketStatus.free.label), id: "free", .free).fixedSize()
         filterChip(String(localized: MarketStatus.trade.label), id: "trade", .trade).fixedSize()
+        Button { hideTaken.toggle() } label: {
+            ChipView(title: String(localized: "Hide taken", comment: "Filter toggle hiding taken marketplace items"), isActive: hideTaken, hue: hue)
+        }
+        .buttonStyle(.squish)
+        .fixedSize()
+        .accessibilityAddTraits(hideTaken ? .isSelected : [])
+        .accessibilityIdentifier("market-hide-taken")
+    }
+
+    private func setAvailability(_ item: MarketItem, _ availability: MarketAvailability) {
+        Task { await model.setAvailability(api: session.api, item: item, availability) }
     }
 
     private var hue: Hue { Feature.market.hue }
+
+    private func react(_ item: MarketItem, _ kind: ReactionKind) {
+        Task {
+            if let e = await model.reactions.toggle(api: session.api, target: item.id, kind: kind, me: session.userID) { model.error = e }
+        }
+    }
 
     private func filterChip(_ title: String, id: String, _ status: MarketStatus?) -> some View {
         Button { filter = status } label: {
@@ -155,22 +204,95 @@ struct StatusBadge: View {
     }
 }
 
+/// Shown only when an item is reserved or taken.
+struct AvailabilityBadge: View {
+    var availability: MarketAvailability
+    var body: some View {
+        if availability != .available {
+            let reserved = availability == .reserved
+            Label { Text(availability.label) } icon: { Image(systemName: reserved ? "clock.fill" : "checkmark.seal.fill") }
+                .labelStyle(.titleAndIcon)
+                .font(.rounded(.caption, weight: .heavy))
+                .foregroundStyle(reserved ? Hue.tangerine.onFill : .white)
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background { if reserved { Capsule().fill(Hue.tangerine.gradient) } else { Capsule().fill(Color.gray) } }
+                .overlay(Capsule().strokeBorder(.white.opacity(0.5), lineWidth: 1))
+                .accessibilityIdentifier("availability-\(availability.rawValue)")
+        }
+    }
+}
+
+/// "Mark as" Available / Reserved / Taken for the owner.
+struct AvailabilityMenu: View {
+    var current: MarketAvailability
+    var onPick: (MarketAvailability) -> Void
+    var body: some View {
+        Section(String(localized: "Mark as", comment: "Menu heading for changing a marketplace item's availability")) {
+            ForEach(MarketAvailability.allCases, id: \.self) { option in
+                Button { onPick(option) } label: {
+                    if option == current { Label { Text(option.label) } icon: { Image(systemName: "checkmark") } } else { Text(option.label) }
+                }
+                .accessibilityIdentifier("mark-\(option.rawValue)")
+            }
+        }
+    }
+}
+
+/// Long press on your own item: "Mark as" Available / Reserved / Taken.
+private struct OwnerAvailabilityMenu: ViewModifier {
+    var item: MarketItem
+    var isMine: Bool
+    var onReact: (ReactionKind) -> Void
+    var onPick: (MarketAvailability) -> Void
+    func body(content: Content) -> some View {
+        if isMine {
+            content.contextMenu {
+                ReactSubmenu(onPick: onReact)
+                AvailabilityMenu(current: item.availability, onPick: onPick)
+            }
+        } else {
+            content
+        }
+    }
+}
+
 struct MarketCard: View {
     var item: MarketItem
     var isMine: Bool
+    /// Read-only here (the card is a button); reacting happens in the detail sheet or the long-press menu.
+    var reactions: [ReactionSummary] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Color.clear
                 .frame(height: 140)
-                .overlay { RemoteImage(url: item.image, hue: Feature.market.hue) }
+                .overlay {
+                    RemoteImage(url: item.image, hue: Feature.market.hue)
+                        .saturation(item.availability == .taken ? 0 : 1)
+                        .opacity(item.availability == .taken ? 0.55 : 1)
+                }
                 .clipped()
                 .overlay(alignment: .topLeading) { StatusBadge(status: item.status).padding(8) }
+                .overlay(alignment: .bottomLeading) { AvailabilityBadge(availability: item.availability).padding(8) }
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: item.title).font(.rounded(.subheadline)).lineLimit(1)
                 HStack(spacing: 6) {
                     AvatarView(user: item.owner, size: 20)
                     Text(verbatim: isMine ? String(localized: "You", comment: "Shown instead of your own name") : (item.owner?.displayName ?? "")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+                if !reactions.isEmpty {
+                    FlowLayout(spacing: 4) {
+                        ForEach(reactions) { r in
+                            Text(verbatim: "\(r.kind.emoji) \(r.count)")
+                                .font(.rounded(.caption2, weight: .bold)).monospacedDigit()
+                                .foregroundStyle(r.mine ? Feature.market.hue.text : Theme.inkSecondary)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Capsule().fill(r.mine ? Feature.market.hue.wash : Theme.chipInactive))
+                                .accessibilityLabel(Text(verbatim: r.kind.chipLabel(count: r.count)))
+                                .accessibilityValue(r.mine ? Text("You reacted") : Text(verbatim: ""))
+                        }
+                    }
+                    .padding(.top, 2)
                 }
             }
             .padding(12)
@@ -187,8 +309,13 @@ struct MarketDetail: View {
     @Environment(\.dismiss) private var dismiss
     var item: MarketItem
     var isMine: Bool
+    var chatDraft: String? = nil
     var onEdit: () -> Void
     var onDelete: () -> Void
+    var onAvailability: (MarketAvailability) -> Void = { _ in }
+    var onAskInChat: (String) -> Void = { _ in }
+    var reactions: [ReactionSummary] = []
+    var onReact: ((ReactionKind) -> Void)? = nil
     @State private var confirmDelete = false
 
     var body: some View {
@@ -200,6 +327,7 @@ struct MarketDetail: View {
                 HStack {
                     Text(verbatim: item.title).font(.rounded(.title2, weight: .heavy))
                     Spacer()
+                    AvailabilityBadge(availability: item.availability)
                     StatusBadge(status: item.status)
                 }
                 if let d = item.description?.nilIfEmpty { Text(verbatim: d) }
@@ -208,7 +336,26 @@ struct MarketDetail: View {
                     Text(verbatim: item.owner?.displayName ?? "").font(.subheadline.weight(.semibold))
                     Text(verbatim: "· " + item.createdAt.relativeShort).font(.subheadline).foregroundStyle(.secondary)
                 }
+                if let onReact {
+                    ReactionBar(summaries: reactions, hue: Feature.market.hue, onToggle: onReact)
+                }
+                if !isMine, let chatDraft {
+                    Button { onAskInChat(chatDraft) } label: {
+                        Label { Text("Ask in chat", comment: "Opens the bubble chat with a question about this item") }
+                            icon: { Image(systemName: "bubble.left.and.bubble.right.fill") }
+                    }
+                    .buttonStyle(PrimaryButtonStyle(hue: Feature.market.hue))
+                    .accessibilityIdentifier("market-ask-in-chat")
+                }
                 if isMine {
+                    Menu {
+                        AvailabilityMenu(current: item.availability, onPick: onAvailability)
+                    } label: {
+                        Label { Text("Mark as", comment: "Menu heading for changing a marketplace item's availability") + Text(verbatim: ": ") + Text(item.availability.label) }
+                            icon: { Image(systemName: "tag.fill") }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .accessibilityIdentifier("market-mark-as")
                     HStack(spacing: 12) {
                         Button("Edit", action: onEdit).buttonStyle(SecondaryButtonStyle())
                         Button("Delete") { confirmDelete = true }.buttonStyle(PrimaryButtonStyle(hue: .coral))
@@ -235,6 +382,7 @@ struct MarketEditor: View {
     @State private var title = ""
     @State private var description = ""
     @State private var status: MarketStatus = .free
+    @State private var availability: MarketAvailability = .available
     @State private var busy = false
     @State private var error: String?
 
@@ -250,6 +398,12 @@ struct MarketEditor: View {
                         .lineLimit(2...5).padding(.vertical, 12).boolaaField()
                     SegmentedPill(selection: $status, options: MarketStatus.allCases.map { .init(value: $0, label: $0.label) },
                                   hue: Feature.market.hue)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Availability", comment: "Label of the marketplace availability picker")
+                            .font(.rounded(.subheadline, weight: .semibold)).foregroundStyle(.secondary)
+                        SegmentedPill(selection: $availability, options: MarketAvailability.allCases.map { .init(value: $0, label: $0.label) },
+                                      hue: Feature.market.hue)
+                    }
                 }
                 .padding(20)
             }
@@ -264,7 +418,7 @@ struct MarketEditor: View {
                 }
             }
             .onAppear {
-                if let existing { title = existing.title; description = existing.description ?? ""; status = existing.status }
+                if let existing { title = existing.title; description = existing.description ?? ""; status = existing.status; availability = existing.availability }
             }
             .errorAlert($error)
         }
@@ -278,7 +432,7 @@ struct MarketEditor: View {
             if let jpeg { imageURL = try await session.api.uploadImage(jpeg, bucket: .market, userID: me) }
             var input = MarketInput(image: imageURL, title: title.trimmingCharacters(in: .whitespaces),
                                     description: description.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
-                                    status: status)
+                                    status: status, availability: availability)
             if let existing {
                 try await session.api.updateMarketItem(id: existing.id, input)
                 if imageURL != existing.image {

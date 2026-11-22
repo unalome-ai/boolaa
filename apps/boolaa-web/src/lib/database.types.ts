@@ -543,6 +543,7 @@ export type Database = {
       }
       market_items: {
         Row: {
+          availability: string
           bubble_id: string
           created_at: string
           description: string | null
@@ -553,6 +554,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          availability?: string
           bubble_id: string
           created_at?: string
           description?: string | null
@@ -563,6 +565,7 @@ export type Database = {
           title: string
         }
         Update: {
+          availability?: string
           bubble_id?: string
           created_at?: string
           description?: string | null
@@ -871,6 +874,104 @@ export type Database = {
           },
         ]
       }
+      reactions: {
+        Row: {
+          bubble_id: string
+          created_at: string
+          event_id: string | null
+          food_post_id: string | null
+          id: string
+          link_id: string | null
+          market_item_id: string | null
+          message_id: string | null
+          reaction: string
+          target_id: string | null
+          target_owner_id: string
+          target_type: string | null
+          user_id: string
+        }
+        Insert: {
+          bubble_id: string
+          created_at?: string
+          event_id?: string | null
+          food_post_id?: string | null
+          id?: string
+          link_id?: string | null
+          market_item_id?: string | null
+          message_id?: string | null
+          reaction: string
+          target_id?: string | null
+          target_owner_id: string
+          target_type?: string | null
+          user_id: string
+        }
+        Update: {
+          bubble_id?: string
+          created_at?: string
+          event_id?: string | null
+          food_post_id?: string | null
+          id?: string
+          link_id?: string | null
+          market_item_id?: string | null
+          message_id?: string | null
+          reaction?: string
+          target_id?: string | null
+          target_owner_id?: string
+          target_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_food_post_id_fkey"
+            columns: ["food_post_id"]
+            isOneToOne: false
+            referencedRelation: "food_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "shared_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_market_item_id_fkey"
+            columns: ["market_item_id"]
+            isOneToOne: false
+            referencedRelation: "market_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           alert_sent_at: string | null
@@ -946,6 +1047,14 @@ export type Database = {
           bubble_id: string
           created_at: string
           id: string
+          preview_claimed_at: string | null
+          preview_description: string | null
+          preview_fetched_at: string | null
+          preview_image_path: string | null
+          preview_requested_at: string | null
+          preview_site_name: string | null
+          preview_status: string
+          preview_title: string | null
           tags: string[]
           title: string | null
           url: string
@@ -955,6 +1064,14 @@ export type Database = {
           bubble_id: string
           created_at?: string
           id?: string
+          preview_claimed_at?: string | null
+          preview_description?: string | null
+          preview_fetched_at?: string | null
+          preview_image_path?: string | null
+          preview_requested_at?: string | null
+          preview_site_name?: string | null
+          preview_status?: string
+          preview_title?: string | null
           tags?: string[]
           title?: string | null
           url: string
@@ -964,6 +1081,14 @@ export type Database = {
           bubble_id?: string
           created_at?: string
           id?: string
+          preview_claimed_at?: string | null
+          preview_description?: string | null
+          preview_fetched_at?: string | null
+          preview_image_path?: string | null
+          preview_requested_at?: string | null
+          preview_site_name?: string | null
+          preview_status?: string
+          preview_title?: string | null
           tags?: string[]
           title?: string | null
           url?: string
@@ -1152,6 +1277,13 @@ export type Database = {
           unread_count: number
         }[]
       }
+      claim_link_preview: {
+        Args: { p_link_id: string }
+        Returns: {
+          bubble_id: string
+          url: string
+        }[]
+      }
       claim_push_batch: { Args: { p_limit?: number }; Returns: Json }
       claim_report_alert: { Args: { p_report_id: string }; Returns: Json }
       complete_email_challenge: {
@@ -1227,6 +1359,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      link_preview_orphans: {
+        Args: { p_grace?: string; p_limit?: number }
+        Returns: string[]
       }
       list_my_devices: {
         Args: never
@@ -1329,6 +1465,7 @@ export type Database = {
       require_admin: { Args: never; Returns: undefined }
       require_invite_lookup_allowed: { Args: never; Returns: undefined }
       require_verified_session: { Args: never; Returns: undefined }
+      retry_link_previews: { Args: never; Returns: number }
       revoke_device: { Args: { p_device_hash: string }; Returns: boolean }
       rotate_invite_code: { Args: { p_bubble_id: string }; Returns: string }
       set_account_status: {
@@ -1349,9 +1486,29 @@ export type Database = {
         Args: { p_bucket: string; p_url: string }
         Returns: string
       }
+      store_link_preview: {
+        Args: {
+          p_description?: string
+          p_image_path?: string
+          p_link_id: string
+          p_site_name?: string
+          p_status: string
+          p_title?: string
+          p_url: string
+        }
+        Returns: boolean
+      }
       sweep_bubble_images: {
         Args: { p_grace?: string; p_key?: string; p_url?: string }
         Returns: number
+      }
+      sweep_link_preview_images: {
+        Args: { p_grace?: string; p_key?: string; p_url?: string }
+        Returns: number
+      }
+      toggle_reaction: {
+        Args: { p_reaction: string; p_target_id: string; p_target_type: string }
+        Returns: Json
       }
       toggle_rsvp: { Args: { p_event_id: string }; Returns: string[] }
       trust_device: {

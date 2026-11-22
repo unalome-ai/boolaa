@@ -344,4 +344,16 @@
         <item quantity="other">%d unread messages</item>
     </plurals>
     <string name="error_chat_message_gone">That message no longer exists.</string>
+
+    <!-- Marketplace availability + "Ask in chat", events "Add to calendar" (docs/boolaa-spec.md) -->
+    <string name="market_availability">Availability</string>
+    <string name="market_available">Available</string>
+    <string name="market_reserved">Reserved</string>
+    <string name="market_taken">Taken</string>
+    <string name="market_hide_taken">Hide taken</string>
+    <string name="market_mark_as">Mark as %1$s</string>
+    <string name="market_ask_in_chat">Ask in chat</string>
+    <string name="market_ask_draft">\@%1$s, is “%2$s” still available?</string>
+    <string name="events_add_to_calendar">Add to calendar</string>
+    <string name="events_no_calendar_app">No calendar app found.</string>
 </resources>

@@ -208,7 +208,8 @@
     "goingCount": "{count, plural, =0 {Personne ne participe encore} one {# personne participe} other {# personnes participent}}",
     "dateTime": "Date et heure",
     "location": "Lieu",
-    "create": "Créer l'événement"
+    "create": "Créer l'événement",
+    "addToCalendar": "Ajouter au calendrier"
   },
   "food": {
     "share": "Partager à manger",
@@ -237,7 +238,15 @@
     "deleteItem": "Supprimer l'objet",
     "emptyTitle": "Rien ici pour l'instant",
     "emptyHint": "Donne ou échange des objets avec ta bulle.",
-    "confirmDelete": "Supprimer « {title} » ?"
+    "confirmDelete": "Supprimer « {title} » ?",
+    "availability": "Disponibilité",
+    "available": "Disponible",
+    "reserved": "Réservé",
+    "taken": "Parti",
+    "hideTaken": "Masquer ce qui est parti",
+    "markAs": "Marquer comme",
+    "askInChat": "Demander dans la discussion",
+    "askDraft": "@{name}, « {title} » est toujours disponible ?"
   },
   "links": {
     "filter": "Filtrer par tag",
@@ -250,7 +259,8 @@
     "confirmDelete": "Supprimer « {title} » ?",
     "url": "URL",
     "tags": "Tags (séparés par des virgules)",
-    "tagsPlaceholder": "cuisine, pas cher"
+    "tagsPlaceholder": "cuisine, pas cher",
+    "previewLoading": "Chargement de l'aperçu…"
   },
   "settings": {
     "bubble": "Bulle",
@@ -512,5 +522,49 @@
     "invalidBody": "Le lien est peut-être ancien ou le code a changé. Demandes-en un nouveau à un membre.",
     "requestSent": "Demande envoyée",
     "getApp": "Télécharge l'app"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enabled": "Autoriser les notifications",
+    "chat": "Messages de discussion",
+    "joinRequests": "Demandes d'adhésion",
+    "approvals": "Ma demande a été acceptée",
+    "newEvents": "Nouveaux événements",
+    "eventReminders": "Rappels d'événements (1 heure avant)",
+    "food": "Cercle gourmand",
+    "market": "Marché",
+    "preview": "Afficher l'aperçu des messages",
+    "previewHint": "Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte.",
+    "blocked": "Les notifications de Boolaa sont désactivées dans tes réglages.",
+    "blockedHint": "Pour les réactiver, clique sur l'icône à gauche de la barre d'adresse, autorise les notifications pour ce site, puis recharge la page.",
+    "ask": "Activer les notifications",
+    "askHint": "Reçois un signal quand tes bulles te parlent.",
+    "on": "Activées sur ce navigateur",
+    "turnOff": "Désactiver sur ce navigateur",
+    "unsupported": "Ce navigateur ne peut pas recevoir de notifications. Sur iPhone et iPad, ajoute d'abord Boolaa à ton écran d'accueil.",
+    "allBubbles": "Ces réglages s'appliquent à toutes tes bulles."
+  },
+  "mute": {
+    "title": "Mettre la bulle en sourdine",
+    "hint": "Aucune notification de cette bulle, rappels compris.",
+    "1h": "1 heure",
+    "8h": "8 heures",
+    "1w": "1 semaine",
+    "forever": "Jusqu'à ce que je la réactive",
+    "until": "En sourdine jusqu'au {date}",
+    "mutedForever": "En sourdine jusqu'à ce que tu la réactives",
+    "unmute": "Réactiver"
+  },
+  "reactions": {
+    "like": "J'aime",
+    "love": "J'adore",
+    "laugh": "Haha",
+    "wow": "Waouh",
+    "sad": "Triste",
+    "thanks": "Merci",
+    "addReaction": "Ajouter une réaction",
+    "react": "Réagir",
+    "chip": "{reaction} : {count, plural, one {# réaction} other {# réactions}}",
+    "reactedByYou": "Tu as réagi"
   }
 }

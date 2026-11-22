@@ -14,6 +14,9 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { cx } from "@/lib/utils";
+import { useChatDraft } from "@/lib/chat-draft";
+import { useReactions } from "@/lib/reactions";
+import { ReactionChips, ReactionPicker } from "@/components/reactions";
 
 /** Scrolled this close to the top, the next older page loads. */
 const TOP_THRESHOLD = 160;
@@ -50,6 +53,24 @@ export default function ChatPage() {
   const anchor = useRef<{ height: number; top: number } | null>(null);
   const pinned = useRef(true);
   const lastMarked = useRef<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Message whose reaction picker is open (button, or right-click on the bubble).
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const liveIds = useMemo(() => (messages ?? []).filter((m) => !m.deleted_at).map((m) => m.id), [messages]);
+  const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "chat_message", targetIds: liveIds, userId, onError: (e) => setError(errorText(e)) });
+  const { bind: bindReactions, reload: reloadReactions, dropTarget } = reactions;
+
+  // A prefilled message from elsewhere ("Ask in chat" on a market item): put it in the composer, unsent.
+  const onDraft = useCallback((draft: string) => {
+    setText(draft);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(draft.length, draft.length);
+    });
+  }, []);
+  useChatDraft(bubble.id, onDraft);
 
   const page = useCallback(
     (before: string | null) =>
@@ -85,12 +106,16 @@ export default function ChatPage() {
 
     // INSERT adds, UPDATE replaces in place (a deletion arrives as an UPDATE with deleted_at set).
     const filter = `bubble_id=eq.${bubble.id}`;
-    const onRow = (payload: { new: unknown }) => merge([{ ...(payload.new as Row<"chat_messages">), sender: null }]);
+    const onRow = (payload: { new: unknown }) => {
+      const row = payload.new as Row<"chat_messages">;
+      if (row.deleted_at) dropTarget(row.id); // a deleted message loses its reactions
+      merge([{ ...row, sender: null }]);
+    };
     const unsubscribe = liveChannel(
       supabase,
       `chat:${bubble.id}`,
       (ch) =>
-        ch
+        bindReactions(ch)
           .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter }, onRow)
           .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_messages", filter }, onRow),
       async (ready) => {
@@ -99,6 +124,7 @@ export default function ChatPage() {
         const { data } = await page(null);
         if (!alive) return;
         if (data) merge(data);
+        void reloadReactions();
         setLive(true);
       },
     );
@@ -109,7 +135,7 @@ export default function ChatPage() {
     };
     // `unread` changes identity with every count; only its stable `load` is used here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase, bubble.id, page]);
+  }, [supabase, bubble.id, page, bindReactions, reloadReactions, dropTarget]);
 
   const loadOlder = useCallback(async () => {
     const el = listRef.current;
@@ -242,6 +268,7 @@ export default function ChatPage() {
     if (error) return setError(errorText(error));
     const gone = (data as { image_path?: string | null } | null)?.image_path;
     void removeChatImage(supabase, gone);
+    dropTarget(m.id);
     setMessages((prev) =>
       mergeMessages(prev ?? [], [{ ...m, content: "", image_path: null, deleted_at: new Date().toISOString() }]),
     );
@@ -315,6 +342,10 @@ export default function ChatPage() {
                           </div>
                         ) : (
                           <div
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              setPickerFor(m.id);
+                            }}
                             className={cx(
                               "overflow-hidden whitespace-pre-wrap break-words rounded-[21px] text-[16px] leading-snug",
                               mine ? "hue-grape rounded-br-[6px] bg-hue-grad text-white shadow-glow" : "rounded-bl-[6px] bg-card text-fg shadow-soft",
@@ -344,8 +375,18 @@ export default function ChatPage() {
                             {m.content && <div className={cx(m.image_path && "px-4 py-2.5")}>{m.content}</div>}
                           </div>
                         )}
+                        {!deleted && <ReactionChips state={reactions} targetId={m.id} className={cx("hue-grape mt-1", mine && "justify-end")} />}
                         <span className={cx("mt-0.5 flex items-center gap-1 px-1 text-[11px] text-muted", mine && "flex-row-reverse")}>
                           {fmt.time(m.created_at)}
+                          {!deleted && (
+                            <ReactionPicker
+                              compact
+                              align={mine ? "right" : "left"}
+                              open={pickerFor === m.id}
+                              onOpenChange={(o) => setPickerFor(o ? m.id : null)}
+                              onPick={(r) => void reactions.toggle(m.id, r)}
+                            />
+                          )}
                           {!mine && !deleted && (
                             <SafetyMenu type="chat_message" id={m.id} author={m.sender ? { id: m.sender_id, name: m.sender.name } : { id: m.sender_id, name: null }} compact />
                           )}
@@ -414,6 +455,7 @@ export default function ChatPage() {
           placeholder={t("placeholder", { bubble: bubble.name })}
           aria-label={t("messageLabel")}
           data-testid="chat-input"
+          ref={inputRef}
           value={text}
           maxLength={4000}
           onChange={(e) => setText(e.target.value)}

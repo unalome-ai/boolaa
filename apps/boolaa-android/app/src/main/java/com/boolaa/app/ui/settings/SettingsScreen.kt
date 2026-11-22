@@ -1,5 +1,8 @@
 package com.boolaa.app.ui.settings
 
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.Icons
+import com.boolaa.app.ui.shell.PushHighlightScroll
 import com.boolaa.app.core.InviteLink
 import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.Canvas
@@ -290,9 +293,13 @@ fun SettingsScreen(navigator: ShellNavigator) {
     var blocking by remember { mutableStateOf<BubbleMember?>(null) }
     val isOwner = state.currentRole == MemberRole.OWNER
     val c = BoolaaTheme.colors
+    val listState = rememberLazyListState()
+    // A tapped join-request push scrolls to the pending requests.
+    PushHighlightScroll(listState, loaded = requests != null)
 
     BoolaaRefreshBox(isRefreshing = busy, onRefresh = { vm.load(refresh = true) }, modifier = Modifier.fillMaxSize().testTag("settings-screen")) {
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = dockClearance()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxSize(),
@@ -303,6 +310,11 @@ fun SettingsScreen(navigator: ShellNavigator) {
                 SettingsRow(BoolaaIcons.Link, Hue.sky, stringResource(R.string.shared_links), BoolaaIcons.Disclosure, navigator::openLinks,
                     Modifier.popIn(2).testTag("settings-links"))
             }
+            item(key = "notifications") {
+                SettingsRow(Icons.Rounded.Notifications, Hue.coral, stringResource(R.string.notifications_title), BoolaaIcons.Disclosure,
+                    navigator::openNotifications, Modifier.popIn(2).testTag("settings-notifications"))
+            }
+            item(key = "mute-${bubble.id}") { MuteCard(bubble.id, Modifier.popIn(2)) }
             item(key = "members-header") { SectionHeader(stringResource(R.string.members), members.size, Modifier.popIn(3)) }
             item(key = "members") {
                 Column(Modifier.popIn(4).boolaaCard().testTag("members-list")) {

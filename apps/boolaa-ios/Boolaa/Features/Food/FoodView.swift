@@ -6,10 +6,12 @@ final class FoodModel {
     var posts: [FoodPost] = []
     var loaded = false
     var error: String?
+    let reactions = ReactionStore(.foodPost)
 
     func load(api: BoolaaAPI, bubbleID: UUID) async {
         do { posts = try await api.foodPosts(bubbleID: bubbleID) } catch { self.error = error.userMessage }
         loaded = true
+        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: posts.map(\.id))
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -17,7 +19,8 @@ final class FoodModel {
         await LiveFeed.observe(FoodPost.self, api: api, bubbleID: bubbleID,
                                rows: { [weak self] in self?.posts ?? [] },
                                apply: { [weak self] in self?.posts = $0 },
-                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) },
+                               reactions: reactions)
     }
 
     func delete(api: BoolaaAPI, post: FoodPost) async {
@@ -50,19 +53,27 @@ struct FoodView: View {
                 }
                 ForEach(Array(mine.enumerated()), id: \.element.id) { index, post in
                     FoodCard(post: post,
+                             reactions: model.reactions.summary(for: post.id, me: session.userID),
+                             onReact: { react(post, $0) },
                              onEdit: { editing = .edit(post) },
                              onDelete: { Task { await model.delete(api: session.api, post: post) } })
+                        .safetyContextMenu(.food(post), react: { react(post, $0) })
                         .scrollFade()
                         .popIn(index)
+                        .pushHighlightTarget(post.id)
                 }
                 SectionHeader(title: "From the bubble", count: others.count, hue: hue)
                 if model.loaded && others.isEmpty {
                     EmptyStateView(icon: "takeoutbag.and.cup.and.straw.fill", title: "No food posts", message: "Posts from other members show up here.", hue: hue)
                 }
                 ForEach(Array(others.enumerated()), id: \.element.id) { index, post in
-                    FoodCard(post: post).safetyContextMenu(.food(post))
+                    FoodCard(post: post,
+                             reactions: model.reactions.summary(for: post.id, me: session.userID),
+                             onReact: { react(post, $0) })
+                        .safetyContextMenu(.food(post), react: { react(post, $0) })
                         .scrollFade()
                         .popIn(index + mine.count)
+                        .pushHighlightTarget(post.id)
                 }
             }
             .padding(.horizontal, 16)
@@ -70,6 +81,7 @@ struct FoodView: View {
             .padding(.bottom, Theme.tabBarClearance)
             .animation(Motion.gentle, value: model.posts.map(\.id))
         }
+        .scrollsToPushHighlight(model.posts.map(\.id))
         .refreshFeedback { await reload() }
         .task {
             await reload()
@@ -82,6 +94,12 @@ struct FoodView: View {
     }
 
     private var hue: Hue { Feature.food.hue }
+
+    private func react(_ post: FoodPost, _ kind: ReactionKind) {
+        Task {
+            if let e = await model.reactions.toggle(api: session.api, target: post.id, kind: kind, me: session.userID) { model.error = e }
+        }
+    }
 
     private func reload() async {
         guard let id = session.currentBubble?.id else { return }
@@ -97,6 +115,8 @@ enum FoodEditorTarget: Identifiable {
 
 struct FoodCard: View {
     var post: FoodPost
+    var reactions: [ReactionSummary] = []
+    var onReact: ((ReactionKind) -> Void)? = nil
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
     @State private var confirmDelete = false
@@ -134,6 +154,12 @@ struct FoodCard: View {
                     }
                 }
                 .padding(16)
+            }
+            if let onReact {
+                ReactionBar(summaries: reactions, hue: Feature.food.hue, onToggle: onReact)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 14)
+                    .padding(.top, post.description?.nilIfEmpty != nil || onEdit != nil ? 0 : 12)
             }
         }
         .background(Theme.card)

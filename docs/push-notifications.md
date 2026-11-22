@@ -262,6 +262,23 @@ All three clients do the same four things:
 - On sign-out: `unregister_push_token(sub.endpoint)`, then `sub.unsubscribe()`, then `signOut()`.
 - Re-subscribe on every app start (`pushManager.getSubscription()` → register again), because browsers rotate subscriptions.
 
+### Implemented (2026-11-23)
+No migration was needed: the clients use only the RPCs and tables above. All three ask for permission only from a button (Notifications settings, or a dismissible Home card shown until the OS/browser has been asked). They register on every start and return to the foreground once the session gate is open (verified, not suspended, age confirmed), and again on a new token or a language change. They unregister before `signOut()` (best effort, 3 s cap on the apps). A tapped push routes per §5: Settings is scrolled to pending requests, and an event/post/item gets a 4 s highlight. A chat push for the chat on screen shows nothing, and opening a chat clears that bubble's delivered chat notifications (apps). No badge.
+
+- **iOS**:
+  - **Entitlement**: `project.yml` sets `aps-environment: development`. Archive/export with an App Store or Ad Hoc profile switches it to `production`. `apns_env` is `#if DEBUG` → `sandbox`, else `production`. The bundle id is `ro.boolaa.app`, so no `APNS_TOPIC` override is needed.
+  - **Code**: `App/AppDelegate.swift` (`UIApplicationDelegateAdaptor`; sets the notification-centre delegate and the 7 categories at launch, so cold-start taps route), `State/PushCenter.swift`, `Core/PushNotifications.swift` (payload → route, presentation rule), `Core/PushAPI.swift`, `Features/Notifications/NotificationsViews.swift` (Profile → Notifications; mute card in bubble Settings). The debug hook `-UITestOpen notifications` opens the screen.
+  - **Tests**: `BoolaaTests/PushTests.swift`. `PushIntegrationTests.swift` runs against the local stack: register/upsert, prefs, mute, then a dry-run APNs entry with the app's parser shape.
+- **Android**:
+  - **Firebase without the config file**: Firebase Messaging via BoM, no analytics dependency; the manifest turns analytics and ad-id collection off. The `com.google.gms.google-services` plugin is declared `apply false` at the root, and `app/build.gradle.kts` applies it **only if `app/google-services.json` exists** (otherwise it logs "building without FCM (push disabled)"). So unit tests and CI build without the file. At runtime, without Firebase the push code does nothing and Settings says notifications are unavailable on this device. Locally, copy `~/.boolaa-signing/google-services.json` to `app/` (git-ignored); in CI, decode `GOOGLE_SERVICES_JSON_B64`.
+  - **Code**: `push/PushManager.kt`, `push/BoolaaMessagingService.kt` (foreground notifications with the server's channel and tag), `ui/shell/PushRouter.kt`, `ui/settings/NotificationsScreen.kt` (Settings → Notifications; Mute card in bubble Settings), `res/values*/strings_push.xml`, small icon `ic_stat_boolaa`. Channels are created at app start and when the activity is created, so their names follow the language. `MainActivity` reads the push extras before the invite/auth link handling. If notifications are blocked in system settings, the token is unregistered.
+  - **Tests**: `PushTest`. `PushLocalStackTest` is opt-in: `BOOLAA_LOCAL_STACK=1 BOOLAA_SERVICE_ROLE_KEY=… ./gradlew :app:testDebugUnitTest --tests '*PushLocalStackTest*'`.
+- **Web**:
+  - **Code**: `public/sw.js` (push, notificationclick, §5 route table fallback, no banner when a focused tab is on that bubble's chat), `src/lib/push.ts` (`enablePush` from a click, `syncPush` on start and language change, `disablePush` = "Turn off on this browser", remembered locally), `src/components/notification-settings.tsx` (Settings section: this browser's state, prefs, mute), `src/components/deep-link.tsx` (scroll to and highlight via `data-item-id`). `BoolaaProvider` handles `?bubble=`: it switches and sets the cookie if the bubble is joined, otherwise opens `/home`.
+  - **Serving**: the proxy matcher skips `sw.js`, and `next.config.ts` serves it with `Cache-Control: no-cache`. Icons are `public/icon-192.png` and `public/badge-72.png`.
+  - **Env**: `NEXT_PUBLIC_VAPID_PUBLIC_KEY` must equal the function's `VAPID_PUBLIC_KEY`; documented in `.env.example`. Locally, `.env.local` (git-ignored) holds the public key of the pair in `supabase/functions/.env`. When the key is empty, the UI shows push as unsupported.
+  - **Tests**: `tests/push.spec.ts`. Headless Chromium has no push service, so the spec stubs the permission and `PushManager` and checks the `push_tokens` row, the outbox row and the dry-run payload.
+
 ## 9. Settings UI each client needs
 
 Settings → **Notifications** (account level):
@@ -299,6 +316,8 @@ Strings (add to each client's catalog; glossary terms, informal tone):
 | Android channel `chat` | Chat | Chat | Discussion | Chat | Chat |
 | Android channel `bubble` | Bubble activity | Activitate în bule | Activité des bulles | Actividad de las burbujas | Attività delle bolle |
 | Android channel `events` | Events | Evenimente | Événements | Eventos | Eventi |
+
+Clients added a few helper strings beyond this table (all five languages, in their catalogs): "Open Settings" (iOS, Android `notifications_open_settings`), "Not now" (Android), "unavailable on this device" (Android, no Firebase), "Muted until you turn it back on" (Android `mute_muted_forever`, web `mute.mutedForever`), and on the web `notifications.on` / `turnOff` / `blockedHint` / `unsupported` / `allBubbles` and `mute.hint`. Native-speaker review (TODO) should cover them too.
 
 ## 10. Production checklist
 
