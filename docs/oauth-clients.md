@@ -11,6 +11,11 @@ Google Cloud project **boolaa**. The consent screen is "Boolaa" (External; scope
 
 **Supabase**: production has Google enabled, with `external_google_client_id` set to `web,ios,android-debug,android-release` (the web ID first). Native apps call `signInWithIdToken(provider: google, idToken, nonce)`. Android's Credential Manager must request the token with the **web** client ID as `serverClientId`; iOS GoogleSignIn uses the iOS client ID.
 
-**Apple**: team `W5WKF2N472` (personal), bundle `ro.boolaa.app`. The Services ID and key are still to be created.
+**Apple** (team `W5WKF2N472`, personal):
+- App ID `ro.boolaa.app` has Sign In with Apple, Push Notifications and Associated Domains. Native iOS uses `signInWithIdToken(provider: apple)`; the audience is the bundle ID.
+- Services ID `ro.boolaa.web` covers web and Android (OAuth redirect). Domains: `rstugahfcpwllumgxwrm.supabase.co`, `boolaa.ro`. Return URL: `https://rstugahfcpwllumgxwrm.supabase.co/auth/v1/callback`.
+- Key ID `HTL62BCS2D`, file `~/.boolaa-signing/AuthKey_HTL62BCS2D.p8` (backed up; never commit it).
+- Supabase: `external_apple_client_id = ro.boolaa.web,ro.boolaa.app`. The client secret is an ES256 JWT valid for at most 6 months. **Renew it with `node scripts/apple-client-secret.mjs` before it expires** (current: 2027-05-21).
+- Private relay emails: register `boolaa.ro` and `noreply@boolaa.ro` under "Sign in with Apple for Email Communication".
 
 **App ID**: the apps move from `com.boolaa.app` to `ro.boolaa.app` (pending rename in iOS `project.yml` and Android `applicationId`).

@@ -21,8 +21,7 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 ### Auth
 - ⬜ **Forgot password and reset**, by email link, with a deep link into the apps.
 - ✅ **Email confirmation** using a real email provider (custom SMTP such as Resend or Postmark), with branded email templates in all 5 languages.
-- ⬜ **Sign in with Apple.** Required on iOS if any other third-party login (Google) is offered.
-- ⬜ **Google sign-in** (optional; the old app had it).
+- 🔄 **Sign in with Apple and Google**: ✅ Google (4 clients) and Apple (Services ID, key, secret) are enabled on production Supabase; see `docs/oauth-clients.md`. ⬜ Client buttons, plus the 16+ screen after the first OAuth sign-in. ⬜ **Renew the Apple secret before 2027-05-21** (`node scripts/apple-client-secret.mjs`).
 - ⬜ **Rate limits and CAPTCHA** on sign-up (Supabase Auth settings).
 
 ### Infrastructure and release
