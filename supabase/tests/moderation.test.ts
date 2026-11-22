@@ -120,10 +120,10 @@ for (const on of FLAG_STATES) {
 
       // delete_content on a food post also lets the admin delete its photo (public bucket), and only that one
       {
-        const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+        const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]); // bucket only accepts JPEG/WebP (20261123100000)
         const up = async (name: string) => {
-          const path = `${s.troll.id}/${name}-${tag}.png`;
-          const { error } = await s.troll.c.storage.from("food.images").upload(path, png, { contentType: "image/png" });
+          const path = `${s.troll.id}/${name}-${tag}.jpg`;
+          const { error } = await s.troll.c.storage.from("food.images").upload(path, jpeg, { contentType: "image/jpeg" });
           assert(!error, `upload: ${error?.message}`);
           return path;
         };

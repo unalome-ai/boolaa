@@ -11,7 +11,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         .sessionNotVerified, .ageConfirmationRequired, .reauthenticationRequired, .invalidDeviceId, .invalidTermsVersion,
         .codeWrong(attemptsLeft: 1), .codeWrong(attemptsLeft: 3), .codeWrongOrExpired, .codeFormat, .codeExpired,
         .noActiveCode, .tooManyCodeAttempts, .tooManyCodes, .emailSendFailed, .emailRateLimited, .samePassword,
-        .oauthFailed, .accountSuspended, .userBanned, .invalidEmail,
+        .oauthFailed, .accountSuspended, .userBanned, .invalidEmail, .imageTooLarge, .imageUnsupported,
     ]
 
     case invalidInviteCode
@@ -53,6 +53,9 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     case accountSuspended
     case userBanned
     case invalidEmail
+    // Images (ImageCompression and the bucket limits in 20261123100000_image_limits.sql)
+    case imageTooLarge
+    case imageUnsupported
 
     /// Classifies any error thrown by the SDK or by URLSession.
     static func classify(_ error: any Error) -> UserFacingError {
@@ -67,6 +70,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
 
     private static func classifyWithoutEvents(_ error: any Error) -> UserFacingError {
         if let code = error as? DeviceCodeError { return classify(deviceCode: code) }
+        if let image = error as? ImageCompression.Failure { return image == .tooLarge ? .imageTooLarge : .imageUnsupported }
+        if let storage = error as? StorageError { return classify(storage: storage) }
         if let urlError = error as? URLError {
             return urlError.code == .cancelled ? .generic : .network
         }
@@ -126,6 +131,20 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         return nil
     }
 
+    /// Storage upload failures. The bucket limits answer statusCode "413" (EntityTooLarge, "exceeded the maximum
+    /// allowed size") or "415" (`invalid_mime_type`, "mime type ... is not supported").
+    static func classify(storage error: StorageError) -> UserFacingError {
+        let text = error.message.lowercased()
+        let code = error.error?.lowercased() ?? ""
+        if error.statusCode == "413" || text.contains("exceeded the maximum allowed size") || code.contains("too large") {
+            return .imageTooLarge
+        }
+        if error.statusCode == "415" || code == "invalid_mime_type" || (text.contains("mime type") && text.contains("not supported")) {
+            return .imageUnsupported
+        }
+        return classify(message: error.message, code: nil) ?? .generic
+    }
+
     /// The `device-code` function's `error` codes (docs/auth-security.md §3).
     static func classify(deviceCode error: DeviceCodeError) -> UserFacingError {
         switch error.code {
@@ -181,6 +200,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .accountSuspended: "Your account is suspended, so you can't do that right now."
         case .userBanned: "This account can't sign in right now: it's suspended or banned."
         case .invalidEmail: "Enter a valid email address."
+        case .imageTooLarge: "That photo is too large. Pick a smaller one."
+        case .imageUnsupported: "We can't read that image. Try a different photo."
         }
     }
 }

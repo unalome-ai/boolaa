@@ -27,6 +27,8 @@ type ErrorKey =
   | "invalidInput"
   | "uploadFailed"
   | "pickPhoto"
+  | "imageTooLarge"
+  | "imageUnsupported"
   | "sessionNotVerified"
   | "ageConfirmationRequired"
   | "reauthenticationRequired"
@@ -82,6 +84,14 @@ export function errorKey(e: unknown): ErrorKey {
   const status = Number(err.status ?? err.statusCode ?? 0);
 
   if (err.name === "DeviceCodeError") return DEVICE_CODE_ERRORS[code] ?? "generic";
+  // Image pipeline (lib/image.ts) and the bucket limits (20261123100000_image_limits.sql). Storage
+  // answers HTTP 400 locally / 413 or 415 hosted, with statusCode "413" EntityTooLarge or "415" InvalidMimeType.
+  if (err.name === "ImageError") return code === "imageTooLarge" ? "imageTooLarge" : "imageUnsupported";
+  const storageCode = String(err.statusCode ?? "");
+  if (storageCode === "413" || status === 413 || code === "EntityTooLarge" || msg.includes("exceeded the maximum allowed size"))
+    return "imageTooLarge";
+  if (storageCode === "415" || status === 415 || code === "InvalidMimeType" || /mime type .* is not supported/.test(msg))
+    return "imageUnsupported";
 
   // Auth-security exceptions (exact texts; docs/auth-security.md §3). Sign-up's "age confirmation
   // required" comes from the before-user-created hook with the same text.

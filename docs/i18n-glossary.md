@@ -59,3 +59,12 @@ Message keys live under `errors.*` in the web's `messages/*.json`. Function `una
 | Auth `over_email_send_rate_limit` (429) | `emailRateLimited` | We just sent you an email. Wait a minute before asking for another. | Tocmai ți-am trimis un email. Așteaptă un minut înainte să ceri altul. | On vient de t'envoyer un e-mail. Attends une minute avant d'en demander un autre. | Te acabamos de enviar un correo. Espera un minuto antes de pedir otro. | Ti abbiamo appena inviato un'email. Aspetta un minuto prima di chiederne un'altra. |
 | Auth `same_password` | `samePassword` | Your new password must be different from the old one. | Parola nouă trebuie să fie diferită de cea veche. | Ton nouveau mot de passe doit être différent de l'ancien. | Tu contraseña nueva tiene que ser distinta de la anterior. | La nuova password deve essere diversa da quella vecchia. |
 | OAuth callback failed / cancelled | `oauthFailed` | Couldn't sign you in with that account. Try again. | Nu te-am putut conecta cu acel cont. Încearcă din nou. | Impossible de te connecter avec ce compte. Réessaie. | No hemos podido iniciar sesión con esa cuenta. Inténtalo de nuevo. | Non siamo riusciti a farti accedere con quell'account. Riprova. |
+
+## Image upload errors (docs/boolaa-spec.md, "Images")
+
+Web keys `errors.imageTooLarge` / `errors.imageUnsupported`; iOS `UserFacingError.imageTooLarge` / `.imageUnsupported`; Android `error_image_too_large` / `error_image_unsupported`.
+
+| Source | key | en | ro | fr | es | it |
+|---|---|---|---|---|---|---|
+| Input above 50 MB or output above the bucket limit; Storage `statusCode` 413 / `EntityTooLarge` | `imageTooLarge` | That photo is too large. Pick a smaller one. | Fotografia e prea mare. Alege una mai mică. | Cette photo est trop lourde. Choisis-en une plus petite. | Esa foto es demasiado grande. Elige una más pequeña. | Questa foto è troppo grande. Scegline una più piccola. |
+| File can't be decoded (e.g. HEIC in Chrome, not an image); Storage `statusCode` 415 / `invalid_mime_type` | `imageUnsupported` | We can't read that image. Try a different photo. | Nu putem citi această imagine. Încearcă altă fotografie. | Impossible de lire cette image. Essaie une autre photo. | No podemos leer esa imagen. Prueba con otra foto. | Non riusciamo a leggere questa immagine. Prova con un'altra foto. |

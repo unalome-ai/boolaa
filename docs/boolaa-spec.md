@@ -29,6 +29,11 @@ The RPCs, called with named params:
   - The departed member's votes are removed.
   - Queued requests that now have a majority are admitted.
 - **Realtime tables**: `chat_messages`, `join_requests` and `bubble_members`. Pending screens and Settings should subscribe to them instead of polling.
+- **Live feeds** (migration `20261123110000_realtime_feeds.sql`): `events` (RSVPs arrive as an UPDATE of the event's `rsvp_list`), `food_posts`, `market_items` and `shared_links` are in `supabase_realtime` too. The Events, Food, Marketplace and Links screens subscribe while shown, on one channel per screen named `<table>:<bubble id>`:
+  - INSERT and UPDATE with the filter `bubble_id=eq.<current bubble>`. Realtime checks them against the subscriber's SELECT policies, so blocked authors, other bubbles and unverified sessions (`require_verified_session`) get nothing.
+  - DELETE unfiltered (Realtime can't filter deletes and, with RLS on, sends only the primary key): remove the row by id and ignore ids the list doesn't hold. The tables keep the default replica identity.
+  - A new id is fetched once with its author join (RLS decides again). An UPDATE of a row in the list is merged in place, keeping the joined author. Merges are by id, so the echo of the client's own write changes nothing, and lists keep their sort order (events by `datetime`, the rest newest first).
+  - Once the subscription is live the screen reloads once, to catch changes made while connecting. Subscriptions end when the screen goes away, the bubble changes or the user signs out.
 - **Push notifications** (`docs/push-notifications.md`): clients call `register_push_token(...)` after the device check and on every start, and `unregister_push_token(p_token)` before signing out. They read and update their own `notification_prefs` row (master switch, per type, `preview_content`) and `bubble_mutes` rows. Pushes carry `{type, bubble_id, target_id}` for deep links.
 - `reject_join_request(p_request_id)` takes the request id and returns nothing.
 - `toggle_rsvp(p_event_id)` returns the new `rsvp_list`.
@@ -36,6 +41,16 @@ The RPCs, called with named params:
 Embedding author info: `select('*, author:users!<fk_column>(id, name, avatar)')`, e.g. `sender:users!sender_id(...)`, `creator:users!creator_id(...)`, `owner:users!owner_id(...)`, `user:users!user_id(...)`.
 
 Storage: the public buckets are `avatars`, `food.images` and `market.images`. Object path **must** be `<auth uid>/<uuid>.<ext>` (enforced by policy). Store the public URL in the row.
+
+### Images
+Every client runs a picked photo through the same pipeline before upload (web `src/lib/image.ts`, iOS and Android `ImageCompression`):
+- **Decode, then make upright**: apply the EXIF orientation to the pixels (web `createImageBitmap(..., {imageOrientation: "from-image"})`, iOS ImageIO thumbnail with transform, Android `ExifInterface` + matrix).
+- **Downsize**: long edge at most **1600 px** (avatars **512 px**), aspect ratio kept, never upscaled. Rounding is `round(side * maxSide / longEdge)`, so all clients produce the same size (e.g. 4032x3024 → 1600x1200; the shared fixture `exif-gps.jpg` → 1067x1600, avatar 341x512).
+- **Re-encode as JPEG, quality 0.82**, on a white background (transparent PNG areas don't turn black). Upload as `<uid>/<uuid>.jpg` with `content-type: image/jpeg`. WebP is not used: Safari's canvas can't encode it.
+- **No metadata**: only pixels reach the encoder, so EXIF, GPS location, camera, XMP and IPTC from the source are gone. iOS and Android also drop any APP1–APP15/COM segment the encoder writes itself (ImageIO adds a small Exif and Photoshop block). Each platform's tests check the uploaded bytes for this.
+- **Limits** (`20261123100000_image_limits.sql`, checked by Storage on upload only, so older objects keep loading): `avatars` 2 MB, `food.images` and `market.images` 5 MB; MIME types `image/jpeg` and `image/webp` only. Clients refuse inputs above 50 MB before decoding.
+- **Errors** (glossary, "Image upload errors"): too large (client check, or Storage `statusCode` 413 / `EntityTooLarge`) → `imageTooLarge`; undecodable file, or Storage 415 / `invalid_mime_type` → `imageUnsupported`. Storage answers both with HTTP 400 locally and 413/415 hosted.
+- **Thumbnails**: none. Supabase image transformations are a paid feature, and a `_thumb` variant would double the uploads and the deletion paths (replace, delete, account deletion, moderation cleanup). Lists show the same image, sized by CSS / native views and loaded lazily; a 1600 px JPEG is a few hundred KB.
 
 Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabase status -o env` prints `ANON_KEY` / `PUBLISHABLE_KEY`. The seeded logins are `alice@boolaa.test`, `bob@boolaa.test` and `carol@boolaa.test`, all with password `password123`. Alice and Bob share the "Flatmates" bubble (invite `FLAT2026`) and "Climbing Crew" (invite `CLIMB123`). Carol has a pending request for Flatmates.
 
@@ -72,10 +87,10 @@ Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabas
    - **Chat**: a floating chat button on every tab.
 5. **Home**: a combined, recency-sorted feed for the current bubble: latest chat messages, food posts, market items, upcoming events and links. Each card deep-links to its section.
 6. **Chat**: messages in chronological order with sender avatar and name. Your own messages are aligned right. Realtime inserts, auto-scroll to the newest message, composer at the bottom.
-7. **Events**: "My events" and "Bubble events" sections sorted by date. Create, edit and delete your own events (title, description, date and time, location). RSVP toggle with a count.
-8. **Food Circle**: "My posts" and "From the bubble" sections. Create and edit (photo upload, description) and delete your own.
-9. **Marketplace**: grid of items with a Free/Trade badge and filter chips (All/Free/Trade). Create, edit and delete your own (photo, title, description, status).
-10. **Links** (opened from Home and Settings): add a URL with a title and comma-separated tags, filter by tag, open the link, delete your own.
+7. **Events**: "My events" and "Bubble events" sections sorted by date. Create, edit and delete your own events (title, description, date and time, location). RSVP toggle with a count. Other members' events and RSVPs update live.
+8. **Food Circle**: "My posts" and "From the bubble" sections. Create and edit (photo upload, description) and delete your own. Other members' posts appear, change and disappear live.
+9. **Marketplace**: grid of items with a Free/Trade badge and filter chips (All/Free/Trade). Create, edit and delete your own (photo, title, description, status). Updates live.
+10. **Links** (opened from Home and Settings): add a URL with a title and comma-separated tags, filter by tag, open the link, delete your own. Updates live.
 11. **Settings** (for the current bubble):
     - Bubble name and description, which the owner can edit.
     - **Invite code** with copy and share buttons.

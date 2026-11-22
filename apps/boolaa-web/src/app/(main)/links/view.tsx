@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties, type For
 import { ExternalLink, Link2, Plus, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
+import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader } from "@/components/ui";
 import { AUTHOR, type SharedLink } from "@/lib/types";
 import { useTranslations } from "next-intl";
@@ -44,6 +45,9 @@ export default function LinksPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
+
+  // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
+  useLiveFeed<SharedLink>({ supabase, table: "shared_links", bubbleId: bubble.id, select: `*, user:users!user_id(${AUTHOR})`, rows: links, setRows: setLinks, compare: byCreatedDesc, reload: load });
 
   const tags = useMemo(() => [...new Set((links ?? []).flatMap((l) => l.tags))].sort(), [links]);
   const shown = (links ?? []).filter((l) => (!tag || l.tags.includes(tag)) && !blocked.has(l.user_id));

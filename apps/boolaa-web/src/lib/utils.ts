@@ -1,3 +1,4 @@
+import { type ImageBucket, prepareImage } from "@/lib/image";
 import type { BoolaaClient } from "@/lib/supabase/client";
 
 export const BUBBLE_COOKIE = "boolaa_bubble";
@@ -32,16 +33,16 @@ export function toLocalInput(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export type ImageBucket = "avatars" | "food.images" | "market.images";
+export type { ImageBucket } from "@/lib/image";
 
-/** Uploads to `<uid>/<uuid>.<ext>` (required by storage policy) and returns the public URL. */
-export async function uploadImage(supabase: BoolaaClient, bucket: ImageBucket, userId: string, file: File) {
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
-    contentType: file.type || undefined,
-    upsert: false,
-  });
+/**
+ * Resizes and re-encodes the picked file (lib/image.ts: upright, no EXIF/GPS, JPEG), uploads it to
+ * `<uid>/<uuid>.jpg` (required by storage policy) and returns the public URL.
+ */
+export async function uploadImage(supabase: BoolaaClient, bucket: ImageBucket, userId: string, file: Blob) {
+  const jpeg = await prepareImage(file, bucket);
+  const path = `${userId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from(bucket).upload(path, jpeg, { contentType: "image/jpeg", upsert: false });
   if (error) throw error;
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }

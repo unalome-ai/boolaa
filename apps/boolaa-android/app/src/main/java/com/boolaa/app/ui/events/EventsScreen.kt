@@ -4,6 +4,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
+import com.boolaa.app.core.FeedSpecs
+import com.boolaa.app.core.keepFeedLive
 import com.boolaa.app.core.EventInput
 import com.boolaa.app.core.Formats
 import com.boolaa.app.model.BubbleEvent
@@ -180,6 +182,9 @@ class EventsViewModel(private val container: AppContainer, private val bubbleId:
         reloadOnBlockChange(container.session) { load() }
     }
 
+    /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.events, bubbleId, _events) { load().join() }
+
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         _events.value = container.api.events(bubbleId).sortedBy { it.datetime }
     }.also { it.invokeOnCompletion { if (_events.value == null) _events.value = emptyList() } }
@@ -208,6 +213,7 @@ fun EventsScreen() {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: EventsViewModel = viewModel(key = "events-${bubble.id}") { EventsViewModel(container, bubble.id) }
+    LaunchedEffect(vm) { vm.keepLive() }
     val events by vm.events.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<BubbleEvent?>(null) }

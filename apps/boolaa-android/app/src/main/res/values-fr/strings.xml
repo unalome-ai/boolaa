@@ -287,6 +287,8 @@
     <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
     <string name="error_account_suspended">Ton compte est suspendu, tu ne peux donc pas faire ça pour le moment.</string>
     <string name="error_user_banned">Ce compte ne peut pas se connecter pour le moment : il est suspendu ou banni.</string>
+    <string name="error_image_too_large">Cette photo est trop lourde. Choisis-en une plus petite.</string>
+    <string name="error_image_unsupported">Impossible de lire cette image. Essaie une autre photo.</string>
     <string name="suspended_title_suspended">Ton compte est suspendu</string>
     <string name="suspended_title_banned">Ton compte a été banni</string>
     <string name="suspended_until">Tu pourras de nouveau utiliser Boolaa le %1$s.</string>

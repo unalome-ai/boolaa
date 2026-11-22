@@ -304,6 +304,8 @@
     "invalidInput": "Unele detalii nu sunt valide. Verifică-le și încearcă din nou.",
     "uploadFailed": "Fotografia nu a putut fi încărcată.",
     "pickPhoto": "Alege mai întâi o fotografie.",
+    "imageTooLarge": "Fotografia e prea mare. Alege una mai mică.",
+    "imageUnsupported": "Nu putem citi această imagine. Încearcă altă fotografie.",
     "generic": "Ceva n-a mers. Încearcă din nou.",
     "onlyOwnerCanRemove": "Doar proprietarul poate elimina membri.",
     "cannotRemoveSelf": "Nu te poți elimina singur de aici. Folosește „Părăsește bula”.",

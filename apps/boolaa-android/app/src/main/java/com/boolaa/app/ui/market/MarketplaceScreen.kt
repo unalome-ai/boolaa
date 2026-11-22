@@ -6,6 +6,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
+import com.boolaa.app.core.FeedSpecs
+import com.boolaa.app.core.keepFeedLive
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.MarketInput
 import com.boolaa.app.model.MarketItem
@@ -184,6 +186,9 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
         reloadOnBlockChange(container.session) { load() }
     }
 
+    /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.market, bubbleId, _items) { load().join() }
+
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         _items.value = container.api.marketItems(bubbleId)
     }.also { it.invokeOnCompletion { if (_items.value == null) _items.value = emptyList() } }
@@ -217,6 +222,7 @@ fun MarketplaceScreen() {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: MarketViewModel = viewModel(key = "market-${bubble.id}") { MarketViewModel(container, bubble.id) }
+    LaunchedEffect(vm) { vm.keepLive() }
     val items by vm.items.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     var filter by rememberSaveable { mutableStateOf(MarketFilter.ALL) }

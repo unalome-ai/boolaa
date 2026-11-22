@@ -6521,6 +6521,34 @@
         }
       }
     },
+    "That photo is too large. Pick a smaller one.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotografia e prea mare. Alege una mai mică."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette photo est trop lourde. Choisis-en une plus petite."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa foto es demasiado grande. Elige una más pequeña."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa foto è troppo grande. Scegline una più piccola."
+          }
+        }
+      }
+    },
     "The members of these bubbles are voting on your request.": {
       "localizations": {
         "ro": {
@@ -7357,6 +7385,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Violenza o minacce"
+          }
+        }
+      }
+    },
+    "We can't read that image. Try a different photo.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu putem citi această imagine. Încearcă altă fotografie."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire cette image. Essaie une autre photo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No podemos leer esa imagen. Prueba con otra foto."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riusciamo a leggere questa immagine. Prova con un'altra foto."
           }
         }
       }

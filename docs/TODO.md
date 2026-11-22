@@ -47,16 +47,16 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 ## P1: Core experience expected of a social app
 - ✅ **Native Android app**, at parity with iOS.
 - ✅ **Live membership** (pending screen, members list) and the remove-member UI.
-- 🔄 **Push notifications** (APNs, FCM, Web Push). ✅ Backend and tables live in production (2026-11-22). ✅ APNs key `XU9A469SX6` (team-scoped, sandbox + production; `~/.boolaa-signing/AuthKey_XU9A469SX6.p8`), accepted by Apple in both environments. ✅ Firebase `google-services.json` (project `paneco-1e9c6`, app `ro.boolaa.app`) in `~/.boolaa-signing/`, git-ignored. ⬜ FCM service-account JSON `boolaa-push.json`. ⬜ Secrets, VAPID keys, `push-dispatch` deploy, Vault (`docs/push-notifications.md` §10). ⬜ Client implementations. Original scope: for new chat messages, join requests (to members), approval (to the requester), event reminders and new events. Includes per-bubble mute and notification settings.
+- 🔄 **Push notifications** (APNs, FCM, Web Push). ✅ Backend and tables live in production (2026-11-22). ✅ APNs key `XU9A469SX6` (team-scoped, sandbox + production; `~/.boolaa-signing/AuthKey_XU9A469SX6.p8`), accepted by Apple in both environments. ✅ Firebase project `boolaa-67a94` (Analytics off), app `ro.boolaa.app`; `google-services.json` in `~/.boolaa-signing/`, git-ignored. ✅ FCM service account `boola-push@boolaa-67a94` (Firebase Cloud Messaging API Admin), key `~/.boolaa-signing/boolaa-push.json`, accepted by FCM v1 (2026-11-22). ⬜ Secrets, VAPID keys, `push-dispatch` deploy, Vault (`docs/push-notifications.md` §10). ⬜ Client implementations. Original scope: for new chat messages, join requests (to members), approval (to the requester), event reminders and new events. Includes per-bubble mute and notification settings.
 - ⬜ **Invite links and universal/app links** (`https://boolaa.ro/join/CODE`) that open the app or the store. Optionally a QR code.
 - ⬜ **Chat**: load older messages, delete your own message, send photos, unread counts and a last-read marker.
-- ⬜ **Live updates** for events, food, market and links, not only chat.
+- ✅ **Live updates** for events, food, market and links, not only chat. Migration `20261123110000_realtime_feeds.sql` publishes the four tables; web, iOS and Android screens subscribe per bubble (INSERT/UPDATE filtered by `bubble_id` and RLS-checked, DELETE by id) and merge changes by id (`docs/boolaa-spec.md`, Live feeds).
 - ⬜ **Bubble logo/cover image**: upload and display.
 - 🔄 **Modern visual redesign**: playful animations, haptics, a happy brand (Fable design pass).
 - ⬜ **Native-speaker review** of the ro, fr, es and it translations.
 - ⬜ **Accessibility pass**: Dynamic Type and font scaling, VoiceOver and TalkBack labels, contrast, reduced motion.
 - ⬜ **Offline and poor-network handling**: cached last view, retry states.
-- ⬜ **Image handling**: resizing and thumbnails (Supabase image transformations), size limits, and stripping EXIF location data.
+- ✅ **Image handling** (web, iOS, Android): photos are made upright, downsized (1600 px, avatars 512 px) and re-encoded as metadata-free JPEG before upload; buckets limited to 2/5 MB and JPEG/WebP (`20261123100000_image_limits.sql`); no thumbnails, lists reuse the image (spec "Images").
 
 ## P2: Nice to have
 - ⬜ Reactions on messages and posts.

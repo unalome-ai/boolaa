@@ -304,6 +304,8 @@
     "invalidInput": "Alcuni dati non sono validi. Controllali e riprova.",
     "uploadFailed": "Non è stato possibile caricare la foto.",
     "pickPhoto": "Scegli prima una foto.",
+    "imageTooLarge": "Questa foto è troppo grande. Scegline una più piccola.",
+    "imageUnsupported": "Non riusciamo a leggere questa immagine. Prova con un'altra foto.",
     "generic": "Qualcosa è andato storto. Riprova.",
     "onlyOwnerCanRemove": "Solo il proprietario può rimuovere membri.",
     "cannotRemoveSelf": "Non puoi rimuoverti da qui. Usa «Lascia la bolla».",

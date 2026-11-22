@@ -70,7 +70,7 @@ struct SafetyIntegrationTests {
         let api = BoolaaAPI(client: client)
 
         // One uploaded file in each bucket.
-        let jpeg = try #require(ImageCompression.jpeg(from: Self.tinyPNG, maxDimension: 8, quality: 0.5))
+        let jpeg = try ImageCompression.jpeg(from: Self.tinyPNG, maxSide: 8, quality: 0.5)
         var urls: [String] = []
         for bucket in BoolaaAPI.userBuckets { urls.append(try await api.uploadImage(jpeg, bucket: bucket, userID: userID)) }
         for url in urls { #expect(await Self.status(of: url) == 200, "uploaded file is public") }

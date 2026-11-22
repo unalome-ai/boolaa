@@ -304,6 +304,8 @@
     "invalidInput": "Algunos datos no son válidos. Revísalos e inténtalo de nuevo.",
     "uploadFailed": "No se pudo subir la foto.",
     "pickPhoto": "Primero elige una foto.",
+    "imageTooLarge": "Esa foto es demasiado grande. Elige una más pequeña.",
+    "imageUnsupported": "No podemos leer esa imagen. Prueba con otra foto.",
     "generic": "Algo ha ido mal. Inténtalo de nuevo.",
     "onlyOwnerCanRemove": "Solo el propietario puede quitar miembros.",
     "cannotRemoveSelf": "No puedes quitarte desde aquí. Usa «Salir de la burbuja».",

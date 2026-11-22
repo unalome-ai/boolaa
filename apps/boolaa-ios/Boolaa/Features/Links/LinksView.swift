@@ -12,6 +12,14 @@ final class LinksModel {
         loaded = true
     }
 
+    /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
+    func listen(api: BoolaaAPI, bubbleID: UUID) async {
+        await LiveFeed.observe(SharedLink.self, api: api, bubbleID: bubbleID,
+                               rows: { [weak self] in self?.links ?? [] },
+                               apply: { [weak self] in self?.links = $0 },
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+    }
+
     var allTags: [String] { Array(Set(links.flatMap(\.tags))).sorted() }
 
     nonisolated static func filter(_ links: [SharedLink], tag: String?) -> [SharedLink] {
@@ -106,7 +114,11 @@ struct LinksView: View {
         .toolbar(.hidden, for: .navigationBar)
         .refreshFeedback { await reload() }
         .onChange(of: safety.contentVersion) { Task { await reload() } }
-        .task { await reload() }
+        // Keyed by bubble: resubscribes when it changes (this screen sits outside the rebuilt tab content).
+        .task(id: session.currentBubble?.id) {
+            await reload()
+            if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
+        }
         .errorAlert($model.error)
     }
 

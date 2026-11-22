@@ -7,6 +7,7 @@ import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.postgrest.exception.PostgrestRestException
+import io.github.jan.supabase.storage.StorageRestException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
@@ -56,6 +57,9 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     // Moderation (docs/moderation.md): RPCs raise "account suspended"; GoTrue answers `user_banned` at sign-in/refresh.
     ACCOUNT_SUSPENDED(R.string.error_account_suspended),
     USER_BANNED(R.string.error_user_banned),
+    // Images: ImageCompression and the bucket limits (20261123100000_image_limits.sql).
+    IMAGE_TOO_LARGE(R.string.error_image_too_large),
+    IMAGE_UNSUPPORTED(R.string.error_image_unsupported),
     GENERIC(R.string.error_generic);
 
     companion object {
@@ -64,6 +68,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
             is CancellationException -> GENERIC
             is DeviceCodeException -> fromFunctionCode(error.code)
             is SocialSignInException -> error.kind
+            is ImageCompression.ImageException -> if (error.tooLarge) IMAGE_TOO_LARGE else IMAGE_UNSUPPORTED
+            is StorageRestException -> fromStorage(error.statusCode, error.code, error.error, error.description)
             is AuthRestException -> when (error.errorCode) {
                 AuthErrorCode.InvalidCredentials -> INVALID_CREDENTIALS
                 AuthErrorCode.UserAlreadyExists, AuthErrorCode.EmailExists -> EMAIL_TAKEN
@@ -86,6 +92,20 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 ?: if (error.statusCode == 401) NOT_AUTHENTICATED else GENERIC
             is HttpRequestException, is HttpRequestTimeoutException, is IOException -> NETWORK
             else -> classify(error.message ?: "", null) ?: GENERIC
+        }
+
+        /**
+         * Storage upload failures. The bucket limits answer statusCode 413 (code EntityTooLarge, "The object exceeded
+         * the maximum allowed size") or 415 (code InvalidMimeType, error `invalid_mime_type`).
+         */
+        fun fromStorage(statusCode: Int, code: String?, error: String?, message: String?): UserFacingError {
+            val text = "${error.orEmpty()} ${message.orEmpty()}".lowercase()
+            return when {
+                statusCode == 413 || code == "EntityTooLarge" || "exceeded the maximum allowed size" in text -> IMAGE_TOO_LARGE
+                statusCode == 415 || code == "InvalidMimeType" || "invalid_mime_type" in text ||
+                    ("mime type" in text && "not supported" in text) -> IMAGE_UNSUPPORTED
+                else -> classify(text, null) ?: GENERIC
+            }
         }
 
         /** `device-code` Edge Function `error` codes (docs/auth-security.md §3). */

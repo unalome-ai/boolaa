@@ -12,6 +12,14 @@ final class EventsModel {
         loaded = true
     }
 
+    /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
+    func listen(api: BoolaaAPI, bubbleID: UUID) async {
+        await LiveFeed.observe(BubbleEvent.self, api: api, bubbleID: bubbleID,
+                               rows: { [weak self] in self?.events ?? [] },
+                               apply: { [weak self] in self?.events = $0 },
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+    }
+
     func toggleRSVP(api: BoolaaAPI, event: BubbleEvent) async {
         do {
             let list = try await api.toggleRSVP(eventID: event.id)
@@ -71,7 +79,10 @@ struct EventsView: View {
             .animation(Motion.gentle, value: model.events.map(\.id))
         }
         .refreshFeedback { await reload() }
-        .task { await reload() }
+        .task {
+            await reload()
+            if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
+        }
         .sheet(item: $editing) { target in
             EventEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } 
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
+import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, StatusBadge } from "@/components/ui";
 import { AUTHOR, type MarketItem } from "@/lib/types";
 import { useTranslations } from "next-intl";
@@ -37,6 +38,9 @@ export default function MarketplacePage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
+
+  // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
+  useLiveFeed<MarketItem>({ supabase, table: "market_items", bubbleId: bubble.id, select: `*, owner:users!owner_id(${AUTHOR})`, rows: items, setRows: setItems, compare: byCreatedDesc, reload: load });
 
   async function remove(item: MarketItem) {
     if (!window.confirm(t("market.confirmDelete", { title: item.title }))) return;

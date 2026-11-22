@@ -12,6 +12,14 @@ final class FoodModel {
         loaded = true
     }
 
+    /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
+    func listen(api: BoolaaAPI, bubbleID: UUID) async {
+        await LiveFeed.observe(FoodPost.self, api: api, bubbleID: bubbleID,
+                               rows: { [weak self] in self?.posts ?? [] },
+                               apply: { [weak self] in self?.posts = $0 },
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+    }
+
     func delete(api: BoolaaAPI, post: FoodPost) async {
         do {
             try await api.deleteFoodPost(id: post.id)
@@ -63,7 +71,10 @@ struct FoodView: View {
             .animation(Motion.gentle, value: model.posts.map(\.id))
         }
         .refreshFeedback { await reload() }
-        .task { await reload() }
+        .task {
+            await reload()
+            if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
+        }
         .sheet(item: $editing) { target in
             FoodEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
@@ -151,7 +162,7 @@ struct FoodEditor: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    PhotoField(jpeg: $jpeg, existingURL: existing?.image, height: 240, hue: Feature.food.hue)
+                    PhotoField(jpeg: $jpeg, bucket: .food, error: $error, existingURL: existing?.image, height: 240, hue: Feature.food.hue)
                     TextField("What are you sharing?", text: $description, axis: .vertical)
                         .lineLimit(2...5).padding(.vertical, 12).boolaaField()
                 }

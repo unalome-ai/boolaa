@@ -139,8 +139,10 @@ struct ProfileSheet: View {
         guard let me = session.userID else { return }
         busy = true; defer { busy = false }
         do {
-            guard let raw = try await item.loadTransferable(type: Data.self),
-                  let jpeg = ImageCompression.jpeg(from: raw, maxDimension: 512, quality: 0.8) else { return }
+            guard let raw = try await item.loadTransferable(type: Data.self) else { throw ImageCompression.Failure.unsupported }
+            let jpeg = try await Task.detached(priority: .userInitiated) {
+                try ImageCompression.jpeg(from: raw, for: .avatars)
+            }.value
             let url = try await session.api.uploadImage(jpeg, bucket: .avatars, userID: me)
             try await session.updateProfile(avatar: url)
         } catch { self.error = error.userMessage }

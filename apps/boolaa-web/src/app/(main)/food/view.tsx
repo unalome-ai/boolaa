@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } 
 import { Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
+import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
 import { AUTHOR, type FoodPost } from "@/lib/types";
 import { useTranslations } from "next-intl";
@@ -35,6 +36,9 @@ export default function FoodPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
+
+  // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
+  useLiveFeed<FoodPost>({ supabase, table: "food_posts", bubbleId: bubble.id, select: `*, user:users!user_id(${AUTHOR})`, rows: posts, setRows: setPosts, compare: byCreatedDesc, reload: load });
 
   async function remove(p: FoodPost) {
     if (!window.confirm(t("food.confirmDelete"))) return;

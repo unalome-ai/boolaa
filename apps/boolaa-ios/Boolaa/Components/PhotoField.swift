@@ -1,9 +1,12 @@
 import PhotosUI
 import SwiftUI
 
-/// Photo picker with preview. Produces compressed JPEG data, or shows an existing remote image.
+/// Photo picker with preview. Produces the upload-ready JPEG for `bucket` (ImageCompression: upright, downsized,
+/// no EXIF/GPS), or shows an existing remote image. A photo that can't be used sets `error`.
 struct PhotoField: View {
     @Binding var jpeg: Data?
+    var bucket: BoolaaAPI.ImageBucket
+    @Binding var error: String?
     var existingURL: String?
     var height: CGFloat = 200
     var hue: Hue = .grape
@@ -23,8 +26,16 @@ struct PhotoField: View {
             loading = true
             Task {
                 defer { loading = false }
-                if let data = try? await newItem.loadTransferable(type: Data.self) {
-                    jpeg = ImageCompression.jpeg(from: data)
+                do {
+                    guard let data = try await newItem.loadTransferable(type: Data.self) else {
+                        throw ImageCompression.Failure.unsupported
+                    }
+                    let bucket = bucket
+                    jpeg = try await Task.detached(priority: .userInitiated) {
+                        try ImageCompression.jpeg(from: data, for: bucket)
+                    }.value
+                } catch {
+                    self.error = error.userMessage
                 }
             }
         }

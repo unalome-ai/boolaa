@@ -5,6 +5,7 @@ import { CalendarPlus, CircleCheck, CirclePlus, Clock, MapPin, Pencil, Plus, Tra
 import { Confetti } from "@/components/confetti";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
+import { byDatetimeAsc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader, SectionTitle } from "@/components/ui";
 import { AUTHOR, type BoolaaEvent } from "@/lib/types";
 import { useTranslations } from "next-intl";
@@ -37,6 +38,9 @@ export default function EventsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
+
+  // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
+  useLiveFeed<BoolaaEvent>({ supabase, table: "events", bubbleId: bubble.id, select: `*, creator:users!creator_id(${AUTHOR})`, rows: events, setRows: setEvents, compare: byDatetimeAsc, reload: load });
 
   /** Returns whether the user is going once the server has confirmed. */
   async function toggleRsvp(ev: BoolaaEvent): Promise<boolean | null> {

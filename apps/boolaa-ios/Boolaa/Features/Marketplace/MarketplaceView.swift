@@ -12,6 +12,14 @@ final class MarketModel {
         loaded = true
     }
 
+    /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
+    func listen(api: BoolaaAPI, bubbleID: UUID) async {
+        await LiveFeed.observe(MarketItem.self, api: api, bubbleID: bubbleID,
+                               rows: { [weak self] in self?.items ?? [] },
+                               apply: { [weak self] in self?.items = $0 },
+                               reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) })
+    }
+
     func delete(api: BoolaaAPI, item: MarketItem) async {
         do {
             try await api.deleteMarketItem(id: item.id)
@@ -87,7 +95,10 @@ struct MarketplaceView: View {
             .animation(Motion.gentle, value: model.items.map(\.id))
         }
         .refreshFeedback { await reload() }
-        .task { await reload() }
+        .task {
+            await reload()
+            if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
+        }
         .sensoryFeedback(.selection, trigger: filter)
         .sheet(item: $editing) { target in
             MarketEditor(target: target) { Task { await reload() } }.boolaaSheet()
@@ -233,7 +244,7 @@ struct MarketEditor: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    PhotoField(jpeg: $jpeg, existingURL: existing?.image, height: 220, hue: Feature.market.hue)
+                    PhotoField(jpeg: $jpeg, bucket: .market, error: $error, existingURL: existing?.image, height: 220, hue: Feature.market.hue)
                     TextField("Title", text: $title).boolaaField()
                     TextField("Description", text: $description, axis: .vertical)
                         .lineLimit(2...5).padding(.vertical, 12).boolaaField()

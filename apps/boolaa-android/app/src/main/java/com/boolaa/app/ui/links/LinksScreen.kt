@@ -4,6 +4,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
+import com.boolaa.app.core.FeedSpecs
+import com.boolaa.app.core.keepFeedLive
 import com.boolaa.app.model.SharedLink
 import com.boolaa.app.model.ReportTarget
 import com.boolaa.app.model.ReportTargetType
@@ -171,6 +173,9 @@ class LinksViewModel(private val container: AppContainer, private val bubbleId: 
         reloadOnBlockChange(container.session) { load() }
     }
 
+    /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.links, bubbleId, _links) { load().join() }
+
     fun load() = launchCatching(trackBusy = false) {
         _links.value = container.api.links(bubbleId)
     }.also { it.invokeOnCompletion { if (_links.value == null) _links.value = emptyList() } }
@@ -195,6 +200,7 @@ fun LinksScreen(onBack: () -> Unit) {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: LinksViewModel = viewModel(key = "links-${bubble.id}") { LinksViewModel(container, bubble.id) }
+    LaunchedEffect(vm) { vm.keepLive() }
     val links by vm.links.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current

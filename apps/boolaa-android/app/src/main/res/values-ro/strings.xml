@@ -287,6 +287,8 @@
     <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
     <string name="error_account_suspended">Contul tău este suspendat, așa că nu poți face asta acum.</string>
     <string name="error_user_banned">Acest cont nu se poate autentifica acum: este suspendat sau blocat.</string>
+    <string name="error_image_too_large">Fotografia e prea mare. Alege una mai mică.</string>
+    <string name="error_image_unsupported">Nu putem citi această imagine. Încearcă altă fotografie.</string>
     <string name="suspended_title_suspended">Contul tău este suspendat</string>
     <string name="suspended_title_banned">Contul tău a fost blocat definitiv</string>
     <string name="suspended_until">Poți folosi Boolaa din nou începând cu %1$s.</string>

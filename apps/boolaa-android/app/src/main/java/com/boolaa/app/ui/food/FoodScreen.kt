@@ -6,6 +6,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
+import com.boolaa.app.core.FeedSpecs
+import com.boolaa.app.core.keepFeedLive
 import com.boolaa.app.core.Formats
 import com.boolaa.app.core.FoodInput
 import com.boolaa.app.core.ImageBucket
@@ -176,6 +178,9 @@ class FoodViewModel(private val container: AppContainer, private val bubbleId: S
         reloadOnBlockChange(container.session) { load() }
     }
 
+    /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.food, bubbleId, _posts) { load().join() }
+
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         _posts.value = container.api.foodPosts(bubbleId)
     }.also { it.invokeOnCompletion { if (_posts.value == null) _posts.value = emptyList() } }
@@ -205,6 +210,7 @@ fun FoodScreen() {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: FoodViewModel = viewModel(key = "food-${bubble.id}") { FoodViewModel(container, bubble.id) }
+    LaunchedEffect(vm) { vm.keepLive() }
     val posts by vm.posts.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<FoodPost?>(null) }
