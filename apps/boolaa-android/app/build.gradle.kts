@@ -19,7 +19,9 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.boolaa.app"
+        // Google and Apple OAuth clients are registered for ro.boolaa.app (docs/oauth-clients.md).
+        // The Kotlin namespace stays com.boolaa.app.
+        applicationId = "ro.boolaa.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -29,6 +31,15 @@ android {
         // Next.js web app serving /privacy and /terms (emulator: adb reverse tcp:3200 tcp:3200).
         buildConfigField("String", "WEB_BASE_URL", "\"${localProp("web.baseUrl", "http://localhost:3200")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProp("supabase.anonKey", "")}\"")
+        // Google sign-in: Credential Manager asks for an ID token for the WEB client (docs/oauth-clients.md). Public, not a secret.
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"816126337836-0k4begddfi0f1usm1hg2e6va9fddni3m.apps.googleusercontent.com\"")
+        // OAuth (Apple) returns through this deep link; it must be in the Supabase redirect allow-list.
+        manifestPlaceholders["authScheme"] = "ro.boolaa.app"
+        // Instrumented tests only (local stack): Mailpit for emailed codes, and the LOCAL service-role key to flip
+        // app_settings flags. Both come from local.properties (gitignored) and are passed to `am instrument`, never
+        // compiled into the app.
+        testInstrumentationRunnerArguments["mailpitUrl"] = localProp("mailpit.url", "http://127.0.0.1:55324")
+        localProps.getProperty("supabase.serviceRoleKey")?.let { testInstrumentationRunnerArguments["serviceRoleKey"] = it }
     }
 
     androidResources {
@@ -92,6 +103,10 @@ dependencies {
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.realtime)
     implementation(libs.supabase.storage)
+    implementation(libs.supabase.functions)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play)
+    implementation(libs.googleid)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.okhttp) { version { strictly(libs.versions.okhttp.get()) } }
     implementation(libs.androidx.browser)

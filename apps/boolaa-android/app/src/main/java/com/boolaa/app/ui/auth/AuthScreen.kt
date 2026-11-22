@@ -44,9 +44,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
+import com.boolaa.app.core.AuthProviders
+import com.boolaa.app.core.GoogleSignIn
+import com.boolaa.app.core.OAuthNonce
+import com.boolaa.app.core.SocialSignInException
 import com.boolaa.app.core.UserFacingError
+import io.github.jan.supabase.auth.exception.AuthRestException
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
@@ -71,6 +78,37 @@ import kotlinx.coroutines.flow.asStateFlow
 class AuthViewModel(private val container: AppContainer) : BaseViewModel() {
     private val _needsConfirmation = MutableStateFlow(false)
     val needsConfirmation = _needsConfirmation.asStateFlow()
+    /** Which provider button shows a spinner. */
+    private val _providerBusy = MutableStateFlow<String?>(null)
+    val providerBusy = _providerBusy.asStateFlow()
+
+    /** Credential Manager sheet -> Google ID token (hashed nonce) -> Supabase signInWith(IDToken) with the raw nonce. */
+    fun signInWithGoogle(activity: Context) = launchCatching(trackBusy = false) {
+        _providerBusy.value = "google"
+        try {
+            val nonce = OAuthNonce.create()
+            val token = GoogleSignIn.idToken(activity, nonce) ?: return@launchCatching
+            try {
+                container.session.signInWithGoogle(token, nonce.raw)
+            } catch (e: AuthRestException) {
+                val kind = UserFacingError.classify(e)
+                throw SocialSignInException(if (kind == UserFacingError.SIGN_IN_PROVIDER_UNAVAILABLE) kind else UserFacingError.SIGN_IN_PROVIDER_FAILED, e)
+            }
+        } finally {
+            _providerBusy.value = null
+        }
+    }
+
+    /** Apple has no Android SDK: OAuth in a Custom Tab, back through ro.boolaa.app://auth/callback. */
+    fun signInWithApple() = launchCatching(trackBusy = false) {
+        _providerBusy.value = "apple"
+        try {
+            if (!AuthProviders.isEnabled("apple")) throw SocialSignInException(UserFacingError.SIGN_IN_PROVIDER_UNAVAILABLE)
+            container.session.startAppleSignIn()
+        } finally {
+            _providerBusy.value = null
+        }
+    }
 
     fun signIn(email: String, password: String) = launchCatching {
         container.session.signIn(email, password)
@@ -94,7 +132,10 @@ fun AuthScreen() {
     val busy by vm.busy.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     val needsConfirmation by vm.needsConfirmation.collectAsStateWithLifecycle()
+    val providerBusy by vm.providerBusy.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var register by rememberSaveable { mutableStateOf(false) }
+    var forgot by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -125,6 +166,10 @@ fun AuthScreen() {
                     .animateContentSize(Motion.gentle()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (forgot) {
+                    ForgotPasswordPanel(onBackToSignIn = { forgot = false }, initialEmail = email)
+                    return@Column
+                }
                 SegmentedPill(
                     options = listOf(false to stringResource(R.string.sign_in), true to stringResource(R.string.create_account)),
                     selected = register, onSelect = { register = it },
@@ -137,6 +182,9 @@ fun AuthScreen() {
                 }
                 BoolaaTextField(email, { email = it }, stringResource(R.string.email), Modifier.testTag("email"), keyboardType = KeyboardType.Email)
                 BoolaaTextField(password, { password = it }, stringResource(R.string.password), Modifier.testTag("password"), isPassword = true)
+                AnimatedVisibility(!register) {
+                    AuthLink(stringResource(R.string.forgot_password), { forgot = true }, Modifier.testTag("forgot-password"))
+                }
                 AnimatedVisibility(register) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
@@ -165,6 +213,9 @@ fun AuthScreen() {
                     loading = busy,
                     modifier = Modifier.padding(top = 4.dp).shake(shakes).testTag("auth-submit"),
                 )
+                OrDivider(Modifier.padding(vertical = 4.dp))
+                GoogleButton(onClick = { vm.signInWithGoogle(context) }, loading = providerBusy == "google", enabled = providerBusy == null)
+                AppleButton(onClick = vm::signInWithApple, loading = providerBusy == "apple", enabled = providerBusy == null)
             }
         }
     }

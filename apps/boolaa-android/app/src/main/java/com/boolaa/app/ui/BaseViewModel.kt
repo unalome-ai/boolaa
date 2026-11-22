@@ -39,7 +39,10 @@ abstract class BaseViewModel : ViewModel() {
 
     protected fun report(e: Throwable) {
         Log.w("Boolaa", "request failed", e)
-        _error.value = UserFacingError.classify(e).message
+        val kind = UserFacingError.classify(e)
+        // Another device revoked this one (or enforcement just switched on): back to the device gate.
+        if (kind == UserFacingError.SESSION_NOT_VERIFIED) com.boolaa.app.state.SecurityEvents.sessionNotVerified.tryEmit(Unit)
+        _error.value = kind.message
     }
 
     /** Runs [block], mapping failures to [error]; [onSuccess] runs only when it completes. */

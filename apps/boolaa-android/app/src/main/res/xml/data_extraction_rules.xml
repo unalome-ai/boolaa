@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API 31+: the device id (docs/auth-security.md §2) must never move to another phone, so a restore counts as a new device. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="boolaa.device.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="boolaa.device.xml" />
+    </device-transfer>
+</data-extraction-rules>

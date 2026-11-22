@@ -10,8 +10,6 @@ import com.boolaa.app.model.ReportTargetType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -36,7 +34,7 @@ class SafetyTest {
         val client = Backend.createClient(ephemeral = true)
         client.auth.signUpWith(Email) {
             email = "android-$name-$run@boolaa.test"; password = "password123"
-            data = buildJsonObject { put("name", "Android $name $run") }
+            data = com.boolaa.app.state.SessionStore.signUpMetadata("Android $name $run", "en")
         }
         if (client.auth.currentUserOrNull() == null) {
             client.auth.signInWith(Email) { email = "android-$name-$run@boolaa.test"; password = "password123" }

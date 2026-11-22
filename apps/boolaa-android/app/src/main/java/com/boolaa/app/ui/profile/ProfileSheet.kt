@@ -176,7 +176,12 @@ class ProfileViewModel(private val container: AppContainer) : BaseViewModel() {
 
     fun signOut() = launchCatching { container.session.signOut() }
     fun unblock(userId: String) = launchCatching(trackBusy = false) { container.session.unblock(userId) }
-    fun deleteAccount(onDone: () -> Unit) = launchCatching(onSuccess = onDone) { container.session.deleteAccount() }
+
+    /** Auth emails follow user_metadata.locale (docs/auth-security.md §5); "System" sends the effective language. */
+    fun setLanguage(tag: String?) {
+        LocaleManager.set(tag)
+        launchCatching(trackBusy = false) { container.session.updateLocale(tag ?: LocaleManager.effective()) }
+    }
 }
 
 /** Language names are shown in their own language (docs/i18n-glossary.md). */
@@ -228,13 +233,15 @@ fun ProfileSheet(onDismiss: () -> Unit) {
 
         SectionHeader(stringResource(R.string.language))
         Column(Modifier.boolaaCard(6.dp).selectableGroup().testTag("language-picker")) {
-            LanguageRow(stringResource(R.string.language_system), selected = language == null) { Haptics.selection(view); language = null; LocaleManager.set(null) }
+            LanguageRow(stringResource(R.string.language_system), selected = language == null) { Haptics.selection(view); language = null; vm.setLanguage(null) }
             LocaleManager.supported.forEach { tag ->
                 LanguageRow(stringResource(languageNames.getValue(tag)), selected = language == tag, tag = tag) {
-                    Haptics.selection(view); language = tag; LocaleManager.set(tag)
+                    Haptics.selection(view); language = tag; vm.setLanguage(tag)
                 }
             }
         }
+
+        SecuritySection()
 
         SectionHeader(stringResource(R.string.blocked_users), state.blocks.size)
         Column(Modifier.boolaaCard().testTag("blocked-users")) {
@@ -269,37 +276,8 @@ fun ProfileSheet(onDismiss: () -> Unit) {
             Text(stringResource(R.string.delete_account), style = Type.chip, color = c.dangerText, modifier = Modifier.padding(start = 6.dp))
         }
     }
-    if (deleting) DeleteAccountDialog(busy = busy, onConfirm = { vm.deleteAccount(onDismiss) }, onDismiss = { deleting = false })
+    if (deleting) DeleteAccountFlow(onDismiss = { deleting = false }, onDeleted = { deleting = false; onDismiss() })
     ErrorDialogFor(vm)
-}
-
-/** Account deletion (App Store 5.1.1(v)): can't-undo warning plus a typed confirmation word. Calm: flat, still, danger only. */
-@Composable
-private fun DeleteAccountDialog(busy: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val word = stringResource(R.string.delete_account_confirm_word)
-    var typed by rememberSaveable { mutableStateOf("") }
-    val matches = typed.trim().equals(word, ignoreCase = true)
-    val c = BoolaaTheme.colors
-    AlertDialog(
-        onDismissRequest = { if (!busy) onDismiss() },
-        icon = { Icon(BoolaaIcons.Warning, contentDescription = null, tint = c.dangerText) },
-        title = { Text(stringResource(R.string.delete_account), style = Type.title2) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.delete_account_warning), style = Type.body)
-                BoolaaTextField(typed, { typed = it }, stringResource(R.string.delete_account_type_to_confirm, word),
-                    Modifier.testTag("delete-confirm-input"))
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm, enabled = matches && !busy, modifier = Modifier.testTag("delete-confirm")) {
-                if (busy) CircularProgressIndicator(strokeWidth = 2.dp, color = c.dangerText, modifier = Modifier.size(18.dp))
-                else Text(stringResource(R.string.delete_account_forever), style = Type.headline, color = if (matches) c.dangerText else c.textSecondary)
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.cancel), style = Type.headline, color = Hue.grape.text) } },
-        shape = RoundedCornerShape(Radius.hero), containerColor = c.card,
-    )
 }
 
 @Composable

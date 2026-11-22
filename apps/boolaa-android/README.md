@@ -2,7 +2,8 @@
 
 A native Android client for Boolaa, built with Kotlin, Jetpack Compose and Material 3. It mirrors the iOS app and `docs/boolaa-spec.md`.
 
-- **Package:** `com.boolaa.app`, minSdk 26, compile/target 36.
+- **Package:** applicationId `ro.boolaa.app` (the Kotlin namespace stays `com.boolaa.app`), minSdk 26, compile/target 36.
+- **Auth deep link:** `ro.boolaa.app://auth/callback` (Sign in with Apple in a Custom Tab, email links). It must be listed in Supabase's `additional_redirect_urls`.
 - **Locales:** en, ro, fr, es and it, with a per-app language picker.
 
 ## Setup
@@ -21,6 +22,9 @@ A native Android client for Boolaa, built with Kotlin, Jetpack Compose and Mater
    supabase.url=http://127.0.0.1:55321
    supabase.anonKey=<ANON_KEY from `supabase status -o env`>
    web.baseUrl=http://localhost:3200
+   # Instrumented tests only (LOCAL stack, never production): flips app_settings flags.
+   supabase.serviceRoleKey=<SERVICE_ROLE_KEY from `supabase status -o env`>
+   mailpit.url=http://127.0.0.1:55324
    ```
 
    `web.baseUrl` is the Next.js app that serves `/privacy` and `/terms`.
@@ -30,6 +34,7 @@ A native Android client for Boolaa, built with Kotlin, Jetpack Compose and Mater
    ```sh
    adb reverse tcp:55321 tcp:55321   # Supabase API
    adb reverse tcp:3200 tcp:3200     # web app (legal pages)
+   adb reverse tcp:55324 tcp:55324   # Mailpit (instrumented tests read emailed codes)
    ```
 
    Cleartext HTTP is allowed only for `127.0.0.1` and `localhost` (`res/xml/network_security_config.xml`).
@@ -39,7 +44,7 @@ A native Android client for Boolaa, built with Kotlin, Jetpack Compose and Mater
 ```sh
 ./gradlew assembleDebug lintDebug testDebugUnitTest   # build + lint + JVM unit tests (Robolectric)
 ./gradlew connectedDebugAndroidTest                    # instrumented tests (needs emulator + adb reverse + local Supabase)
-./gradlew installDebug && adb shell am start -n com.boolaa.app/.MainActivity
+./gradlew installDebug && adb shell am start -n ro.boolaa.app/com.boolaa.app.MainActivity
 ```
 
 ### Unit tests (`app/src/test`)
@@ -63,17 +68,26 @@ A native Android client for Boolaa, built with Kotlin, Jetpack Compose and Mater
   - a block hides chat both ways and an unblock restores it;
   - `delete_my_account` removes the storage objects, the membership, the messages and the login.
 
+- **`AuthSecurityFlowTest`** (reads codes from Mailpit; flips `device_verification_enforced` with the local service-role key and restores it):
+  - forgot password: email, emailed 6-digit code, new password, signed in;
+  - a new device with enforcement on lands on "Check your email"; a wrong code shows the tries left; the right code opens the app;
+  - the seeded device id `boolaa-test-device` skips the code (no email is sent);
+  - "Your devices" lists this device and another one; revoking the other one makes it need a code again;
+  - deleting an account always needs an emailed code (`delete_my_account` is refused without one).
+- The UI tests pin the device id with `container.device.overrideForTesting(...)`. `supabase/seed.sql` trusts `boolaa-test-device` for alice, bob and carol; the 10-device cap can evict that row if many other devices are trusted, and `yarn db:reset` restores it.
+
 ### Debug launch hooks (debug builds only)
 
 These are intent extras read by `DebugHooks`. They are used for screenshots and manual QA.
 
 ```sh
-adb shell am start -n com.boolaa.app/.MainActivity --es autoLogin alice@boolaa.test --es bubble "Climbing Crew" --es tab settings
-adb shell am start -n com.boolaa.app/.MainActivity --es open chat     # chat | links | profile | addBubble
-adb shell am start -n com.boolaa.app/.MainActivity --es signOut true
+adb shell am start -n ro.boolaa.app/com.boolaa.app.MainActivity --es autoLogin alice@boolaa.test --es bubble "Climbing Crew" --es tab settings
+adb shell am start -n ro.boolaa.app/com.boolaa.app.MainActivity --es open chat     # chat | links | profile | addBubble
+adb shell am start -n ro.boolaa.app/com.boolaa.app.MainActivity --es signOut true
 ```
 
 - `password` defaults to `password123`.
+- `deviceId` pins the device id; `autoLogin` defaults it to the seeded `boolaa-test-device`, so it skips the device code.
 - `tab` takes one of `home`, `events`, `food`, `marketplace` or `settings`.
 
 ## Architecture
@@ -84,7 +98,12 @@ adb shell am start -n com.boolaa.app/.MainActivity --es signOut true
   - It holds the profile, memberships, pending requests, blocks and the current bubble.
   - The current bubble is persisted in SharedPreferences.
   - It runs a realtime channel on the user's own `bubble_members` and `join_requests` rows. That moves the user Onboarding → Main when approved, and back out when removed.
-- **`RouteGate`:** maps the session state to Auth, Onboarding or Main.
+- **`RouteGate`:** maps the session state to Auth, Reset password, Device code, Age confirmation, Onboarding or Main.
+- **Auth security** (`docs/auth-security.md`):
+  - `DeviceIdentity`: 32 random bytes per install, AES-GCM under an AndroidKeyStore key, excluded from backup and device transfer.
+  - `SessionStore.gate()` calls `start_device_check` after every sign-in and on every app start; an unverified session stays on "Check your email" (`DeviceCodeScreen`), and a `session not verified` error from any query sends it back there.
+  - Google: Credential Manager with the WEB client ID and a hashed nonce, then `signInWith(IDToken)` with the raw nonce. Apple: `signInWith(Apple)` in a Custom Tab, back through the deep link. After a first OAuth sign-in the app asks for age and Terms (`confirm_age`).
+  - Profile → Security: change password (reauthenticate code), change email and delete account (`sensitive_action` code), and "Your devices" with revoke.
 - **Main shell:** a NavHost with five tabs plus chat and links, a pill tab bar, a chat FAB and a bubble-chip header.
 - **Screens:** each screen has a ViewModel keyed by bubble id, and errors go through `UserFacingError`.
 - **Realtime:** chat inserts, plus the members and requests lists in Settings, use `LiveTables`.

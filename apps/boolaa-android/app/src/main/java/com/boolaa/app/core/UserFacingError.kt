@@ -33,17 +33,48 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     EMAIL_TAKEN(R.string.error_email_taken),
     WEAK_PASSWORD(R.string.error_weak_password),
     NETWORK(R.string.error_network),
+    // Auth security (docs/auth-security.md §3): RPC texts, device-code function codes and GoTrue codes.
+    SESSION_NOT_VERIFIED(R.string.error_session_not_verified),
+    AGE_CONFIRMATION_REQUIRED(R.string.error_age_confirmation_required),
+    REAUTHENTICATION_REQUIRED(R.string.error_reauthentication_required),
+    INVALID_DEVICE_ID(R.string.error_invalid_device_id),
+    INVALID_TERMS_VERSION(R.string.error_invalid_terms_version),
+    CODE_FORMAT(R.string.error_code_format),
+    CODE_WRONG(R.string.error_code_wrong),
+    CODE_WRONG_OR_EXPIRED(R.string.error_code_wrong_or_expired),
+    CODE_EXPIRED(R.string.error_code_expired),
+    NO_ACTIVE_CODE(R.string.error_no_active_code),
+    TOO_MANY_ATTEMPTS(R.string.error_too_many_attempts),
+    TOO_MANY_CODES(R.string.error_too_many_codes),
+    EMAIL_RATE_LIMITED(R.string.error_email_rate_limited),
+    EMAIL_SEND_FAILED(R.string.error_email_send_failed),
+    SAME_PASSWORD(R.string.error_same_password),
+    INVALID_EMAIL(R.string.error_invalid_email),
+    GOOGLE_NO_ACCOUNT(R.string.error_google_no_account),
+    SIGN_IN_PROVIDER_FAILED(R.string.error_sign_in_provider_failed),
+    SIGN_IN_PROVIDER_UNAVAILABLE(R.string.error_sign_in_provider_unavailable),
     GENERIC(R.string.error_generic);
 
     companion object {
         /** Classifies any error thrown by supabase-kt, Ktor or OkHttp. */
         fun classify(error: Throwable): UserFacingError = when (error) {
             is CancellationException -> GENERIC
+            is DeviceCodeException -> fromFunctionCode(error.code)
+            is SocialSignInException -> error.kind
             is AuthRestException -> when (error.errorCode) {
                 AuthErrorCode.InvalidCredentials -> INVALID_CREDENTIALS
                 AuthErrorCode.UserAlreadyExists, AuthErrorCode.EmailExists -> EMAIL_TAKEN
                 AuthErrorCode.WeakPassword -> WEAK_PASSWORD
                 AuthErrorCode.SessionNotFound, AuthErrorCode.SessionExpired -> NOT_AUTHENTICATED
+                AuthErrorCode.OtpExpired, AuthErrorCode.ReauthenticationNotValid -> CODE_WRONG_OR_EXPIRED
+                AuthErrorCode.ReauthenticationNeeded, AuthErrorCode.ReauthNonceMissing -> REAUTHENTICATION_REQUIRED
+                AuthErrorCode.OverEmailSendRateLimit -> EMAIL_RATE_LIMITED
+                AuthErrorCode.OverRequestRateLimit -> TOO_MANY_CODES
+                AuthErrorCode.SamePassword -> SAME_PASSWORD
+                AuthErrorCode.EmailAddressInvalid -> INVALID_EMAIL
+                AuthErrorCode.ProviderDisabled, AuthErrorCode.OauthProviderNotSupported -> SIGN_IN_PROVIDER_UNAVAILABLE
+                AuthErrorCode.BadOauthState, AuthErrorCode.BadOauthCallback, AuthErrorCode.BadCodeVerifier,
+                AuthErrorCode.FlowStateNotFound, AuthErrorCode.FlowStateExpired, AuthErrorCode.UnexpectedAudience -> SIGN_IN_PROVIDER_FAILED
                 else -> classify(error.error + " " + error.errorDescription, null) ?: GENERIC
             }
             is PostgrestRestException -> classify(error.error, error.code) ?: GENERIC
@@ -51,6 +82,20 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 ?: if (error.statusCode == 401) NOT_AUTHENTICATED else GENERIC
             is HttpRequestException, is HttpRequestTimeoutException, is IOException -> NETWORK
             else -> classify(error.message ?: "", null) ?: GENERIC
+        }
+
+        /** `device-code` Edge Function `error` codes (docs/auth-security.md §3). */
+        fun fromFunctionCode(code: String): UserFacingError = when (code) {
+            "invalid_request" -> CODE_FORMAT
+            "invalid_code" -> CODE_WRONG
+            "unauthorized" -> NOT_AUTHENTICATED
+            "session_not_verified" -> SESSION_NOT_VERIFIED
+            "no_active_code" -> NO_ACTIVE_CODE
+            "code_expired" -> CODE_EXPIRED
+            "too_many_attempts" -> TOO_MANY_ATTEMPTS
+            "rate_limited" -> TOO_MANY_CODES
+            "email_failed" -> EMAIL_SEND_FAILED
+            else -> GENERIC
         }
 
         /** Matches the exception texts raised by the RPCs in the migration, plus auth and RLS failures. */
@@ -68,11 +113,21 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 "member not found" to MEMBER_NOT_FOUND,
                 "cannot report yourself" to CANNOT_REPORT_SELF,
                 "report target not found" to REPORT_TARGET_NOT_FOUND,
+                "session not verified" to SESSION_NOT_VERIFIED,
+                "age confirmation required" to AGE_CONFIRMATION_REQUIRED,
+                "reauthentication required" to REAUTHENTICATION_REQUIRED,
+                "invalid device id" to INVALID_DEVICE_ID,
+                "invalid terms version" to INVALID_TERMS_VERSION,
                 "not authenticated" to NOT_AUTHENTICATED,
                 "jwt expired" to NOT_AUTHENTICATED,
                 "invalid login credentials" to INVALID_CREDENTIALS,
                 "user already registered" to EMAIL_TAKEN,
+                "should be different from the old password" to SAME_PASSWORD,
                 "password should be" to WEAK_PASSWORD,
+                "token has expired or is invalid" to CODE_WRONG_OR_EXPIRED,
+                "email rate limit exceeded" to EMAIL_RATE_LIMITED,
+                "for security purposes, you can only request this after" to EMAIL_RATE_LIMITED,
+                "unable to validate email address" to INVALID_EMAIL,
                 "row-level security" to PERMISSION_DENIED,
                 "permission denied" to PERMISSION_DENIED,
             )
@@ -82,3 +137,6 @@ enum class UserFacingError(@param:StringRes val message: Int) {
         }
     }
 }
+
+/** Google or Apple sign-in failed on the device (no account, provider off) before or after reaching Supabase. */
+class SocialSignInException(val kind: UserFacingError, cause: Throwable? = null) : RuntimeException(kind.name, cause)

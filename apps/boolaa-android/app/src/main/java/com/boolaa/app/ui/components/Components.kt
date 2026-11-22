@@ -327,7 +327,11 @@ fun ErrorDialog(message: String?, onDismiss: () -> Unit) {
 fun ConfirmDialog(title: String, message: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = { onDismiss(); onConfirm() }) { Text(confirm, style = Type.headline, color = BoolaaTheme.colors.dangerText) } },
+        confirmButton = {
+            TextButton(onClick = { onDismiss(); onConfirm() }, modifier = Modifier.testTag("confirm-dialog-confirm")) {
+                Text(confirm, style = Type.headline, color = BoolaaTheme.colors.dangerText)
+            }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), style = Type.headline, color = Hue.grape.text) } },
         title = { Text(title, style = Type.title2) },
         text = { Text(message, style = Type.body) },

@@ -52,12 +52,15 @@ fun MemberSafetyMenu(name: String, blocked: Boolean, onReport: () -> Unit, onBlo
     }
 }
 
-/** "By creating an account you agree to the Terms and Privacy Policy", with both names opening Custom Tabs. */
+/**
+ * "By creating an account you agree to the Terms and Privacy Policy" ([template] takes the two names as %1$s and %2$s),
+ * with both names opening Custom Tabs.
+ */
 @Composable
-fun LegalAgreementText(modifier: Modifier = Modifier) {
+fun LegalAgreementText(modifier: Modifier = Modifier, @androidx.annotation.StringRes template: Int = R.string.legal_agree, centered: Boolean = true) {
     val context = LocalContext.current
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0] ?: java.util.Locale.ENGLISH
-    val template = stringResource(R.string.legal_agree)
+    val template = stringResource(template)
     val terms = stringResource(R.string.terms_of_use)
     val privacy = stringResource(R.string.privacy_policy)
     val linkStyle = TextLinkStyles(SpanStyle(color = Hue.grape.text, fontWeight = FontWeight.SemiBold))
@@ -75,6 +78,6 @@ fun LegalAgreementText(modifier: Modifier = Modifier) {
             rest = rest.substring(next + 4)
         }
     }
-    Text(text, modifier = modifier.testTag("legal-agree"), color = BoolaaTheme.colors.textSecondary,
-        style = Type.subheadline.copy(textAlign = TextAlign.Center))
+    Text(text, modifier = modifier.testTag("legal-agree"), color = if (centered) BoolaaTheme.colors.textSecondary else BoolaaTheme.colors.textPrimary,
+        style = if (centered) Type.subheadline.copy(textAlign = TextAlign.Center) else Type.body)
 }

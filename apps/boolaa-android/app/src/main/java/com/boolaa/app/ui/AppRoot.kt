@@ -26,14 +26,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.boolaa.app.AppContainer
 import com.boolaa.app.DebugHooks
 import com.boolaa.app.state.AppRoute
+import com.boolaa.app.ui.auth.AgeConfirmScreen
 import com.boolaa.app.ui.auth.AuthScreen
+import com.boolaa.app.ui.auth.DeviceCodeScreen
+import com.boolaa.app.ui.auth.ResetPasswordScreen
 import com.boolaa.app.ui.onboarding.OnboardingScreen
 import com.boolaa.app.ui.shell.MainShell
 import com.boolaa.app.ui.theme.BoolaaTheme
 
 val LocalAppContainer = staticCompositionLocalOf<AppContainer> { error("AppContainer not provided") }
 
-/** Routing gate (spec §2): Auth, Onboarding or Main, decided by [com.boolaa.app.state.RouteGate]. */
+/**
+ * Routing gate (spec §2, docs/auth-security.md §8): Auth, then the device code / age / new password steps when due,
+ * then Onboarding or Main, decided by [com.boolaa.app.state.RouteGate].
+ */
 @Composable
 fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
     val session = LocalAppContainer.current.session
@@ -62,6 +68,9 @@ fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
             when (route) {
                 AppRoute.LAUNCHING -> Splash()
                 AppRoute.AUTH -> AuthScreen()
+                AppRoute.RESET_PASSWORD -> ResetPasswordScreen()
+                AppRoute.DEVICE_CODE -> DeviceCodeScreen()
+                AppRoute.AGE_CONFIRMATION -> AgeConfirmScreen()
                 AppRoute.ONBOARDING -> OnboardingScreen()
                 AppRoute.MAIN -> MainShell(initialTab = debugHooks.tab, initialOpen = debugHooks.open)
             }

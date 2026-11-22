@@ -35,6 +35,8 @@ class BoolaaFlowTest {
 
     @Before fun signedOutInEnglish() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync { LocaleManager.set("en") }
+        // supabase/seed.sql trusts this device id for the seeded users, so sign-in skips the emailed device code.
+        container.device.overrideForTesting(LocalStack.SEEDED_DEVICE)
         runBlocking { container.session.signOut() }
         rule.waitUntilExactlyOneExists(hasTestTag("auth-screen"), timeout)
     }
@@ -45,6 +47,7 @@ class BoolaaFlowTest {
             container.api.client.from("chat_messages").delete { filter { eq("sender_id", me); eq("content", content) } }
         }
         container.session.signOut()
+        container.device.overrideForTesting(null)
     }
 
     private fun signIn(email: String) {
