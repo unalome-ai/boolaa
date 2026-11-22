@@ -1,0 +1,4 @@
+// Committed defaults; Local.xcconfig (gitignored) overrides them.
+SUPABASE_URL = http:/$()/127.0.0.1:55321
+SUPABASE_ANON_KEY =
+#include? "Local.xcconfig"

@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --app-bg: #fafafa;
+  --app-fg: #222222;
+  --app-card: #ffffff;
+  --app-muted: #6b6b76;
+  --app-line: #ececf0;
+  --app-chip: #eeeeee;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: #18181b;
+    --app-fg: #f4f4f5;
+    --app-card: #23232b;
+    --app-muted: #a1a1aa;
+    --app-line: #2f2f39;
+    --app-chip: #23232b;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-brand: #9d78bd;
+  --color-brand-dark: #8a63ab;
+  --color-accent: #7b61ff;
+  --color-app: var(--app-bg);
+  --color-fg: var(--app-fg);
+  --color-card: var(--app-card);
+  --color-muted: var(--app-muted);
+  --color-line: var(--app-line);
+  --color-chip: var(--app-chip);
+  --radius-card: 16px;
+  --shadow-soft: 0 2px 12px rgb(0 0 0 / 0.08);
+  --shadow-float: 0 6px 24px rgb(0 0 0 / 0.16);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--app-fg);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+@utility card {
+  @apply rounded-card bg-card shadow-soft;
+}
+@utility input {
+  @apply w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[15px] text-fg outline-none placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/30;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-muted;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-brand text-white hover:bg-brand-dark;
+}
+@utility btn-ghost {
+  @apply btn bg-chip text-brand hover:bg-brand/15;
+}
+@utility btn-danger {
+  @apply btn bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-400;
+}
+@utility chip {
+  @apply inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-medium transition;
+}

@@ -1,0 +1,291 @@
+import Foundation
+
+// Row models mirror supabase/migrations/20261122000000_boolaa_schema.sql.
+// Author embeds come from `select('*, author:users!<fk>(id, name, avatar)')`.
+
+/// `public.users` (also used for the `author:users!fk(...)` embeds).
+struct UserProfile: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    var name: String
+    var avatar: String?
+    var createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, avatar
+        case createdAt = "created_at"
+    }
+
+    var avatarURL: URL? { avatar.flatMap(URL.init(string:)) }
+    var displayName: String { name.isEmpty ? String(localized: "Someone", comment: "Placeholder for a user without a name") : name }
+}
+
+/// `public.bubbles`
+struct Bubble: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    var name: String
+    var description: String?
+    var logo: String?
+    var maxSize: Int
+    var inviteCode: String
+    var createdBy: UUID?
+    var createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, logo
+        case maxSize = "max_size"
+        case inviteCode = "invite_code"
+        case createdBy = "created_by"
+        case createdAt = "created_at"
+    }
+}
+
+enum MemberRole: String, Codable, Sendable {
+    case owner, member
+}
+
+/// `public.bubble_members`, optionally embedding the bubble or the user.
+struct BubbleMember: Codable, Hashable, Sendable, Identifiable {
+    let userId: UUID
+    let bubbleId: UUID
+    var approved: Bool
+    var role: MemberRole
+    var createdAt: Date
+    var bubble: Bubble?
+    var user: UserProfile?
+
+    var id: String { "\(userId)-\(bubbleId)" }
+
+    enum CodingKeys: String, CodingKey {
+        case approved, role, bubble, user
+        case userId = "user_id"
+        case bubbleId = "bubble_id"
+        case createdAt = "created_at"
+    }
+}
+
+/// Minimal bubble embed (`bubble:bubbles(id, name)`).
+struct BubbleRef: Codable, Hashable, Sendable {
+    let id: UUID
+    var name: String
+}
+
+/// `public.join_requests`
+struct JoinRequest: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let userId: UUID
+    let bubbleId: UUID
+    var approverIds: [UUID]
+    var createdAt: Date
+    var user: UserProfile?
+    var bubble: BubbleRef?
+
+    enum CodingKeys: String, CodingKey {
+        case id, user, bubble
+        case userId = "user_id"
+        case bubbleId = "bubble_id"
+        case approverIds = "approver_ids"
+        case createdAt = "created_at"
+    }
+
+    /// Approvals needed for admission: a strict majority of approved members (see approve_join_request).
+    static func approvalsNeeded(memberCount: Int) -> Int { memberCount / 2 + 1 }
+
+    /// Only votes from people who are still approved members count (try_admit_join_request).
+    func countedApprovals(memberIDs: Set<UUID>) -> Int {
+        Set(approverIds).intersection(memberIDs).count
+    }
+
+    /// Has a majority but the bubble is full: the backend admits the requester when a seat frees.
+    static func isWaitingForSeat(approvals: Int, memberCount: Int, maxSize: Int) -> Bool {
+        approvals * 2 > memberCount && memberCount >= maxSize
+    }
+}
+
+/// `public.chat_messages`
+struct ChatMessage: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let bubbleId: UUID
+    let senderId: UUID
+    var content: String
+    var createdAt: Date
+    var sender: UserProfile?
+
+    enum CodingKeys: String, CodingKey {
+        case id, content, sender
+        case bubbleId = "bubble_id"
+        case senderId = "sender_id"
+        case createdAt = "created_at"
+    }
+}
+
+/// `public.events`
+struct BubbleEvent: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let bubbleId: UUID
+    let creatorId: UUID
+    var title: String
+    var description: String?
+    var datetime: Date
+    var location: String?
+    var rsvpList: [UUID]
+    var createdAt: Date
+    var creator: UserProfile?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, description, datetime, location, creator
+        case bubbleId = "bubble_id"
+        case creatorId = "creator_id"
+        case rsvpList = "rsvp_list"
+        case createdAt = "created_at"
+    }
+}
+
+/// `public.food_posts`
+struct FoodPost: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let bubbleId: UUID
+    let userId: UUID
+    var image: String
+    var description: String?
+    var createdAt: Date
+    var user: UserProfile?
+
+    enum CodingKeys: String, CodingKey {
+        case id, image, description, user
+        case bubbleId = "bubble_id"
+        case userId = "user_id"
+        case createdAt = "created_at"
+    }
+}
+
+enum MarketStatus: String, Codable, CaseIterable, Sendable {
+    case free, trade
+    var label: LocalizedStringResource {
+        switch self {
+        case .free: LocalizedStringResource("Free", comment: "Marketplace item status")
+        case .trade: LocalizedStringResource("Trade", comment: "Marketplace item status")
+        }
+    }
+}
+
+/// `public.market_items`
+struct MarketItem: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let bubbleId: UUID
+    let ownerId: UUID
+    var image: String
+    var title: String
+    var description: String?
+    var status: MarketStatus
+    var createdAt: Date
+    var owner: UserProfile?
+
+    enum CodingKeys: String, CodingKey {
+        case id, image, title, description, status, owner
+        case bubbleId = "bubble_id"
+        case ownerId = "owner_id"
+        case createdAt = "created_at"
+    }
+}
+
+/// `public.shared_links`
+struct SharedLink: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let bubbleId: UUID
+    let userId: UUID
+    var url: String
+    var title: String?
+    var tags: [String]
+    var createdAt: Date
+    var user: UserProfile?
+
+    enum CodingKeys: String, CodingKey {
+        case id, url, title, tags, user
+        case bubbleId = "bubble_id"
+        case userId = "user_id"
+        case createdAt = "created_at"
+    }
+
+    /// Parses "food, cheap ,  ,Recipes" into ["food", "cheap", "recipes"].
+    static func parseTags(_ raw: String) -> [String] {
+        var seen = Set<String>()
+        return raw.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+}
+
+// MARK: - Write payloads
+
+struct NewChatMessage: Encodable, Sendable {
+    let bubbleId: UUID
+    let senderId: UUID
+    let content: String
+    enum CodingKeys: String, CodingKey { case content; case bubbleId = "bubble_id"; case senderId = "sender_id" }
+}
+
+struct EventInput: Encodable, Sendable {
+    var bubbleId: UUID?
+    var creatorId: UUID?
+    var title: String
+    var description: String?
+    var datetime: Date
+    var location: String?
+    enum CodingKeys: String, CodingKey {
+        case title, description, datetime, location
+        case bubbleId = "bubble_id"
+        case creatorId = "creator_id"
+    }
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(bubbleId, forKey: .bubbleId)
+        try c.encodeIfPresent(creatorId, forKey: .creatorId)
+        try c.encode(title, forKey: .title)
+        try c.encode(description, forKey: .description)
+        try c.encode(datetime, forKey: .datetime)
+        try c.encode(location, forKey: .location)
+    }
+}
+
+struct FoodInput: Encodable, Sendable {
+    var bubbleId: UUID?
+    var userId: UUID?
+    var image: String
+    var description: String?
+    enum CodingKeys: String, CodingKey { case image, description; case bubbleId = "bubble_id"; case userId = "user_id" }
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(bubbleId, forKey: .bubbleId)
+        try c.encodeIfPresent(userId, forKey: .userId)
+        try c.encode(image, forKey: .image)
+        try c.encode(description, forKey: .description)
+    }
+}
+
+struct MarketInput: Encodable, Sendable {
+    var bubbleId: UUID?
+    var ownerId: UUID?
+    var image: String
+    var title: String
+    var description: String?
+    var status: MarketStatus
+    enum CodingKeys: String, CodingKey { case image, title, description, status; case bubbleId = "bubble_id"; case ownerId = "owner_id" }
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(bubbleId, forKey: .bubbleId)
+        try c.encodeIfPresent(ownerId, forKey: .ownerId)
+        try c.encode(image, forKey: .image)
+        try c.encode(title, forKey: .title)
+        try c.encode(description, forKey: .description)
+        try c.encode(status, forKey: .status)
+    }
+}
+
+struct LinkInput: Encodable, Sendable {
+    let bubbleId: UUID
+    let userId: UUID
+    let url: String
+    let title: String?
+    let tags: [String]
+    enum CodingKeys: String, CodingKey { case url, title, tags; case bubbleId = "bubble_id"; case userId = "user_id" }
+}

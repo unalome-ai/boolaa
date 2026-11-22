@@ -1,0 +1,50 @@
+# OS / editors
+.DS_Store
+.idea/
+*.swp
+
+# Secrets & local config (never commit)
+.env
+.env.*
+!.env.example
+**/local.properties
+apps/boolaa-ios/Config/Local.xcconfig
+supabase/.env
+
+# Node / Next
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Expo (legacy app)
+apps/boolaa/.expo/
+apps/boolaa/dist/
+apps/boolaa/web-build/
+
+# iOS
+apps/boolaa-ios/build/
+apps/boolaa-ios/*.xcodeproj/
+DerivedData/
+xcuserdata/
+*.xcresult
+
+# Android
+.gradle/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
+
+# Backup of the legacy app's own git history
+.legacy-git/

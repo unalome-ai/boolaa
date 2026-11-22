@@ -1,0 +1,256 @@
+import Foundation
+import Supabase
+
+/// Every backend call the app makes. Stateless and `Sendable`; all access is subject to RLS.
+struct BoolaaAPI: Sendable {
+    let client: SupabaseClient
+
+    static let authorColumns = "id, name, avatar"
+
+    // MARK: Profile
+
+    func profile(userID: UUID) async throws -> UserProfile {
+        try await client.from("users").select().eq("id", value: userID).single().execute().value
+    }
+
+    func updateProfile(userID: UUID, name: String? = nil, avatar: String? = nil) async throws -> UserProfile {
+        struct Patch: Encodable { var name: String?; var avatar: String? }
+        return try await client.from("users")
+            .update(Patch(name: name, avatar: avatar))
+            .eq("id", value: userID).select().single().execute().value
+    }
+
+    // MARK: Bubbles & membership
+
+    /// The caller's membership rows (approved or not) with the bubble embedded.
+    func memberships(userID: UUID) async throws -> [BubbleMember] {
+        try await client.from("bubble_members")
+            .select("*, bubble:bubbles(*)")
+            .eq("user_id", value: userID)
+            .order("created_at")
+            .execute().value
+    }
+
+    func members(bubbleID: UUID) async throws -> [BubbleMember] {
+        try await client.from("bubble_members")
+            .select("*, user:users!user_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .eq("approved", value: true)
+            .order("created_at")
+            .execute().value
+    }
+
+    func createBubble(name: String, description: String?, maxSize: Int) async throws -> Bubble {
+        struct Params: Encodable { let p_name: String; let p_description: String?; let p_max_size: Int }
+        return try await client.rpc("create_bubble", params: Params(p_name: name, p_description: description, p_max_size: maxSize))
+            .single().execute().value
+    }
+
+    func updateBubble(id: UUID, name: String, description: String?) async throws {
+        struct Patch: Encodable { let name: String; let description: String? }
+        try await client.from("bubbles").update(Patch(name: name, description: description)).eq("id", value: id).execute()
+    }
+
+    /// Owner only. Raises "only the owner can remove members", "use leave to remove yourself", "member not found".
+    func removeMember(bubbleID: UUID, userID: UUID) async throws {
+        struct Params: Encodable { let p_bubble_id: UUID; let p_user_id: UUID }
+        try await client.rpc("remove_member", params: Params(p_bubble_id: bubbleID, p_user_id: userID)).execute()
+    }
+
+    func leaveBubble(bubbleID: UUID, userID: UUID) async throws {
+        try await client.from("bubble_members").delete()
+            .eq("bubble_id", value: bubbleID).eq("user_id", value: userID).execute()
+    }
+
+    // MARK: Join requests
+
+    func requestToJoin(inviteCode: String) async throws -> JoinRequest {
+        struct Params: Encodable { let p_invite_code: String }
+        return try await client.rpc("request_to_join", params: Params(p_invite_code: inviteCode))
+            .single().execute().value
+    }
+
+    /// The caller's own pending requests, with the bubble name.
+    func myJoinRequests(userID: UUID) async throws -> [JoinRequest] {
+        try await client.from("join_requests")
+            .select("*, bubble:bubbles(id, name)")
+            .eq("user_id", value: userID)
+            .order("created_at")
+            .execute().value
+    }
+
+    /// Pending requests to join a bubble the caller belongs to.
+    func joinRequests(bubbleID: UUID) async throws -> [JoinRequest] {
+        try await client.from("join_requests")
+            .select("*, user:users!user_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .order("created_at")
+            .execute().value
+    }
+
+    /// Returns true when the requester was admitted.
+    func approveJoinRequest(id: UUID) async throws -> Bool {
+        struct Params: Encodable { let p_request_id: UUID }
+        return try await client.rpc("approve_join_request", params: Params(p_request_id: id)).execute().value
+    }
+
+    func rejectJoinRequest(id: UUID) async throws {
+        struct Params: Encodable { let p_request_id: UUID }
+        try await client.rpc("reject_join_request", params: Params(p_request_id: id)).execute()
+    }
+
+    func cancelJoinRequest(id: UUID) async throws {
+        try await client.from("join_requests").delete().eq("id", value: id).execute()
+    }
+
+    // MARK: Chat
+
+    func chatMessages(bubbleID: UUID, limit: Int = 200) async throws -> [ChatMessage] {
+        // Newest N, then flipped to chronological order.
+        let rows: [ChatMessage] = try await client.from("chat_messages")
+            .select("*, sender:users!sender_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute().value
+        return rows.reversed()
+    }
+
+    func sendMessage(bubbleID: UUID, senderID: UUID, content: String) async throws -> ChatMessage {
+        try await client.from("chat_messages")
+            .insert(NewChatMessage(bubbleId: bubbleID, senderId: senderID, content: content))
+            .select("*, sender:users!sender_id(\(Self.authorColumns))")
+            .single().execute().value
+    }
+
+    // MARK: Events
+
+    func events(bubbleID: UUID) async throws -> [BubbleEvent] {
+        try await client.from("events")
+            .select("*, creator:users!creator_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .order("datetime")
+            .execute().value
+    }
+
+    func upcomingEvents(bubbleID: UUID, limit: Int) async throws -> [BubbleEvent] {
+        try await client.from("events")
+            .select("*, creator:users!creator_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .gte("datetime", value: Date.now)
+            .order("datetime")
+            .limit(limit)
+            .execute().value
+    }
+
+    func createEvent(_ input: EventInput) async throws {
+        try await client.from("events").insert(input).execute()
+    }
+
+    func updateEvent(id: UUID, _ input: EventInput) async throws {
+        try await client.from("events").update(input).eq("id", value: id).execute()
+    }
+
+    func deleteEvent(id: UUID) async throws {
+        try await client.from("events").delete().eq("id", value: id).execute()
+    }
+
+    func toggleRSVP(eventID: UUID) async throws -> [UUID] {
+        struct Params: Encodable { let p_event_id: UUID }
+        return try await client.rpc("toggle_rsvp", params: Params(p_event_id: eventID)).execute().value
+    }
+
+    // MARK: Food
+
+    func foodPosts(bubbleID: UUID, limit: Int? = nil) async throws -> [FoodPost] {
+        var q = client.from("food_posts")
+            .select("*, user:users!user_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .order("created_at", ascending: false)
+        if let limit { q = q.limit(limit) }
+        return try await q.execute().value
+    }
+
+    func createFoodPost(_ input: FoodInput) async throws {
+        try await client.from("food_posts").insert(input).execute()
+    }
+
+    func updateFoodPost(id: UUID, _ input: FoodInput) async throws {
+        try await client.from("food_posts").update(input).eq("id", value: id).execute()
+    }
+
+    func deleteFoodPost(id: UUID) async throws {
+        try await client.from("food_posts").delete().eq("id", value: id).execute()
+    }
+
+    // MARK: Marketplace
+
+    func marketItems(bubbleID: UUID, limit: Int? = nil) async throws -> [MarketItem] {
+        var q = client.from("market_items")
+            .select("*, owner:users!owner_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .order("created_at", ascending: false)
+        if let limit { q = q.limit(limit) }
+        return try await q.execute().value
+    }
+
+    func createMarketItem(_ input: MarketInput) async throws {
+        try await client.from("market_items").insert(input).execute()
+    }
+
+    func updateMarketItem(id: UUID, _ input: MarketInput) async throws {
+        try await client.from("market_items").update(input).eq("id", value: id).execute()
+    }
+
+    func deleteMarketItem(id: UUID) async throws {
+        try await client.from("market_items").delete().eq("id", value: id).execute()
+    }
+
+    // MARK: Links
+
+    func links(bubbleID: UUID, limit: Int? = nil) async throws -> [SharedLink] {
+        var q = client.from("shared_links")
+            .select("*, user:users!user_id(\(Self.authorColumns))")
+            .eq("bubble_id", value: bubbleID)
+            .order("created_at", ascending: false)
+        if let limit { q = q.limit(limit) }
+        return try await q.execute().value
+    }
+
+    func createLink(_ input: LinkInput) async throws {
+        try await client.from("shared_links").insert(input).execute()
+    }
+
+    func deleteLink(id: UUID) async throws {
+        try await client.from("shared_links").delete().eq("id", value: id).execute()
+    }
+
+    // MARK: Storage
+
+    enum ImageBucket: String { case avatars, food = "food.images", market = "market.images" }
+
+    /// Uploads JPEG data to `<uid>/<uuid>.jpg` (the path shape the storage policy enforces) and returns the public URL.
+    func uploadImage(_ jpeg: Data, bucket: ImageBucket, userID: UUID) async throws -> String {
+        let path = "\(userID.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
+        let storage = client.storage.from(bucket.rawValue)
+        try await storage.upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
+        return try storage.getPublicURL(path: path).absoluteString
+    }
+
+    /// The object path (`<uid>/<file>`) inside `bucket` for one of our public URLs, or nil for foreign URLs.
+    static func storagePath(fromPublicURL url: String, bucket: ImageBucket) -> String? {
+        let marker = "/storage/v1/object/public/\(bucket.rawValue)/"
+        guard let range = url.range(of: marker) else { return nil }
+        let rest = url[range.upperBound...].split(separator: "?", maxSplits: 1).first.map(String.init) ?? ""
+        let path = rest.removingPercentEncoding ?? rest
+        return path.split(separator: "/").count == 2 ? path : nil
+    }
+
+    /// Best-effort delete of an image we uploaded. Only touches the caller's own `<uid>/` folder;
+    /// seeded or external URLs are ignored. Failures are swallowed: the row change already succeeded.
+    func removeImage(publicURL: String?, bucket: ImageBucket, userID: UUID) async {
+        guard let publicURL, let path = Self.storagePath(fromPublicURL: publicURL, bucket: bucket),
+              path.hasPrefix(userID.uuidString.lowercased() + "/") else { return }
+        _ = try? await client.storage.from(bucket.rawValue).remove(paths: [path])
+    }
+}

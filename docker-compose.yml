@@ -1,0 +1,94 @@
+version: '3.8'
+services:
+  db:
+    image: supabase/postgres:15.8.1.060
+    restart: unless-stopped
+    ports:
+      - '54322:5432' # Postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+
+  rest:
+    image: postgrest/postgrest:v12.2.12
+    restart: unless-stopped
+    ports:
+      - '54323:3000' # PostgREST
+    depends_on:
+      - db
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/postgres
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: super-secret-jwt-token
+
+  realtime:
+    image: supabase/realtime:v2.37.10
+    restart: unless-stopped
+    ports:
+      - '54324:4000' # Realtime
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      PORT: 4000
+      JWT_SECRET: super-secret-jwt-token
+
+  gotrue:
+    image: supabase/gotrue:v2.177.0
+    restart: unless-stopped
+    ports:
+      - '54325:9999' # Auth
+    depends_on:
+      - db
+    environment:
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+      GOTRUE_JWT_SECRET: super-secret-jwt-token
+      GOTRUE_SITE_URL: http://localhost:54321
+      GOTRUE_API_EXTERNAL_URL: http://localhost:54325
+      GOTRUE_DISABLE_SIGNUP: 'false'
+
+  storage:
+    image: supabase/storage-api:v1.25.7
+    restart: unless-stopped
+    ports:
+      - '54326:5000' # Storage
+    depends_on:
+      - db
+    environment:
+      ANON_KEY: super-secret-jwt-token
+      SERVICE_KEY: super-secret-jwt-token
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: super-secret-jwt-token
+      DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+
+  studio:
+    image: supabase/studio:2025.06.30-sha-6f5982d
+    restart: unless-stopped
+    ports:
+      - '54321:3000' # Studio
+    depends_on:
+      - db
+    environment:
+      SUPABASE_DB_HOST: db
+      SUPABASE_DB_PORT: 5432
+      SUPABASE_DB_NAME: postgres
+      SUPABASE_DB_USER: postgres
+      SUPABASE_DB_PASSWORD: postgres
+      SUPABASE_JWT_SECRET: super-secret-jwt-token
+
+volumes:
+  supabase-db-data:
+  supabase-storage-data:
