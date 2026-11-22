@@ -6,31 +6,31 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 
 ### Product and safety (store requirements)
 - ✅ **Database (Supabase): account deletion** (`delete_my_account`).
-- 🔄 **Account deletion UI** (web, iOS, Android): a confirmation step, and the user's stored images are deleted first.
+- ✅ **Account deletion UI** (web, iOS, Android): a confirmation step, and the user's stored images are deleted first.
 - ✅ **Database: block users**, two-way, enforced by the database's access rules (RLS), including live chat.
 - ✅ **Database: report content and users** (`report_content`), into a moderation queue.
-- 🔄 **Report and block UI** on every message, post, item, event, link and member, plus a "Blocked users" list in the profile.
+- ✅ **Report and block UI** on every message, post, item, event, link and member, plus a "Blocked users" list in the profile.
 - ⬜ **Moderation process.** Apple requires acting on reports within 24 hours. It needs:
   - an alert to the team for each new report (database webhook → email or Slack);
   - an admin view of open reports with actions: delete content, remove the user from a bubble, suspend the account.
 - ⬜ **Suspended/banned accounts** (`users.status`): blocked at sign-in and hidden from everyone.
-- 🔄 **Privacy Policy and Terms of Service pages** (web, all 5 languages), linked from register, the profile/settings screens and the store listings.
+- ✅ **Privacy Policy and Terms of Service pages** (web, all 5 languages), linked from register, the profile/settings screens and the store listings.
 - ⬜ **Legal review** of the Privacy Policy and Terms. Fill in the controller's company name, address, contact email and DPO (if any).
 - ⬜ **Age rating.** Decide on 13+ or 16+ (the GDPR digital-consent age in Romania is 16), add an age confirmation at sign-up, and fill in the App Store and Play Store questionnaires.
 
 ### Auth
 - ⬜ **Forgot password and reset**, by email link, with a deep link into the apps.
-- ⬜ **Email confirmation** using a real email provider (custom SMTP such as Resend or Postmark), with branded email templates in all 5 languages.
+- ✅ **Email confirmation** using a real email provider (custom SMTP such as Resend or Postmark), with branded email templates in all 5 languages.
 - ⬜ **Sign in with Apple.** Required on iOS if any other third-party login (Google) is offered.
 - ⬜ **Google sign-in** (optional; the old app had it).
 - ⬜ **Rate limits and CAPTCHA** on sign-up (Supabase Auth settings).
 
 ### Infrastructure and release
-- ✅ **Git repository**. ⬜ **Remote** (GitHub) and **CI**: build, lint and test all 3 apps, and run migrations against a fresh database.
-- ⬜ **Hosted Supabase project** (EU region): run the migrations, set up the storage buckets, auth settings, backups (PITR) and the redirect URLs.
+- ✅ **Git repository** and **Remote** (`unalome-ai/boolaa`). ⬜ and **CI**: build, lint and test all 3 apps, and run migrations against a fresh database.
+- ✅ **Hosted Supabase project** (Zurich; `boolaa.ro`): run the migrations, set up the storage buckets, auth settings, backups (PITR) and the redirect URLs.
 - ⬜ **Separate staging and production environments.** Never run `seed.sql` in production.
-- ⬜ **Domain**: landing page and web app (e.g. boolaa.app), with legal URLs that never change.
-- ⬜ **Web hosting** (e.g. Vercel), with environment variables and preview deploys.
+- ✅ **Domain**: landing page and web app (e.g. boolaa.app), with legal URLs that never change.
+- ✅ **Web hosting** (DigitalOcean App Platform, Frankfurt), with environment variables and preview deploys.
 - ⬜ **iOS**:
   - Apple Developer account, bundle ID, signing and the App Store Connect record.
   - Privacy "nutrition labels" and the `PrivacyInfo.xcprivacy` manifest.
@@ -42,14 +42,14 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ⬜ **Error reporting** (Sentry or Crashlytics) and basic product analytics. Both must be covered by consent and by the privacy policy.
 
 ## P1: Core experience expected of a social app
-- 🔄 **Native Android app**, at parity with iOS.
-- 🔄 **Live membership** (pending screen, members list) and the remove-member UI.
+- ✅ **Native Android app**, at parity with iOS.
+- ✅ **Live membership** (pending screen, members list) and the remove-member UI.
 - ⬜ **Push notifications** (APNs, FCM, Web Push) for new chat messages, join requests (to members), approval (to the requester), event reminders and new events. Includes per-bubble mute and notification settings.
 - ⬜ **Invite links and universal/app links** (`https://boolaa.app/join/CODE`) that open the app or the store. Optionally a QR code.
 - ⬜ **Chat**: load older messages, delete your own message, send photos, unread counts and a last-read marker.
 - ⬜ **Live updates** for events, food, market and links, not only chat.
 - ⬜ **Bubble logo/cover image**: upload and display.
-- ⬜ **Modern visual redesign**: playful animations, haptics, a happy brand (Fable design pass).
+- 🔄 **Modern visual redesign**: playful animations, haptics, a happy brand (Fable design pass).
 - ⬜ **Native-speaker review** of the ro, fr, es and it translations.
 - ⬜ **Accessibility pass**: Dynamic Type and font scaling, VoiceOver and TalkBack labels, contrast, reduced motion.
 - ⬜ **Offline and poor-network handling**: cached last view, retry states.
