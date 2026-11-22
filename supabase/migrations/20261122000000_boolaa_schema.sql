@@ -2,7 +2,7 @@
 -- events, food circle, marketplace and shared links.
 -- Shared contract for apps/boolaa-ios (SwiftUI) and apps/boolaa-web (Next.js).
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ---------------------------------------------------------------------------
 -- Tables
@@ -21,7 +21,7 @@ create table public.bubbles (
   description  text,
   logo         text,
   max_size     int  not null default 12 check (max_size between 2 and 150),
-  invite_code  text not null unique default upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 8)),
+  invite_code  text not null unique default upper(substr(encode(extensions.gen_random_bytes(6), 'hex'), 1, 8)),
   created_by   uuid references public.users (id) on delete set null,
   created_at   timestamptz not null default now()
 );
