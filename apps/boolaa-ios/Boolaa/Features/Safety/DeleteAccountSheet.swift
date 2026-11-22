@@ -22,10 +22,10 @@ struct DeleteAccountSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 44)).foregroundStyle(.red)
+                    Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 44)).foregroundStyle(Theme.dangerText)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 12)
-                    Text("Delete your account?").font(.title2.weight(.bold)).frame(maxWidth: .infinity)
+                    Text("Delete your account?").font(.rounded(.title2)).frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                     Text("This can't be undone. Your profile, photos, messages, events, food posts, items and links will be permanently deleted, and you'll leave all your bubbles.")
                         .foregroundStyle(.secondary)
@@ -42,7 +42,7 @@ struct DeleteAccountSheet: View {
                     Button(role: .destructive) {
                         Task { await delete() }
                     } label: {
-                        if busy { ProgressView().tint(.white) } else { Text("Delete account permanently") }
+                        if busy { ProgressView() } else { Text("Delete account permanently") }
                     }
                     .buttonStyle(DestructiveButtonStyle())
                     .disabled(!Self.matches(typed) || busy)
@@ -69,15 +69,19 @@ struct DeleteAccountSheet: View {
     }
 }
 
-/// Full-width red button, same shape as PrimaryButtonStyle.
+/// Full-width red button for irreversible actions. Calm on purpose: flat, no bounce, no glow.
 struct DestructiveButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
         configuration.label
-            .font(.headline)
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, minHeight: 50)
-            .background(Color.red.opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.35),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .font(.rounded(.headline))
+            .foregroundStyle(Color.white.opacity(isEnabled ? 1 : 0.85))
+            .tint(.white)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity, minHeight: 54)
+            .background(Theme.danger.opacity(isEnabled ? 1 : 0.35), in: shape)
+            .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }

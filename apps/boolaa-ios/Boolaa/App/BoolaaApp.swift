@@ -16,7 +16,7 @@ struct BoolaaApp: App {
             RootView()
                 .environment(session)
                 .environment(safety)
-                .tint(Theme.brand)
+                .tint(Theme.brandText)
                 .task {
                     session.start()
                     await DebugHooks.applyAutoLogin(session: session)

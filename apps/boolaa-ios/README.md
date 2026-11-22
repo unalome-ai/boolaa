@@ -56,9 +56,19 @@ Boolaa/Core        AppConfig (Info.plist keys), Backend (SupabaseClient), Boolaa
                    BoolaaJSON (timestamptz decoding), Theme, ImageCompression
 Boolaa/Models      Codable rows matching the migration (explicit snake_case CodingKeys) + insert payloads
 Boolaa/State       SessionStore (@Observable: auth, profile, memberships, current bubble), RouteGate (pure), ShellRouter
-Boolaa/Features    Auth, Onboarding, Shell (header/pill tab bar/FAB), Home, Chat, Events, Food, Marketplace, Links, Settings, Profile
-Boolaa/Components  Avatar, chips, cards, PhotoField (PhotosPicker + JPEG compression)
+Boolaa/Features    Auth, Onboarding, Shell (header/bubble chips/dock), Home, Chat, Events, Food, Marketplace, Links, Settings, Profile
+Boolaa/Components  Avatar, chips, cards, PhotoField (PhotosPicker + JPEG compression),
+                   Playful (bubble orb, ambient backdrop, confetti, shimmer skeletons, segmented pill, entrance motion)
 ```
+
+## Design
+
+The look, motion and voice are specified in `docs/design-system.md` (shared with Android and the web). Tokens are in `Boolaa/Core/Theme.swift`: `Hue` (colour families, the deterministic bubble colour), `Feature` (feature colours), `Theme` (surfaces, radii, spacing), `Motion` (springs) and the button, card and field styles. Rules to keep when adding UI:
+
+- Use `Hue`/`Theme` tokens, never raw colours. Text on a hue's fill uses `hue.onFill`; a hue used as text uses `hue.text`.
+- Ambient loops use `TimelineView` + `Canvas` (see `Playful.swift`), not `repeatForever` animations, so XCUITest can still reach idle.
+- Every animation has a Reduce Motion path (`Motion.resolve`, `SquishButtonStyle`, `popIn`).
+- Safety screens (report, blocked users, delete account) stay calm: `PrimaryButtonStyle(calm: true)`, `DestructiveButtonStyle`, `CalmEmptyState`.
 
 ## Localization (en, ro, fr, es, it)
 

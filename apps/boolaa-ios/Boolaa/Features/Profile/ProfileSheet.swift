@@ -25,9 +25,9 @@ struct ProfileSheet: View {
                     .padding(.top, 12)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Name").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                        Text("Name").font(.rounded(.caption)).foregroundStyle(.secondary).padding(.leading, 4)
                         TextField("Your name", text: $name).boolaaField().accessibilityIdentifier("profile-name")
-                        Text("Email").font(.caption.weight(.bold)).foregroundStyle(.secondary).padding(.top, 6)
+                        Text("Email").font(.rounded(.caption)).foregroundStyle(.secondary).padding(.top, 6).padding(.leading, 4)
                         Text(verbatim: session.email ?? "").foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading).boolaaField()
                     }
@@ -45,19 +45,19 @@ struct ProfileSheet: View {
                     VStack(spacing: 10) {
                         LanguageRow()
                         NavigationLink(value: ProfileDestination.blocked) {
-                            ProfileRow(title: "Blocked users", icon: "hand.raised", trailing: "chevron.right")
+                            ProfileRow(title: "Blocked users", icon: "hand.raised.fill", trailing: "chevron.right", hue: .coral)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.squish)
                         .accessibilityIdentifier("blocked-users-row")
                         Button { legalPage = .privacy } label: {
-                            ProfileRow(title: LegalPage.privacy.title, icon: "lock.shield", trailing: "arrow.up.forward.square")
+                            ProfileRow(title: LegalPage.privacy.title, icon: "lock.shield.fill", trailing: "arrow.up.forward", hue: .mint)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.squish)
                         .accessibilityIdentifier("privacy-row")
                         Button { legalPage = .terms } label: {
-                            ProfileRow(title: LegalPage.terms.title, icon: "doc.text", trailing: "arrow.up.forward.square")
+                            ProfileRow(title: LegalPage.terms.title, icon: "doc.text.fill", trailing: "arrow.up.forward", hue: .sunny)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.squish)
                         .accessibilityIdentifier("terms-row")
                     }
 
@@ -70,7 +70,8 @@ struct ProfileSheet: View {
                     Button(role: .destructive) { showDeleteAccount = true } label: {
                         Label { Text("Delete account") } icon: { Image(systemName: "trash") }
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Theme.dangerText)
+                            .frame(minHeight: 44)
                     }
                     .padding(.top, 4)
                     .accessibilityIdentifier("delete-account")
@@ -84,7 +85,7 @@ struct ProfileSheet: View {
             .navigationDestination(for: ProfileDestination.self) { _ in BlockedUsersView() }
             .legalPageSheet($legalPage)
             .sheet(isPresented: $showDeleteAccount) {
-                DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() })
+                DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() }).boolaaSheet()
             }
             .onAppear {
                 name = session.profile?.name ?? ""
@@ -111,10 +112,14 @@ struct ProfileSheet: View {
     // Built here (main actor) because PhotosPicker's label closure is nonisolated.
     private var avatarLabel: some View {
         ZStack(alignment: .bottomTrailing) {
-            AvatarView(user: session.profile, size: 110)
-            Image(systemName: "camera.fill").font(.subheadline).foregroundStyle(.white)
-                .frame(width: 34, height: 34).background(Circle().fill(Theme.brand))
-                .overlay(Circle().stroke(Theme.card, lineWidth: 3))
+            AvatarView(user: session.profile, size: 112)
+                .padding(5)
+                .background(Circle().strokeBorder(
+                    AngularGradient(colors: [Hue.grape.fill, Hue.pink.fill, Hue.sunny.fill, Hue.mint.fill, Hue.sky.fill, Hue.grape.fill], center: .center),
+                    lineWidth: 3))
+            Image(systemName: "camera.fill").font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                .frame(width: 38, height: 38).background(Circle().fill(Hue.grape.gradient))
+                .overlay(Circle().strokeBorder(Theme.background, lineWidth: 3))
         }
         .overlay { if busy { ProgressView() } }
     }
@@ -136,16 +141,20 @@ struct ProfileRow: View {
     var title: LocalizedStringResource
     var icon: String
     var trailing: String
+    var hue: Hue = .grape
 
     var body: some View {
-        HStack {
-            Label { Text(title) } icon: { Image(systemName: icon) }
-                .foregroundStyle(.primary)
+        HStack(spacing: 12) {
+            FeatureBadge(icon: icon, hue: hue, size: 34)
+            Text(title).foregroundStyle(.primary)
             Spacer()
-            Image(systemName: trailing).foregroundStyle(Theme.brand)
+            Image(systemName: trailing).font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
         }
         .font(.body.weight(.medium))
-        .boolaaField()
+        .padding(.horizontal, 12)
+        .frame(minHeight: 56)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         .contentShape(Rectangle())
     }
 }
@@ -159,17 +168,21 @@ struct LanguageRow: View {
         Button {
             if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
         } label: {
-            HStack {
-                Label { Text("Language") } icon: { Image(systemName: "globe") }
-                    .foregroundStyle(.primary)
+            HStack(spacing: 12) {
+                FeatureBadge(icon: "globe", hue: .sky, size: 34)
+                Text("Language").foregroundStyle(.primary)
                 Spacer()
                 Text(verbatim: AppLanguage.current.nativeName).foregroundStyle(.secondary)
-                Image(systemName: "arrow.up.forward.app").foregroundStyle(Theme.brand)
+                Image(systemName: "arrow.up.forward").font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
             }
             .font(.body.weight(.medium))
-            .boolaaField()
+            .padding(.horizontal, 12)
+            .frame(minHeight: 56)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.squish)
         .accessibilityHint(Text("Opens Settings, where you can choose the app language."))
         .accessibilityIdentifier("language-row")
     }

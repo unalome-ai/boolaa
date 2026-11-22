@@ -34,6 +34,7 @@ struct MarketplaceView: View {
     @State private var filter: MarketStatus?
     @State private var editing: MarketEditorTarget?
     @State private var detail: MarketItem?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -44,41 +45,58 @@ struct MarketplaceView: View {
                     HStack(spacing: 8) {
                         filterChips
                         Spacer(minLength: 4)
-                        AddButton(label: "List item", id: "list-item") { editing = .new }.fixedSize()
+                        AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }.fixedSize()
                     }
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 8) { filterChips }
-                        AddButton(label: "List item", id: "list-item") { editing = .new }
+                        AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }
                     }
                 }
                 let visible = MarketModel.filter(model.items, by: filter)
                 if model.loaded && !visible.isEmpty {
                     Text("\(visible.count) items", comment: "Number of marketplace items shown")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.rounded(.subheadline, weight: .semibold)).monospacedDigit().foregroundStyle(.secondary)
+                        .contentTransition(.numericText(value: Double(visible.count)))
+                }
+                if !model.loaded {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).fill(Theme.field)
+                                .frame(height: 200).modifier(Shimmer())
+                        }
+                    }
+                    .accessibilityHidden(true)
                 }
                 if model.loaded && visible.isEmpty {
-                    EmptyStateView(icon: "tag", title: "Nothing listed", message: "Give away or trade things with your bubble.")
+                    EmptyStateView(icon: "tag.fill", title: "Nothing listed", message: "Give away or trade things with your bubble.", hue: hue)
                 }
                 LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(visible) { item in
+                    ForEach(Array(visible.enumerated()), id: \.element.id) { index, item in
                         Button { detail = item } label: { MarketCard(item: item, isMine: item.ownerId == session.userID) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.squish)
                             .safetyContextMenu(.market(item))
+                            .transition(.scale(scale: 0.85).combined(with: .opacity))
+                            .popIn(index)
                     }
                 }
             }
             .padding(.horizontal, 16)
+            .padding(.top, 4)
             .padding(.bottom, Theme.tabBarClearance)
+            .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: filter)
+            .animation(Motion.gentle, value: model.items.map(\.id))
         }
-        .refreshable { await reload() }
+        .refreshFeedback { await reload() }
         .task { await reload() }
+        .sensoryFeedback(.selection, trigger: filter)
         .sheet(item: $editing) { target in
-            MarketEditor(target: target) { Task { await reload() } }
+            MarketEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
         .sheet(item: $detail) { item in
             MarketDetail(item: item, isMine: item.ownerId == session.userID,
                          onEdit: { detail = nil; editing = .edit(item) },
                          onDelete: { detail = nil; Task { await model.delete(api: session.api, item: item) } })
+                .boolaaSheet()
         }
         .errorAlert($model.error)
     }
@@ -89,11 +107,14 @@ struct MarketplaceView: View {
         filterChip(String(localized: MarketStatus.trade.label), id: "trade", .trade).fixedSize()
     }
 
+    private var hue: Hue { Feature.market.hue }
+
     private func filterChip(_ title: String, id: String, _ status: MarketStatus?) -> some View {
-        Button { withAnimation(.snappy) { filter = status } } label: {
-            ChipView(title: title, isActive: filter == status)
+        Button { filter = status } label: {
+            ChipView(title: title, isActive: filter == status, hue: hue)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.squish)
+        .accessibilityAddTraits(filter == status ? .isSelected : [])
         .accessibilityIdentifier("market-filter-\(id)")
     }
 
@@ -112,11 +133,14 @@ enum MarketEditorTarget: Identifiable {
 struct StatusBadge: View {
     var status: MarketStatus
     var body: some View {
-        Text(status.label)
-            .font(.caption.weight(.bold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(Capsule().fill(status == .free ? Theme.brand : Theme.accent))
+        let hue: Hue = status == .free ? .mint : .sunny
+        Label { Text(status.label) } icon: { Image(systemName: status == .free ? "gift.fill" : "arrow.left.arrow.right") }
+            .labelStyle(.titleAndIcon)
+            .font(.rounded(.caption, weight: .heavy))
+            .foregroundStyle(hue.onFill)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(hue.gradient, in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.5), lineWidth: 1))
     }
 }
 
@@ -128,21 +152,22 @@ struct MarketCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Color.clear
                 .frame(height: 140)
-                .overlay { RemoteImage(url: item.image) }
+                .overlay { RemoteImage(url: item.image, hue: Feature.market.hue) }
                 .clipped()
                 .overlay(alignment: .topLeading) { StatusBadge(status: item.status).padding(8) }
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: item.title).font(.subheadline.weight(.semibold)).lineLimit(1)
+                Text(verbatim: item.title).font(.rounded(.subheadline)).lineLimit(1)
                 HStack(spacing: 6) {
-                    AvatarView(user: item.owner, size: 18)
+                    AvatarView(user: item.owner, size: 20)
                     Text(verbatim: isMine ? String(localized: "You", comment: "Shown instead of your own name") : (item.owner?.displayName ?? "")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
-            .padding(10)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 10, y: 3)
+        .cardChrome()
         .accessibilityIdentifier("market-item-\(item.title)")
     }
 }
@@ -158,11 +183,11 @@ struct MarketDetail: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Color.clear.frame(height: 280)
-                    .overlay { RemoteImage(url: item.image) }
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                Color.clear.frame(height: 300)
+                    .overlay { RemoteImage(url: item.image, hue: Feature.market.hue) }
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
                 HStack {
-                    Text(verbatim: item.title).font(.title2.bold())
+                    Text(verbatim: item.title).font(.rounded(.title2, weight: .heavy))
                     Spacer()
                     StatusBadge(status: item.status)
                 }
@@ -175,11 +200,12 @@ struct MarketDetail: View {
                 if isMine {
                     HStack(spacing: 12) {
                         Button("Edit", action: onEdit).buttonStyle(SecondaryButtonStyle())
-                        Button("Delete") { confirmDelete = true }.buttonStyle(PrimaryButtonStyle())
+                        Button("Delete") { confirmDelete = true }.buttonStyle(PrimaryButtonStyle(hue: .coral))
                     }
                 }
             }
             .padding(20)
+            .padding(.top, 8)
         }
         .presentationDetents([.large])
         .confirmationDialog(Text("Delete “\(item.title)”?", comment: "Confirmation title; the argument is the item title"), isPresented: $confirmDelete, titleVisibility: .visible) {
@@ -207,14 +233,12 @@ struct MarketEditor: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    PhotoField(jpeg: $jpeg, existingURL: existing?.image, height: 220)
+                    PhotoField(jpeg: $jpeg, existingURL: existing?.image, height: 220, hue: Feature.market.hue)
                     TextField("Title", text: $title).boolaaField()
                     TextField("Description", text: $description, axis: .vertical)
                         .lineLimit(2...5).padding(.vertical, 12).boolaaField()
-                    Picker("Status", selection: $status) {
-                        ForEach(MarketStatus.allCases, id: \.self) { Text($0.label).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedPill(selection: $status, options: MarketStatus.allCases.map { .init(value: $0, label: $0.label) },
+                                  hue: Feature.market.hue)
                 }
                 .padding(20)
             }

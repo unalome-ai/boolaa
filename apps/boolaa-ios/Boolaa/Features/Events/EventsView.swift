@@ -39,39 +39,46 @@ struct EventsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
-                SectionHeaderWithAction(title: "My events", count: mine.count) {
-                    AddButton(label: "New event", id: "new-event") { editing = .new }
+                SectionHeaderWithAction(title: "My events", count: mine.count, hue: hue) {
+                    AddButton(label: "New event", id: "new-event", hue: hue) { editing = .new }
                 }
+                if !model.loaded { SkeletonList(count: 2) }
                 if model.loaded && mine.isEmpty {
-                    EmptyStateView(icon: "calendar.badge.plus", title: "No events from you", message: "Plan something for the bubble.")
+                    EmptyStateView(icon: "calendar.badge.plus", title: "No events from you", message: "Plan something for the bubble.", hue: hue)
                 }
-                ForEach(mine) { event in
+                ForEach(Array(mine.enumerated()), id: \.element.id) { index, event in
                     EventCard(event: event, myID: session.userID,
                               onRSVP: { Task { await model.toggleRSVP(api: session.api, event: event) } },
                               onEdit: { editing = .edit(event) },
                               onDelete: { Task { await model.delete(api: session.api, event: event) } })
+                        .popIn(index)
                 }
 
-                SectionHeader(title: "Bubble events", count: others.count)
+                SectionHeader(title: "Bubble events", count: others.count, hue: hue)
                 if model.loaded && others.isEmpty {
-                    EmptyStateView(icon: "calendar", title: "Nothing planned", message: "Events from other members show up here.")
+                    EmptyStateView(icon: "calendar", title: "Nothing planned", message: "Events from other members show up here.", hue: hue)
                 }
-                ForEach(others) { event in
+                ForEach(Array(others.enumerated()), id: \.element.id) { index, event in
                     EventCard(event: event, myID: session.userID,
                               onRSVP: { Task { await model.toggleRSVP(api: session.api, event: event) } })
                         .safetyContextMenu(.event(event))
+                        .popIn(index + mine.count)
                 }
             }
             .padding(.horizontal, 16)
+            .padding(.top, 4)
             .padding(.bottom, Theme.tabBarClearance)
+            .animation(Motion.gentle, value: model.events.map(\.id))
         }
-        .refreshable { await reload() }
+        .refreshFeedback { await reload() }
         .task { await reload() }
         .sheet(item: $editing) { target in
-            EventEditor(target: target) { Task { await reload() } }
+            EventEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
         .errorAlert($model.error)
     }
+
+    private var hue: Hue { Feature.events.hue }
 
     private func reload() async {
         guard let id = session.currentBubble?.id else { return }
@@ -92,79 +99,131 @@ struct EventCard: View {
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
     @State private var confirmDelete = false
+    @State private var taps = 0
+    @State private var bursts = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var going: Bool { myID.map(event.rsvpList.contains) ?? false }
+    @ScaledMetric(relativeTo: .title2) private var tileWidth: CGFloat = 56
+    @ScaledMetric(relativeTo: .title2) private var tileHeight: CGFloat = 64
+
+    @ViewBuilder private var creatorLabel: some View {
+        if let creator = event.creator {
+            AvatarView(user: creator, size: 24)
+            Text(verbatim: creator.displayName).font(.caption.weight(.medium)).foregroundStyle(.secondary).lineLimit(1)
+        }
+    }
+
+    private var goingCount: some View {
+        Text("\(event.rsvpList.count) going", comment: "Number of people who RSVPed to an event")
+            .font(.rounded(.caption, weight: .semibold)).monospacedDigit()
+            .foregroundStyle(.secondary).lineLimit(1)
+            .contentTransition(.numericText(value: Double(event.rsvpList.count)))
+    }
+
+    private var rsvpButton: some View {
+        let hue = Feature.events.hue
+        return Button {
+            taps += 1
+            onRSVP()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: going ? "checkmark.circle.fill" : "plus.circle.fill")
+                    .contentTransition(.symbolEffect(.replace))
+                Text(going ? LocalizedStringResource("Going", comment: "RSVP button when you are attending")
+                           : LocalizedStringResource("RSVP", comment: "RSVP button when you are not attending"))
+                    .lineLimit(1)
+            }
+            .font(.rounded(.subheadline))
+            .foregroundStyle(going ? Hue.mint.onFill : hue.text)
+            .padding(.horizontal, 14).frame(minHeight: 38)
+            .background {
+                if going {
+                    Capsule().fill(Hue.mint.gradient).shadow(color: Hue.mint.fill.opacity(0.4), radius: 8, y: 4)
+                } else {
+                    Capsule().fill(hue.wash)
+                }
+            }
+        }
+        .buttonStyle(.squish)
+        .fixedSize()
+        .overlay { ConfettiBurst(trigger: bursts) }
+        .accessibilityValue(going ? Text("Going") : Text(verbatim: ""))
+        .accessibilityIdentifier("rsvp-\(event.title)")
+    }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            VStack(spacing: 0) {
-                Text(event.datetime.formatted(.dateTime.month(.abbreviated)).uppercased(with: .current))
-                    .font(.caption.weight(.bold)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 3)
-                    .background(Theme.brand)
-                Text(event.datetime.formatted(.dateTime.day()))
-                    .font(.title2.weight(.bold)).foregroundStyle(Theme.brand)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(width: 54, height: 60)
-            .background(Theme.brand.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        let hue = Feature.events.hue
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
+                // Calendar-page tile, tipped a little like a sticker.
+                VStack(spacing: 0) {
+                    Text(event.datetime.formatted(.dateTime.month(.abbreviated)).uppercased(with: .current))
+                        .font(.rounded(.caption2, weight: .heavy)).foregroundStyle(hue.onFill)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity).padding(.vertical, 4).padding(.horizontal, 2)
+                        .background(hue.gradient)
+                    Text(event.datetime.formatted(.dateTime.day()))
+                        .font(.rounded(.title2, weight: .heavy)).foregroundStyle(hue.text)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .frame(width: min(tileWidth, 84), height: min(tileHeight, 96))
+                .background(hue.wash)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .rotationEffect(.degrees(-4))
+                .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(alignment: .top) {
-                    Text(verbatim: event.title).font(.headline)
-                    Spacer()
-                    if onEdit != nil {
-                        Menu {
-                            Button("Edit", systemImage: "pencil") { onEdit?() }
-                            Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
-                        } label: {
-                            Image(systemName: "ellipsis").foregroundStyle(.secondary).frame(width: 28, height: 24)
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .top) {
+                        Text(verbatim: event.title).font(.rounded(.headline))
+                        Spacer()
+                        if onEdit != nil {
+                            Menu {
+                                Button("Edit", systemImage: "pencil") { onEdit?() }
+                                Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                            } label: {
+                                Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(.secondary).frame(width: 32, height: 28)
+                            }
+                            .accessibilityLabel(Text("More actions"))
+                            .accessibilityIdentifier("event-menu")
                         }
-                        .accessibilityLabel(Text("More actions"))
-                        .accessibilityIdentifier("event-menu")
+                    }
+                    Label(event.datetime.formatted(date: .abbreviated, time: .shortened), systemImage: "clock.fill")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    if let location = event.location?.nilIfEmpty {
+                        Label { Text(verbatim: location) } icon: { Image(systemName: "mappin.circle.fill") }.font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    if let description = event.description?.nilIfEmpty {
+                        Text(verbatim: description).font(.subheadline).padding(.top, 2)
                     }
                 }
-                Label(event.datetime.formatted(date: .abbreviated, time: .shortened), systemImage: "clock")
-                    .font(.subheadline).foregroundStyle(.secondary)
-                if let location = event.location?.nilIfEmpty {
-                    Label { Text(verbatim: location) } icon: { Image(systemName: "mappin.and.ellipse") }.font(.subheadline).foregroundStyle(.secondary)
+            }
+            // Footer: one row when it fits, two when the text is large or the translation long.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    creatorLabel
+                    Spacer(minLength: 4)
+                    goingCount
+                    rsvpButton
                 }
-                if let description = event.description?.nilIfEmpty {
-                    Text(verbatim: description).font(.subheadline)
-                }
-                HStack {
-                    if let creator = event.creator {
-                        AvatarView(user: creator, size: 22)
-                        Text(verbatim: creator.displayName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        creatorLabel
+                        Spacer(minLength: 4)
+                        goingCount
                     }
-                    Spacer()
-                    Text("\(event.rsvpList.count) going", comment: "Number of people who RSVPed to an event")
-                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                }
-                .padding(.top, 4)
-                HStack {
-                    Spacer()
-                    Button(action: onRSVP) {
-                        HStack(spacing: 6) {
-                            Image(systemName: going ? "checkmark.circle.fill" : "plus.circle")
-                            Text(going ? LocalizedStringResource("Going", comment: "RSVP button when you are attending")
-                                       : LocalizedStringResource("RSVP", comment: "RSVP button when you are not attending"))
-                                .lineLimit(1)
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(going ? .white : Theme.brand)
-                        .padding(.horizontal, 12).frame(height: 32)
-                        .background(Capsule().fill(going ? Theme.brand : Theme.brand.opacity(0.12)))
-                    }
-                    .buttonStyle(.plain)
-                    .fixedSize()
-                    .accessibilityValue(going ? Text("Going") : Text(verbatim: ""))
-                    .accessibilityIdentifier("rsvp-\(event.title)")
+                    rsvpButton
                 }
             }
         }
         .card()
+        .animation(Motion.resolve(Motion.bouncy, reduceMotion: reduceMotion), value: going)
+        .animation(Motion.snappy, value: event.rsvpList.count)
+        .onChange(of: going) { _, now in
+            if now { bursts += 1 }
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+        .sensoryFeedback(.success, trigger: bursts)
         .confirmationDialog(Text("Delete “\(event.title)”?", comment: "Confirmation title; the argument is the event title"), isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { onDelete?() }
         }
@@ -186,16 +245,22 @@ struct EventEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TextField("Title", text: $title).accessibilityIdentifier("event-title")
+            ScrollView {
+                VStack(spacing: 12) {
+                    BubbleCluster(icon: "calendar", hue: Feature.events.hue, size: 72)
+                        .padding(.vertical, 8)
+                    TextField("Title", text: $title).boolaaField().accessibilityIdentifier("event-title")
                     TextField("Description", text: $description, axis: .vertical).lineLimit(2...5)
-                }
-                Section {
+                        .padding(.vertical, 12).boolaaField()
                     DatePicker("Date & time", selection: $date)
-                    TextField("Location", text: $location)
+                        .padding(.horizontal, 16).frame(minHeight: 52)
+                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
+                    TextField("Location", text: $location).boolaaField()
                 }
+                .padding(20)
             }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Theme.background.ignoresSafeArea())
             .navigationTitle(isNew ? "New event" : "Edit event")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

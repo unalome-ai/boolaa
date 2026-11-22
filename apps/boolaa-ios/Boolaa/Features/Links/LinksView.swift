@@ -32,6 +32,9 @@ struct LinksView: View {
     @State private var title = ""
     @State private var tags = ""
     @State private var busy = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var hue: Hue { Feature.links.hue }
 
     private var urlIsValid: Bool {
         let t = url.trimmingCharacters(in: .whitespaces).lowercased()
@@ -41,16 +44,8 @@ struct LinksView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    Button { dismiss() } label: {
-                        Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(Theme.brand).frame(width: 40, height: 40)
-                            .background(Circle().fill(Theme.card))
-                            .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
-                    }
-                    .accessibilityLabel("Back")
-                    Text("Links").font(.system(size: 32, weight: .bold)).accessibilityIdentifier("screen-title")
-                    Spacer()
+                PushedHeader(title: "Links", backID: "links-back", onBack: { dismiss() }) {
+                    BubbleNameTag(bubble: session.currentBubble)
                 }
 
                 VStack(spacing: 10) {
@@ -62,9 +57,9 @@ struct LinksView: View {
                     TextField("Tags, comma-separated", text: $tags)
                         .textInputAutocapitalization(.never).boolaaField()
                     Button { Task { await add() } } label: {
-                        if busy { ProgressView().tint(.white) } else { Text("Add link") }
+                        if busy { ProgressView() } else { Text("Add link") }
                     }
-                    .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(PrimaryButtonStyle(hue: hue))
                     .disabled(!urlIsValid || busy)
                 }
                 .card()
@@ -72,30 +67,44 @@ struct LinksView: View {
                 if !model.allTags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            Button { tag = nil } label: { ChipView(title: String(localized: "All", comment: "Filter chip showing every item"), isActive: tag == nil) }.buttonStyle(.plain)
+                            Button { tag = nil } label: { ChipView(title: String(localized: "All", comment: "Filter chip showing every item"), isActive: tag == nil, hue: hue) }
+                                .buttonStyle(.squish)
+                                .accessibilityAddTraits(tag == nil ? .isSelected : [])
                             ForEach(model.allTags, id: \.self) { t in
-                                Button { tag = t } label: { ChipView(title: "#" + t, isActive: tag == t) }.buttonStyle(.plain)
+                                Button { tag = t } label: { ChipView(title: "#" + t, isActive: tag == t, hue: hue) }
+                                    .buttonStyle(.squish)
+                                    .accessibilityAddTraits(tag == t ? .isSelected : [])
                             }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
                     }
+                    .padding(.horizontal, -16)
+                    .sensoryFeedback(.selection, trigger: tag)
                 }
 
                 let visible = LinksModel.filter(model.links, tag: tag)
+                if !model.loaded { SkeletonList(count: 2) }
                 if model.loaded && visible.isEmpty {
-                    EmptyStateView(icon: "link", title: "No links yet", message: "Share recipes, playlists, anything useful.")
+                    EmptyStateView(icon: "link", title: "No links yet", message: "Share recipes, playlists, anything useful.", hue: hue)
                 }
-                ForEach(visible) { link in
+                ForEach(Array(visible.enumerated()), id: \.element.id) { index, link in
                     LinkRow(link: link, isMine: link.userId == session.userID,
                             onOpen: { if let u = URL(string: link.url) { openURL(u) } },
                             onDelete: { Task { await delete(link) } })
                         .safetyContextMenu(.link(link))
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                        .popIn(index)
                 }
             }
             .padding(16)
+            .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: tag)
+            .animation(Motion.resolve(Motion.bouncy, reduceMotion: reduceMotion), value: model.links.map(\.id))
         }
-        .background(Theme.background.ignoresSafeArea())
+        .scrollDismissesKeyboard(.interactively)
+        .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
         .toolbar(.hidden, for: .navigationBar)
-        .refreshable { await reload() }
+        .refreshFeedback { await reload() }
         .onChange(of: safety.contentVersion) { Task { await reload() } }
         .task { await reload() }
         .errorAlert($model.error)
@@ -136,34 +145,34 @@ struct LinkRow: View {
     @State private var confirmDelete = false
 
     var body: some View {
+        let hue = Feature.links.hue
         HStack(alignment: .top, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.brand.opacity(0.14))
-                Image(systemName: "link").foregroundStyle(Theme.brand)
-            }
-            .frame(width: 42, height: 42)
+            FeatureBadge(icon: Feature.links.icon, hue: hue)
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: link.title?.nilIfEmpty ?? link.url).font(.headline).lineLimit(2)
+                Text(verbatim: link.title?.nilIfEmpty ?? link.url).font(.rounded(.headline)).lineLimit(2)
                 Text(verbatim: URL(string: link.url)?.host() ?? link.url).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 if !link.tags.isEmpty {
-                    Text(verbatim: link.tags.map { "#" + $0 }.joined(separator: " ")).font(.caption.weight(.semibold)).foregroundStyle(Theme.brand)
+                    Text(verbatim: link.tags.map { "#" + $0 }.joined(separator: " ")).font(.rounded(.caption)).foregroundStyle(hue.text)
                 }
                 HStack(spacing: 6) {
-                    AvatarView(user: link.user, size: 18)
+                    AvatarView(user: link.user, size: 20)
                     Text(verbatim: link.user?.displayName ?? "").font(.caption).foregroundStyle(.secondary)
                 }
+                .padding(.top, 2)
             }
-            Spacer()
+            Spacer(minLength: 4)
             VStack(spacing: 8) {
-                Button(action: onOpen) { Image(systemName: "arrow.up.right.square").font(.title3) }
+                Button(action: onOpen) { CircleIcon(systemName: "arrow.up.right", hue: hue, size: 38) }
                     .accessibilityLabel("Open link")
                 if isMine {
-                    Button { confirmDelete = true } label: { Image(systemName: "trash").foregroundStyle(.red) }
-                        .accessibilityLabel("Delete link")
+                    Button { confirmDelete = true } label: {
+                        Image(systemName: "trash.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.dangerText)
+                            .frame(width: 38, height: 38).background(Circle().fill(Theme.danger.opacity(0.12)))
+                    }
+                    .accessibilityLabel("Delete link")
                 }
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(Theme.brand)
+            .buttonStyle(.squishIcon)
         }
         .card()
         .contentShape(Rectangle())

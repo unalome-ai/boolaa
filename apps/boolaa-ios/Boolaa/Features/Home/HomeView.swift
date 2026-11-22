@@ -80,36 +80,33 @@ struct HomeView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
                 if let bubble = session.currentBubble {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: bubble.name).font(.headline)
-                            if let d = bubble.description { Text(verbatim: d).font(.subheadline).foregroundStyle(.secondary) }
-                        }
-                        Spacer()
-                        Button { router.open(.links) } label: {
-                            Label("Links", systemImage: "link").font(.subheadline.weight(.semibold))
-                        }
-                        .buttonStyle(.bordered)
-                        .accessibilityIdentifier("home-links")
+                    BubbleHero(bubble: bubble, firstName: session.profile?.displayName.split(separator: " ").first.map(String.init)) {
+                        router.open(.links)
                     }
-                    .card()
+                    .popIn(0)
                 }
 
                 if model.loaded && model.items.isEmpty {
                     EmptyStateView(icon: "sparkles", title: "Nothing here yet",
                                    message: "Say hi in the chat, plan an event or share some food.")
                 }
-                ForEach(model.items) { item in
-                    Button { open(item) } label: { FeedCard(item: item) }
-                        .buttonStyle(.plain)
-                        .safetyContextMenu(item.reportTarget)
+                if !model.items.isEmpty {
+                    SectionHeader(title: "What's new")
                 }
-                if !model.loaded { ProgressView().frame(maxWidth: .infinity).padding(40) }
+                ForEach(Array(model.items.enumerated()), id: \.element.id) { index, item in
+                    Button { open(item) } label: { FeedCard(item: item) }
+                        .buttonStyle(.squish)
+                        .safetyContextMenu(item.reportTarget)
+                        .scrollFade()
+                        .popIn(index + 1)
+                }
+                if !model.loaded { SkeletonList().padding(.top, 8) }
             }
             .padding(.horizontal, 16)
+            .padding(.top, 4)
             .padding(.bottom, Theme.tabBarClearance)
         }
-        .refreshable { await reload() }
+        .refreshFeedback { await reload() }
         .task { await reload() }
         .errorAlert($model.error)
     }
@@ -120,12 +117,65 @@ struct HomeView: View {
     }
 
     private func open(_ item: FeedItem) {
-        switch item {
-        case .message: router.open(.chat)
-        case .food: router.tab = .food
-        case .market: router.tab = .marketplace
-        case .event: router.tab = .events
-        case .link: router.open(.links)
+        withAnimation(Motion.snappy) {
+            switch item {
+            case .message: router.open(.chat)
+            case .food: router.tab = .food
+            case .market: router.tab = .marketplace
+            case .event: router.tab = .events
+            case .link: router.open(.links)
+            }
+        }
+    }
+}
+
+/// The current bubble as a big, glossy card in its own colour.
+struct BubbleHero: View {
+    var bubble: Bubble
+    var firstName: String?
+    var onLinks: () -> Void
+
+    var body: some View {
+        let hue = Hue.forID(bubble.id)
+        VStack(alignment: .leading, spacing: 6) {
+            if let firstName {
+                Text("Hi, \(firstName)!", comment: "Greeting on the Home card; the argument is the user's first name")
+                    .font(.rounded(.subheadline, weight: .semibold))
+            }
+            Text(verbatim: bubble.name)
+                .font(.rounded(.title, weight: .heavy))
+                .lineLimit(2).minimumScaleFactor(0.75)
+            if let d = bubble.description?.nilIfEmpty {
+                Text(verbatim: d).font(.subheadline.weight(.medium)).lineLimit(3)
+            }
+            Button(action: onLinks) {
+                Label("Links", systemImage: "link")
+                    .font(.rounded(.subheadline))
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 36)
+                    .background(hue.onFill.opacity(0.16), in: Capsule())
+                    .overlay(Capsule().strokeBorder(hue.onFill.opacity(0.25), lineWidth: 1))
+            }
+            .buttonStyle(.squish)
+            .padding(.top, 8)
+            .accessibilityIdentifier("home-links")
+        }
+        .foregroundStyle(hue.onFill)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            ZStack(alignment: .topTrailing) {
+                LinearGradient(colors: hue.onFill == .white ? [hue.fill, hue.deep] : [hue.glow, hue.fill],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                // Decorative bubbles, shapes only.
+                Circle().fill(.white.opacity(0.16)).frame(width: 150, height: 150).offset(x: 46, y: -58)
+                Circle().fill(.white.opacity(0.14)).frame(width: 64, height: 64).offset(x: -96, y: 62)
+                    .floating(amplitude: 4, period: 6)
+                Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1.5).frame(width: 30, height: 30).offset(x: -40, y: 22)
+                    .floating(amplitude: 6, period: 4.5, phase: 0.4)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
+            .shadow(color: hue.fill.opacity(0.35), radius: 16, y: 10)
         }
     }
 }
@@ -135,26 +185,23 @@ struct FeedCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.brand.opacity(0.14))
-                Image(systemName: icon).foregroundStyle(Theme.brand).font(.system(size: 17, weight: .semibold))
-            }
-            .frame(width: 42, height: 42)
+            FeatureBadge(icon: feature.icon, hue: feature.hue)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 HStack {
-                    Text(kind).font(.caption.weight(.bold)).foregroundStyle(Theme.brand).textCase(.uppercase)
+                    Text(kind).font(.rounded(.caption)).foregroundStyle(feature.hue.text).textCase(.uppercase)
                         .lineLimit(1).minimumScaleFactor(0.8)
                     Spacer()
                     Text(item.date.relativeShort).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Text(verbatim: title).font(.body.weight(.semibold)).lineLimit(2).foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
                 if let subtitle { Text(verbatim: subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(2) }
             }
             if let image {
-                RemoteImage(url: image)
-                    .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                RemoteImage(url: image, hue: feature.hue)
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
         }
         .card()
@@ -162,13 +209,13 @@ struct FeedCard: View {
         .accessibilityIdentifier("feed-\(item.id)")
     }
 
-    private var icon: String {
+    private var feature: Feature {
         switch item {
-        case .message: "bubble.left.fill"
-        case .food: "fork.knife"
-        case .market: "tag.fill"
-        case .event: "calendar"
-        case .link: "link"
+        case .message: .chat
+        case .food: .food
+        case .market: .market
+        case .event: .events
+        case .link: .links
         }
     }
 

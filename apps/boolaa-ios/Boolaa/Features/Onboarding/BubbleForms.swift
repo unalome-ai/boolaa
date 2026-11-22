@@ -23,11 +23,16 @@ struct CreateBubbleForm: View {
                 HStack {
                     Text("Max members")
                     Spacer()
-                    Text(maxSize, format: .number).foregroundStyle(Theme.brand).bold()
+                    Text(maxSize, format: .number)
+                        .font(.rounded(.title3, weight: .heavy)).monospacedDigit()
+                        .foregroundStyle(Theme.brandText)
+                        .contentTransition(.numericText(value: Double(maxSize)))
+                        .animation(Motion.snappy, value: maxSize)
                 }
             }
-            .padding(.horizontal, 14).frame(minHeight: 48)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 16).frame(minHeight: 52)
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
+            .sensoryFeedback(.selection, trigger: maxSize)
 
             Button {
                 Task {
@@ -41,7 +46,7 @@ struct CreateBubbleForm: View {
                     } catch { self.error = error.userMessage }
                 }
             } label: {
-                if busy { ProgressView().tint(.white) } else { Text("Create bubble") }
+                if busy { ProgressView() } else { Text("Create bubble") }
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || name.count > 60 || busy)
@@ -79,7 +84,7 @@ struct JoinBubbleForm: View {
                     } catch { self.error = error.userMessage }
                 }
             } label: {
-                if busy { ProgressView().tint(.white) } else { Text("Request to join") }
+                if busy { ProgressView() } else { Text("Request to join") }
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty || busy)

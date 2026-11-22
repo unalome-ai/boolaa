@@ -80,6 +80,9 @@ Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabas
 
 ## Visual language
 
-- **Colours**: brand purple `#9D78BD`, accent `#7B61FF`, light background `#FAFAFA`, dark background `#18181B` with dark cards `#23232B`. Supports light and dark mode.
-- **Navigation**: floating rounded "pill" tab bar with circular icon buttons; the active button is filled purple with a white icon. The floating chat button is a purple 56pt circle at bottom right, above the tab bar.
-- **Shapes**: rounded cards (16pt radius) and soft shadows. Avatars are circles with a 2pt purple border, and users without a photo get an initials placeholder.
+The full design system (colour, typography, layout, motion, components, voice) is in `docs/design-system.md`. In short:
+
+- **Colours**: brand purple "grape" `#7357F6` (evolved from `#9D78BD` / `#7B61FF`) with a joyful secondary palette (coral, mint, sky, sunny, pink, tangerine, indigo). Each bubble gets its own colour, derived from its id; each feature has its own colour (chat grape, events coral, food tangerine, marketplace mint, links sky). Light background `#FBF8FF`, dark background `#15111F` with dark cards `#221C33`.
+- **Navigation**: a floating dock: a rounded "pill" tab bar with circular icon buttons (the active one is filled with the tab's colour and slides between tabs) and, beside it, the round chat button, a glossy purple 60pt bubble.
+- **Shapes**: glossy bubbles, pills and rounded cards (24pt radius) with soft purple-tinted shadows. Avatars are circles; users without a photo get initials on their own colour.
+- **Motion**: springy and quick, with still fallbacks under Reduce Motion.

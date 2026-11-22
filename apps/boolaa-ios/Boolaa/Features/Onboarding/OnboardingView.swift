@@ -6,7 +6,12 @@ struct OnboardingView: View {
     @State private var mode: Mode = .join
     @State private var error: String?
 
-    enum Mode: String, CaseIterable { case join, create }
+    enum Mode: String, CaseIterable {
+        case join, create
+        static var options: [SegmentedPill<Mode>.Option] {
+            [.init(value: .join, label: "Join a bubble"), .init(value: .create, label: "Create a bubble")]
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -14,18 +19,19 @@ struct OnboardingView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(session.pendingRequests.isEmpty ? LocalizedStringResource("Welcome") : LocalizedStringResource("Pending approval"))
-                            .font(.system(size: 32, weight: .bold))
+                            .font(.rounded(.largeTitle, weight: .heavy))
                             .lineLimit(2).minimumScaleFactor(0.75)
+                            .accessibilityAddTraits(.isHeader)
                         Text(session.pendingRequests.isEmpty
                              ? LocalizedStringResource("Start a bubble or join one with an invite code.")
                              : LocalizedStringResource("The members of these bubbles are voting on your request."))
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     }
                     Spacer()
                     Menu {
                         Button("Sign out", role: .destructive) { Task { await session.signOut() } }
                     } label: {
-                        AvatarView(user: session.profile, size: 40)
+                        AvatarView(user: session.profile, size: 44)
                     }
                     .accessibilityLabel(Text("Profile"))
                     .accessibilityIdentifier("onboarding-profile")
@@ -36,22 +42,23 @@ struct OnboardingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
-                    Picker("Mode", selection: $mode) {
-                        ForEach(Mode.allCases, id: \.self) { Text($0 == .join ? LocalizedStringResource("Join a bubble") : LocalizedStringResource("Create a bubble")).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedPill(selection: $mode, options: Mode.options)
                     if mode == .join {
                         JoinBubbleForm()
                     } else {
                         CreateBubbleForm()
                     }
                 }
-                .card(padding: 16)
+                .padding(18)
+                .background(Theme.card.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
+                .cardChrome(radius: Theme.Radius.hero)
+                .popIn(2)
             }
             .padding(20)
         }
         .refreshable { await session.reload() }
-        .background(Theme.background.ignoresSafeArea())
+        .background { AuthBackdrop(intensity: 0.7) }
         .errorAlert($error)
     }
 }
@@ -66,15 +73,18 @@ struct PendingRequestsList: View {
             ForEach(session.pendingRequests) { request in
                 HStack(spacing: 14) {
                     ZStack {
-                        Circle().fill(Theme.brand.opacity(0.15)).frame(width: 48, height: 48)
-                        Image(systemName: "hourglass").foregroundStyle(Theme.brand).font(.title3)
+                        BubbleOrb(hue: Hue.forID(request.bubbleId))
+                        Image(systemName: "hourglass").font(.system(size: 19, weight: .bold))
+                            .foregroundStyle(Hue.forID(request.bubbleId).onFill)
+                            .symbolEffect(.pulse, options: .repeat(3))
                     }
+                    .frame(width: 50, height: 50)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: request.bubble?.name ?? "").font(.headline)
+                        Text(verbatim: request.bubble?.name ?? "").font(.rounded(.headline))
                         Text("\(request.approverIds.count) approvals so far", comment: "Approvals a pending join request has received")
                             .font(.subheadline).foregroundStyle(.secondary)
                         Text("Requested \(request.createdAt.relativeShort)", comment: "When a join request was sent; the argument is a relative time like “5 min ago”")
-                            .font(.caption).foregroundStyle(.tertiary)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button("Cancel", role: .destructive) {
@@ -83,9 +93,12 @@ struct PendingRequestsList: View {
                         }
                     }
                     .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
+                    .tint(Theme.dangerText)
                     .accessibilityIdentifier("cancel-request")
                 }
                 .card()
+                .popIn(1)
             }
         }
         .accessibilityIdentifier("pending-requests")

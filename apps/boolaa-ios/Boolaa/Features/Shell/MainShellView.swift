@@ -7,29 +7,31 @@ struct MainShellView: View {
     @State private var router = ShellRouter()
     @State private var appliedDebugHooks = false
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         NavigationStack(path: $router.path) {
             VStack(spacing: 0) {
                 ShellHeader(title: router.tab.title)
                 ZStack {
-                    switch router.tab {
-                    case .home: HomeView()
-                    case .events: EventsView()
-                    case .food: FoodView()
-                    case .marketplace: MarketplaceView()
-                    case .settings: SettingsView()
+                    ZStack {
+                        switch router.tab {
+                        case .home: HomeView().transition(contentTransition)
+                        case .events: EventsView().transition(contentTransition)
+                        case .food: FoodView().transition(contentTransition)
+                        case .marketplace: MarketplaceView().transition(contentTransition)
+                        case .settings: SettingsView().transition(contentTransition)
+                        }
                     }
+                    // Rebuild tab content when the bubble changes, or after a block/unblock, so every screen reloads.
+                    .id("\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)")
+                    .transition(contentTransition)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                // Rebuild tab content when the bubble changes, or after a block/unblock, so every screen reloads.
-                .id("\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)")
             }
-            .background(Theme.background.ignoresSafeArea())
-            .overlay(alignment: .bottom) { PillTabBar(selection: $router.tab) }
-            .overlay(alignment: .bottomTrailing) {
-                ChatFAB { router.open(.chat) }
-                    .padding(.trailing, 20)
-                    .padding(.bottom, 96)
+            .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
+            .overlay(alignment: .bottom) {
+                Dock(selection: $router.tab) { router.open(.chat) }
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ShellDestination.self) { destination in
@@ -40,15 +42,23 @@ struct MainShellView: View {
             }
         }
         .environment(router)
-        .sheet(isPresented: $router.showProfile) { ProfileSheet() }
-        .sheet(isPresented: $router.showAddBubble) { AddBubbleSheet() }
-        .sheet(item: Binding(get: { safety.reportTarget }, set: { safety.reportTarget = $0 })) { ReportSheet(target: $0) }
+        .sheet(isPresented: $router.showProfile) { ProfileSheet().boolaaSheet() }
+        .sheet(isPresented: $router.showAddBubble) { AddBubbleSheet().boolaaSheet() }
+        .sheet(item: Binding(get: { safety.reportTarget }, set: { safety.reportTarget = $0 })) { ReportSheet(target: $0).boolaaSheet() }
+        .sensoryFeedback(.selection, trigger: router.tab)
+        .sensoryFeedback(.impact(weight: .medium), trigger: session.currentBubble?.id)
         .errorAlert(Binding(get: { safety.error }, set: { safety.error = $0 }))
         .task(id: session.userID) {
             safety.reset()
             if session.userID != nil { await safety.load() }
         }
         .onAppear(perform: applyDebugHooks)
+    }
+
+    /// New content rises in with a little swell; old content just fades.
+    private var contentTransition: AnyTransition {
+        reduceMotion ? .opacity
+            : .asymmetric(insertion: .opacity.combined(with: .offset(y: 14)).combined(with: .scale(scale: 0.98)), removal: .opacity)
     }
 
     private func applyDebugHooks() {
@@ -74,52 +84,99 @@ struct MainShellView: View {
     }
 }
 
+extension MainTab {
+    /// The colour the dock's selection takes on this tab.
+    var hue: Hue {
+        switch self {
+        case .home: .grape
+        case .events: Feature.events.hue
+        case .food: Feature.food.hue
+        case .marketplace: Feature.market.hue
+        case .settings: .indigo
+        }
+    }
+}
+
+extension View {
+    /// Shared sheet chrome: big soft corners, a grabber and the app background.
+    func boolaaSheet() -> some View {
+        presentationCornerRadius(Theme.Radius.hero)
+            .presentationDragIndicator(.visible)
+            .presentationBackground(Theme.background)
+    }
+}
+
+/// App background with a soft glow in the current bubble's colour behind the header.
+struct ShellBackground: View {
+    var hue: Hue
+    @Environment(\.colorScheme) private var colorScheme
+    var body: some View {
+        let dark = colorScheme == .dark
+        ZStack {
+            Theme.background
+            RadialGradient(colors: [hue.fill.opacity(dark ? 0.20 : 0.30), hue.fill.opacity(0)],
+                           center: UnitPoint(x: 0.95, y: 0), startRadius: 0, endRadius: 340)
+            RadialGradient(colors: [hue.glow.opacity(dark ? 0.12 : 0.22), hue.glow.opacity(0)],
+                           center: UnitPoint(x: 0, y: 0.08), startRadius: 0, endRadius: 220)
+        }
+        .ignoresSafeArea()
+        .animation(Motion.gentle, value: hue)
+    }
+}
+
 /// Large title, avatar button and horizontal bubble chips with "+ New".
 struct ShellHeader: View {
     @Environment(SessionStore.self) private var session
     @Environment(ShellRouter.self) private var router
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var chips
     var title: LocalizedStringResource
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
                 Text(title)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.rounded(.largeTitle, weight: .heavy))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.6)
+                    .contentTransition(reduceMotion ? .opacity : .numericText())
+                    .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: router.tab)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("screen-title")
                 Spacer()
                 Button { router.showProfile = true } label: {
-                    AvatarView(user: session.profile, size: 42)
+                    AvatarView(user: session.profile, size: 44)
+                        .floatingShadow(Hue.grape.fill)
                 }
+                .buttonStyle(.squishIcon)
                 .accessibilityLabel(Text("Profile"))
                 .accessibilityIdentifier("profile-button")
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
 
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 8) {
                         ForEach(session.bubbles) { bubble in
+                            let active = bubble.id == session.currentBubble?.id
                             Button {
-                                withAnimation(.snappy) { session.selectBubble(bubble.id) }
+                                withAnimation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion)) { session.selectBubble(bubble.id) }
                             } label: {
-                                ChipView(title: bubble.name, isActive: bubble.id == session.currentBubble?.id)
+                                BubbleChip(bubble: bubble, isActive: active, namespace: chips)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.squish)
                             .id(bubble.id)
                             .accessibilityIdentifier("bubble-chip-\(bubble.name)")
-                            .accessibilityAddTraits(bubble.id == session.currentBubble?.id ? .isSelected : [])
+                            .accessibilityAddTraits(active ? .isSelected : [])
                         }
                         Button { router.showAddBubble = true } label: {
                             ChipView(title: String(localized: "New", comment: "Chip that creates or joins another bubble"), isActive: false, systemImage: "plus", outlined: true)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.squish)
                         .accessibilityIdentifier("bubble-chip-new")
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 6)
                 }
                 .onChange(of: session.currentBubble?.id) { _, id in
                     if let id { withAnimation { proxy.scrollTo(id, anchor: .center) } }
@@ -127,55 +184,141 @@ struct ShellHeader: View {
             }
         }
         .padding(.top, 8)
-        .padding(.bottom, 12)
-        .background(Theme.background)
+        .padding(.bottom, 6)
     }
 }
 
-/// Floating rounded pill with circular icon buttons; the active one is filled purple.
-struct PillTabBar: View {
-    @Binding var selection: MainTab
+/// Bubble switcher chip: a little glossy bubble in the bubble's own colour plus its name.
+/// The filled capsule slides between chips and takes the colour of the bubble it lands on.
+struct BubbleChip: View {
+    var bubble: Bubble
+    var isActive: Bool
+    var namespace: Namespace.ID
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 6) {
+        let hue = Hue.forID(bubble.id)
+        HStack(spacing: 7) {
+            BubbleOrb(hue: hue)
+                .frame(width: 16, height: 16)
+                .overlay(Circle().strokeBorder(.white.opacity(isActive ? 0.9 : 0), lineWidth: 1.5))
+                .phaseAnimator(reduceMotion ? [1.0] : [1.0, 1.45, 1.0], trigger: isActive) { orb, scale in
+                    orb.scaleEffect(scale)
+                } animation: { _ in Motion.bouncy }
+            Text(verbatim: bubble.name).font(.rounded(.subheadline)).lineLimit(1)
+        }
+        .foregroundStyle(isActive ? hue.onFill : Theme.ink)
+        .padding(.leading, 11)
+        .padding(.trailing, 16)
+        .frame(minHeight: 38)
+        .background {
+            if isActive {
+                Capsule().fill(hue.gradient)
+                    .shadow(color: hue.fill.opacity(0.4), radius: 8, y: 4)
+                    .matchedGeometryEffect(id: "active-bubble", in: namespace)
+            } else {
+                Capsule().fill(Theme.card).overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+            }
+        }
+        .contentShape(Capsule())
+    }
+}
+
+/// The floating dock: pill tab bar plus the round chat button, with a fade so content dissolves beneath it.
+struct Dock: View {
+    @Binding var selection: MainTab
+    var onChat: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            PillTabBar(selection: $selection)
+            ChatFAB(action: onChat)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+        .padding(.top, 28)
+        .frame(maxWidth: .infinity)
+        .background {
+            LinearGradient(stops: [.init(color: Theme.background.opacity(0), location: 0),
+                                   .init(color: Theme.background.opacity(0.9), location: 0.5),
+                                   .init(color: Theme.background, location: 1)], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+/// Floating pill of icon buttons. A filled circle slides to the active tab and takes that tab's colour.
+struct PillTabBar: View {
+    @Binding var selection: MainTab
+    @Namespace private var namespace
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        HStack(spacing: 2) {
             ForEach(MainTab.allCases) { tab in
                 let active = tab == selection
                 Button {
-                    withAnimation(.snappy(duration: 0.25)) { selection = tab }
+                    withAnimation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion)) { selection = tab }
                 } label: {
                     Image(systemName: active ? tab.activeIcon : tab.icon)
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(active ? Color.white : Theme.brand)
-                        .frame(width: 50, height: 50)
-                        .background(Circle().fill(active ? Theme.brand : Color.clear))
+                        .font(.system(size: 20, weight: .bold))
+                        .symbolEffect(.bounce, value: active)
+                        .foregroundStyle(active ? tab.hue.onFill : Theme.inkSecondary)
+                        .frame(maxWidth: 52, minHeight: 52, maxHeight: 52)
+                        .background {
+                            if active {
+                                Circle().fill(tab.hue.gradient)
+                                    .shadow(color: tab.hue.fill.opacity(0.45), radius: 8, y: 4)
+                                    .matchedGeometryEffect(id: "active-tab", in: namespace)
+                            }
+                        }
                         .contentShape(Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.squishIcon)
                 .accessibilityLabel(Text(tab.title))
                 .accessibilityIdentifier("tab-\(tab.rawValue)")
                 .accessibilityAddTraits(active ? .isSelected : [])
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(Capsule().fill(Theme.card))
-        .overlay(Capsule().stroke(Theme.brand.opacity(0.25), lineWidth: 1))
-        .shadow(color: .black.opacity(0.12), radius: 16, x: 0, y: 6)
-        .padding(.bottom, 8)
+        .padding(6)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        .floatingShadow()
     }
 }
 
+/// Round chat button: a glossy grape bubble with a slow pulse ring.
 struct ChatFAB: View {
     var action: () -> Void
+    @State private var taps = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
-        Button(action: action) {
-            Image(systemName: "bubble.left.and.bubble.right.fill")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-                .background(Circle().fill(Theme.brand))
-                .shadow(color: .black.opacity(0.22), radius: 8, x: 0, y: 4)
+        Button {
+            taps += 1
+            action()
+        } label: {
+            ZStack {
+                if !reduceMotion {
+                    TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { timeline in
+                        let t = timeline.date.timeIntervalSinceReferenceDate / 3.2
+                        let phase = t - t.rounded(.down)
+                        Circle().stroke(Hue.grape.fill.opacity(0.45 * (1 - phase)), lineWidth: 2)
+                            .scaleEffect(1 + 0.4 * phase)
+                    }
+                }
+                BubbleOrb(hue: .grape)
+                Image(systemName: Feature.chat.icon)
+                    .font(.system(size: 21, weight: .bold))
+                    .foregroundStyle(.white)
+                    .symbolEffect(.bounce, value: taps)
+            }
+            .frame(width: 60, height: 60)
+            .floatingShadow(Hue.grape.fill)
         }
+        .buttonStyle(.squishIcon)
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityLabel("Open chat")
         .accessibilityIdentifier("chat-fab")
     }
@@ -193,20 +336,20 @@ struct AddBubbleSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Picker("Mode", selection: $mode) {
-                        Text("Join a bubble").tag(OnboardingView.Mode.join)
-                        Text("Create a bubble").tag(OnboardingView.Mode.create)
-                    }
-                    .pickerStyle(.segmented)
+                    SegmentedPill(selection: $mode, options: OnboardingView.Mode.options)
 
                     if mode == .join {
                         if requested != nil {
                             Label("Request sent. The members of the bubble will vote on it.",
                                   systemImage: "checkmark.seal.fill")
-                                .foregroundStyle(Theme.brand)
-                                .card()
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Hue.mint.text)
+                                .padding(14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Hue.mint.wash, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
+                                .transition(.scale(scale: 0.9).combined(with: .opacity))
                         }
-                        JoinBubbleForm { requested = $0 }
+                        JoinBubbleForm { request in withAnimation(Motion.bouncy) { requested = request } }
                     } else {
                         CreateBubbleForm { dismiss() }
                     }

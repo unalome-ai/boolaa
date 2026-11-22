@@ -132,4 +132,16 @@ struct FeatureLogicTests {
         #expect(AvatarView.initials(for: "Mary Jane Watson") == "MJ")
         #expect(AvatarView.initials(for: "  ") == "?")
     }
+
+    /// The bubble colour must match Android and web: FNV-1a 32-bit of the lowercase UUID, xor-folded, modulo the palette.
+    @Test func bubbleColourIsDeterministic() {
+        #expect(Hue.fnv1a("") == 2_166_136_261)
+        #expect(Hue.fnv1a("a") == 3_826_002_220)
+        #expect(Hue.fnv1a("boolaa") == 3_352_750_575)
+        #expect(Hue.bubblePalette.map(\.name) == ["grape", "coral", "mint", "sky", "sunny", "pink", "tangerine", "indigo"])
+        #expect(Hue.forID(UUID(uuidString: "AAAAAAAA-0000-0000-0000-000000000001")) == .sky)
+        #expect(Hue.forID(UUID(uuidString: "aaaaaaaa-0000-0000-0000-000000000002")) == .tangerine)
+        #expect(Hue.forSeed("11111111-1111-1111-1111-111111111111") == .sunny)
+        #expect(Hue.forID(nil) == .grape)
+    }
 }

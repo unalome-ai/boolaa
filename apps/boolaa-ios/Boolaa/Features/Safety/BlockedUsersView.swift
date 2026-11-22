@@ -10,18 +10,18 @@ struct BlockedUsersView: View {
                 Text("Blocked people can't see your messages, events, posts or links, and you won't see theirs.")
                     .font(.subheadline).foregroundStyle(.secondary)
                 if safety.loaded && safety.blocked.isEmpty {
-                    EmptyStateView(icon: "hand.raised", title: "No blocked users",
+                    CalmEmptyState(icon: "hand.raised", title: "No blocked users",
                                    message: "Long-press a message, post or member to block someone.")
                 }
                 VStack(spacing: 0) {
                     ForEach(safety.blocked) { row in
                         HStack(spacing: 12) {
-                            AvatarView(user: row.user, size: 36)
+                            AvatarView(user: row.user, size: 40)
                             Text(verbatim: row.user?.displayName ?? String(localized: "Someone", comment: "Placeholder for a user without a name"))
                                 .font(.body.weight(.medium)).lineLimit(1)
                             Spacer()
                             Button("Unblock") { Task { await safety.unblock(row.blockedId) } }
-                                .buttonStyle(.bordered).tint(Theme.brand)
+                                .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Theme.brandText)
                                 .accessibilityIdentifier("unblock-\(row.user?.name ?? "")")
                         }
                         .padding(.vertical, 8)
@@ -30,7 +30,7 @@ struct BlockedUsersView: View {
                 }
                 .padding(.horizontal, safety.blocked.isEmpty ? 0 : 16)
                 .background(safety.blocked.isEmpty ? Color.clear : Theme.card,
-                            in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
             }
             .padding(20)
         }
@@ -40,5 +40,24 @@ struct BlockedUsersView: View {
         .refreshable { await safety.load() }
         .task { await safety.load() }
         .errorAlert(Binding(get: { safety.error }, set: { safety.error = $0 }))
+    }
+}
+
+/// Empty state for safety screens: no floating bubbles, no bounce.
+struct CalmEmptyState: View {
+    var icon: String
+    var title: LocalizedStringResource
+    var message: LocalizedStringResource
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon).font(.system(size: 32, weight: .semibold)).foregroundStyle(.secondary)
+                .padding(.bottom, 4)
+            Text(title).font(.rounded(.headline)).multilineTextAlignment(.center)
+            Text(message).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(24)
+        .card(padding: 0)
+        .accessibilityElement(children: .combine)
     }
 }

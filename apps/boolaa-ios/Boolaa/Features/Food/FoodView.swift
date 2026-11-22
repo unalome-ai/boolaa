@@ -33,33 +33,44 @@ struct FoodView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
-                SectionHeaderWithAction(title: "My posts", count: mine.count) {
-                    AddButton(label: "Share food", id: "share-food") { editing = .new }
+                SectionHeaderWithAction(title: "My posts", count: mine.count, hue: hue) {
+                    AddButton(label: "Share food", id: "share-food", hue: hue) { editing = .new }
                 }
+                if !model.loaded { SkeletonList(count: 2) }
                 if model.loaded && mine.isEmpty {
-                    EmptyStateView(icon: "fork.knife", title: "Nothing shared yet", message: "Leftovers? Snap a photo and share them.")
+                    EmptyStateView(icon: "fork.knife", title: "Nothing shared yet", message: "Leftovers? Snap a photo and share them.", hue: hue)
                 }
-                ForEach(mine) { post in
+                ForEach(Array(mine.enumerated()), id: \.element.id) { index, post in
                     FoodCard(post: post,
                              onEdit: { editing = .edit(post) },
                              onDelete: { Task { await model.delete(api: session.api, post: post) } })
+                        .scrollFade()
+                        .popIn(index)
                 }
-                SectionHeader(title: "From the bubble", count: others.count)
+                SectionHeader(title: "From the bubble", count: others.count, hue: hue)
                 if model.loaded && others.isEmpty {
-                    EmptyStateView(icon: "takeoutbag.and.cup.and.straw", title: "No food posts", message: "Posts from other members show up here.")
+                    EmptyStateView(icon: "takeoutbag.and.cup.and.straw.fill", title: "No food posts", message: "Posts from other members show up here.", hue: hue)
                 }
-                ForEach(others) { FoodCard(post: $0).safetyContextMenu(.food($0)) }
+                ForEach(Array(others.enumerated()), id: \.element.id) { index, post in
+                    FoodCard(post: post).safetyContextMenu(.food(post))
+                        .scrollFade()
+                        .popIn(index + mine.count)
+                }
             }
             .padding(.horizontal, 16)
+            .padding(.top, 4)
             .padding(.bottom, Theme.tabBarClearance)
+            .animation(Motion.gentle, value: model.posts.map(\.id))
         }
-        .refreshable { await reload() }
+        .refreshFeedback { await reload() }
         .task { await reload() }
         .sheet(item: $editing) { target in
-            FoodEditor(target: target) { Task { await reload() } }
+            FoodEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
         .errorAlert($model.error)
     }
+
+    private var hue: Hue { Feature.food.hue }
 
     private func reload() async {
         guard let id = session.currentBubble?.id else { return }
@@ -81,33 +92,42 @@ struct FoodCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            RemoteImage(url: post.image)
-                .frame(height: 200)
+            Color.clear
+                .frame(height: 210)
                 .frame(maxWidth: .infinity)
+                .overlay { RemoteImage(url: post.image, hue: Feature.food.hue) }
                 .clipped()
-            VStack(alignment: .leading, spacing: 8) {
-                if let d = post.description?.nilIfEmpty { Text(verbatim: d).font(.body) }
-                HStack {
-                    AvatarView(user: post.user, size: 24)
-                    Text(verbatim: post.user?.displayName ?? "").font(.caption.weight(.semibold)).lineLimit(1)
-                    Text(verbatim: "· " + post.createdAt.relativeShort).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                    Spacer()
+                .overlay(alignment: .bottomLeading) {
+                    // Author pill floating on the photo.
+                    HStack(spacing: 6) {
+                        AvatarView(user: post.user, size: 24)
+                        Text(verbatim: post.user?.displayName ?? "").font(.rounded(.caption)).lineLimit(1)
+                        Text(verbatim: "· " + post.createdAt.relativeShort).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                    .padding(.leading, 5).padding(.trailing, 12).padding(.vertical, 5)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(10)
+                }
+            if post.description?.nilIfEmpty != nil || onEdit != nil {
+                HStack(alignment: .top) {
+                    if let d = post.description?.nilIfEmpty { Text(verbatim: d).font(.body.weight(.medium)) }
+                    Spacer(minLength: 0)
                     if onEdit != nil {
                         Menu {
                             Button("Edit", systemImage: "pencil") { onEdit?() }
                             Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
                         } label: {
-                            Image(systemName: "ellipsis").foregroundStyle(.secondary).frame(width: 28, height: 24)
+                            Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(.secondary).frame(width: 32, height: 28)
                         }
                         .accessibilityLabel(Text("More actions"))
                     }
                 }
+                .padding(16)
             }
-            .padding(14)
         }
         .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 10, y: 3)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .cardChrome()
         .confirmationDialog("Delete this post?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { onDelete?() }
         }
@@ -131,7 +151,7 @@ struct FoodEditor: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    PhotoField(jpeg: $jpeg, existingURL: existing?.image, height: 240)
+                    PhotoField(jpeg: $jpeg, existingURL: existing?.image, height: 240, hue: Feature.food.hue)
                     TextField("What are you sharing?", text: $description, axis: .vertical)
                         .lineLimit(2...5).padding(.vertical, 12).boolaaField()
                 }
