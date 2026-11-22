@@ -23,7 +23,8 @@
     "choosePhoto": "Elige una foto",
     "selectedPhoto": "Foto elegida",
     "avatarOf": "Avatar de {name}",
-    "language": "Idioma"
+    "language": "Idioma",
+    "bubblePhotoOf": "Foto de la burbuja {name}"
   },
   "nav": {
     "home": "Inicio",
@@ -177,7 +178,19 @@
     "emptyHint": "¡Saluda a tu burbuja!",
     "messageLabel": "Mensaje",
     "placeholder": "Mensaje para {bubble}",
-    "send": "Enviar"
+    "send": "Enviar",
+    "deleted": "Este mensaje se ha eliminado",
+    "deleteMessage": "Eliminar mensaje",
+    "deleteConfirmTitle": "¿Eliminar este mensaje?",
+    "deleteConfirmBody": "Desaparece para todos en la burbuja.",
+    "deleteConfirm": "Eliminar",
+    "newMessages": "Mensajes nuevos",
+    "loadingOlder": "Cargando mensajes anteriores…",
+    "chatStart": "Aquí empieza el chat",
+    "addPhoto": "Añadir una foto",
+    "removePhoto": "Quitar la foto",
+    "photo": "Foto",
+    "unread": "{count, plural, one {# mensaje sin leer} other {# mensajes sin leer}}"
   },
   "events": {
     "newEvent": "Nuevo evento",
@@ -273,7 +286,21 @@
     "removeMemberNamed": "Quitar a {name}",
     "removeTitle": "¿Quitar al miembro?",
     "removeBody": "<strong>{name}</strong> perderá el acceso a {bubble}. Para volver necesitará el código de invitación y la aprobación de los miembros.",
-    "removed": "{name} ya no forma parte de la burbuja"
+    "removed": "{name} ya no forma parte de la burbuja",
+    "inviteLink": "Enlace de invitación",
+    "copyLink": "Copiar enlace",
+    "shareLink": "Compartir enlace",
+    "shareLinkText": "Únete a mi burbuja «{bubble}» en Boolaa: {url}",
+    "rotateCode": "Código nuevo",
+    "rotateTitle": "¿Cambiar el código de invitación?",
+    "rotateBody": "El código, el enlace y el código QR antiguos dejan de funcionar al momento. Las solicitudes ya enviadas se mantienen.",
+    "rotateConfirm": "Cambiar código",
+    "rotated": "Nuevo código de invitación listo",
+    "bubblePhoto": "Foto de la burbuja",
+    "addBubblePhoto": "Añadir una foto",
+    "changeBubblePhoto": "Cambiar la foto",
+    "removeBubblePhoto": "Quitar la foto",
+    "bubblePhotoHint": "La ve todo el mundo en la burbuja. Las fotos cuadradas quedan mejor."
   },
   "home": {
     "chat": "Chat",
@@ -327,7 +354,10 @@
     "emailSendFailed": "No hemos podido enviar el correo. Inténtalo de nuevo.",
     "emailRateLimited": "Te acabamos de enviar un correo. Espera un minuto antes de pedir otro.",
     "samePassword": "Tu contraseña nueva tiene que ser distinta de la anterior.",
-    "oauthFailed": "No hemos podido iniciar sesión con esa cuenta. Inténtalo de nuevo."
+    "oauthFailed": "No hemos podido iniciar sesión con esa cuenta. Inténtalo de nuevo.",
+    "tooManyInviteAttempts": "Demasiados intentos con códigos no válidos. Inténtalo de nuevo dentro de una hora.",
+    "onlyOwnerCanRotate": "Solo el propietario puede cambiar el código de invitación.",
+    "chatMessageGone": "Ese mensaje ya no existe."
   },
   "safety": {
     "moreActions": "Más acciones",
@@ -470,5 +500,17 @@
     "backToSignIn": "Volver a iniciar sesión",
     "activeAgain": "Tu cuenta vuelve a estar activa.",
     "continue": "Continuar"
+  },
+  "invite": {
+    "title": "Tienes una invitación",
+    "signedOutBody": "Alguien te ha invitado a una burbuja en Boolaa. Inicia sesión o crea una cuenta para verla y pedir unirte.",
+    "approvalNote": "Los miembros votan tu solicitud. Entras cuando la mayoría diga que sí.",
+    "pending": "Ya pediste unirte. Esperando a que los miembros lo aprueben.",
+    "member": "Ya estás en esta burbuja.",
+    "openBubble": "Abrir la burbuja",
+    "invalidTitle": "Esta invitación no es válida",
+    "invalidBody": "Puede que el enlace sea antiguo o que el código haya cambiado. Pide uno nuevo a un miembro.",
+    "requestSent": "Solicitud enviada",
+    "getApp": "Descarga la app"
   }
 }

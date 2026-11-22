@@ -28,6 +28,13 @@ struct RootView: View {
             }
         }
         .animation(Motion.resolve(Motion.gentle, reduceMotion: reduceMotion), value: session.route)
+        // An opened invite link: the join preview, once the user is past sign-in and the device gate.
+        .sheet(item: Binding(
+            get: { session.inviteToShow.map(PendingInvite.init) },
+            set: { if $0 == nil { session.pendingInviteCode = nil } }
+        )) { invite in
+            JoinInviteSheet(code: invite.code).boolaaSheet()
+        }
     }
 
     /// Screens swell in like a bubble and fade out.

@@ -102,7 +102,8 @@ export function render(item: ClaimedItem, locale: Locale): { title: string; body
 
   switch (item.type) {
     case "chat": {
-      let body = truncate(d.text ?? "");
+      // A photo message may have no text (caption optional).
+      let body = truncate(d.text ?? "") || (d.photo ? s.chat.photo : "");
       if (item.count > 1) body = truncate(`${body} ${plural(locale, s.chat.more, item.count - 1, vars)}`, MAX_TEXT + 30);
       return { title: fill(s.chat.title, vars), body };
     }

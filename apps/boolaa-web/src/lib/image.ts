@@ -6,15 +6,18 @@
  * byte limits mirror storage.buckets in supabase/migrations/20261123100000_image_limits.sql.
  */
 
-export type ImageBucket = "avatars" | "food.images" | "market.images";
+export type ImageBucket = "avatars" | "bubble.images" | "food.images" | "market.images" | "chat.images";
 
 const MB = 1024 * 1024;
 
 /** Long-edge size in px and the bucket's upload limit in bytes. */
 export const IMAGE_LIMITS: Record<ImageBucket, { maxSide: number; maxBytes: number }> = {
   avatars: { maxSide: 512, maxBytes: 2 * MB },
+  // Bubble photos are shown as small circles like avatars (20261123130000_bubble_cover.sql).
+  "bubble.images": { maxSide: 512, maxBytes: 2 * MB },
   "food.images": { maxSide: 1600, maxBytes: 5 * MB },
   "market.images": { maxSide: 1600, maxBytes: 5 * MB },
+  "chat.images": { maxSide: 1600, maxBytes: 5 * MB },
 };
 
 /** Picked files above this are refused before decoding (memory); a phone photo is well below it. */

@@ -23,7 +23,8 @@
     "choosePhoto": "Choisis une photo",
     "selectedPhoto": "Photo choisie",
     "avatarOf": "Avatar de {name}",
-    "language": "Langue"
+    "language": "Langue",
+    "bubblePhotoOf": "Photo de la bulle {name}"
   },
   "nav": {
     "home": "Accueil",
@@ -177,7 +178,19 @@
     "emptyHint": "Dis bonjour à ta bulle !",
     "messageLabel": "Message",
     "placeholder": "Message à {bubble}",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "deleted": "Ce message a été supprimé",
+    "deleteMessage": "Supprimer le message",
+    "deleteConfirmTitle": "Supprimer ce message ?",
+    "deleteConfirmBody": "Il disparaît pour tout le monde dans la bulle.",
+    "deleteConfirm": "Supprimer",
+    "newMessages": "Nouveaux messages",
+    "loadingOlder": "Chargement des anciens messages…",
+    "chatStart": "C'est le début de la discussion",
+    "addPhoto": "Ajouter une photo",
+    "removePhoto": "Retirer la photo",
+    "photo": "Photo",
+    "unread": "{count, plural, one {# message non lu} other {# messages non lus}}"
   },
   "events": {
     "newEvent": "Nouvel événement",
@@ -273,7 +286,21 @@
     "removeMemberNamed": "Retirer {name}",
     "removeTitle": "Retirer le membre ?",
     "removeBody": "<strong>{name}</strong> n'aura plus accès à {bubble}. Pour revenir, il lui faudra le code d'invitation et l'approbation des membres.",
-    "removed": "{name} ne fait plus partie de la bulle"
+    "removed": "{name} ne fait plus partie de la bulle",
+    "inviteLink": "Lien d'invitation",
+    "copyLink": "Copier le lien",
+    "shareLink": "Partager le lien",
+    "shareLinkText": "Rejoins ma bulle « {bubble} » sur Boolaa : {url}",
+    "rotateCode": "Nouveau code",
+    "rotateTitle": "Changer le code d'invitation ?",
+    "rotateBody": "L'ancien code, le lien et le code QR ne marchent plus tout de suite. Les demandes déjà envoyées restent.",
+    "rotateConfirm": "Changer le code",
+    "rotated": "Nouveau code d'invitation prêt",
+    "bubblePhoto": "Photo de la bulle",
+    "addBubblePhoto": "Ajouter une photo",
+    "changeBubblePhoto": "Changer la photo",
+    "removeBubblePhoto": "Retirer la photo",
+    "bubblePhotoHint": "Tout le monde dans la bulle la voit. Les photos carrées rendent mieux."
   },
   "home": {
     "chat": "Discussion",
@@ -327,7 +354,10 @@
     "emailSendFailed": "Impossible d'envoyer l'e-mail. Réessaie.",
     "emailRateLimited": "On vient de t'envoyer un e-mail. Attends une minute avant d'en demander un autre.",
     "samePassword": "Ton nouveau mot de passe doit être différent de l'ancien.",
-    "oauthFailed": "Impossible de te connecter avec ce compte. Réessaie."
+    "oauthFailed": "Impossible de te connecter avec ce compte. Réessaie.",
+    "tooManyInviteAttempts": "Trop d'essais avec des codes invalides. Réessaie dans une heure.",
+    "onlyOwnerCanRotate": "Seul le propriétaire peut changer le code d'invitation.",
+    "chatMessageGone": "Ce message n'existe plus."
   },
   "safety": {
     "moreActions": "Plus d'actions",
@@ -470,5 +500,17 @@
     "backToSignIn": "Retour à la connexion",
     "activeAgain": "Ton compte est de nouveau actif.",
     "continue": "Continuer"
+  },
+  "invite": {
+    "title": "Tu as une invitation",
+    "signedOutBody": "Quelqu'un t'a invité dans une bulle sur Boolaa. Connecte-toi ou crée un compte pour la voir et demander à la rejoindre.",
+    "approvalNote": "Les membres votent sur ta demande. Tu entres dès que la majorité dit oui.",
+    "pending": "Tu as déjà demandé à la rejoindre. On attend l'accord des membres.",
+    "member": "Tu es déjà dans cette bulle.",
+    "openBubble": "Ouvrir la bulle",
+    "invalidTitle": "Cette invitation n'est pas valide",
+    "invalidBody": "Le lien est peut-être ancien ou le code a changé. Demandes-en un nouveau à un membre.",
+    "requestSent": "Demande envoyée",
+    "getApp": "Télécharge l'app"
   }
 }

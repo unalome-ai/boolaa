@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useBoolaa } from "@/components/boolaa-provider";
+import { useChatUnread } from "@/components/chat-unread";
+import { badgeText } from "@/lib/chat";
 import { CreateJoinTabs } from "@/components/create-join";
 import { ProfileSheet } from "@/components/profile-sheet";
 import { BubbleLogo } from "@/components/orb";
@@ -44,8 +46,37 @@ function navKeyFor(pathname: string): NavKey | null {
   return [...TABS, ...EXTRA].find((t) => pathname.startsWith(t.href))?.key ?? null;
 }
 
+/**
+ * Unread chat count bubble (docs/boolaa-spec.md, "Chat"): the number up to 99, then "99+". Hidden from
+ * assistive tech: the control carries the count as its description (useUnreadDescription), so its
+ * accessible name stays the bubble / section name.
+ */
+function UnreadBadge({ count, className }: { count: number | undefined; className?: string }) {
+  const text = badgeText(count);
+  if (!text) return null;
+  return (
+    <span
+      data-testid="unread-badge"
+      aria-hidden
+      className={cx(
+        "hue-coral anim-pop inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-hue px-1.5 font-display text-[11px] font-black leading-none text-white",
+        className,
+      )}
+    >
+      {text}
+    </span>
+  );
+}
+
+function useUnreadDescription() {
+  const t = useTranslations("chat");
+  return (count: number | undefined) => (count && count > 0 ? t("unread", { count }) : undefined);
+}
+
 function BubbleSwitcher({ onNew }: { onNew: () => void }) {
   const { bubbles, bubble, setBubbleId } = useBoolaa();
+  const { counts } = useChatUnread();
+  const describe = useUnreadDescription();
   const t = useTranslations("nav");
   const rowRef = useRef<HTMLDivElement>(null);
   const [pulse, setPulse] = useState<string | null>(null);
@@ -74,6 +105,7 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
               setBubbleId(b.id);
             }}
             aria-pressed={active}
+            aria-description={active ? undefined : describe(counts[b.id]?.unread)}
             data-hue={hue}
             className={cx(
               "chip pl-[11px] transition-[background,color,box-shadow,transform]",
@@ -81,12 +113,28 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
               active ? "fill-hue" : "bg-card text-fg shadow-[0_0_0_1px_var(--app-line)] hover:bg-hue-wash",
             )}
           >
-            <span
-              key={pulse === b.id ? "pulse" : "still"}
-              className={cx("orb h-4 w-4", pulse === b.id && "anim-orb-pulse", active && "ring-[1.5px] ring-white")}
-              aria-hidden
-            />
+            {b.logo ? (
+              /* eslint-disable-next-line @next/next/no-img-element -- Supabase storage URL */
+              <img
+                key={pulse === b.id ? "pulse" : "still"}
+                src={b.logo}
+                alt=""
+                data-testid="bubble-chip-photo"
+                className={cx(
+                  "-my-0.5 h-5 w-5 rounded-full bg-field object-cover",
+                  pulse === b.id && "anim-orb-pulse",
+                  active ? "ring-[1.5px] ring-white" : "ring-[1.5px] ring-hue/40",
+                )}
+              />
+            ) : (
+              <span
+                key={pulse === b.id ? "pulse" : "still"}
+                className={cx("orb h-4 w-4", pulse === b.id && "anim-orb-pulse", active && "ring-[1.5px] ring-white")}
+                aria-hidden
+              />
+            )}
             {b.name}
+            <UnreadBadge count={active ? 0 : counts[b.id]?.unread} className="-mr-1" />
           </button>
         );
       })}
@@ -159,21 +207,29 @@ function Dock({ pathname, chatLabel }: { pathname: string; chatLabel: string }) 
 }
 
 function ChatOrb({ label, className }: { label: string; className?: string }) {
+  const { bubble } = useBoolaa();
+  const { counts } = useChatUnread();
+  const describe = useUnreadDescription();
   return (
     <Link
       href="/chat"
       aria-label={label}
+      aria-description={describe(bubble ? counts[bubble.id]?.unread : 0)}
       data-testid="chat-fab"
       className={cx("press-round ring-pulse orb hue-grape relative flex h-[60px] w-[60px] items-center justify-center text-white", className)}
       style={{ boxShadow: "0 10px 24px -6px color-mix(in srgb, var(--grape) 60%, transparent), inset 0 0 0 2px rgb(255 255 255 / 0.28)" }}
     >
       <MessagesSquare size={24} strokeWidth={2.5} className="relative z-10" />
+      <UnreadBadge count={bubble ? counts[bubble.id]?.unread : 0} className="absolute -right-1 -top-1 z-20 ring-2 ring-app" />
     </Link>
   );
 }
 
 function Sidebar({ pathname }: { pathname: string }) {
   const t = useTranslations("nav");
+  const { bubble } = useBoolaa();
+  const { counts } = useChatUnread();
+  const describe = useUnreadDescription();
   const item = ({ href, key, icon: Icon }: NavItem) => {
     const active = pathname.startsWith(href);
     const hue = FEATURE_HUE[key];
@@ -182,6 +238,7 @@ function Sidebar({ pathname }: { pathname: string }) {
         key={href}
         href={href}
         aria-current={active ? "page" : undefined}
+        aria-description={key === "chat" && !active ? describe(bubble ? counts[bubble.id]?.unread : 0) : undefined}
         data-testid={`nav-${key}`}
         className={cx(
           "press flex min-w-0 items-center gap-3 rounded-full py-1.5 pl-1.5 pr-4 font-display font-bold transition-colors",
@@ -198,6 +255,7 @@ function Sidebar({ pathname }: { pathname: string }) {
           <Icon size={20} strokeWidth={active ? 2.6 : 2.2} />
         </span>
         <span className="truncate">{t(key)}</span>
+        {key === "chat" && !active && <UnreadBadge count={bubble ? counts[bubble.id]?.unread : 0} className="ml-auto" />}
       </Link>
     );
   };

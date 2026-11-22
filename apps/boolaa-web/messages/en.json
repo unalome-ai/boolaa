@@ -23,7 +23,8 @@
     "choosePhoto": "Choose a photo",
     "selectedPhoto": "Selected photo",
     "avatarOf": "{name}'s avatar",
-    "language": "Language"
+    "language": "Language",
+    "bubblePhotoOf": "Photo of {name}"
   },
   "nav": {
     "home": "Home",
@@ -177,7 +178,19 @@
     "emptyHint": "Say hi to your bubble!",
     "messageLabel": "Message",
     "placeholder": "Message {bubble}",
-    "send": "Send"
+    "send": "Send",
+    "deleted": "This message was deleted",
+    "deleteMessage": "Delete message",
+    "deleteConfirmTitle": "Delete this message?",
+    "deleteConfirmBody": "It disappears for everyone in the bubble.",
+    "deleteConfirm": "Delete",
+    "newMessages": "New messages",
+    "loadingOlder": "Loading older messages…",
+    "chatStart": "That's the start of the chat",
+    "addPhoto": "Add a photo",
+    "removePhoto": "Remove photo",
+    "photo": "Photo",
+    "unread": "{count, plural, one {# unread message} other {# unread messages}}"
   },
   "events": {
     "newEvent": "New event",
@@ -273,7 +286,21 @@
     "removeMemberNamed": "Remove {name}",
     "removeTitle": "Remove member?",
     "removeBody": "<strong>{name}</strong> will lose access to {bubble}. To come back they'll need the invite code and the members' approval.",
-    "removed": "{name} is no longer in the bubble"
+    "removed": "{name} is no longer in the bubble",
+    "inviteLink": "Invite link",
+    "copyLink": "Copy link",
+    "shareLink": "Share link",
+    "shareLinkText": "Join my bubble “{bubble}” on Boolaa: {url}",
+    "rotateCode": "New code",
+    "rotateTitle": "Change the invite code?",
+    "rotateBody": "The old code, link and QR code stop working right away. Requests already sent stay.",
+    "rotateConfirm": "Change code",
+    "rotated": "New invite code ready",
+    "bubblePhoto": "Bubble photo",
+    "addBubblePhoto": "Add a photo",
+    "changeBubblePhoto": "Change photo",
+    "removeBubblePhoto": "Remove photo",
+    "bubblePhotoHint": "Everyone in the bubble sees it. Square photos look best."
   },
   "home": {
     "chat": "Chat",
@@ -327,7 +354,10 @@
     "emailSendFailed": "Couldn't send the email. Try again.",
     "emailRateLimited": "We just sent you an email. Wait a minute before asking for another.",
     "samePassword": "Your new password must be different from the old one.",
-    "oauthFailed": "Couldn't sign you in with that account. Try again."
+    "oauthFailed": "Couldn't sign you in with that account. Try again.",
+    "tooManyInviteAttempts": "Too many tries with invalid codes. Try again in an hour.",
+    "onlyOwnerCanRotate": "Only the owner can change the invite code.",
+    "chatMessageGone": "That message no longer exists."
   },
   "safety": {
     "moreActions": "More actions",
@@ -470,5 +500,17 @@
     "backToSignIn": "Back to sign in",
     "activeAgain": "Your account is active again.",
     "continue": "Continue"
+  },
+  "invite": {
+    "title": "You've got an invite",
+    "signedOutBody": "Someone invited you to a bubble on Boolaa. Sign in or create an account to see it and ask to join.",
+    "approvalNote": "The members vote on your request. You're in once most of them say yes.",
+    "pending": "You've already asked to join. Waiting for the members to approve.",
+    "member": "You're already in this bubble.",
+    "openBubble": "Open bubble",
+    "invalidTitle": "This invite isn't valid",
+    "invalidBody": "The link may be old or the code was changed. Ask a member for a new one.",
+    "requestSent": "Request sent",
+    "getApp": "Get the app"
   }
 }

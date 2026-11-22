@@ -282,6 +282,9 @@ Deno.test("render: chat text, preview off, coalesced count and plural forms", ()
   assertEq(render(item({ preview_content: false, count: 21 }), "ro").body, "21 de mesaje noi în Flatmates", "ro other");
   assertEq(render(item({ count: 2 }), "en").body, "Pizza tonight? +1 more message", "coalesced");
   assertEq(render(item({ count: 4 }), "fr").body, "Pizza tonight? +3 autres messages", "fr plural");
+  assertEq(render(item({ data: { text: "", photo: true } }), "en").body, "📷 Photo", "photo without caption");
+  assertEq(render(item({ data: { text: "", photo: true } }), "ro").body, "📷 Fotografie", "photo ro");
+  assertEq(render(item({ data: { text: "Look", photo: true } }), "en").body, "Look", "caption wins");
   for (const l of ["en", "ro", "fr", "es", "it"] as const) {
     for (const type of ["chat", "join_request", "approval", "new_event", "event_reminder", "food", "market"] as const) {
       for (const preview_content of [true, false]) {

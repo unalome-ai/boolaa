@@ -20,6 +20,12 @@ final class SessionStore {
     private(set) var pendingRequests: [JoinRequest] = []
     private(set) var currentBubbleID: UUID?
     var lastError: String?
+    /// An invite link opened in any state (even signed out). Kept through sign-in, the device gate and
+    /// app restarts; the join preview shows once Onboarding or Main is reached.
+    var pendingInviteCode: String? {
+        didSet { defaults.set(pendingInviteCode, forKey: Self.pendingInviteKey) }
+    }
+    private static let pendingInviteKey = "boolaa.pendingInviteCode"
 
     // Device gate (docs/auth-security.md §8) and account status (docs/moderation.md)
     let device: DeviceIdentity
@@ -46,6 +52,32 @@ final class SessionStore {
         self.device = device
         self.defaults = defaults
         currentBubbleID = defaults.string(forKey: Self.currentBubbleKey).flatMap(UUID.init(uuidString:))
+        pendingInviteCode = defaults.string(forKey: Self.pendingInviteKey).flatMap(InviteLink.normalize)
+    }
+
+    // MARK: Invite links
+
+    /// Stores the code of an invite link (universal link or `boolaa://join/…`). Returns false for any other URL.
+    @discardableResult
+    func handleInviteURL(_ url: URL) -> Bool {
+        guard let code = InviteLink.code(from: url) else { return false }
+        pendingInviteCode = code
+        return true
+    }
+
+    /// The join preview shows only on Onboarding or Main (never over sign-in or the device gate).
+    var inviteToShow: String? {
+        route == .onboarding || route == .main ? pendingInviteCode : nil
+    }
+
+    func invitePreview(code: String) async throws -> InvitePreview? {
+        try await api.invitePreview(code: code)
+    }
+
+    /// Owner only. The settings screen shows the new code after the reload.
+    func rotateInviteCode(bubbleID: UUID) async throws {
+        _ = try await api.rotateInviteCode(bubbleID: bubbleID)
+        await reload()
     }
 
     // MARK: Derived state
@@ -247,7 +279,8 @@ final class SessionStore {
 
     /// Live updates for the signed-in user's own membership rows and join requests:
     /// admission moves them from Pending approval to Main, removal moves them to the next
-    /// bubble (or Onboarding), an ownership hand-over updates the role.
+    /// bubble (or Onboarding), an ownership hand-over updates the role. Bubble row updates
+    /// (name, description, photo) refresh the switcher, Settings and the pending list.
     private func startMembershipWatch(userID: UUID) {
         membershipWatch?.cancel()
         let client = client
@@ -263,6 +296,9 @@ final class SessionStore {
                               guard let id = LiveChanges.id(of: old) else { return false }
                               return await self?.pendingRequests.contains { $0.id == id } ?? false
                           }),
+                    // A new name, description or photo of any bubble the user can read (member or
+                    // requester; RLS decides). Deletes arrive through bubble_members instead.
+                    .init(table: "bubbles", column: nil, equals: nil, deleteMatches: { _ in false }),
                 ],
                 onChange: { [weak self] in self?.scheduleReload() }
             )
@@ -507,6 +543,27 @@ final class SessionStore {
     func updateCurrentBubble(name: String, description: String?) async throws {
         guard let bubble = currentBubble else { return }
         try await api.updateBubble(id: bubble.id, name: name, description: description)
+        await reload()
+    }
+
+    /// Sets (`jpeg` from ImageCompression for `.bubbles`) or removes (`nil`) the current bubble's photo.
+    /// Upload, point the row at it, then delete the previous file; if the row update fails the new file
+    /// is deleted again. Old files that slip through are swept server-side.
+    func setCurrentBubbleLogo(_ jpeg: Data?) async throws {
+        guard let bubble = currentBubble else { return }
+        let previous = bubble.logo
+        if let jpeg {
+            let url = try await api.uploadBubbleLogo(jpeg, bubbleID: bubble.id)
+            do {
+                try await api.setBubbleLogo(bubbleID: bubble.id, logo: url)
+            } catch {
+                await api.removeBubbleLogo(publicURL: url, bubbleID: bubble.id)
+                throw error
+            }
+        } else {
+            try await api.setBubbleLogo(bubbleID: bubble.id, logo: nil)
+        }
+        await api.removeBubbleLogo(publicURL: previous, bubbleID: bubble.id)
         await reload()
     }
 }

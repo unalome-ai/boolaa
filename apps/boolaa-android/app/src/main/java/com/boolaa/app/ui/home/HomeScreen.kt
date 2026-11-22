@@ -102,7 +102,7 @@ sealed class FeedItem {
             messages: List<ChatMessage>, food: List<FoodPost>, market: List<MarketItem>,
             events: List<BubbleEvent>, links: List<SharedLink>,
         ): List<FeedItem> =
-            (messages.map(::Message) + food.map(::Food) + market.map(::Market) + events.map(::Event) + links.map(::Link))
+            (messages.filterNot { it.isDeleted }.map(::Message) + food.map(::Food) + market.map(::Market) + events.map(::Event) + links.map(::Link))
                 .sortedByDescending { it.date }
     }
 }
@@ -119,7 +119,8 @@ class HomeViewModel(private val container: AppContainer, private val bubbleId: S
     fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
         val api = container.api
         _items.value = coroutineScope {
-            val m = async { api.chatMessages(bubbleId, 5) }
+            // Deleted messages are skipped (spec "Chat": Home).
+            val m = async { api.latestChatMessages(bubbleId, 5) }
             val f = async { api.foodPosts(bubbleId, 5) }
             val i = async { api.marketItems(bubbleId, 5) }
             val e = async { api.upcomingEvents(bubbleId, 5) }
@@ -235,7 +236,7 @@ fun FeedCard(item: FeedItem, modifier: Modifier = Modifier, onClick: () -> Unit 
         is FeedItem.Link -> BoolaaIcons.Link to R.string.feed_kind_link
     }
     val title = when (item) {
-        is FeedItem.Message -> item.message.content
+        is FeedItem.Message -> if (item.message.isPhotoOnly) stringResource(R.string.chat_photo) else item.message.content
         is FeedItem.Food -> item.post.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.feed_new_food_post)
         is FeedItem.Market -> item.item.title
         is FeedItem.Event -> item.event.title

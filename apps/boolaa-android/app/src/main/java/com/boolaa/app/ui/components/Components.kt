@@ -122,6 +122,33 @@ fun Avatar(user: UserProfile?, size: Dp, modifier: Modifier = Modifier, rainbow:
     }
 }
 
+/**
+ * A bubble's logo as a circle: the photo when it has one (center-cropped), otherwise the bubble's own glossy orb in
+ * its id-derived hue, with initials on larger sizes ([showInitials]). The photo is described as "Photo of <name>".
+ */
+@Composable
+fun BubbleLogo(bubbleId: String, name: String, logo: String?, size: Dp, modifier: Modifier = Modifier, showInitials: Boolean = size >= 32.dp) {
+    val hue = Hue.forId(bubbleId)
+    Box(modifier.size(size).clip(CircleShape), contentAlignment = Alignment.Center) {
+        if (!logo.isNullOrBlank()) {
+            AsyncImage(
+                model = logo, contentDescription = stringResource(R.string.bubble_photo_of, name),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize().clip(CircleShape).background(hue.wash).testTag("bubble-logo-image"),
+            )
+        } else {
+            BubbleOrb(hue, Modifier.matchParentSize())
+            if (showInitials) {
+                Text(
+                    initials(name), color = hue.onFill, fontFamily = Display, fontWeight = FontWeight.ExtraBold,
+                    fontSize = with(androidx.compose.ui.platform.LocalDensity.current) { (size * 0.36f).toSp() }, maxLines = 1,
+                    modifier = Modifier.clearAndSetSemantics { },
+                )
+            }
+        }
+    }
+}
+
 fun initials(name: String): String =
     name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.take(2).joinToString("") { it.first().uppercase() }
         .ifEmpty { "?" }

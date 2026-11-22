@@ -4,7 +4,8 @@
   "chat": {
     "title": "{name} en {bubble}",
     "more": { "one": "+# mensaje más", "other": "+# mensajes más" },
-    "private": { "one": "Nuevo mensaje en {bubble}", "other": "# mensajes nuevos en {bubble}" }
+    "private": { "one": "Nuevo mensaje en {bubble}", "other": "# mensajes nuevos en {bubble}" },
+    "photo": "📷 Foto"
   },
   "join_request": {
     "body": "{name} quiere unirse",

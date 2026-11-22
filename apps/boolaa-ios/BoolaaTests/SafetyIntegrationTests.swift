@@ -69,12 +69,19 @@ struct SafetyIntegrationTests {
         let userID = try #require(signUp.session?.user.id, "local auth has email confirmations off")
         let api = BoolaaAPI(client: client)
 
-        // One uploaded file in each bucket.
+        // One uploaded file in each bucket (chat.images is private: checked by listing the folder).
         let jpeg = try ImageCompression.jpeg(from: Self.tinyPNG, maxSide: 8, quality: 0.5)
         var urls: [String] = []
-        for bucket in BoolaaAPI.userBuckets { urls.append(try await api.uploadImage(jpeg, bucket: bucket, userID: userID)) }
+        for bucket in BoolaaAPI.userBuckets where bucket != .chat {
+            urls.append(try await api.uploadImage(jpeg, bucket: bucket, userID: userID))
+        }
+        _ = try await api.uploadChatImage(jpeg, userID: userID)
         for url in urls { #expect(await Self.status(of: url) == 200, "uploaded file is public") }
+        let chatFolder = { try await api.client.storage.from("chat.images").list(path: userID.uuidString.lowercased()) }
+        #expect(try await chatFolder().count == 1)
 
+        await api.purgeMyFiles(userID: userID)
+        #expect(try await chatFolder().isEmpty, "chat photos under <uid>/ were removed")
         try await api.deleteMyAccount(userID: userID)
 
         for url in urls { #expect(await Self.status(of: url) != 200, "file under <uid>/ was removed: \(url)") }

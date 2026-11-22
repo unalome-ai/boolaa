@@ -12,6 +12,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         .codeWrong(attemptsLeft: 1), .codeWrong(attemptsLeft: 3), .codeWrongOrExpired, .codeFormat, .codeExpired,
         .noActiveCode, .tooManyCodeAttempts, .tooManyCodes, .emailSendFailed, .emailRateLimited, .samePassword,
         .oauthFailed, .accountSuspended, .userBanned, .invalidEmail, .imageTooLarge, .imageUnsupported,
+        .tooManyInviteAttempts, .ownerOnlyRotate, .chatMessageGone,
     ]
 
     case invalidInviteCode
@@ -56,6 +57,11 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     // Images (ImageCompression and the bucket limits in 20261123100000_image_limits.sql)
     case imageTooLarge
     case imageUnsupported
+    // Invite links (20261123140000_invite_links.sql)
+    case tooManyInviteAttempts
+    case ownerOnlyRotate
+    // Chat (20261123120000_chat_improvements.sql)
+    case chatMessageGone
 
     /// Classifies any error thrown by the SDK or by URLSession.
     static func classify(_ error: any Error) -> UserFacingError {
@@ -103,6 +109,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         let text = message.lowercased()
         let table: [(String, UserFacingError)] = [
             ("invalid invite code", .invalidInviteCode),
+            ("too many attempts", .tooManyInviteAttempts),
+            ("only the owner can change the invite code", .ownerOnlyRotate),
             ("already a member", .alreadyMember),
             ("bubble is full", .bubbleFull),
             ("not a member of this bubble", .notMember),
@@ -111,6 +119,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             ("only the owner can remove members", .ownerOnlyRemove),
             ("use leave to remove yourself", .removeSelf),
             ("member not found", .memberNotFound),
+            ("message not found", .chatMessageGone),
             ("cannot report yourself", .cannotReportSelf),
             ("report target not found", .reportTargetNotFound),
             ("not authenticated", .notAuthenticated),
@@ -202,6 +211,9 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .invalidEmail: "Enter a valid email address."
         case .imageTooLarge: "That photo is too large. Pick a smaller one."
         case .imageUnsupported: "We can't read that image. Try a different photo."
+        case .tooManyInviteAttempts: "Too many tries with invalid codes. Try again in an hour."
+        case .ownerOnlyRotate: "Only the owner can change the invite code."
+        case .chatMessageGone: "That message no longer exists."
         }
     }
 }

@@ -7,6 +7,7 @@ import com.boolaa.app.model.ReportTargetType
 import com.boolaa.app.model.BubbleEvent
 import com.boolaa.app.model.BubbleMember
 import com.boolaa.app.model.ChatMessage
+import com.boolaa.app.model.ChatUnread
 import com.boolaa.app.model.FoodPost
 import com.boolaa.app.model.JoinRequest
 import com.boolaa.app.model.MarketItem
@@ -36,13 +37,25 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import java.time.Instant
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 /** Inputs for the editable bubble content. */
 data class EventInput(val title: String, val description: String?, val datetime: Instant, val location: String?)
 data class FoodInput(val image: String, val description: String?)
 data class MarketInput(val image: String, val title: String, val description: String?, val status: MarketStatus)
 
-enum class ImageBucket(val id: String) { AVATARS("avatars"), FOOD("food.images"), MARKET("market.images") }
+enum class ImageBucket(val id: String) {
+    AVATARS("avatars"), FOOD("food.images"), MARKET("market.images"),
+    /** Bubble logos: `<bubble id>/<uuid>.jpg`, written by whoever may manage the bubble (20261123130000_bubble_cover.sql). */
+    BUBBLE("bubble.images"),
+    /** Chat photos: PRIVATE, `<uid>/<uuid>.jpg`, read through signed URLs (20261123120000_chat_improvements.sql). */
+    CHAT("chat.images");
+
+    companion object {
+        /** Buckets whose objects live under `<auth uid>/` (cleaned on account deletion). */
+        val userOwned = listOf(AVATARS, FOOD, MARKET, CHAT)
+    }
+}
 
 /** Every backend call the app makes (mirrors apps/boolaa-ios BoolaaAPI.swift). All access is subject to RLS. */
 class BoolaaApi(val client: SupabaseClient) {
@@ -104,6 +117,27 @@ class BoolaaApi(val client: SupabaseClient) {
         }) { filter { eq("id", id) } }
     }
 
+    /** Sets or clears the bubble's logo (owner only; the DB accepts only our own `bubble.images/<bubble id>/` URLs). */
+    suspend fun updateBubbleLogo(id: String, logo: String?) {
+        client.from("bubbles").update(buildJsonObject {
+            put("logo", logo?.let(::JsonPrimitive) ?: JsonNull)
+        }) { filter { eq("id", id) } }
+    }
+
+    /** Uploads the logo JPEG to `<bubble id>/<uuid>.jpg` in `bubble.images` and returns the public URL. */
+    suspend fun uploadBubbleLogo(jpeg: ByteArray, bubbleId: String): String {
+        val path = bubbleLogoPath(bubbleId)
+        val api = client.storage.from(ImageBucket.BUBBLE.id)
+        api.upload(path, jpeg) { contentType = ContentType.Image.JPEG; upsert = false }
+        return api.publicUrl(path)
+    }
+
+    /** Best-effort removal of one of this bubble's logo objects (other URLs are ignored). */
+    suspend fun deleteBubbleLogo(publicUrl: String?, bubbleId: String) {
+        val path = bubbleLogoObject(publicUrl, bubbleId) ?: return
+        runCatching { client.storage.from(ImageBucket.BUBBLE.id).delete(path) }
+    }
+
     suspend fun leaveBubble(bubbleId: String, userId: String) {
         client.from("bubble_members").delete { filter { eq("bubble_id", bubbleId); eq("user_id", userId) } }
     }
@@ -118,9 +152,17 @@ class BoolaaApi(val client: SupabaseClient) {
     suspend fun requestToJoin(inviteCode: String): JoinRequest =
         client.postgrest.rpc("request_to_join", buildJsonObject { put("p_invite_code", inviteCode.trim()) }).one()
 
+    /** What an invite link shows before joining (name, logo, member count, own status); null for an unknown code. */
+    suspend fun invitePreview(code: String): InvitePreview? =
+        client.postgrest.rpc("get_invite_preview", buildJsonObject { put("p_code", code) }).list<InvitePreview>().firstOrNull()
+
+    /** Owner only: replaces the invite code, so every old link and QR code stops working. Returns the new code. */
+    suspend fun rotateInviteCode(bubbleId: String): String =
+        json.decodeFromString<String>(client.postgrest.rpc("rotate_invite_code", buildJsonObject { put("p_bubble_id", bubbleId) }).data)
+
     /** The caller's own pending requests, with the bubble name. */
     suspend fun myJoinRequests(userId: String): List<JoinRequest> =
-        client.from("join_requests").select(Columns.raw("*, bubble:bubbles(id, name)")) {
+        client.from("join_requests").select(Columns.raw("*, bubble:bubbles(id, name, logo)")) {
             filter { eq("user_id", userId) }
             order("created_at", Order.ASCENDING)
         }.list()
@@ -146,25 +188,73 @@ class BoolaaApi(val client: SupabaseClient) {
         client.from("join_requests").delete { filter { eq("id", id) } }
     }
 
-    // Chat
+    // Chat (docs/boolaa-spec.md, "Chat")
 
-    /** Newest [limit] messages in chronological order. */
-    suspend fun chatMessages(bubbleId: String, limit: Long = 200): List<ChatMessage> =
+    /**
+     * One page of [bubbleId]'s chat, **newest first**: the newest [limit] messages, or those just before [beforeId]
+     * (keyset on the server, so no timestamps are sent). A page shorter than [limit] means the start of the chat.
+     */
+    suspend fun chatPage(bubbleId: String, beforeId: String?, limit: Int = CHAT_PAGE_SIZE): List<ChatMessage> =
+        client.postgrest.rpc("chat_messages_page", buildJsonObject {
+            put("p_bubble_id", bubbleId)
+            put("p_before_id", beforeId?.let(::JsonPrimitive) ?: JsonNull)
+            put("p_limit", limit)
+        }) { select(Columns.raw("*, ${author("sender", "sender_id")}")) }.list()
+
+    /** Newest [limit] messages that aren't deleted, newest first (Home). */
+    suspend fun latestChatMessages(bubbleId: String, limit: Long): List<ChatMessage> =
         client.from("chat_messages").select(Columns.raw("*, ${author("sender", "sender_id")}")) {
-            filter { eq("bubble_id", bubbleId) }
+            filter { eq("bubble_id", bubbleId); exact("deleted_at", null) }
             order("created_at", Order.DESCENDING)
             limit(limit)
-        }.list<ChatMessage>().reversed()
+        }.list()
 
-    suspend fun sendMessage(bubbleId: String, senderId: String, content: String): ChatMessage =
+    /** Inserts a message; [content] may be empty when [imagePath] (an uploaded `chat.images` object) is set. */
+    suspend fun sendMessage(bubbleId: String, senderId: String, content: String, imagePath: String? = null): ChatMessage =
         client.from("chat_messages").insert(buildJsonObject {
             put("bubble_id", bubbleId)
             put("sender_id", senderId)
             put("content", content)
+            imagePath?.let { put("image_path", it) }
         }) { select(Columns.raw("*, ${author("sender", "sender_id")}")) }.one()
 
-    suspend fun deleteMessage(id: String) {
-        client.from("chat_messages").delete { filter { eq("id", id) } }
+    /**
+     * Soft-deletes the caller's own message and returns the photo path the client must now remove from `chat.images`
+     * (null when there is none or it is kept as report evidence). Raises 'message not found'.
+     */
+    suspend fun deleteChatMessage(id: String): String? {
+        val body = json.parseToJsonElement(client.postgrest.rpc("delete_chat_message", buildJsonObject { put("p_message_id", id) }).data)
+        val obj = (if (body is JsonArray) body.firstOrNull() else body) as? JsonObject ?: return null
+        return (obj["image_path"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+    }
+
+    /** Uploads a chat photo JPEG to `<uid>/<uuid>.jpg` in the private `chat.images` bucket and returns the object path. */
+    suspend fun uploadChatImage(jpeg: ByteArray, userId: String): String {
+        val path = imagePath(userId)
+        client.storage.from(ImageBucket.CHAT.id).upload(path, jpeg) { contentType = ContentType.Image.JPEG; upsert = false }
+        return path
+    }
+
+    /** Best-effort removal of one of the caller's own `chat.images` objects. */
+    suspend fun removeChatImage(path: String?, userId: String) {
+        if (path == null || !path.startsWith(userId.lowercase() + "/") || ".." in path) return
+        runCatching { client.storage.from(ImageBucket.CHAT.id).delete(path) }
+    }
+
+    /** Signed URLs (1 hour) for `chat.images` paths, in one call; paths the caller may not read are left out. */
+    suspend fun signedChatImageUrls(paths: Collection<String>): Map<String, String> {
+        if (paths.isEmpty()) return emptyMap()
+        return client.storage.from(ImageBucket.CHAT.id).createSignedUrls(CHAT_URL_TTL_SECONDS.seconds, paths)
+            .filter { it.error == null && it.signedURL.isNotEmpty() }
+            .associate { it.path to it.signedURL }
+    }
+
+    /** One row per approved bubble: unread count (capped at 100) and the last-read marker. */
+    suspend fun chatUnreadCounts(): List<ChatUnread> = client.postgrest.rpc("chat_unread_counts").list()
+
+    /** Moves the caller's read marker up to [messageId] (never back). Raises 'message not found'. */
+    suspend fun markChatRead(bubbleId: String, messageId: String) {
+        client.postgrest.rpc("mark_chat_read", buildJsonObject { put("p_bubble_id", bubbleId); put("p_message_id", messageId) })
     }
 
     // Events
@@ -312,12 +402,12 @@ class BoolaaApi(val client: SupabaseClient) {
         ).jsonPrimitive.content
 
     /**
-     * Removes every object under `<uid>/` in the three buckets (failures ignored: SQL cannot delete storage objects),
+     * Removes every object under `<uid>/` in the user-owned buckets (avatars, food, market, chat) (failures ignored: SQL cannot delete storage objects),
      * then deletes the auth user, which cascades to the profile, memberships and authored content.
      */
     suspend fun deleteMyAccount(userId: String) {
         val prefix = userId.lowercase()
-        for (bucket in ImageBucket.entries) {
+        for (bucket in ImageBucket.userOwned) {
             runCatching {
                 val api = client.storage.from(bucket.id)
                 repeat(50) {
@@ -349,6 +439,9 @@ class BoolaaApi(val client: SupabaseClient) {
 
     companion object {
         const val AUTHOR_COLUMNS = "id, name, avatar"
+        const val CHAT_PAGE_SIZE = 50
+        /** Signed chat photo URLs live an hour. */
+        const val CHAT_URL_TTL_SECONDS = 3600L
         /** `http://host/storage/v1/object/public/food.images/<uid>/<uuid>.jpg` -> `<uid>/<uuid>.jpg`; null for foreign URLs. */
         fun storagePath(publicUrl: String?, bucket: ImageBucket): String? {
             val marker = "/storage/v1/object/public/${bucket.id}/"
@@ -358,6 +451,13 @@ class BoolaaApi(val client: SupabaseClient) {
         }
 
         fun imagePath(userId: String, id: UUID = UUID.randomUUID()) = "${userId.lowercase()}/${id.toString().lowercase()}.jpg"
+
+        /** `<bubble id>/<uuid>.jpg`: bubble logos belong to the bubble, not to the uploader. */
+        fun bubbleLogoPath(bubbleId: String, id: UUID = UUID.randomUUID()) = "${bubbleId.lowercase()}/${id.toString().lowercase()}.jpg"
+
+        /** The `bubble.images` object behind [publicUrl] when it sits in [bubbleId]'s folder, else null. */
+        fun bubbleLogoObject(publicUrl: String?, bubbleId: String): String? =
+            storagePath(publicUrl, ImageBucket.BUBBLE)?.takeIf { it.startsWith(bubbleId.lowercase() + "/") && ".." !in it }
     }
 }
 

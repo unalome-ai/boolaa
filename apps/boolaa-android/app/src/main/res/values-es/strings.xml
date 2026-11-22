@@ -298,4 +298,51 @@
     <string name="suspended_reason">Motivo: %1$s</string>
     <string name="suspended_appeal">¿Crees que es un error? Escríbenos a %1$s y cuéntanos por qué.</string>
     <string name="suspended_back_to_sign_in">Volver a iniciar sesión</string>
+    <!-- Invite links (docs/boolaa-spec.md, "Invite links"; strings shared with web and iOS) -->
+    <string name="invite_title">Tienes una invitación</string>
+    <string name="invite_approval_note">Los miembros votan tu solicitud. Entras cuando la mayoría diga que sí.</string>
+    <string name="invite_pending">Ya pediste unirte. Esperando a que los miembros lo aprueben.</string>
+    <string name="invite_member">Ya estás en esta burbuja.</string>
+    <string name="invite_open_bubble">Abrir la burbuja</string>
+    <string name="invite_invalid_title">Esta invitación no es válida</string>
+    <string name="invite_invalid_body">Puede que el enlace sea antiguo o que el código haya cambiado. Pide uno nuevo a un miembro.</string>
+    <string name="invite_request_sent">Solicitud enviada</string>
+    <string name="invite_link">Enlace de invitación</string>
+    <string name="copy_invite_link">Copiar enlace</string>
+    <string name="share_invite_link">Compartir enlace</string>
+    <string name="invite_qr_code">Código QR</string>
+    <string name="invite_qr_hint">Deja que un amigo escanee este código para pedir unirse a %1$s.</string>
+    <string name="invite_link_share_text">Únete a mi burbuja «%1$s» en Boolaa: %2$s</string>
+    <string name="rotate_invite_code">Código nuevo</string>
+    <string name="rotate_invite_title">¿Cambiar el código de invitación?</string>
+    <string name="rotate_invite_body">El código, el enlace y el código QR antiguos dejan de funcionar al momento. Las solicitudes ya enviadas se mantienen.</string>
+    <string name="rotate_invite_confirm">Cambiar código</string>
+    <string name="invite_rotated">Nuevo código de invitación listo</string>
+    <string name="error_too_many_invite_attempts">Demasiados intentos con códigos no válidos. Inténtalo de nuevo dentro de una hora.</string>
+    <string name="error_only_owner_can_rotate">Solo el propietario puede cambiar el código de invitación.</string>
+    <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
+    <string name="bubble_photo">Foto de la burbuja</string>
+    <string name="add_bubble_photo">Añadir una foto</string>
+    <string name="change_bubble_photo">Cambiar la foto</string>
+    <string name="remove_bubble_photo">Quitar la foto</string>
+    <string name="bubble_photo_hint">La ve todo el mundo en la burbuja. Las fotos cuadradas quedan mejor.</string>
+    <string name="bubble_photo_of">Foto de la burbuja %1$s</string>
+    <!-- Chat (20261123120000_chat_improvements.sql, glossary "Chat") -->
+    <string name="chat_deleted">Este mensaje se ha eliminado</string>
+    <string name="chat_delete_message">Eliminar mensaje</string>
+    <string name="chat_delete_confirm_title">¿Eliminar este mensaje?</string>
+    <string name="chat_delete_confirm_body">Desaparece para todos en la burbuja.</string>
+    <string name="chat_delete_confirm">Eliminar</string>
+    <string name="chat_new_messages">Mensajes nuevos</string>
+    <string name="chat_loading_older">Cargando mensajes anteriores…</string>
+    <string name="chat_start">Aquí empieza el chat</string>
+    <string name="chat_add_photo">Añadir una foto</string>
+    <string name="chat_remove_photo">Quitar la foto</string>
+    <string name="chat_photo">Foto</string>
+    <plurals name="chat_unread">
+        <item quantity="one">%d mensaje sin leer</item>
+        <item quantity="many">%d mensajes sin leer</item>
+        <item quantity="other">%d mensajes sin leer</item>
+    </plurals>
+    <string name="error_chat_message_gone">Ese mensaje ya no existe.</string>
 </resources>

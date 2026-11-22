@@ -68,3 +68,25 @@ Web keys `errors.imageTooLarge` / `errors.imageUnsupported`; iOS `UserFacingErro
 |---|---|---|---|---|---|---|
 | Input above 50 MB or output above the bucket limit; Storage `statusCode` 413 / `EntityTooLarge` | `imageTooLarge` | That photo is too large. Pick a smaller one. | Fotografia e prea mare. Alege una mai mică. | Cette photo est trop lourde. Choisis-en une plus petite. | Esa foto es demasiado grande. Elige una más pequeña. | Questa foto è troppo grande. Scegline una più piccola. |
 | File can't be decoded (e.g. HEIC in Chrome, not an image); Storage `statusCode` 415 / `invalid_mime_type` | `imageUnsupported` | We can't read that image. Try a different photo. | Nu putem citi această imagine. Încearcă altă fotografie. | Impossible de lire cette image. Essaie une autre photo. | No podemos leer esa imagen. Prueba con otra foto. | Non riusciamo a leggere questa immagine. Prova con un'altra foto. |
+
+## Chat (docs/boolaa-spec.md, "Chat")
+
+Web keys under `chat.*` (`errors.chatMessageGone`); iOS and Android use the same English texts as keys / `chat_*` resource names.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| `deleted` (placeholder) | This message was deleted | Mesajul a fost șters | Ce message a été supprimé | Este mensaje se ha eliminado | Questo messaggio è stato eliminato |
+| `deleteMessage` (menu) | Delete message | Șterge mesajul | Supprimer le message | Eliminar mensaje | Elimina messaggio |
+| `deleteConfirmTitle` | Delete this message? | Ștergi mesajul? | Supprimer ce message ? | ¿Eliminar este mensaje? | Eliminare questo messaggio? |
+| `deleteConfirmBody` | It disappears for everyone in the bubble. | Dispare pentru toți cei din bulă. | Il disparaît pour tout le monde dans la bulle. | Desaparece para todos en la burbuja. | Sparisce per tutti nella bolla. |
+| `deleteConfirm` (button) | Delete | Șterge | Supprimer | Eliminar | Elimina |
+| `newMessages` (divider) | New messages | Mesaje noi | Nouveaux messages | Mensajes nuevos | Nuovi messaggi |
+| `loadingOlder` | Loading older messages… | Se încarcă mesajele mai vechi… | Chargement des anciens messages… | Cargando mensajes anteriores… | Caricamento dei messaggi precedenti… |
+| `chatStart` | That's the start of the chat | Aici începe chatul | C'est le début de la discussion | Aquí empieza el chat | Qui inizia la chat |
+| `addPhoto` | Add a photo | Adaugă o fotografie | Ajouter une photo | Añadir una foto | Aggiungi una foto |
+| `removePhoto` | Remove photo | Elimină fotografia | Retirer la photo | Quitar la foto | Rimuovi la foto |
+| `photo` (label, Home preview) | Photo | Fotografie | Photo | Foto | Foto |
+| `unread` (badge label) | {count, plural, one {# unread message} other {# unread messages}} | {count, plural, one {# mesaj necitit} few {# mesaje necitite} other {# de mesaje necitite}} | {count, plural, one {# message non lu} other {# messages non lus}} | {count, plural, one {# mensaje sin leer} other {# mensajes sin leer}} | {count, plural, one {# messaggio non letto} other {# messaggi non letti}} |
+| `chatMessageGone` (error `message not found`) | That message no longer exists. | Mesajul nu mai există. | Ce message n'existe plus. | Ese mensaje ya no existe. | Questo messaggio non esiste più. |
+
+The badge shows the number up to 99 and "99+" above (the server caps the count at 100).

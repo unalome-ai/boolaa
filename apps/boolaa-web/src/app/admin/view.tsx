@@ -10,7 +10,18 @@ import { A, REASON_LABEL, STATUS_LABEL, TARGET_LABEL } from "./strings";
 type Queue = "open" | "actioned" | "dismissed";
 type Action = "dismiss" | "delete_content" | "remove_from_bubble" | "suspend" | "ban";
 
-type Snapshot = { text?: string; title?: string; url?: string; image?: string; deleted: boolean };
+type Snapshot = {
+  text?: string;
+  title?: string;
+  url?: string;
+  image?: string;
+  /** Chat photos live in the private chat.images bucket: a path to sign, not a URL. */
+  image_bucket?: string;
+  image_path?: string;
+  /** A chat message its author deleted while a report was open: the text/photo are the kept evidence. */
+  deleted_by_author?: boolean;
+  deleted: boolean;
+};
 type Report = {
   id: string;
   reason: string;
@@ -125,19 +136,39 @@ function UserStatus({ status, until, ended }: { status: string | null; until: st
   );
 }
 
+/** Signed URL for a chat photo (admins may read reported ones, 20261123120000_chat_improvements.sql). */
+function useSignedImage(bucket?: string, path?: string) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!bucket || !path) return;
+    let alive = true;
+    getSupabase()
+      .storage.from(bucket)
+      .createSignedUrl(path, 600)
+      .then(({ data }) => alive && setUrl(data?.signedUrl ?? null));
+    return () => {
+      alive = false;
+    };
+  }, [bucket, path]);
+  return url;
+}
+
 function SnapshotView({ r }: { r: Report }) {
   const s = r.snapshot;
+  const signed = useSignedImage(s.image_bucket, s.image_path);
+  const image = s.image ?? signed ?? undefined;
   if (s.deleted)
     return <p className="rounded-small bg-field px-3 py-2 text-sm italic text-muted">{A.contentDeleted}</p>;
   return (
     <div className="flex gap-3 rounded-small bg-field px-3 py-2 text-sm" data-testid="admin-snapshot">
-      {s.image && (
-        <a href={s.image} target="_blank" rel="noreferrer" className="shrink-0">
+      {image && (
+        <a href={image} target="_blank" rel="noreferrer" className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.image} alt="" className="h-16 w-16 rounded-small object-cover" />
+          <img src={image} alt="" className="h-16 w-16 rounded-small object-cover" data-testid="admin-snapshot-image" />
         </a>
       )}
       <div className="min-w-0 space-y-0.5">
+        {s.deleted_by_author && <p className="text-xs font-semibold text-danger-ink">{A.deletedByAuthor}</p>}
         {r.target_type === "user" && <p className="text-xs text-muted">{A.profileReport}</p>}
         {s.title && <p className="font-semibold">{s.title}</p>}
         {s.text && <p className="whitespace-pre-wrap break-words">{s.text}</p>}

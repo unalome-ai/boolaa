@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { getSupabase } from "@/lib/supabase/client";
 import { useErrorText } from "@/i18n/errors";
 import { ErrorText } from "@/components/ui";
+import { AUTH_NEXT_COOKIE } from "@/lib/auth-next";
+import { writeCookie } from "@/lib/utils";
 
 type Provider = "google" | "apple";
 
@@ -36,7 +38,7 @@ function AppleMark() {
  * medium, the official "G". Apple: black button with white logo and title in light mode, white
  * with black in dark mode, same height and corner as Google's so neither dominates.
  */
-export function OAuthButtons({ className }: { className?: string }) {
+export function OAuthButtons({ className, next }: { className?: string; next?: string | null }) {
   const t = useTranslations("auth");
   const errorText = useErrorText();
   const [busy, setBusy] = useState<Provider | null>(null);
@@ -45,6 +47,8 @@ export function OAuthButtons({ className }: { className?: string }) {
   async function go(provider: Provider) {
     setBusy(provider);
     setError(null);
+    // Where /auth/callback continues after the device gate (e.g. an invite link, /join/CODE).
+    if (next) writeCookie(AUTH_NEXT_COOKIE, next, 1);
     const { error } = await getSupabase().auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/auth/callback` },

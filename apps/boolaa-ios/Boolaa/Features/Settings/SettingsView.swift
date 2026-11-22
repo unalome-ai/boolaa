@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -60,7 +61,14 @@ struct SettingsView: View {
     @State private var description = ""
     @State private var confirmLeave = false
     @State private var copied = false
+    @State private var linkCopied = false
+    @State private var showInviteQR = false
+    @State private var confirmRotate = false
+    @State private var rotating = false
     @State private var memberToRemove: BubbleMember?
+    @State private var photoItem: PhotosPickerItem?
+    @State private var showPhotoPicker = false
+    @State private var photoBusy = false
 
     private var isOwner: Bool { session.currentRole == .owner }
 
@@ -186,6 +194,23 @@ struct SettingsView: View {
         } message: {
             Text("You'll need a new invite and the members' approval to come back.")
         }
+        // Invite links (docs/boolaa-spec.md): owner-only rotation kills the old code, link and QR code.
+        .confirmationDialog(Text("Change the invite code?"), isPresented: $confirmRotate, titleVisibility: .visible) {
+            Button("Change code", role: .destructive) {
+                guard let id = session.currentBubble?.id else { return }
+                Task {
+                    rotating = true; defer { rotating = false }
+                    do { try await session.rotateInviteCode(bubbleID: id) } catch { model.error = error.userMessage }
+                }
+            }
+        } message: {
+            Text("The old code, link and QR code stop working right away. Requests already sent stay.")
+        }
+        .sheet(isPresented: $showInviteQR) {
+            if let bubble = session.currentBubble {
+                InviteQRSheet(bubbleName: bubble.name, url: InviteLink.url(for: bubble.inviteCode)).boolaaSheet()
+            }
+        }
         .errorAlert($model.error)
     }
 
@@ -212,9 +237,11 @@ struct SettingsView: View {
             } else {
                 let hue = Hue.forID(bubble.id)
                 HStack(alignment: .top, spacing: 14) {
-                    BubbleOrb(hue: hue).frame(width: 52, height: 52)
+                    BubbleLogo(bubble: bubble, size: 64)
+                        .overlay { if photoBusy { ProgressView().tint(.white) } }
                         .shadow(color: hue.fill.opacity(0.4), radius: 8, y: 4)
                         .floating(amplitude: 3, period: 5)
+                        .accessibilityIdentifier("bubble-logo")
                     VStack(alignment: .leading, spacing: 4) {
                         Text(verbatim: bubble.name).font(.rounded(.title2, weight: .heavy))
                         if let d = bubble.description?.nilIfEmpty {
@@ -242,9 +269,61 @@ struct SettingsView: View {
                         .accessibilityIdentifier("edit-bubble")
                     }
                 }
+                if isOwner { photoControls(bubble) }
             }
         }
         .card()
+        .photosPicker(isPresented: $showPhotoPicker, selection: $photoItem, matching: .images)
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            photoItem = nil
+            Task { await uploadPhoto(item) }
+        }
+    }
+
+    /// Owner only (can_manage_bubble): add, change or remove the bubble's photo.
+    private func photoControls(_ bubble: Bubble) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Bubble photo", comment: "Settings: heading of the bubble photo controls")
+                .font(.rounded(.caption, weight: .heavy)).foregroundStyle(.secondary).textCase(.uppercase)
+            HStack(spacing: 10) {
+                Button { showPhotoPicker = true } label: {
+                    Label {
+                        Text(bubble.logo == nil ? LocalizedStringResource("Add a photo", comment: "Settings: pick a photo for the bubble")
+                             : LocalizedStringResource("Change photo", comment: "Settings: replace the bubble's photo"))
+                    } icon: { Image(systemName: "camera.fill") }
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .accessibilityIdentifier("bubble-photo-pick")
+                if bubble.logo != nil {
+                    Button(role: .destructive) { Task { await removePhoto() } } label: {
+                        Label { Text("Remove photo", comment: "Settings: remove the bubble's photo") } icon: { Image(systemName: "trash") }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .accessibilityIdentifier("bubble-photo-remove")
+                }
+            }
+            .disabled(photoBusy)
+            Text("Everyone in the bubble sees it. Square photos look best.", comment: "Settings: hint under the bubble photo buttons")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(.top, 6)
+    }
+
+    private func uploadPhoto(_ item: PhotosPickerItem) async {
+        photoBusy = true; defer { photoBusy = false }
+        do {
+            guard let raw = try await item.loadTransferable(type: Data.self) else { throw ImageCompression.Failure.unsupported }
+            let jpeg = try await Task.detached(priority: .userInitiated) {
+                try ImageCompression.jpeg(from: raw, for: .bubbles)
+            }.value
+            try await session.setCurrentBubbleLogo(jpeg)
+        } catch { model.error = error.userMessage }
+    }
+
+    private func removePhoto() async {
+        photoBusy = true; defer { photoBusy = false }
+        do { try await session.setCurrentBubbleLogo(nil) } catch { model.error = error.userMessage }
     }
 
     private func inviteCard(_ bubble: Bubble) -> some View {
@@ -279,12 +358,60 @@ struct SettingsView: View {
                 .buttonStyle(.squishIcon)
                 .accessibilityLabel("Share invite code")
             }
+            inviteLinkRow(bubble)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Hue.grape.wash, in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
             .strokeBorder(Theme.brandText.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [7, 6])))
+    }
+
+    /// The invite link `https://boolaa.ro/join/<CODE>`: copy, share, QR code for every member; a new code for the owner.
+    @ViewBuilder
+    private func inviteLinkRow(_ bubble: Bubble) -> some View {
+        let url = InviteLink.url(for: bubble.inviteCode)
+        Divider().padding(.vertical, 2)
+        Text("Invite link").font(.rounded(.caption, weight: .heavy)).foregroundStyle(.secondary).textCase(.uppercase)
+        Text(verbatim: url.absoluteString)
+            .font(.footnote.monospaced()).foregroundStyle(Theme.brandText)
+            .lineLimit(1).truncationMode(.middle)
+            .textSelection(.enabled)
+            .accessibilityIdentifier("invite-link")
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+            Button {
+                UIPasteboard.general.url = url
+                linkCopied = true
+                Task { try? await Task.sleep(for: .seconds(1.5)); linkCopied = false }
+            } label: {
+                Label("Copy link", systemImage: linkCopied ? "checkmark" : "link")
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(maxWidth: .infinity)
+            }
+            .accessibilityIdentifier("invite-copy-link")
+            ShareLink(item: String(localized: "Join my bubble “\(bubble.name)” on Boolaa: \(url.absoluteString)",
+                                   comment: "Share sheet text for the invite link; arguments are the bubble name and the link")) {
+                Label("Share link", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity)
+            }
+            .accessibilityIdentifier("invite-share-link")
+            Button { showInviteQR = true } label: {
+                Label("QR code", systemImage: "qrcode").frame(maxWidth: .infinity)
+            }
+            .accessibilityIdentifier("invite-qr-button")
+            if isOwner {
+                Button { confirmRotate = true } label: {
+                    Label("New code", systemImage: "arrow.triangle.2.circlepath").frame(maxWidth: .infinity)
+                }
+                .disabled(rotating)
+                .accessibilityIdentifier("invite-rotate")
+            }
+        }
+        .font(.rounded(.subheadline, weight: .bold))
+        .lineLimit(1).minimumScaleFactor(0.8)
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .tint(Hue.grape.text)
+        .sensoryFeedback(.success, trigger: linkCopied) { _, now in now }
     }
 
     @ViewBuilder

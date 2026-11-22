@@ -38,6 +38,14 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
+			<string>ro.boolaa.app.invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>boolaa</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
 			<string>com.googleusercontent.apps.ios</string>
 			<key>CFBundleURLSchemes</key>
 			<array>

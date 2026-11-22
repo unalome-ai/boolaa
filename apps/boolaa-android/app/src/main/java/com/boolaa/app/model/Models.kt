@@ -49,9 +49,9 @@ data class BubbleMember(
     val key: String get() = "$userId-$bubbleId"
 }
 
-/** Minimal bubble embed (`bubble:bubbles(id, name)`). */
+/** Minimal bubble embed (`bubble:bubbles(id, name, logo)`). */
 @Serializable
-data class BubbleRef(val id: String, val name: String)
+data class BubbleRef(val id: String, val name: String, val logo: String? = null)
 
 /** `public.join_requests` */
 @Serializable
@@ -73,16 +73,43 @@ data class JoinRequest(
     }
 }
 
-/** `public.chat_messages` */
+/**
+ * `public.chat_messages` (20261123120000_chat_improvements.sql). [imagePath] is an object path in the private
+ * `chat.images` bucket (shown through signed URLs); a deleted message keeps its row with [deletedAt] set and its
+ * text and photo wiped.
+ */
 @Serializable
 data class ChatMessage(
     val id: String,
     @SerialName("bubble_id") val bubbleId: String,
     @SerialName("sender_id") val senderId: String,
-    val content: String,
+    val content: String = "",
     @SerialName("created_at") val createdAt: Timestamp,
     val sender: UserProfile? = null,
-)
+    @SerialName("image_path") val imagePath: String? = null,
+    @SerialName("deleted_at") val deletedAt: Timestamp? = null,
+) {
+    val isDeleted: Boolean get() = deletedAt != null
+    /** A photo without a caption (Home shows the "Photo" label). */
+    val isPhotoOnly: Boolean get() = !isDeleted && imagePath != null && content.isBlank()
+}
+
+/** One row of `chat_unread_counts()`: unread messages from others (capped at 100) and the read marker. */
+@Serializable
+data class ChatUnread(
+    @SerialName("bubble_id") val bubbleId: String,
+    @SerialName("unread_count") val unreadCount: Int = 0,
+    @SerialName("last_read_at") val lastReadAt: Timestamp? = null,
+) {
+    companion object {
+        /** Badge text: nothing for 0, the number up to 99, "99+" above (the server caps the count at 100). */
+        fun badgeText(count: Int): String? = when {
+            count <= 0 -> null
+            count > 99 -> "99+"
+            else -> count.toString()
+        }
+    }
+}
 
 /** `public.events` */
 @Serializable
@@ -176,3 +203,33 @@ enum class ReportReason(val wire: String) {
 
 /** What the report sheet is about: the content (or user) and its author. */
 data class ReportTarget(val type: ReportTargetType, val id: String, val authorId: String, val authorName: String)
+
+/**
+ * Live bubble edits (realtime UPDATE on `public.bubbles`, 20261123130000_bubble_cover.sql): name, description and
+ * logo are merged into the caller's memberships and pending requests by id; other bubbles are ignored.
+ */
+data class BubblePatch(val id: String, val name: String, val description: String?, val logo: String?) {
+    fun applyTo(b: Bubble): Bubble = if (b.id == id) b.copy(name = name, description = description, logo = logo) else b
+
+    companion object {
+        /** Reads the patch from a realtime record (plain JSON; timestamps are not decoded). */
+        fun fromRecord(record: kotlinx.serialization.json.JsonObject): BubblePatch? {
+            fun str(k: String) = (record[k] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+            val id = str("id") ?: return null
+            val name = str("name") ?: return null
+            return BubblePatch(id, name, str("description"), str("logo"))
+        }
+
+        /** Null when nothing the caller holds changed (so the state isn't touched). */
+        fun merge(memberships: List<BubbleMember>?, requests: List<JoinRequest>, patch: BubblePatch): Pair<List<BubbleMember>?, List<JoinRequest>>? {
+            val inMembers = memberships.orEmpty().any { it.bubbleId == patch.id && it.bubble != null }
+            val inRequests = requests.any { it.bubbleId == patch.id && it.bubble != null }
+            if (!inMembers && !inRequests) return null
+            val m = memberships?.map { if (it.bubbleId == patch.id && it.bubble != null) it.copy(bubble = patch.applyTo(it.bubble)) else it }
+            val r = requests.map {
+                if (it.bubbleId == patch.id && it.bubble != null) it.copy(bubble = it.bubble.copy(name = patch.name, logo = patch.logo)) else it
+            }
+            return m to r
+        }
+    }
+}

@@ -4,6 +4,8 @@ import SwiftUI
 struct MainShellView: View {
     @Environment(SessionStore.self) private var session
     @Environment(SafetyStore.self) private var safety
+    @Environment(UnreadStore.self) private var unread
+    @Environment(\.scenePhase) private var scenePhase
     @State private var router = ShellRouter()
     @State private var appliedDebugHooks = false
 
@@ -31,7 +33,7 @@ struct MainShellView: View {
             }
             .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
             .overlay(alignment: .bottom) {
-                Dock(selection: $router.tab) { router.open(.chat) }
+                Dock(selection: $router.tab, unread: unread.count(for: session.currentBubble?.id)) { router.open(.chat) }
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ShellDestination.self) { destination in
@@ -51,6 +53,19 @@ struct MainShellView: View {
         .task(id: session.userID) {
             safety.reset()
             if session.userID != nil { await safety.load() }
+        }
+        // Unread badges: on start, then live (debounced) until sign-out.
+        .task(id: session.userID) {
+            unread.reset()
+            guard let userID = session.userID else { return }
+            await unread.refresh()
+            await unread.watch(userID: userID)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await unread.refresh() } }
+        }
+        .onChange(of: session.bubbles.map(\.id)) { _, _ in
+            Task { await unread.refresh() }
         }
         .onAppear(perform: applyDebugHooks)
     }
@@ -128,6 +143,7 @@ struct ShellBackground: View {
 struct ShellHeader: View {
     @Environment(SessionStore.self) private var session
     @Environment(ShellRouter.self) private var router
+    @Environment(UnreadStore.self) private var unread
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var chips
     var title: LocalizedStringResource
@@ -162,7 +178,7 @@ struct ShellHeader: View {
                             Button {
                                 withAnimation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion)) { session.selectBubble(bubble.id) }
                             } label: {
-                                BubbleChip(bubble: bubble, isActive: active, namespace: chips)
+                                BubbleChip(bubble: bubble, isActive: active, namespace: chips, unread: unread.count(for: bubble.id))
                             }
                             .buttonStyle(.squish)
                             .id(bubble.id)
@@ -188,24 +204,26 @@ struct ShellHeader: View {
     }
 }
 
-/// Bubble switcher chip: a little glossy bubble in the bubble's own colour plus its name.
+/// Bubble switcher chip: the bubble's photo (or a little glossy bubble in its own colour) plus its name.
 /// The filled capsule slides between chips and takes the colour of the bubble it lands on.
 struct BubbleChip: View {
     var bubble: Bubble
     var isActive: Bool
     var namespace: Namespace.ID
+    var unread = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let hue = Hue.forID(bubble.id)
         HStack(spacing: 7) {
-            BubbleOrb(hue: hue)
-                .frame(width: 16, height: 16)
+            BubbleLogo(bubble: bubble, size: bubble.logo == nil ? 16 : 26)
+                .accessibilityHidden(true)
                 .overlay(Circle().strokeBorder(.white.opacity(isActive ? 0.9 : 0), lineWidth: 1.5))
                 .phaseAnimator(reduceMotion ? [1.0] : [1.0, 1.45, 1.0], trigger: isActive) { orb, scale in
                     orb.scaleEffect(scale)
                 } animation: { _ in Motion.bouncy }
             Text(verbatim: bubble.name).font(.rounded(.subheadline)).lineLimit(1)
+            UnreadBadge(count: unread, inverted: isActive)
         }
         .foregroundStyle(isActive ? hue.onFill : Theme.ink)
         .padding(.leading, 11)
@@ -227,12 +245,13 @@ struct BubbleChip: View {
 /// The floating dock: pill tab bar plus the round chat button, with a fade so content dissolves beneath it.
 struct Dock: View {
     @Binding var selection: MainTab
+    var unread = 0
     var onChat: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
             PillTabBar(selection: $selection)
-            ChatFAB(action: onChat)
+            ChatFAB(unread: unread, action: onChat)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
@@ -290,6 +309,7 @@ struct PillTabBar: View {
 
 /// Round chat button: a glossy grape bubble with a slow pulse ring.
 struct ChatFAB: View {
+    var unread = 0
     var action: () -> Void
     @State private var taps = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -316,11 +336,45 @@ struct ChatFAB: View {
             }
             .frame(width: 60, height: 60)
             .floatingShadow(Hue.grape.fill)
+            .overlay(alignment: .topTrailing) {
+                UnreadBadge(count: unread, inverted: false, bordered: true).offset(x: 6, y: -4)
+            }
         }
         .buttonStyle(.squishIcon)
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityLabel("Open chat")
+        .accessibilityValue(unread > 0 ? Text(UnreadBadge.label(unread)) : Text(verbatim: ""))
         .accessibilityIdentifier("chat-fab")
+    }
+}
+
+/// Unread chat messages: the number up to 99, "99+" above, nothing at 0.
+struct UnreadBadge: View {
+    var count: Int
+    /// On a filled (active) chip: white badge with coloured text.
+    var inverted = false
+    var bordered = false
+
+    static func label(_ count: Int) -> String {
+        String(localized: "\(count) unread messages", comment: "Accessibility label of the unread badge; the argument is the count (99+ shown above 99)")
+    }
+
+    var body: some View {
+        if let text = ChatUnread.badgeText(count) {
+            Text(verbatim: text)
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(inverted ? Hue.coral.text : .white)
+                .padding(.horizontal, 6)
+                .frame(minWidth: 20, minHeight: 20)
+                .background(inverted ? AnyShapeStyle(Color.white) : AnyShapeStyle(Hue.coral.gradient), in: Capsule())
+                .overlay { if bordered { Capsule().strokeBorder(Theme.background, lineWidth: 2) } }
+                .contentTransition(.numericText(value: Double(count)))
+                .animation(Motion.snappy, value: count)
+                .accessibilityLabel(Text(Self.label(count)))
+                .accessibilityIdentifier("unread-badge")
+                .transition(.scale.combined(with: .opacity))
+        }
     }
 }
 

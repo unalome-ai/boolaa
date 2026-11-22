@@ -39,6 +39,7 @@ import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.components.BoolaaIcons
 import com.boolaa.app.ui.components.BoolaaTextField
 import com.boolaa.app.ui.components.BubbleOrb
+import com.boolaa.app.ui.components.BubbleLogo
 import com.boolaa.app.ui.components.PrimaryButton
 import com.boolaa.app.ui.components.RollingCount
 import com.boolaa.app.ui.components.SegmentedPill
@@ -147,8 +148,13 @@ fun PendingRequestsList(requests: List<JoinRequest>, onCancel: (JoinRequest) -> 
             val hue = Hue.forId(r.bubbleId)
             Row(Modifier.popIn(index).boolaaCard().testTag("pending-request"), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                    BubbleOrb(hue, Modifier.matchParentSize())
-                    Icon(BoolaaIcons.Pending, contentDescription = null, tint = hue.onFill, modifier = Modifier.size(22.dp))
+                    val logo = r.bubble?.logo
+                    if (logo.isNullOrBlank()) {
+                        BubbleOrb(hue, Modifier.matchParentSize())
+                        Icon(BoolaaIcons.Pending, contentDescription = null, tint = hue.onFill, modifier = Modifier.size(22.dp))
+                    } else {
+                        BubbleLogo(r.bubbleId, r.bubble?.name.orEmpty(), logo, size = 48.dp)
+                    }
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {

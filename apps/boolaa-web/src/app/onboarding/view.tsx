@@ -6,7 +6,7 @@ import { ArrowLeft, Hourglass, LogOut, RefreshCw } from "lucide-react";
 import { fetchMyBubbles } from "@/components/boolaa-provider";
 import { CreateJoinTabs } from "@/components/create-join";
 import { AmbientBackdrop, BubbleLogo, FeatureBadge } from "@/components/orb";
-import { ErrorText, PageLoader } from "@/components/ui";
+import { BubblePhoto, ErrorText, PageLoader } from "@/components/ui";
 import { hueFor } from "@/lib/hue";
 import { getSupabase } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -14,13 +14,14 @@ import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { CompactLocalePicker } from "@/i18n/locale-picker";
 import { liveChannel } from "@/lib/realtime";
-import { BUBBLE_COOKIE, hardNavigate, writeCookie } from "@/lib/utils";
+import { BUBBLE_COOKIE, hardNavigate, readCookie, writeCookie } from "@/lib/utils";
+import { PENDING_INVITE_COOKIE, invitePath, isPlausibleInviteCode } from "@/lib/invite";
 
 type Pending = {
   id: string;
   created_at: string;
   approver_ids: string[];
-  bubble: { id: string; name: string; description: string | null } | null;
+  bubble: { id: string; name: string; description: string | null; logo: string | null } | null;
 };
 
 export default function OnboardingPage() {
@@ -45,7 +46,7 @@ export default function OnboardingPage() {
           fetchMyBubbles(supabase, uid),
           supabase
             .from("join_requests")
-            .select("id, created_at, approver_ids, bubble:bubbles!bubble_id(id, name, description)")
+            .select("id, created_at, approver_ids, bubble:bubbles!bubble_id(id, name, description, logo)")
             .eq("user_id", uid)
             .order("created_at", { ascending: false }),
         ]);
@@ -72,6 +73,13 @@ export default function OnboardingPage() {
   );
 
   useEffect(() => {
+    // Signed in after opening an invite link (e.g. via email confirmation, which loses ?next=):
+    // go back to that invite once.
+    const invite = readCookie(PENDING_INVITE_COOKIE);
+    if (invite) {
+      writeCookie(PENDING_INVITE_COOKIE, "", 0);
+      if (isPlausibleInviteCode(invite)) return hardNavigate(invitePath(invite));
+    }
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) return hardNavigate("/login");
       setUserId(data.user.id);
@@ -105,7 +113,9 @@ export default function OnboardingPage() {
           .on("postgres_changes", { event: "*", schema: "public", table: "join_requests", filter: `user_id=eq.${userId}` }, reload)
           .on("postgres_changes", { event: "DELETE", schema: "public", table: "join_requests" }, (p) => {
             if (pendingIds.current.has((p.old as { id?: string }).id ?? "")) reload();
-          }),
+          })
+          // A requested bubble was renamed or got a new photo (requesters may read the row).
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubbles" }, reload),
       (ready) => {
         if (ready) void load(userId).then(() => setLive(true)); // catch up on anything before streaming started
         else setLive(false);
@@ -180,9 +190,13 @@ export default function OnboardingPage() {
               <ul className="space-y-3">
                 {pending.map((p, i) => (
                   <li key={p.id} className="card anim-rise flex items-center gap-4 p-4" style={{ "--i": i } as CSSProperties}>
-                    <FeatureBadge hue={hueFor(p.bubble?.id)}>
-                      <Hourglass size={20} strokeWidth={2.6} />
-                    </FeatureBadge>
+                    {p.bubble?.logo ? (
+                      <BubblePhoto bubble={p.bubble} size={44} />
+                    ) : (
+                      <FeatureBadge hue={hueFor(p.bubble?.id)}>
+                        <Hourglass size={20} strokeWidth={2.6} />
+                      </FeatureBadge>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{p.bubble?.name ?? "—"}</p>
                       <p className="text-sm text-muted">

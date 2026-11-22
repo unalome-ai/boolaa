@@ -31,6 +31,7 @@ import com.boolaa.app.ui.auth.AuthScreen
 import com.boolaa.app.ui.auth.DeviceCodeScreen
 import com.boolaa.app.ui.auth.ResetPasswordScreen
 import com.boolaa.app.ui.auth.SuspendedScreen
+import com.boolaa.app.ui.invite.InviteSheet
 import com.boolaa.app.ui.onboarding.OnboardingScreen
 import com.boolaa.app.ui.shell.MainShell
 import com.boolaa.app.ui.theme.BoolaaTheme
@@ -46,6 +47,7 @@ val LocalAppContainer = staticCompositionLocalOf<AppContainer> { error("AppConta
 fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
     val session = LocalAppContainer.current.session
     val state by session.state.collectAsStateWithLifecycle()
+    val invite by session.pendingInvite.collectAsStateWithLifecycle()
 
     LaunchedEffect(debugHooks) {
         if (debugHooks.signOut) session.signOut()
@@ -78,6 +80,9 @@ fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
                 AppRoute.MAIN -> MainShell(initialTab = debugHooks.tab, initialOpen = debugHooks.open)
             }
         }
+        // An opened invite link waits through sign-in and the device / age gates, then shows its join preview.
+        val code = invite
+        if (code != null && (state.route == AppRoute.ONBOARDING || state.route == AppRoute.MAIN)) InviteSheet(code)
     }
 }
 

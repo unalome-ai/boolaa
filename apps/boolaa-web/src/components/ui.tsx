@@ -51,6 +51,47 @@ export function Avatar({
   );
 }
 
+/**
+ * A bubble's photo (bubbles.logo), or its initials on the bubble's own hue (derived from its id, so the
+ * fallback matches the switcher's colour on every client).
+ */
+export function BubblePhoto({
+  bubble,
+  size = 40,
+  className,
+}: {
+  bubble: { id: string; name: string; logo?: string | null } | null | undefined;
+  size?: number;
+  className?: string;
+}) {
+  const t = useTranslations("common");
+  const style = { width: size, height: size, fontSize: Math.max(10, size * 0.36) };
+  const label = t("bubblePhotoOf", { name: bubble?.name ?? "" });
+  return bubble?.logo ? (
+    <img
+      src={bubble.logo}
+      alt={label}
+      style={style}
+      data-testid="bubble-photo"
+      className={cx("shrink-0 rounded-full bg-field object-cover ring-2 ring-card", className)}
+    />
+  ) : (
+    <span
+      role="img"
+      aria-label={label}
+      style={style}
+      data-testid="bubble-photo-fallback"
+      className={cx(
+        "inline-flex shrink-0 select-none items-center justify-center rounded-full bg-hue-grad font-display font-extrabold text-hue-on ring-2 ring-card",
+        hueClass(hueFor(bubble?.id)),
+        className,
+      )}
+    >
+      {initials(bubble?.name)}
+    </span>
+  );
+}
+
 export function Spinner({ className }: { className?: string }) {
   const t = useTranslations("common");
   return <Loader2 className={cx("animate-spin text-grape", className)} size={22} aria-label={t("loading")} />;

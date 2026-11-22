@@ -39,6 +39,7 @@ export const A = {
   linked: "Linked from the alert email",
   urgent: "Urgent",
   contentDeleted: "Content deleted",
+  deletedByAuthor: "Deleted by its author after the report; kept here as evidence until the report is handled.",
   profileReport: "Report about the person, not a post",
   reportedBy: "reported",
   in: "in",

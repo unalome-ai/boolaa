@@ -37,11 +37,12 @@ export type { ImageBucket } from "@/lib/image";
 
 /**
  * Resizes and re-encodes the picked file (lib/image.ts: upright, no EXIF/GPS, JPEG), uploads it to
- * `<uid>/<uuid>.jpg` (required by storage policy) and returns the public URL.
+ * `<folder>/<uuid>.jpg` and returns the public URL. The folder is required by storage policy: the
+ * user's id, except in `bubble.images`, where it is the bubble's id (the photo belongs to the bubble).
  */
-export async function uploadImage(supabase: BoolaaClient, bucket: ImageBucket, userId: string, file: Blob) {
+export async function uploadImage(supabase: BoolaaClient, bucket: ImageBucket, folderId: string, file: Blob) {
   const jpeg = await prepareImage(file, bucket);
-  const path = `${userId}/${crypto.randomUUID()}.jpg`;
+  const path = `${folderId}/${crypto.randomUUID()}.jpg`;
   const { error } = await supabase.storage.from(bucket).upload(path, jpeg, { contentType: "image/jpeg", upsert: false });
   if (error) throw error;
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;

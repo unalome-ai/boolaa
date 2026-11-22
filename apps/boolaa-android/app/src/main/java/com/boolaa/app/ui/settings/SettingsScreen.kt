@@ -1,9 +1,22 @@
 package com.boolaa.app.ui.settings
 
+import com.boolaa.app.core.InviteLink
+import androidx.compose.ui.geometry.Size
+import androidx.compose.foundation.Canvas
+import android.widget.Toast
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.ContentResolver
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.LinearProgressIndicator
+import com.boolaa.app.core.ImageBucket
+import com.boolaa.app.core.ImageCompression
+import com.boolaa.app.ui.components.BubbleLogo
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
@@ -236,6 +249,28 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
     }
 
     fun leave() = launchCatching { container.session.leaveCurrentBubble() }
+
+    /** Owner only: a new invite code; old links and QR codes stop working. */
+    fun rotateInvite(onDone: () -> Unit) = launchCatching(trackBusy = false, onSuccess = onDone) {
+        container.session.rotateInviteCode(bubbleId)
+    }
+
+    private val _logoBusy = MutableStateFlow(false)
+    val logoBusy = _logoBusy.asStateFlow()
+
+    /** Owner only: picked photo -> ImageCompression (512 px, like avatars) -> bubble.images -> bubbles.logo. */
+    fun setLogo(bubble: Bubble, resolver: ContentResolver, uri: Uri) = launchCatching(trackBusy = false) {
+        _logoBusy.value = true
+        try {
+            val jpeg = ImageCompression.jpegFromUri(resolver, uri, ImageBucket.BUBBLE)
+            container.session.setBubbleLogo(bubble, jpeg)
+        } finally { _logoBusy.value = false }
+    }
+
+    fun removeLogo(bubble: Bubble) = launchCatching(trackBusy = false) {
+        _logoBusy.value = true
+        try { container.session.removeBubbleLogo(bubble) } finally { _logoBusy.value = false }
+    }
 }
 
 /** Settings for the current bubble (spec §11). */
@@ -263,7 +298,7 @@ fun SettingsScreen(navigator: ShellNavigator) {
             modifier = Modifier.fillMaxSize(),
         ) {
             item(key = "info-${bubble.id}") { InfoCard(bubble, members.size, isOwner, vm, Modifier.popIn(0)) }
-            item(key = "invite-${bubble.id}") { InviteCard(bubble, Modifier.popIn(1)) }
+            item(key = "invite-${bubble.id}") { InviteCard(bubble, isOwner, vm, Modifier.popIn(1)) }
             item(key = "links") {
                 SettingsRow(BoolaaIcons.Link, Hue.sky, stringResource(R.string.shared_links), BoolaaIcons.Disclosure, navigator::openLinks,
                     Modifier.popIn(2).testTag("settings-links"))
@@ -377,7 +412,7 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: Set
             }
         } else {
             Row(verticalAlignment = Alignment.Top) {
-                BubbleOrb(hue, Modifier.size(56.dp))
+                BubbleLogo(bubble.id, bubble.name, bubble.logo, size = 64.dp, modifier = Modifier.testTag("bubble-logo"))
                 Column(Modifier.weight(1f).padding(start = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(bubble.name, style = Type.title2, color = c.textPrimary)
                     Text(bubble.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.no_description), style = Type.subheadline, color = c.textSecondary)
@@ -393,16 +428,56 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: Set
                         size = 40.dp, modifier = Modifier.testTag("edit-bubble"))
                 }
             }
+            if (isOwner) BubbleLogoControls(bubble, vm)
         }
+    }
+}
+
+/** Owner-only: add / change / remove the bubble photo (Android Photo Picker, no permission needed). */
+@Composable
+private fun BubbleLogoControls(bubble: Bubble, vm: SettingsViewModel) {
+    val c = BoolaaTheme.colors
+    val resolver = LocalContext.current.contentResolver
+    val logoBusy by vm.logoBusy.collectAsStateWithLifecycle()
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) vm.setLogo(bubble, resolver, uri)
+    }
+    val hasLogo = !bubble.logo.isNullOrBlank()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("bubble-photo-controls")) {
+        Text(stringResource(R.string.bubble_photo), style = Type.headline, color = c.textPrimary)
+        Text(stringResource(R.string.bubble_photo_hint), style = Type.caption, color = c.textSecondary)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SecondaryButton(
+                stringResource(if (hasLogo) R.string.change_bubble_photo else R.string.add_bubble_photo),
+                onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                enabled = !logoBusy, modifier = Modifier.weight(1f).testTag("bubble-photo-pick"),
+            )
+            if (hasLogo) {
+                SecondaryButton(
+                    stringResource(R.string.remove_bubble_photo), onClick = { vm.removeLogo(bubble) },
+                    enabled = !logoBusy, danger = true, modifier = Modifier.weight(1f).testTag("bubble-photo-remove"),
+                )
+            }
+        }
+        if (logoBusy) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Hue.grape.fill)
     }
 }
 
 /** The invite code as a ticket: grape wash, dashed outline; the copy button morphs to a mint check for 1.5 s. */
 @Composable
-private fun InviteCard(bubble: Bubble, modifier: Modifier = Modifier) {
+private fun InviteCard(bubble: Bubble, isOwner: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val view = LocalView.current
     var copied by remember { mutableStateOf(false) }
+    var linkCopied by remember { mutableStateOf(false) }
+    var showQr by rememberSaveable { mutableStateOf(false) }
+    var confirmRotate by rememberSaveable { mutableStateOf(false) }
+    val link = InviteLink.url(bubble.inviteCode)
+    val linkShareText = stringResource(R.string.invite_link_share_text, bubble.name, link)
+    val shareLinkLabel = stringResource(R.string.share_invite_link)
+    val copyLinkLabel = stringResource(R.string.copy_invite_link)
+    val rotatedText = stringResource(R.string.invite_rotated)
+    LaunchedEffect(linkCopied) { if (linkCopied) { delay(Motion.COPIED_MS); linkCopied = false } }
     val shareText = stringResource(R.string.invite_share_text, bubble.name, bubble.inviteCode)
     val shareTitle = stringResource(R.string.share_invite_code)
     val copyLabel = stringResource(R.string.copy_invite_code)
@@ -439,7 +514,68 @@ private fun InviteCard(bubble: Bubble, modifier: Modifier = Modifier) {
                 context.startActivity(Intent.createChooser(send, shareTitle))
             }, filled = true, size = 44.dp, modifier = Modifier.testTag("share-invite"))
         }
+        // Invite link https://boolaa.ro/join/CODE (spec "Invite links"): opens the app, or the web page without it.
+        Text(stringResource(R.string.invite_link).uppercase(LocalConfiguration.current.locales[0]), style = Type.caption.copy(fontWeight = FontWeight.Black),
+            color = grape.text, modifier = Modifier.padding(top = 6.dp))
+        Text(link, style = Type.subheadline, color = grape.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag("invite-link"))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            CircleIconButton(if (linkCopied) BoolaaIcons.Check else BoolaaIcons.Copy, copyLinkLabel, onClick = {
+                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                cm.setPrimaryClip(ClipData.newPlainText(copyLinkLabel, link))
+                linkCopied = true
+                Haptics.success(view)
+            }, size = 44.dp, modifier = Modifier.testTag("copy-invite-link"))
+            CircleIconButton(BoolaaIcons.Share, shareLinkLabel, onClick = {
+                val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, linkShareText) }
+                context.startActivity(Intent.createChooser(send, shareLinkLabel))
+            }, size = 44.dp, modifier = Modifier.testTag("share-invite-link"))
+            CircleIconButton(BoolaaIcons.QrCode, stringResource(R.string.invite_qr_code), onClick = { showQr = true },
+                size = 44.dp, modifier = Modifier.testTag("show-invite-qr"))
+            Spacer(Modifier.weight(1f))
+            if (isOwner) {
+                TextButton(onClick = { confirmRotate = true }, modifier = Modifier.testTag("rotate-invite")) {
+                    Text(stringResource(R.string.rotate_invite_code), style = Type.headline, color = grape.text)
+                }
+            }
+        }
     }
+    if (showQr) InviteQrDialog(bubble.name, link, onDismiss = { showQr = false })
+    if (confirmRotate) {
+        ConfirmDialog(
+            title = stringResource(R.string.rotate_invite_title),
+            message = stringResource(R.string.rotate_invite_body),
+            confirm = stringResource(R.string.rotate_invite_confirm),
+            onConfirm = { vm.rotateInvite { Toast.makeText(context, rotatedText, Toast.LENGTH_SHORT).show() } },
+            onDismiss = { confirmRotate = false },
+        )
+    }
+}
+
+/** The invite link as a QR code (dark modules on white, so cameras read it in dark mode too). */
+@Composable
+private fun InviteQrDialog(bubbleName: String, link: String, onDismiss: () -> Unit) {
+    val matrix = remember(link) { InviteLink.qrMatrix(link) }
+    val qrLabel = stringResource(R.string.invite_qr_code)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done), style = Type.headline, color = Hue.grape.text) } },
+        title = { Text(qrLabel, style = Type.title2) },
+        text = {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Canvas(
+                    Modifier.size(240.dp).clip(RoundedCornerShape(16.dp)).background(Color.White)
+                        .semantics { contentDescription = qrLabel }.testTag("invite-qr"),
+                ) {
+                    val cell = size.minDimension / matrix.width
+                    for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                        if (matrix[x, y]) drawRect(Color.Black, topLeft = Offset(x * cell, y * cell), size = Size(cell + 0.5f, cell + 0.5f))
+                    }
+                }
+                Text(stringResource(R.string.invite_qr_hint, bubbleName), style = Type.subheadline, textAlign = TextAlign.Center)
+            }
+        },
+        shape = RoundedCornerShape(Radius.hero), containerColor = BoolaaTheme.colors.card,
+    )
 }
 
 @Composable

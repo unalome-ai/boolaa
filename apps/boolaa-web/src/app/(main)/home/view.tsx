@@ -26,7 +26,7 @@ const LIMIT = 5;
 const KIND_HUE: Record<FeedItem["kind"], Hue> = { chat: "grape", food: "tangerine", market: "mint", event: "coral", link: "sky" };
 
 type FeedData = {
-  chat: (Pick<Row<"chat_messages">, "id" | "content" | "created_at"> & { sender: Author | null })[];
+  chat: (Pick<Row<"chat_messages">, "id" | "content" | "image_path" | "created_at"> & { sender: Author | null })[];
   food: (Pick<Row<"food_posts">, "id" | "image" | "description" | "created_at"> & { user: Author | null })[];
   market: (Pick<Row<"market_items">, "id" | "image" | "title" | "status" | "created_at"> & { owner: Author | null })[];
   events: (Pick<Row<"events">, "id" | "title" | "datetime" | "location" | "rsvp_list" | "created_at"> & {
@@ -49,8 +49,9 @@ export default function HomePage() {
       const [chat, food, market, events, links] = await Promise.all([
         supabase
           .from("chat_messages")
-          .select(`id, content, created_at, sender:users!sender_id(${AUTHOR})`)
+          .select(`id, content, image_path, created_at, sender:users!sender_id(${AUTHOR})`)
           .eq("bubble_id", bubble.id)
+          .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(LIMIT),
         supabase
@@ -95,7 +96,7 @@ export default function HomePage() {
       kind: "chat" as const,
       icon: <MessagesSquare size={22} strokeWidth={2.4} />,
       author: m.sender,
-      body: <p className="text-[16px] font-semibold">{m.content}</p>,
+      body: <p className="text-[16px] font-semibold">{m.content || (m.image_path ? `📷 ${t("chat.photo")}` : "")}</p>,
     })),
     ...data.food.map((f) => ({
       key: `food-${f.id}`,

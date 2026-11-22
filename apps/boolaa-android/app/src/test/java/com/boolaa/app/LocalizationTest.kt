@@ -96,4 +96,27 @@ class LocalizationTest {
             assertEquals(ctx(tag).getString(R.string.suspended_sign_in_blocked), ctx(tag).getString(R.string.error_user_banned))
         }
     }
+
+    /** Chat strings follow the glossary ("Chat") in every language; Romanian plurals use one/few/other. */
+    @Test fun chat_strings_per_locale() {
+        fun unread(tag: String, n: Int) = ctx(tag).resources.getQuantityString(R.plurals.chat_unread, n, n)
+        assertEquals("1 unread message", unread("en", 1))
+        assertEquals("99 unread messages", unread("en", 99))
+        assertEquals("1 mesaj necitit", unread("ro", 1))
+        assertEquals("5 mesaje necitite", unread("ro", 5))
+        assertEquals("20 de mesaje necitite", unread("ro", 20))
+        assertEquals("2 messages non lus", unread("fr", 2))
+        assertEquals("1 mensaje sin leer", unread("es", 1))
+        assertEquals("3 messaggi non letti", unread("it", 3))
+        val deleted = mapOf(
+            "en" to "This message was deleted", "ro" to "Mesajul a fost șters", "fr" to "Ce message a été supprimé",
+            "es" to "Este mensaje se ha eliminado", "it" to "Questo messaggio è stato eliminato",
+        )
+        deleted.forEach { (tag, text) -> assertEquals(text, ctx(tag).getString(R.string.chat_deleted)) }
+        assertEquals("That's the start of the chat", ctx("en").getString(R.string.chat_start))
+        assertEquals("C'est le début de la discussion", ctx("fr").getString(R.string.chat_start))
+        assertEquals("Ce message n'existe plus.", ctx("fr").getString(R.string.error_chat_message_gone))
+        assertEquals("Ștergi mesajul?", ctx("ro").getString(R.string.chat_delete_confirm_title))
+        assertEquals("Foto", ctx("it").getString(R.string.chat_photo))
+    }
 }

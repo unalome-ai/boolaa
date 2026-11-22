@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import com.boolaa.app.core.InviteLink
 import com.boolaa.app.core.UserBanned
 import com.boolaa.app.core.UserFacingError
 import com.boolaa.app.ui.AppRoot
@@ -23,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         val hooks = DebugHooks.from(intent)
         hooks.deviceId?.let { container.device.overrideForTesting(it) }
-        handleAuthDeeplink(intent)
+        handleDeeplink(intent)
         setContent {
             CompositionLocalProvider(LocalAppContainer provides container) {
                 BoolaaTheme {
@@ -35,13 +36,23 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleAuthDeeplink(intent)
+        handleDeeplink(intent)
     }
 
     override fun onStart() {
         super.onStart()
         // Every return to the app re-checks the device, so a device revoked elsewhere asks for its code again.
         container.session.recheckDevice()
+        // Unread chat badges are refreshed on every return to the foreground.
+        container.unread.refresh()
+    }
+
+    /** An invite link (App Link or custom scheme), else an auth callback. */
+    private fun handleDeeplink(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            InviteLink.parse(intent.dataString)?.let { container.session.openInvite(it); return }
+        }
+        handleAuthDeeplink(intent)
     }
 
     /** `ro.boolaa.app://auth/callback?code=...` from the Apple Custom Tab or an email link (PKCE exchange). */

@@ -9,7 +9,7 @@ import { RESEND_COOLDOWN_S, markSent, sendSensitiveCode, verifySensitiveCode } f
 import type { BoolaaClient } from "@/lib/supabase/client";
 import { hardNavigate, signOutTarget } from "@/lib/utils";
 
-const BUCKETS = ["avatars", "food.images", "market.images"] as const;
+const BUCKETS = ["avatars", "food.images", "market.images", "chat.images"] as const;
 
 /**
  * Account deletion (docs/auth-security.md §2, "Flow: delete account"): warning + typed word, then

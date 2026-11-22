@@ -34,6 +34,28 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="${authScheme}" android:host="auth" android:path="/callback" />
             </intent-filter>
+            <!-- Invite links (docs/boolaa-spec.md, "Invite links"). Verified against https://boolaa.ro/.well-known/assetlinks.json
+                 (release signing certificate); www is accepted too but not verified (it redirects to boolaa.ro). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="boolaa.ro" android:pathPrefix="/join/" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="www.boolaa.ro" android:pathPrefix="/join/" />
+            </intent-filter>
+            <!-- Fallback when the App Link isn't verified: boolaa://join/CODE and ro.boolaa.app://join/CODE. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="boolaa" android:host="join" />
+                <data android:scheme="${authScheme}" android:host="join" />
+            </intent-filter>
         </activity>
 
         <!-- Persists the per-app language below API 33 (AppCompatDelegate.setApplicationLocales). -->

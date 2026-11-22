@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Check, ChevronRight, Clock, Copy, Crown, Link2, LogOut, Share2, UserMinus, X } from "lucide-react";
+import { Check, ChevronRight, Clock, Copy, Crown, ImagePlus, Link2, LogOut, RefreshCw, Share2, Trash2, UserMinus, X } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
-import { Avatar, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
+import { Avatar, BubblePhoto, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
+import { removeImage, uploadImage } from "@/lib/utils";
 import { FeatureBadge } from "@/components/orb";
 import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type JoinRequest, type Member } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
+import { inviteUrl } from "@/lib/invite";
 
 export default function SettingsPage() {
   const { supabase, userId, refreshBubbles } = useBoolaa();
@@ -24,6 +26,9 @@ export default function SettingsPage() {
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [rotating, setRotating] = useState(false);
+  const [rotateBusy, setRotateBusy] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [removing, setRemoving] = useState<Member | null>(null);
@@ -118,6 +123,38 @@ export default function SettingsPage() {
     }
   }
 
+  const link = inviteUrl(bubble.invite_code);
+
+  async function copyLink() {
+    await navigator.clipboard?.writeText(link).catch(() => undefined);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 1500);
+  }
+
+  async function shareLink() {
+    const text = t("shareLinkText", { bubble: bubble.name, url: link });
+    if (navigator.share) {
+      await navigator.share({ title: t("shareTitle"), text }).catch(() => undefined);
+    } else {
+      await navigator.clipboard?.writeText(text).catch(() => undefined);
+      setNotice(t("inviteCopied"));
+      setTimeout(() => setNotice(null), 2000);
+    }
+  }
+
+  /** Owner only: a new code; the old code, link and QR code stop working at once. */
+  async function rotate() {
+    setRotateBusy(true);
+    setError(null);
+    const { error } = await supabase.rpc("rotate_invite_code", { p_bubble_id: bubble.id });
+    setRotateBusy(false);
+    setRotating(false);
+    if (error) return setError(errorText(error));
+    await refreshBubbles();
+    setNotice(t("rotated"));
+    setTimeout(() => setNotice(null), 2500);
+  }
+
   async function approve(r: JoinRequest) {
     setError(null);
     const { data, error } = await supabase.rpc("approve_join_request", { p_request_id: r.id });
@@ -181,6 +218,26 @@ export default function SettingsPage() {
         <button type="button" onClick={share} className="btn-primary h-11 px-4 text-sm">
           <Share2 size={16} strokeWidth={2.6} /> {t("share")}
         </button>
+        {/* Invite link: https://boolaa.ro/join/CODE (opens the app when installed). */}
+        <div className="min-w-0 basis-full border-t border-dashed pt-3" style={{ borderColor: "color-mix(in srgb, var(--h-ink) 30%, transparent)" }}>
+          <h3 className="font-display text-xs font-black uppercase tracking-wide text-hue-ink">{t("inviteLink")}</h3>
+          <p className="truncate font-mono text-sm text-hue-ink" data-testid="invite-link">
+            {link}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" onClick={copyLink} className={`btn h-10 px-3.5 text-sm ${linkCopied ? "hue-mint fill-hue" : "bg-brand/15 text-brand-ink"}`} data-testid="copy-invite-link">
+              {linkCopied ? <Check size={16} strokeWidth={3} className="anim-pop" /> : <Link2 size={16} strokeWidth={2.6} />} {linkCopied ? t("copied") : t("copyLink")}
+            </button>
+            <button type="button" onClick={shareLink} className="btn h-10 bg-brand/15 px-3.5 text-sm text-brand-ink" data-testid="share-invite-link">
+              <Share2 size={16} strokeWidth={2.6} /> {t("shareLink")}
+            </button>
+            {isOwner && (
+              <button type="button" onClick={() => setRotating(true)} className="btn h-10 bg-brand/15 px-3.5 text-sm text-brand-ink" data-testid="rotate-invite">
+                <RefreshCw size={16} strokeWidth={2.6} /> {t("rotateCode")}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <SectionTitle hue="indigo" count={requests.length > 0 ? requests.length : undefined}>
@@ -306,6 +363,18 @@ export default function SettingsPage() {
         </div>
       </Modal>
 
+      <Modal open={rotating} onClose={() => setRotating(false)} title={t("rotateTitle")}>
+        <p className="mb-5 text-muted">{t("rotateBody")}</p>
+        <div className="flex gap-3">
+          <button type="button" onClick={() => setRotating(false)} className="btn-ghost flex-1">
+            {tc("cancel")}
+          </button>
+          <button type="button" onClick={rotate} disabled={rotateBusy} className="btn-primary flex-1" data-testid="rotate-confirm">
+            {t("rotateConfirm")}
+          </button>
+        </div>
+      </Modal>
+
       <Modal open={leaving} onClose={() => setLeaving(false)} title={t("leaveTitle")}>
         <p className="mb-5 text-muted">
           {t.rich("leaveBody", {
@@ -356,16 +425,20 @@ function BubbleDetails({ canEdit }: { canEdit: boolean }) {
 
   if (!canEdit) {
     return (
-      <div className="card p-4">
-        <p className="text-lg font-semibold">{bubble.name}</p>
-        <p className="text-muted">{bubble.description || t("noDescription")}</p>
-        <p className="mt-2 text-xs text-muted">{t("ownerOnly")}</p>
+      <div className="card flex items-start gap-4 p-4">
+        <BubblePhoto bubble={bubble} size={64} />
+        <div className="min-w-0 flex-1">
+          <p className="text-lg font-semibold">{bubble.name}</p>
+          <p className="text-muted">{bubble.description || t("noDescription")}</p>
+          <p className="mt-2 text-xs text-muted">{t("ownerOnly")}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <form onSubmit={save} className="card space-y-3 p-4">
+      <BubblePhotoEditor />
       <div>
         <label className="label" htmlFor="bubble-name-edit">
           {t("name")}
@@ -384,5 +457,73 @@ function BubbleDetails({ canEdit }: { canEdit: boolean }) {
         {saved ? tc("saved") : busy ? tc("saving") : tc("save")}
       </button>
     </form>
+  );
+}
+
+/**
+ * Owner-only photo controls (docs/boolaa-spec.md, "Bubble photo"): upload or replace through the shared
+ * image pipeline into `bubble.images/<bubble id>/`, point bubbles.logo at it, then delete the previous
+ * file (best effort; the hourly sweep removes anything missed). Members get the change live.
+ */
+function BubblePhotoEditor() {
+  const { supabase, refreshBubbles } = useBoolaa();
+  const bubble = useBubble();
+  const t = useTranslations("settings");
+  const errorText = useErrorText();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function setLogo(file: File | null) {
+    setBusy(true);
+    setError(null);
+    const previous = bubble.logo;
+    let uploaded: string | null = null;
+    try {
+      if (file) uploaded = await uploadImage(supabase, "bubble.images", bubble.id, file);
+      const { error } = await supabase.from("bubbles").update({ logo: uploaded }).eq("id", bubble.id);
+      if (error) throw error;
+      await removeImage(supabase, "bubble.images", previous).catch(() => undefined);
+      await refreshBubbles();
+    } catch (e) {
+      if (uploaded) await removeImage(supabase, "bubble.images", uploaded).catch(() => undefined);
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-4" data-testid="bubble-photo-editor">
+      <BubblePhoto bubble={bubble} size={72} className={busy ? "animate-pulse" : undefined} />
+      <div className="min-w-0 flex-1 space-y-2">
+        <span className="label mb-0">{t("bubblePhoto")}</span>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="chip bg-brand/15 text-brand-ink" disabled={busy} onClick={() => inputRef.current?.click()}>
+            <ImagePlus size={15} /> {bubble.logo ? t("changeBubblePhoto") : t("addBubblePhoto")}
+          </button>
+          {bubble.logo && (
+            <button type="button" className="chip bg-field text-muted hover:text-fg" disabled={busy} onClick={() => setLogo(null)} data-testid="bubble-photo-remove">
+              <Trash2 size={15} /> {t("removeBubblePhoto")}
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-muted">{t("bubblePhotoHint")}</p>
+        <ErrorText>{error}</ErrorText>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        aria-label={t("bubblePhoto")}
+        className="sr-only"
+        data-testid="bubble-photo-input"
+        onChange={(e) => {
+          const f = e.target.files?.[0] ?? null;
+          e.target.value = "";
+          if (f) void setLogo(f);
+        }}
+      />
+    </div>
   );
 }

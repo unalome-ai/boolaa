@@ -18,6 +18,9 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 enum class UserFacingError(@param:StringRes val message: Int) {
     INVALID_INVITE_CODE(R.string.error_invalid_invite_code),
+    // Invite links (20261123140000_invite_links.sql): too many unknown codes in an hour; rotation is owner-only.
+    TOO_MANY_INVITE_ATTEMPTS(R.string.error_too_many_invite_attempts),
+    ONLY_OWNER_CAN_ROTATE(R.string.error_only_owner_can_rotate),
     ALREADY_MEMBER(R.string.error_already_member),
     BUBBLE_FULL(R.string.error_bubble_full),
     NOT_MEMBER(R.string.error_not_member),
@@ -28,6 +31,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     MEMBER_NOT_FOUND(R.string.error_member_not_found),
     CANNOT_REPORT_SELF(R.string.error_cannot_report_self),
     REPORT_TARGET_NOT_FOUND(R.string.error_report_target_not_found),
+    // Chat (20261123120000_chat_improvements.sql): delete_chat_message / mark_chat_read on a message that is gone.
+    CHAT_MESSAGE_GONE(R.string.error_chat_message_gone),
     NOT_AUTHENTICATED(R.string.error_not_authenticated),
     PERMISSION_DENIED(R.string.error_permission_denied),
     INVALID_CREDENTIALS(R.string.error_invalid_credentials),
@@ -127,6 +132,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
             val text = message.lowercase()
             val table = listOf(
                 "invalid invite code" to INVALID_INVITE_CODE,
+                "too many attempts" to TOO_MANY_INVITE_ATTEMPTS,
+                "only the owner can change the invite code" to ONLY_OWNER_CAN_ROTATE,
                 "already a member" to ALREADY_MEMBER,
                 "bubble is full" to BUBBLE_FULL,
                 "not a member of this bubble" to NOT_MEMBER,
@@ -137,6 +144,7 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 "member not found" to MEMBER_NOT_FOUND,
                 "cannot report yourself" to CANNOT_REPORT_SELF,
                 "report target not found" to REPORT_TARGET_NOT_FOUND,
+                "message not found" to CHAT_MESSAGE_GONE,
                 "session not verified" to SESSION_NOT_VERIFIED,
                 "age confirmation required" to AGE_CONFIRMATION_REQUIRED,
                 "reauthentication required" to REAUTHENTICATION_REQUIRED,

@@ -77,11 +77,16 @@ struct PendingRequestsList: View {
         VStack(spacing: 12) {
             ForEach(session.pendingRequests) { request in
                 HStack(spacing: 14) {
-                    ZStack {
-                        BubbleOrb(hue: Hue.forID(request.bubbleId))
-                        Image(systemName: "hourglass").font(.system(size: 19, weight: .bold))
+                    ZStack(alignment: .bottomTrailing) {
+                        BubbleLogo(id: request.bubbleId, name: request.bubble?.name ?? "", logo: request.bubble?.logo, size: 50)
+                        Image(systemName: "hourglass").font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Hue.forID(request.bubbleId).onFill)
                             .symbolEffect(.pulse, options: .repeat(3))
+                            .frame(width: 22, height: 22)
+                            .background(Circle().fill(Hue.forID(request.bubbleId).gradient))
+                            .overlay(Circle().strokeBorder(Theme.card, lineWidth: 2))
+                            .offset(x: 4, y: 4)
+                            .accessibilityHidden(true)
                     }
                     .frame(width: 50, height: 50)
                     VStack(alignment: .leading, spacing: 4) {

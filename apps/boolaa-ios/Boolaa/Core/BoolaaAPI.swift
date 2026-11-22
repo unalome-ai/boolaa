@@ -70,10 +70,24 @@ struct BoolaaAPI: Sendable {
             .single().execute().value
     }
 
+    /// Invite link preview (name, cover, size, the caller's status); nil when the code matches no bubble.
+    /// Raises "too many attempts" after too many unknown codes in an hour.
+    func invitePreview(code: String) async throws -> InvitePreview? {
+        struct Params: Encodable { let p_code: String }
+        let rows: [InvitePreview] = try await client.rpc("get_invite_preview", params: Params(p_code: code)).execute().value
+        return rows.first
+    }
+
+    /// Owner only: replaces the invite code (old code, links and QR codes stop working). Returns the new code.
+    func rotateInviteCode(bubbleID: UUID) async throws -> String {
+        struct Params: Encodable { let p_bubble_id: UUID }
+        return try await client.rpc("rotate_invite_code", params: Params(p_bubble_id: bubbleID)).execute().value
+    }
+
     /// The caller's own pending requests, with the bubble name.
     func myJoinRequests(userID: UUID) async throws -> [JoinRequest] {
         try await client.from("join_requests")
-            .select("*, bubble:bubbles(id, name)")
+            .select("*, bubble:bubbles(id, name, logo)")
             .eq("user_id", value: userID)
             .order("created_at")
             .execute().value
@@ -103,24 +117,99 @@ struct BoolaaAPI: Sendable {
         try await client.from("join_requests").delete().eq("id", value: id).execute()
     }
 
-    // MARK: Chat
+    // MARK: Chat (docs/boolaa-spec.md, "Chat"; 20261123120000_chat_improvements.sql)
 
-    func chatMessages(bubbleID: UUID, limit: Int = 200) async throws -> [ChatMessage] {
-        // Newest N, then flipped to chronological order.
-        let rows: [ChatMessage] = try await client.from("chat_messages")
-            .select("*, sender:users!sender_id(\(Self.authorColumns))")
+    static let chatColumns = "*, sender:users!sender_id(\(authorColumns))"
+    static let chatPageSize = 50
+
+    /// The newest `limit` messages, in chronological order (Home, debug hooks). `includeDeleted: false`
+    /// skips author-deleted placeholders.
+    func chatMessages(bubbleID: UUID, limit: Int = 200, includeDeleted: Bool = true) async throws -> [ChatMessage] {
+        var q = client.from("chat_messages")
+            .select(Self.chatColumns)
             .eq("bubble_id", value: bubbleID)
+        if !includeDeleted { q = q.is("deleted_at", value: nil) }
+        let rows: [ChatMessage] = try await q
             .order("created_at", ascending: false)
+            .order("id", ascending: false)
             .limit(limit)
             .execute().value
         return rows.reversed()
     }
 
-    func sendMessage(bubbleID: UUID, senderID: UUID, content: String) async throws -> ChatMessage {
+    /// One page of the chat (`chat_messages_page`), returned in chronological order: the newest
+    /// `limit` messages, or the ones just before `beforeID` (the oldest message loaded). The server
+    /// keys pages on (created_at, id), so no timestamp is ever sent. Fewer than `limit` rows means
+    /// the start of the chat.
+    func chatPage(bubbleID: UUID, beforeID: UUID?, limit: Int = chatPageSize) async throws -> [ChatMessage] {
+        struct Params: Encodable { let p_bubble_id: UUID; let p_before_id: UUID?; let p_limit: Int }
+        let rows: [ChatMessage] = try await client
+            .rpc("chat_messages_page", params: Params(p_bubble_id: bubbleID, p_before_id: beforeID, p_limit: limit))
+            .select(Self.chatColumns)
+            .execute().value
+        return rows.reversed()
+    }
+
+    /// Text, photo (`imagePath` already uploaded to `chat.images`) or both: `content` may be empty with a photo.
+    func sendMessage(bubbleID: UUID, senderID: UUID, content: String, imagePath: String? = nil) async throws -> ChatMessage {
         try await client.from("chat_messages")
-            .insert(NewChatMessage(bubbleId: bubbleID, senderId: senderID, content: content))
-            .select("*, sender:users!sender_id(\(Self.authorColumns))")
+            .insert(NewChatMessage(bubbleId: bubbleID, senderId: senderID, content: content, imagePath: imagePath))
+            .select(Self.chatColumns)
             .single().execute().value
+    }
+
+    /// Soft-deletes one of the caller's own messages. Returns the photo path the caller must now
+    /// remove from `chat.images` (nil without a photo, or when it is kept as report evidence).
+    /// Raises "message not found" (not yours, or gone).
+    func deleteChatMessage(id: UUID) async throws -> String? {
+        struct Params: Encodable { let p_message_id: UUID }
+        struct Result: Decodable { let id: UUID; let image_path: String? }
+        let result: Result = try await client.rpc("delete_chat_message", params: Params(p_message_id: id)).execute().value
+        return result.image_path
+    }
+
+    /// One row per approved bubble: unread count (capped at 100) and the last-read marker.
+    func chatUnreadCounts() async throws -> [ChatUnread] {
+        try await client.rpc("chat_unread_counts").execute().value
+    }
+
+    /// Moves the caller's marker up to `messageID` (never back). Returns the marker.
+    @discardableResult
+    func markChatRead(bubbleID: UUID, messageID: UUID) async throws -> Date? {
+        struct Params: Encodable { let p_bubble_id: UUID; let p_message_id: UUID }
+        let raw: String = try await client.rpc("mark_chat_read", params: Params(p_bubble_id: bubbleID, p_message_id: messageID))
+            .execute().value
+        return BoolaaJSON.parseTimestamp(raw)
+    }
+
+    // MARK: Chat photos (private bucket `chat.images`)
+
+    /// `<uid>/<uuid>.jpg`, the path shape the insert and storage policies require.
+    static func chatImagePath(userID: UUID, fileID: UUID = UUID()) -> String {
+        "\(userID.uuidString.lowercased())/\(fileID.uuidString.lowercased()).jpg"
+    }
+
+    /// Uploads a prepared JPEG (ImageCompression for `.chat`) and returns its object path.
+    func uploadChatImage(_ jpeg: Data, userID: UUID) async throws -> String {
+        let path = Self.chatImagePath(userID: userID)
+        try await client.storage.from(ImageBucket.chat.rawValue)
+            .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
+        return path
+    }
+
+    /// Best-effort removal of one of the caller's chat photos (only their own `<uid>/` folder).
+    func removeChatImage(path: String?, userID: UUID) async {
+        guard let path, path.hasPrefix(userID.uuidString.lowercased() + "/") else { return }
+        _ = try? await client.storage.from(ImageBucket.chat.rawValue).remove(paths: [path])
+    }
+
+    /// Signed URLs (1 hour) for chat photos, in one request. Paths the caller may not read are left out.
+    func signedChatImageURLs(paths: [String], expiresIn: Int = 3600) async throws -> [String: URL] {
+        guard !paths.isEmpty else { return [:] }
+        let results = try await client.storage.from(ImageBucket.chat.rawValue).createSignedURLs(paths: paths, expiresIn: expiresIn)
+        var out: [String: URL] = [:]
+        for result in results { if let url = result.signedURL { out[result.path] = url } }
+        return out
     }
 
     // MARK: Events
@@ -227,7 +316,13 @@ struct BoolaaAPI: Sendable {
 
     // MARK: Storage
 
-    enum ImageBucket: String { case avatars, food = "food.images", market = "market.images" }
+    enum ImageBucket: String {
+        case avatars, food = "food.images", market = "market.images", bubbles = "bubble.images"
+        /// Private: shown through signed URLs, never public URLs.
+        case chat = "chat.images"
+        /// Round images (avatars, bubble photos): 512 px and 2 MB.
+        var isSmall: Bool { self == .avatars || self == .bubbles }
+    }
 
     /// Uploads JPEG data to `<uid>/<uuid>.jpg` (the path shape the storage policy enforces) and returns the public URL.
     func uploadImage(_ jpeg: Data, bucket: ImageBucket, userID: UUID) async throws -> String {
@@ -252,5 +347,49 @@ struct BoolaaAPI: Sendable {
         guard let publicURL, let path = Self.storagePath(fromPublicURL: publicURL, bucket: bucket),
               path.hasPrefix(userID.uuidString.lowercased() + "/") else { return }
         _ = try? await client.storage.from(bucket.rawValue).remove(paths: [path])
+    }
+
+    // MARK: Bubble photo (bucket `bubble.images`, 20261123130000_bubble_cover.sql)
+
+    /// `<bubble id>/<uuid>.jpg`: the photo belongs to the bubble, so whoever manages it later can replace it.
+    static func bubbleLogoPath(bubbleID: UUID, fileID: UUID = UUID()) -> String {
+        "\(bubbleID.uuidString.lowercased())/\(fileID.uuidString.lowercased()).jpg"
+    }
+
+    /// Uploads a prepared JPEG into the bubble's folder and returns its public URL. Storage lets only
+    /// whoever can manage the bubble (today: its owner) write there.
+    func uploadBubbleLogo(_ jpeg: Data, bubbleID: UUID) async throws -> String {
+        let path = Self.bubbleLogoPath(bubbleID: bubbleID)
+        let storage = client.storage.from(ImageBucket.bubbles.rawValue)
+        try await storage.upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
+        return try storage.getPublicURL(path: path).absoluteString
+    }
+
+    /// Sets or clears `bubbles.logo`. The database only accepts a URL of an object in this bubble's folder
+    /// ("invalid bubble logo" otherwise, shown as the generic error).
+    func setBubbleLogo(bubbleID: UUID, logo: String?) async throws {
+        struct Patch: Encodable {
+            let logo: String?
+            // Encode an explicit null so removing the photo clears the column.
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(logo, forKey: .logo)
+            }
+            enum CodingKeys: String, CodingKey { case logo }
+        }
+        try await client.from("bubbles").update(Patch(logo: logo)).eq("id", value: bubbleID).execute()
+    }
+
+    /// The object path of a bubble photo URL, only when it sits in that bubble's own folder.
+    static func bubbleLogoPath(fromPublicURL url: String?, bubbleID: UUID) -> String? {
+        guard let url, let path = storagePath(fromPublicURL: url, bucket: .bubbles),
+              path.hasPrefix(bubbleID.uuidString.lowercased() + "/") else { return nil }
+        return path
+    }
+
+    /// Best-effort delete of a bubble photo. Whatever is missed is swept server-side (sweep_bubble_images).
+    func removeBubbleLogo(publicURL: String?, bubbleID: UUID) async {
+        guard let path = Self.bubbleLogoPath(fromPublicURL: publicURL, bubbleID: bubbleID) else { return }
+        _ = try? await client.storage.from(ImageBucket.bubbles.rawValue).remove(paths: [path])
     }
 }

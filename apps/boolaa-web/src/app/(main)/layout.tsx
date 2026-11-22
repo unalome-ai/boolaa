@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { BoolaaProvider } from "@/components/boolaa-provider";
+import { ChatUnreadProvider } from "@/components/chat-unread";
 import { PageLoader } from "@/components/ui";
 
 // Data is loaded client-side with the browser Supabase client (RLS-scoped, realtime-capable);
@@ -13,7 +14,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       }
     >
-      <AppShell>{children}</AppShell>
+      <ChatUnreadProvider>
+        <AppShell>{children}</AppShell>
+      </ChatUnreadProvider>
     </BoolaaProvider>
   );
 }

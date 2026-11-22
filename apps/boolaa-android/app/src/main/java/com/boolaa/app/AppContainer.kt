@@ -3,8 +3,10 @@ package com.boolaa.app
 import android.content.Context
 import com.boolaa.app.core.Backend
 import com.boolaa.app.core.BoolaaApi
+import com.boolaa.app.core.ChatImageUrls
 import com.boolaa.app.core.DeviceIdentity
 import com.boolaa.app.state.SessionStore
+import com.boolaa.app.state.UnreadStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,4 +23,8 @@ class AppContainer(context: Context) {
         scope = appScope,
         device = device,
     )
+    /** Unread chat badges (chat_unread_counts) for the bubble chips and the chat button. */
+    val unread = UnreadStore(api, session, appScope)
+    /** Signed `chat.images` URLs, cached per path for their hour. */
+    val chatImages = ChatImageUrls(api)
 }

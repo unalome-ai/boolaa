@@ -58,7 +58,7 @@ final class HomeModel {
 
     func load(api: BoolaaAPI, bubbleID: UUID) async {
         do {
-            async let m = api.chatMessages(bubbleID: bubbleID, limit: 5)
+            async let m = api.chatMessages(bubbleID: bubbleID, limit: 5, includeDeleted: false)
             async let f = api.foodPosts(bubbleID: bubbleID, limit: 5)
             async let i = api.marketItems(bubbleID: bubbleID, limit: 5)
             async let e = api.upcomingEvents(bubbleID: bubbleID, limit: 5)
@@ -231,12 +231,17 @@ struct FeedCard: View {
 
     private var title: String {
         switch item {
-        case .message(let m): m.content
+        case .message(let m): Self.messageTitle(m)
         case .food(let f): f.description?.nilIfEmpty ?? String(localized: "New food post")
         case .market(let i): i.title
         case .event(let e): e.title
         case .link(let l): l.title?.nilIfEmpty ?? l.url
         }
+    }
+
+    /// A photo without a caption shows the "Photo" label.
+    static func messageTitle(_ m: ChatMessage) -> String {
+        m.content.nilIfEmpty ?? (m.imagePath != nil ? String(localized: "Photo", comment: "Home card / chat preview for a photo message without a caption") : "")
     }
 
     private var subtitle: String? {

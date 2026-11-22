@@ -298,4 +298,51 @@
     <string name="suspended_reason">Motif : %1$s</string>
     <string name="suspended_appeal">Tu penses que c\'est une erreur ? Écris-nous à %1$s et explique-nous pourquoi.</string>
     <string name="suspended_back_to_sign_in">Retour à la connexion</string>
+    <!-- Invite links (docs/boolaa-spec.md, "Invite links"; strings shared with web and iOS) -->
+    <string name="invite_title">Tu as une invitation</string>
+    <string name="invite_approval_note">Les membres votent sur ta demande. Tu entres dès que la majorité dit oui.</string>
+    <string name="invite_pending">Tu as déjà demandé à la rejoindre. On attend l\'accord des membres.</string>
+    <string name="invite_member">Tu es déjà dans cette bulle.</string>
+    <string name="invite_open_bubble">Ouvrir la bulle</string>
+    <string name="invite_invalid_title">Cette invitation n\'est pas valide</string>
+    <string name="invite_invalid_body">Le lien est peut-être ancien ou le code a changé. Demandes-en un nouveau à un membre.</string>
+    <string name="invite_request_sent">Demande envoyée</string>
+    <string name="invite_link">Lien d\'invitation</string>
+    <string name="copy_invite_link">Copier le lien</string>
+    <string name="share_invite_link">Partager le lien</string>
+    <string name="invite_qr_code">Code QR</string>
+    <string name="invite_qr_hint">Fais scanner ce code à un ami pour qu\'il demande à rejoindre %1$s.</string>
+    <string name="invite_link_share_text">Rejoins ma bulle « %1$s » sur Boolaa : %2$s</string>
+    <string name="rotate_invite_code">Nouveau code</string>
+    <string name="rotate_invite_title">Changer le code d\'invitation ?</string>
+    <string name="rotate_invite_body">L\'ancien code, le lien et le code QR ne marchent plus tout de suite. Les demandes déjà envoyées restent.</string>
+    <string name="rotate_invite_confirm">Changer le code</string>
+    <string name="invite_rotated">Nouveau code d\'invitation prêt</string>
+    <string name="error_too_many_invite_attempts">Trop d\'essais avec des codes invalides. Réessaie dans une heure.</string>
+    <string name="error_only_owner_can_rotate">Seul le propriétaire peut changer le code d\'invitation.</string>
+    <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
+    <string name="bubble_photo">Photo de la bulle</string>
+    <string name="add_bubble_photo">Ajouter une photo</string>
+    <string name="change_bubble_photo">Changer la photo</string>
+    <string name="remove_bubble_photo">Retirer la photo</string>
+    <string name="bubble_photo_hint">Tout le monde dans la bulle la voit. Les photos carrées rendent mieux.</string>
+    <string name="bubble_photo_of">Photo de la bulle %1$s</string>
+    <!-- Chat (20261123120000_chat_improvements.sql, glossary "Chat") -->
+    <string name="chat_deleted">Ce message a été supprimé</string>
+    <string name="chat_delete_message">Supprimer le message</string>
+    <string name="chat_delete_confirm_title">Supprimer ce message ?</string>
+    <string name="chat_delete_confirm_body">Il disparaît pour tout le monde dans la bulle.</string>
+    <string name="chat_delete_confirm">Supprimer</string>
+    <string name="chat_new_messages">Nouveaux messages</string>
+    <string name="chat_loading_older">Chargement des anciens messages…</string>
+    <string name="chat_start">C\'est le début de la discussion</string>
+    <string name="chat_add_photo">Ajouter une photo</string>
+    <string name="chat_remove_photo">Retirer la photo</string>
+    <string name="chat_photo">Photo</string>
+    <plurals name="chat_unread">
+        <item quantity="one">%d message non lu</item>
+        <item quantity="many">%d messages non lus</item>
+        <item quantity="other">%d messages non lus</item>
+    </plurals>
+    <string name="error_chat_message_gone">Ce message n\'existe plus.</string>
 </resources>

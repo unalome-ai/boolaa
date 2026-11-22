@@ -70,6 +70,21 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_recovery_grants: {
+        Row: {
+          granted_at: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_id: string
@@ -219,26 +234,61 @@ export type Database = {
           },
         ]
       }
+      chat_message_evidence: {
+        Row: {
+          content: string
+          deleted_at: string
+          image_path: string | null
+          message_id: string
+        }
+        Insert: {
+          content: string
+          deleted_at?: string
+          image_path?: string | null
+          message_id: string
+        }
+        Update: {
+          content?: string
+          deleted_at?: string
+          image_path?: string | null
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_evidence_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           bubble_id: string
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
+          image_path: string | null
           sender_id: string
         }
         Insert: {
           bubble_id: string
           content: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          image_path?: string | null
           sender_id: string
         }
         Update: {
           bubble_id?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          image_path?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -252,6 +302,45 @@ export type Database = {
           {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_reads: {
+        Row: {
+          bubble_id: string
+          last_read_at: string
+          last_read_message_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bubble_id: string
+          last_read_at: string
+          last_read_message_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bubble_id?: string
+          last_read_at?: string
+          last_read_message_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reads_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_reads_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -383,6 +472,29 @@ export type Database = {
           },
           {
             foreignKeyName: "food_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invite_lookup_failures: {
+        Row: {
+          at: string
+          user_id: string
+        }
+        Insert: {
+          at?: string
+          user_id: string
+        }
+        Update: {
+          at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_lookup_failures_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1005,7 +1117,41 @@ export type Database = {
         }
         Returns: Json
       }
+      bubble_image_orphans: {
+        Args: { p_grace?: string; p_limit?: number }
+        Returns: string[]
+      }
       bubble_member_ids: { Args: { p_bubble_id: string }; Returns: string[] }
+      can_manage_bubble: { Args: { p_bubble_id: string }; Returns: boolean }
+      can_manage_bubble_object: { Args: { p_name: string }; Returns: boolean }
+      can_read_chat_image: { Args: { p_path: string }; Returns: boolean }
+      chat_image_uploaded: { Args: { p_path: string }; Returns: boolean }
+      chat_messages_page: {
+        Args: { p_before_id?: string; p_bubble_id: string; p_limit?: number }
+        Returns: {
+          bubble_id: string
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          image_path: string | null
+          sender_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "chat_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      chat_unread_counts: {
+        Args: never
+        Returns: {
+          bubble_id: string
+          last_read_at: string
+          unread_count: number
+        }[]
+      }
       claim_push_batch: { Args: { p_limit?: number }; Returns: Json }
       claim_report_alert: { Args: { p_report_id: string }; Returns: Json }
       complete_email_challenge: {
@@ -1037,10 +1183,28 @@ export type Database = {
         }
       }
       current_session_id: { Args: never; Returns: string }
+      delete_chat_message: { Args: { p_message_id: string }; Returns: Json }
       delete_my_account: { Args: never; Returns: undefined }
       device_hash_of: { Args: { p_device_id: string }; Returns: string }
       enqueue_event_reminders: { Args: never; Returns: number }
+      generate_invite_code: { Args: never; Returns: string }
+      get_invite_preview: {
+        Args: { p_code: string }
+        Returns: {
+          bubble_id: string
+          logo: string
+          max_size: number
+          member_count: number
+          name: string
+          status: string
+        }[]
+      }
+      has_fresh_sensitive_proof: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       hook_before_user_created: { Args: { event: Json }; Returns: Json }
+      invite_lookup_limit: { Args: never; Returns: number }
       is_account_active: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_age_confirmed: { Args: never; Returns: boolean }
@@ -1052,6 +1216,7 @@ export type Database = {
         Args: { p_bucket: string; p_name: string }
         Returns: boolean
       }
+      is_reported_chat_photo: { Args: { p_name: string }; Returns: boolean }
       is_session_verified: { Args: never; Returns: boolean }
       issue_email_challenge: {
         Args: {
@@ -1072,10 +1237,15 @@ export type Database = {
           last_seen_at: string
         }[]
       }
+      mark_chat_read: {
+        Args: { p_bubble_id: string; p_message_id: string }
+        Returns: string
+      }
       mark_session_verified: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: undefined
       }
+      normalize_invite_code: { Args: { p_code: string }; Returns: string }
       prune_push_outbox: { Args: never; Returns: undefined }
       push_enqueue: {
         Args: {
@@ -1157,8 +1327,10 @@ export type Database = {
         }
       }
       require_admin: { Args: never; Returns: undefined }
+      require_invite_lookup_allowed: { Args: never; Returns: undefined }
       require_verified_session: { Args: never; Returns: undefined }
       revoke_device: { Args: { p_device_hash: string }; Returns: boolean }
+      rotate_invite_code: { Args: { p_bubble_id: string }; Returns: string }
       set_account_status: {
         Args: {
           p_reason: string
@@ -1176,6 +1348,10 @@ export type Database = {
       storage_path_from_url: {
         Args: { p_bucket: string; p_url: string }
         Returns: string
+      }
+      sweep_bubble_images: {
+        Args: { p_grace?: string; p_key?: string; p_url?: string }
+        Returns: number
       }
       toggle_rsvp: { Args: { p_event_id: string }; Returns: string[] }
       trust_device: {

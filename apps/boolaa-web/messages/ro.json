@@ -23,7 +23,8 @@
     "choosePhoto": "Alege o fotografie",
     "selectedPhoto": "Fotografia aleasă",
     "avatarOf": "Avatar: {name}",
-    "language": "Limbă"
+    "language": "Limbă",
+    "bubblePhotoOf": "Fotografia bulei {name}"
   },
   "nav": {
     "home": "Acasă",
@@ -177,7 +178,19 @@
     "emptyHint": "Salută-ți bula!",
     "messageLabel": "Mesaj",
     "placeholder": "Mesaj către {bubble}",
-    "send": "Trimite"
+    "send": "Trimite",
+    "deleted": "Mesajul a fost șters",
+    "deleteMessage": "Șterge mesajul",
+    "deleteConfirmTitle": "Ștergi mesajul?",
+    "deleteConfirmBody": "Dispare pentru toți cei din bulă.",
+    "deleteConfirm": "Șterge",
+    "newMessages": "Mesaje noi",
+    "loadingOlder": "Se încarcă mesajele mai vechi…",
+    "chatStart": "Aici începe chatul",
+    "addPhoto": "Adaugă o fotografie",
+    "removePhoto": "Elimină fotografia",
+    "photo": "Fotografie",
+    "unread": "{count, plural, one {# mesaj necitit} few {# mesaje necitite} other {# de mesaje necitite}}"
   },
   "events": {
     "newEvent": "Eveniment nou",
@@ -273,7 +286,21 @@
     "removeMemberNamed": "Elimină membrul {name}",
     "removeTitle": "Elimini membrul?",
     "removeBody": "<strong>{name}</strong> nu va mai avea acces la {bubble}. Pentru a reveni va avea nevoie de codul de invitație și de aprobarea membrilor.",
-    "removed": "{name} nu mai face parte din bulă"
+    "removed": "{name} nu mai face parte din bulă",
+    "inviteLink": "Link de invitație",
+    "copyLink": "Copiază linkul",
+    "shareLink": "Trimite linkul",
+    "shareLinkText": "Intră în bula mea „{bubble}” pe Boolaa: {url}",
+    "rotateCode": "Cod nou",
+    "rotateTitle": "Schimbi codul de invitație?",
+    "rotateBody": "Codul, linkul și codul QR vechi nu mai funcționează imediat. Cererile deja trimise rămân.",
+    "rotateConfirm": "Schimbă codul",
+    "rotated": "Codul nou de invitație e gata",
+    "bubblePhoto": "Fotografia bulei",
+    "addBubblePhoto": "Adaugă o fotografie",
+    "changeBubblePhoto": "Schimbă fotografia",
+    "removeBubblePhoto": "Elimină fotografia",
+    "bubblePhotoHint": "O vede toată lumea din bulă. Fotografiile pătrate arată cel mai bine."
   },
   "home": {
     "chat": "Chat",
@@ -327,7 +354,10 @@
     "emailSendFailed": "Nu am putut trimite emailul. Încearcă din nou.",
     "emailRateLimited": "Tocmai ți-am trimis un email. Așteaptă un minut înainte să ceri altul.",
     "samePassword": "Parola nouă trebuie să fie diferită de cea veche.",
-    "oauthFailed": "Nu te-am putut conecta cu acel cont. Încearcă din nou."
+    "oauthFailed": "Nu te-am putut conecta cu acel cont. Încearcă din nou.",
+    "tooManyInviteAttempts": "Prea multe încercări cu coduri greșite. Încearcă din nou peste o oră.",
+    "onlyOwnerCanRotate": "Doar proprietarul poate schimba codul de invitație.",
+    "chatMessageGone": "Mesajul nu mai există."
   },
   "safety": {
     "moreActions": "Mai multe acțiuni",
@@ -470,5 +500,17 @@
     "backToSignIn": "Înapoi la autentificare",
     "activeAgain": "Contul tău este din nou activ.",
     "continue": "Continuă"
+  },
+  "invite": {
+    "title": "Ai o invitație",
+    "signedOutBody": "Cineva te-a invitat într-o bulă pe Boolaa. Autentifică-te sau creează un cont ca s-o vezi și să ceri să intri.",
+    "approvalNote": "Membrii votează cererea ta. Intri când majoritatea spun da.",
+    "pending": "Ai cerut deja să intri. Aștepți aprobarea membrilor.",
+    "member": "Ești deja în această bulă.",
+    "openBubble": "Deschide bula",
+    "invalidTitle": "Invitația nu e validă",
+    "invalidBody": "Linkul poate fi vechi sau codul a fost schimbat. Cere unui membru unul nou.",
+    "requestSent": "Cerere trimisă",
+    "getApp": "Descarcă aplicația"
   }
 }

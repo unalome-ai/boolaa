@@ -298,4 +298,50 @@
     <string name="suspended_appeal">Think this is a mistake? Write to %1$s and tell us why.</string>
     <string name="suspended_back_to_sign_in">Back to sign in</string>
     <string name="appeal_email" translatable="false">privacy@boolaa.ro</string>
+    <!-- Invite links (docs/boolaa-spec.md, "Invite links"; strings shared with web and iOS) -->
+    <string name="invite_title">You\'ve got an invite</string>
+    <string name="invite_approval_note">The members vote on your request. You\'re in once most of them say yes.</string>
+    <string name="invite_pending">You\'ve already asked to join. Waiting for the members to approve.</string>
+    <string name="invite_member">You\'re already in this bubble.</string>
+    <string name="invite_open_bubble">Open bubble</string>
+    <string name="invite_invalid_title">This invite isn\'t valid</string>
+    <string name="invite_invalid_body">The link may be old or the code was changed. Ask a member for a new one.</string>
+    <string name="invite_request_sent">Request sent</string>
+    <string name="invite_link">Invite link</string>
+    <string name="copy_invite_link">Copy link</string>
+    <string name="share_invite_link">Share link</string>
+    <string name="invite_qr_code">QR code</string>
+    <string name="invite_qr_hint">Let a friend scan this to ask to join %1$s.</string>
+    <string name="invite_link_share_text">Join my bubble “%1$s” on Boolaa: %2$s</string>
+    <string name="rotate_invite_code">New code</string>
+    <string name="rotate_invite_title">Change the invite code?</string>
+    <string name="rotate_invite_body">The old code, link and QR code stop working right away. Requests already sent stay.</string>
+    <string name="rotate_invite_confirm">Change code</string>
+    <string name="invite_rotated">New invite code ready</string>
+    <string name="error_too_many_invite_attempts">Too many tries with invalid codes. Try again in an hour.</string>
+    <string name="error_only_owner_can_rotate">Only the owner can change the invite code.</string>
+    <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
+    <string name="bubble_photo">Bubble photo</string>
+    <string name="add_bubble_photo">Add a photo</string>
+    <string name="change_bubble_photo">Change photo</string>
+    <string name="remove_bubble_photo">Remove photo</string>
+    <string name="bubble_photo_hint">Everyone in the bubble sees it. Square photos look best.</string>
+    <string name="bubble_photo_of">Photo of %1$s</string>
+    <!-- Chat (20261123120000_chat_improvements.sql, glossary "Chat") -->
+    <string name="chat_deleted">This message was deleted</string>
+    <string name="chat_delete_message">Delete message</string>
+    <string name="chat_delete_confirm_title">Delete this message?</string>
+    <string name="chat_delete_confirm_body">It disappears for everyone in the bubble.</string>
+    <string name="chat_delete_confirm">Delete</string>
+    <string name="chat_new_messages">New messages</string>
+    <string name="chat_loading_older">Loading older messages…</string>
+    <string name="chat_start">That\'s the start of the chat</string>
+    <string name="chat_add_photo">Add a photo</string>
+    <string name="chat_remove_photo">Remove photo</string>
+    <string name="chat_photo">Photo</string>
+    <plurals name="chat_unread">
+        <item quantity="one">%d unread message</item>
+        <item quantity="other">%d unread messages</item>
+    </plurals>
+    <string name="error_chat_message_gone">That message no longer exists.</string>
 </resources>

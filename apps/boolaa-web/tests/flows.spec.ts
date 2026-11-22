@@ -29,7 +29,7 @@ test("register, create bubble, request to join, approve, leave", async ({ browse
   await a.getByTestId("sidebar").getByTestId("nav-settings").click();
   await expect(a.getByTestId("settings")).toHaveAttribute("data-live", "true");
   const code = (await a.getByTestId("invite-code").textContent())!.trim();
-  expect(code).toMatch(/^[0-9A-F]{8}$/);
+  expect(code).toMatch(/^[2-9A-HJKMNP-Z]{10}$/); // generate_invite_code (20261123140000)
 
   // Profile sheet: rename.
   await a.getByTestId("profile-button").click();

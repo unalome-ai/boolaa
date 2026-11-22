@@ -232,13 +232,51 @@ struct PushedHeader<Subtitle: View>: View {
     }
 }
 
+/// A bubble's photo in a circle (filled and clipped, the upload isn't cropped), or, without one, the glossy
+/// orb in the bubble's own colour with its initials once there is room for them.
+struct BubbleLogo: View {
+    var id: UUID?
+    var name: String
+    var logo: String?
+    var size: CGFloat = 40
+
+    var body: some View {
+        let hue = Hue.forID(id)
+        ZStack {
+            BubbleOrb(hue: hue)
+            if size >= 28 { initials(hue) }
+            if let url = logo.flatMap(URL.init(string:)) {
+                AsyncImage(url: url, transaction: Transaction(animation: Motion.fade)) { phase in
+                    if let image = phase.image { image.resizable().scaledToFill().transition(.opacity) } else { Color.clear }
+                }
+                .clipShape(Circle())
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityElement()
+        .accessibilityLabel(Text("Photo of \(name)", comment: "Accessibility label of a bubble's photo; the argument is the bubble name"))
+        .accessibilityHidden(logo == nil)
+    }
+
+    private func initials(_ hue: Hue) -> some View {
+        Text(verbatim: AvatarView.initials(for: name))
+            .font(.system(size: size * 0.36, weight: .heavy, design: .rounded))
+            .foregroundStyle(hue.onFill)
+            .accessibilityHidden(true)
+    }
+}
+
+extension BubbleLogo {
+    init(bubble: Bubble, size: CGFloat = 40) { self.init(id: bubble.id, name: bubble.name, logo: bubble.logo, size: size) }
+}
+
 /// Small bubble dot plus the bubble's name, in the bubble's colour.
 struct BubbleNameTag: View {
     var bubble: Bubble?
     var body: some View {
         let hue = Hue.forID(bubble?.id)
         HStack(spacing: 5) {
-            BubbleOrb(hue: hue).frame(width: 12, height: 12)
+            BubbleLogo(id: bubble?.id, name: bubble?.name ?? "", logo: bubble?.logo, size: 14)
             Text(verbatim: bubble?.name ?? "").font(.rounded(.subheadline, weight: .semibold)).foregroundStyle(hue.text).lineLimit(1)
         }
     }

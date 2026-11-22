@@ -44,6 +44,8 @@ targets:
       path: Boolaa/Resources/Boolaa.entitlements
       properties:
         com.apple.developer.applesignin: [Default]
+        # Universal links for invite links https://boolaa.ro/join/<CODE> (AASA served by the web app).
+        com.apple.developer.associated-domains: ["applinks:boolaa.ro"]
     info:
       path: Boolaa/Resources/Info.plist
       properties:
@@ -63,6 +65,9 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: ro.boolaa.app.auth
             CFBundleURLSchemes: [ro.boolaa.app]
+          # Legacy invite-link fallback: boolaa://join/<CODE> (ro.boolaa.app://join/<CODE> works too).
+          - CFBundleURLName: ro.boolaa.app.invite
+            CFBundleURLSchemes: [boolaa]
           - CFBundleURLName: com.googleusercontent.apps.ios
             CFBundleURLSchemes: [com.googleusercontent.apps.816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7]
         GIDClientID: 816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7.apps.googleusercontent.com

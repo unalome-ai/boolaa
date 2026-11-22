@@ -9,6 +9,8 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { hardNavigate } from "@/lib/utils";
 import { OAuthButtons, OrDivider } from "@/components/oauth-buttons";
+import { safeNext } from "@/lib/auth-next";
+import { withNext } from "@/lib/invite";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -18,12 +20,16 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
+  // `?next=/join/CODE` (invite links): continue there after the device gate instead of /home.
+  const [next, setNext] = useState<string | null>(null);
 
-  // Back from /auth/callback after a failed or cancelled Google / Apple sign-in.
+  // Back from /auth/callback after a failed or cancelled Google / Apple sign-in, and `?next=`.
+  // One-off read of the URL on mount.
   useEffect(() => {
-    // One-off read of the URL on mount.
+    const params = new URLSearchParams(window.location.search);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (new URLSearchParams(window.location.search).get("error") === "oauth") setError(errorText("oauthFailed"));
+    if (params.get("error") === "oauth") setError(errorText("oauthFailed"));
+    if (params.get("next")) setNext(safeNext(params.get("next")));
   }, [errorText]);
 
   async function submit(e: FormEvent) {
@@ -41,12 +47,12 @@ export default function LoginPage() {
     }
     // Full navigation so the proxy sees the fresh auth cookies. The device gate runs
     // start_device_check (and the code / 16+ screens if needed), then routes to /home or /onboarding.
-    hardNavigate("/verify?next=%2Fhome");
+    hardNavigate(`/verify?next=${encodeURIComponent(next ?? "/home")}`);
   }
 
   return (
     <AuthCard title={t("loginTitle")} subtitle={t("loginSubtitle")}>
-      <OAuthButtons />
+      <OAuthButtons next={next} />
       <OrDivider />
       <form onSubmit={submit} className="space-y-4">
         <div>
@@ -90,7 +96,7 @@ export default function LoginPage() {
       </form>
       <p className="mt-5 text-center text-sm text-muted">
         {t("newHere")}{" "}
-        <Link href="/register" className="font-semibold text-brand-ink hover:underline">
+        <Link href={withNext("/register", next)} className="font-semibold text-brand-ink hover:underline">
           {t("createAccountLink")}
         </Link>
       </p>

@@ -98,7 +98,7 @@ struct ImageProcessingTests {
         #expect(try JPEGSegments(try exifFixture()).exif)
     }
 
-    @Test(arguments: [(BoolaaAPI.ImageBucket.food, 1067, 1600), (.market, 1067, 1600), (.avatars, 341, 512)])
+    @Test(arguments: [(BoolaaAPI.ImageBucket.food, 1067, 1600), (.market, 1067, 1600), (.avatars, 341, 512), (.bubbles, 341, 512)])
     func photosAreUprightDownsizedAndStripped(bucket: BoolaaAPI.ImageBucket, width: Int, height: Int) throws {
         try expectClean(try ImageCompression.jpeg(from: try exifFixture(), for: bucket), width: width, height: height)
     }

@@ -32,8 +32,10 @@ object ImageCompression {
     /** Picked files above this are refused before decoding; a phone photo is well below it. */
     const val MAX_INPUT_BYTES = 50 * 1024 * 1024
 
-    fun maxSide(bucket: ImageBucket) = if (bucket == ImageBucket.AVATARS) 512 else 1600
-    fun maxBytes(bucket: ImageBucket) = (if (bucket == ImageBucket.AVATARS) 2 else 5) * 1024 * 1024
+    /** Avatars and bubble logos: 512 px / 2 MB; feed photos: 1600 px / 5 MB. */
+    private fun isSmall(bucket: ImageBucket) = bucket == ImageBucket.AVATARS || bucket == ImageBucket.BUBBLE
+    fun maxSide(bucket: ImageBucket) = if (isSmall(bucket)) 512 else 1600
+    fun maxBytes(bucket: ImageBucket) = (if (isSmall(bucket)) 2 else 5) * 1024 * 1024
 
     /** Size of an upright [width] x [height] image with its long edge capped at [maxSide] (never upscaled). */
     fun targetSize(width: Int, height: Int, maxSide: Int): Pair<Int, Int> {

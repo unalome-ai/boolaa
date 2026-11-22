@@ -10,8 +10,9 @@ enum LiveChanges {
     struct Watch: Sendable {
         var table: String
         /// INSERT/UPDATE filter `column=eq.value` (RealtimePostgresFilter itself isn't Sendable).
-        var column: String
-        var equals: UUID
+        /// Without a column the watch is unfiltered and RLS alone decides which rows arrive.
+        var column: String?
+        var equals: UUID?
         var deleteMatches: @Sendable ([String: AnyJSON]) async -> Bool
     }
 
@@ -26,7 +27,8 @@ enum LiveChanges {
         let channel = client.realtimeV2.channel(topic)
         var streams: [(AsyncStream<InsertAction>, AsyncStream<UpdateAction>, AsyncStream<DeleteAction>, Watch)] = []
         for watch in watches {
-            let filter = RealtimePostgresFilter.eq(watch.column, value: watch.equals)
+            var filter: RealtimePostgresFilter?
+            if let column = watch.column, let equals = watch.equals { filter = .eq(column, value: equals) }
             streams.append((
                 channel.postgresChange(InsertAction.self, schema: "public", table: watch.table, filter: filter),
                 channel.postgresChange(UpdateAction.self, schema: "public", table: watch.table, filter: filter),

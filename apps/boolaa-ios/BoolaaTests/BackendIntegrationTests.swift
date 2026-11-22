@@ -71,14 +71,17 @@ struct BackendIntegrationTests {
     @Test(.timeLimit(.minutes(1)))
     func realtimeDeliversInsert() async throws {
         let me = try await signInAlice()
+        // A throwaway bubble: chat messages can't be hard-deleted any more, and leaving the
+        // bubble deletes it with its messages.
+        let bubble = try await api.createBubble(name: "zz realtime \(UUID().uuidString.prefix(6))", description: nil, maxSize: 2)
         let channel = client.realtimeV2.channel("test-chat-\(UUID().uuidString.lowercased())")
         let inserts = channel.postgresChange(InsertAction.self, schema: "public", table: "chat_messages",
-                                             filter: .eq("bubble_id", value: Seed.climbing))
+                                             filter: .eq("bubble_id", value: bubble.id))
         try await channel.subscribeWithError()
         try await Task.sleep(for: .milliseconds(500))
 
         let text = "integration test \(UUID().uuidString.prefix(8))"
-        let sent = try await api.sendMessage(bubbleID: Seed.climbing, senderID: me, content: text)
+        let sent = try await api.sendMessage(bubbleID: bubble.id, senderID: me, content: text)
 
         var received: ChatMessage?
         for await action in inserts {
@@ -87,9 +90,10 @@ struct BackendIntegrationTests {
         }
         #expect(received?.content == text)
         #expect(received?.senderId == me)
+        #expect(received?.imagePath == nil && received?.isDeleted == false)
 
         await client.realtimeV2.removeChannel(channel)
-        try await client.from("chat_messages").delete().eq("id", value: sent.id).execute()
+        try await api.leaveBubble(bubbleID: bubble.id, userID: me)
         try await client.auth.signOut()
     }
 }

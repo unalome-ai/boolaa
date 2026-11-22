@@ -11,6 +11,7 @@ type ErrorKey =
   | "notMember"
   | "requestNotFound"
   | "eventNotFound"
+  | "chatMessageGone"
   | "onlyOwnerCanRemove"
   | "cannotRemoveSelf"
   | "memberNotFound"
@@ -45,6 +46,8 @@ type ErrorKey =
   | "emailRateLimited"
   | "samePassword"
   | "oauthFailed"
+  | "tooManyInviteAttempts"
+  | "onlyOwnerCanRotate"
   | "generic";
 
 /** Messages that take an argument: `codeWrong` shows how many tries are left. */
@@ -108,11 +111,15 @@ export function errorKey(e: unknown): ErrorKey {
 
   // RPC exceptions raised by the migration (exact texts).
   if (msg.includes("invalid invite code")) return "invalidInviteCode";
+  // Invite links (20261123140000_invite_links.sql).
+  if (msg.includes("too many attempts")) return "tooManyInviteAttempts";
+  if (msg.includes("only the owner can change the invite code")) return "onlyOwnerCanRotate";
   if (msg.includes("already a member")) return "alreadyMember";
   if (msg.includes("bubble is full")) return "bubbleFull";
   if (msg.includes("not a member of this bubble")) return "notMember";
   if (msg.includes("request not found")) return "requestNotFound";
   if (msg.includes("event not found")) return "eventNotFound";
+  if (msg.includes("message not found")) return "chatMessageGone";
   if (msg.includes("only the owner can remove members")) return "onlyOwnerCanRemove";
   if (msg.includes("use leave to remove yourself")) return "cannotRemoveSelf";
   if (msg.includes("member not found")) return "memberNotFound";

@@ -63,7 +63,9 @@ struct BlockedUser: Codable, Identifiable, Hashable, Sendable {
 }
 
 extension BoolaaAPI {
-    static let userBuckets: [ImageBucket] = [.avatars, .food, .market]
+    /// Account deletion empties the caller's `<uid>/` folder in each of these (not `bubble.images`:
+    /// a bubble's photo stays with the bubble).
+    static let userBuckets: [ImageBucket] = [.avatars, .food, .market, .chat]
 
     /// Raises "cannot report yourself" / "report target not found". Returns the report id.
     func report(_ target: ReportTarget, reason: ReportReason, details: String?) async throws -> UUID {

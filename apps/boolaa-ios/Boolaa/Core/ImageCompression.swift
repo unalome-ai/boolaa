@@ -15,8 +15,10 @@ enum ImageCompression {
     /// Picked files above this are refused before decoding; a phone photo is well below it.
     static let maxInputBytes = 50 * 1024 * 1024
 
-    static func maxSide(for bucket: BoolaaAPI.ImageBucket) -> Int { bucket == .avatars ? 512 : 1600 }
-    static func maxBytes(for bucket: BoolaaAPI.ImageBucket) -> Int { (bucket == .avatars ? 2 : 5) * 1024 * 1024 }
+    /// Avatars and bubble photos are small round images: 512 px and 2 MB (bucket `bubble.images`,
+    /// 20261123130000_bubble_cover.sql). No crop: views fill and clip them to a circle.
+    static func maxSide(for bucket: BoolaaAPI.ImageBucket) -> Int { bucket.isSmall ? 512 : 1600 }
+    static func maxBytes(for bucket: BoolaaAPI.ImageBucket) -> Int { (bucket.isSmall ? 2 : 5) * 1024 * 1024 }
 
     /// Size of an upright `width` x `height` image with its long edge capped at `maxSide` (never upscaled).
     static func targetSize(width: Int, height: Int, maxSide: Int) -> (width: Int, height: Int) {

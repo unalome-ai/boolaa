@@ -24,6 +24,14 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - 🔄 **Rate limits and CAPTCHA** on sign-up: ✅ rate limits set (emails 100/h, 60 s per user). ⬜ Cloudflare Turnstile CAPTCHA.
 
 ### Infrastructure and release
+- ⬜ **Release checklist (`develop` → `main`; hold until all P1 and P2 are done and the go is given)**:
+  - `supabase db push --linked --include-all` (migrations `20261122220000` … latest; the wave-2 files were written out of timestamp order locally).
+  - Redeploy `device-code` and `push-dispatch` (photo-message push text); push go-live per `docs/push-notifications.md` §10 (FCM key `~/.boolaa-signing/boolaa-push.json`, APNs key, VAPID, Vault).
+  - Vault secrets `storage_sweep_url` and `storage_sweep_key` for the hourly bubble-photo sweep (`sweep_bubble_images`), then check one sweep run.
+  - Turn OFF *Secure password change* (approved 2026-11-22).
+  - Push `main` (deploys web), then check `https://boolaa.ro/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json` return 200 JSON with no redirect.
+  - Apple Developer portal: enable Associated Domains on App ID `ro.boolaa.app`; set `APP_STORE_URL` / `ANDROID_URL` in `apps/boolaa-web/src/lib/site.ts` once the listing and `/android` page exist.
+  - Turn on the `device_verification_enforced` / `age_confirmation_required` flags once the apps ship.
 - ✅ **Git repository** and **Remote** (`unalome-ai/boolaa`). ⬜ and **CI**: build, lint and test all 3 apps, and run migrations against a fresh database.
 - ✅ **Hosted Supabase project** (Zurich; `boolaa.ro`): run the migrations, set up the storage buckets, auth settings, backups (PITR) and the redirect URLs.
 - ⬜ **Separate staging and production environments.** Never run `seed.sql` in production.
@@ -48,10 +56,10 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ✅ **Native Android app**, at parity with iOS.
 - ✅ **Live membership** (pending screen, members list) and the remove-member UI.
 - 🔄 **Push notifications** (APNs, FCM, Web Push). ✅ Backend and tables live in production (2026-11-22). ✅ APNs key `XU9A469SX6` (team-scoped, sandbox + production; `~/.boolaa-signing/AuthKey_XU9A469SX6.p8`), accepted by Apple in both environments. ✅ Firebase project `boolaa-67a94` (Analytics off), app `ro.boolaa.app`; `google-services.json` in `~/.boolaa-signing/`, git-ignored. ✅ FCM service account `boola-push@boolaa-67a94` (Firebase Cloud Messaging API Admin), key `~/.boolaa-signing/boolaa-push.json`, accepted by FCM v1 (2026-11-22). ⬜ Secrets, VAPID keys, `push-dispatch` deploy, Vault (`docs/push-notifications.md` §10). ⬜ Client implementations. Original scope: for new chat messages, join requests (to members), approval (to the requester), event reminders and new events. Includes per-bubble mute and notification settings.
-- ⬜ **Invite links and universal/app links** (`https://boolaa.ro/join/CODE`) that open the app or the store. Optionally a QR code.
-- ⬜ **Chat**: load older messages, delete your own message, send photos, unread counts and a last-read marker.
+- ✅ **Invite links and universal/app links** (`https://boolaa.ro/join/CODE`): link = the bubble's invite code; owner-only rotation (`rotate_invite_code`), new codes 10 chars; signed-in preview via `get_invite_preview` (name, cover, member count; throttled, 20 unknown codes/hour); joining still needs the majority vote. Web `/join/[code]` (sign-in/register keep the code), `/.well-known` AASA + assetlinks (release cert SHA-256); iOS Associated Domains + share + QR; Android `autoVerify` filter + share + QR (zxing core); migration `20261123140000_invite_links.sql` (spec "Invite links"). **At release:** deploy the migration; deploy the web so `https://boolaa.ro/.well-known/*` serves JSON (check no redirect from www/http and that DO serves it with `application/json`); enable **Associated Domains** on App ID `ro.boolaa.app` in the Apple Developer portal; set `APP_STORE_URL` / `ANDROID_URL` in `src/lib/site.ts` once live; Android App Links verify only for release-signed APKs. No Supabase redirect-URL change needed (the flow reuses `/auth/callback`). Unverified until then: real universal-link / App Link hand-off on devices.
+- ✅ **Chat**: load older messages, delete your own message, send photos, unread counts and a last-read marker. Migration `20261123120000_chat_improvements.sql` (keyset `chat_messages_page`, soft delete `delete_chat_message` with report evidence kept for admins, private `chat.images` bucket via signed URLs, `chat_reads` + `mark_chat_read` / `chat_unread_counts`); web, iOS and Android chat screens, switcher/chat-button badges and a "New messages" divider (`docs/boolaa-spec.md`, Chat).
 - ✅ **Live updates** for events, food, market and links, not only chat. Migration `20261123110000_realtime_feeds.sql` publishes the four tables; web, iOS and Android screens subscribe per bubble (INSERT/UPDATE filtered by `bubble_id` and RLS-checked, DELETE by id) and merge changes by id (`docs/boolaa-spec.md`, Live feeds).
-- ⬜ **Bubble logo/cover image**: upload and display.
+- ✅ **Bubble logo/cover image**: upload and display. Migration `20261123130000_bubble_cover.sql`: bucket `bubble.images` (`<bubble id>/<uuid>.jpg`, 2 MB, 512 px avatar pipeline), editable by `can_manage_bubble` (owner now, admins later), logo URL validated, hourly orphan sweep via Storage API, `bubbles` live; web, iOS and Android show it in the switcher, Settings and pending list (spec "Bubble photo").
 - 🔄 **Modern visual redesign**: playful animations, haptics, a happy brand (Fable design pass).
 - ⬜ **Native-speaker review** of the ro, fr, es and it translations.
 - ⬜ **Accessibility pass**: Dynamic Type and font scaling, VoiceOver and TalkBack labels, contrast, reduced motion.

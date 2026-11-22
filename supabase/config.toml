@@ -149,11 +149,13 @@ enabled = true
 # in emails.
 site_url = "http://127.0.0.1:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-# Web app (dev on :3100, prod boolaa.ro) and the native apps' deep link.
+# Web app (dev on :3100 and :3200, prod boolaa.ro) and the native apps' deep link.
 additional_redirect_urls = [
   "https://127.0.0.1:3000",
   "http://127.0.0.1:3100/auth/callback",
   "http://localhost:3100/auth/callback",
+  "http://127.0.0.1:3200/auth/callback",
+  "http://localhost:3200/auth/callback",
   "https://boolaa.ro/auth/callback",
   "boolaa://auth/callback",
   # Android (applicationId ro.boolaa.app): Sign in with Apple in a Custom Tab, and email links.

@@ -40,6 +40,7 @@ import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.QrCode2
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.SwapHoriz
@@ -81,6 +82,7 @@ object BoolaaIcons {
     val Check = Icons.Rounded.Check
     val Close = Icons.Rounded.Close
     val Share = Icons.Rounded.Share
+    val QrCode = Icons.Rounded.QrCode2
     val Free = Icons.Rounded.Redeem
     val Trade = Icons.Rounded.SwapHoriz
     val Open = Icons.Rounded.ArrowOutward

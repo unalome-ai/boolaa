@@ -298,4 +298,51 @@
     <string name="suspended_reason">Motiv: %1$s</string>
     <string name="suspended_appeal">Crezi că e o greșeală? Scrie-ne la %1$s și spune-ne de ce.</string>
     <string name="suspended_back_to_sign_in">Înapoi la autentificare</string>
+    <!-- Invite links (docs/boolaa-spec.md, "Invite links"; strings shared with web and iOS) -->
+    <string name="invite_title">Ai o invitație</string>
+    <string name="invite_approval_note">Membrii votează cererea ta. Intri când majoritatea spun da.</string>
+    <string name="invite_pending">Ai cerut deja să intri. Aștepți aprobarea membrilor.</string>
+    <string name="invite_member">Ești deja în această bulă.</string>
+    <string name="invite_open_bubble">Deschide bula</string>
+    <string name="invite_invalid_title">Invitația nu e validă</string>
+    <string name="invite_invalid_body">Linkul poate fi vechi sau codul a fost schimbat. Cere unui membru unul nou.</string>
+    <string name="invite_request_sent">Cerere trimisă</string>
+    <string name="invite_link">Link de invitație</string>
+    <string name="copy_invite_link">Copiază linkul</string>
+    <string name="share_invite_link">Trimite linkul</string>
+    <string name="invite_qr_code">Cod QR</string>
+    <string name="invite_qr_hint">Lasă un prieten să scaneze codul ca să ceară să intre în %1$s.</string>
+    <string name="invite_link_share_text">Intră în bula mea „%1$s” pe Boolaa: %2$s</string>
+    <string name="rotate_invite_code">Cod nou</string>
+    <string name="rotate_invite_title">Schimbi codul de invitație?</string>
+    <string name="rotate_invite_body">Codul, linkul și codul QR vechi nu mai funcționează imediat. Cererile deja trimise rămân.</string>
+    <string name="rotate_invite_confirm">Schimbă codul</string>
+    <string name="invite_rotated">Codul nou de invitație e gata</string>
+    <string name="error_too_many_invite_attempts">Prea multe încercări cu coduri greșite. Încearcă din nou peste o oră.</string>
+    <string name="error_only_owner_can_rotate">Doar proprietarul poate schimba codul de invitație.</string>
+    <!-- Bubble logo (20261123130000_bubble_cover.sql) -->
+    <string name="bubble_photo">Fotografia bulei</string>
+    <string name="add_bubble_photo">Adaugă o fotografie</string>
+    <string name="change_bubble_photo">Schimbă fotografia</string>
+    <string name="remove_bubble_photo">Elimină fotografia</string>
+    <string name="bubble_photo_hint">O vede toată lumea din bulă. Fotografiile pătrate arată cel mai bine.</string>
+    <string name="bubble_photo_of">Fotografia bulei %1$s</string>
+    <!-- Chat (20261123120000_chat_improvements.sql, glossary "Chat") -->
+    <string name="chat_deleted">Mesajul a fost șters</string>
+    <string name="chat_delete_message">Șterge mesajul</string>
+    <string name="chat_delete_confirm_title">Ștergi mesajul?</string>
+    <string name="chat_delete_confirm_body">Dispare pentru toți cei din bulă.</string>
+    <string name="chat_delete_confirm">Șterge</string>
+    <string name="chat_new_messages">Mesaje noi</string>
+    <string name="chat_loading_older">Se încarcă mesajele mai vechi…</string>
+    <string name="chat_start">Aici începe chatul</string>
+    <string name="chat_add_photo">Adaugă o fotografie</string>
+    <string name="chat_remove_photo">Elimină fotografia</string>
+    <string name="chat_photo">Fotografie</string>
+    <plurals name="chat_unread">
+        <item quantity="one">%d mesaj necitit</item>
+        <item quantity="few">%d mesaje necitite</item>
+        <item quantity="other">%d de mesaje necitite</item>
+    </plurals>
+    <string name="error_chat_message_gone">Mesajul nu mai există.</string>
 </resources>

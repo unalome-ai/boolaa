@@ -56,6 +56,24 @@ export async function fetchMyBubbles(supabase: BoolaaClient, userId: string): Pr
   return (data ?? []).flatMap((m) => (m.bubble ? [{ ...m.bubble, role: m.role }] : []));
 }
 
+/**
+ * Merges a realtime UPDATE of a `bubbles` row into my list by id (keeping my role). Ids I don't hold
+ * are ignored, and an unchanged row returns the same list so nothing re-renders.
+ */
+export function mergeBubbleUpdate(list: MyBubble[], row: Partial<Bubble>): MyBubble[] {
+  const i = list.findIndex((b) => b.id === row.id);
+  if (i < 0) return list;
+  const cur = list[i]!;
+  const next: MyBubble = {
+    ...cur,
+    name: row.name ?? cur.name,
+    description: row.description !== undefined ? row.description : cur.description,
+    logo: row.logo !== undefined ? row.logo : cur.logo,
+  };
+  if (next.name === cur.name && next.description === cur.description && next.logo === cur.logo) return list;
+  return list.map((b, j) => (j === i ? next : b));
+}
+
 export function BoolaaProvider({ children, fallback }: { children: ReactNode; fallback: ReactNode }) {
   const supabase = getSupabase();
   const [auth, setAuth] = useState<{ id: string; email: string } | null>(null);
@@ -157,6 +175,10 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
           .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubble_members", filter: mine }, refresh)
           .on("postgres_changes", { event: "DELETE", schema: "public", table: "bubble_members" }, (p) => {
             if ((p.old as { user_id?: string }).user_id === auth.id) refresh();
+          })
+          // A bubble's name, description or photo changed (RLS sends only bubbles I can read).
+          .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bubbles" }, (p) => {
+            setBubbles((list) => (list ? mergeBubbleUpdate(list, p.new as Partial<Bubble>) : list));
           }),
       (ready) => {
         if (ready) void refreshBubbles().then(() => setLive(true));

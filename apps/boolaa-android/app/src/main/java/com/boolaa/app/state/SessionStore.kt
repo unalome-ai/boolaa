@@ -28,6 +28,8 @@ import com.boolaa.app.core.TableWatch
 import com.boolaa.app.model.Block
 import com.boolaa.app.model.Bubble
 import com.boolaa.app.model.BubbleMember
+import com.boolaa.app.model.BubblePatch
+import io.github.jan.supabase.realtime.PostgresAction
 import com.boolaa.app.model.JoinRequest
 import com.boolaa.app.model.MemberRole
 import com.boolaa.app.model.UserProfile
@@ -106,6 +108,13 @@ class SessionStore(
 ) {
     private val _state = MutableStateFlow(SessionState(storedBubbleId = prefs.getString(KEY_BUBBLE, null)))
     val state: StateFlow<SessionState> = _state.asStateFlow()
+
+    /**
+     * Invite code from an opened link (https://boolaa.ro/join/CODE), kept through sign-in, the device gate and onboarding
+     * (and process death, in prefs) until the join preview is dismissed.
+     */
+    private val _pendingInvite = MutableStateFlow(prefs.getString(KEY_INVITE, null))
+    val pendingInvite: StateFlow<String?> = _pendingInvite.asStateFlow()
     private val auth get() = api.client.auth
     private val mutex = Mutex()
     private val gateMutex = Mutex()
@@ -323,8 +332,20 @@ class SessionStore(
         scope.launch { previous?.close() }
         live = LiveTables.open(
             api.client, scope, "me",
-            listOf(TableWatch("bubble_members", "user_id", userId), TableWatch("join_requests", "user_id", userId)),
+            listOf(
+                TableWatch("bubble_members", "user_id", userId), TableWatch("join_requests", "user_id", userId),
+                // Name, description and logo edits of the caller's bubbles (RLS sends only bubbles they may read).
+                TableWatch("bubbles"),
+            ),
         ) { table, action ->
+            if (table == "bubbles") {
+                val patch = (action as? PostgresAction.Update)?.record?.let(BubblePatch::fromRecord) ?: return@open
+                _state.update { s ->
+                    val (m, r) = BubblePatch.merge(s.memberships, s.pendingRequests, patch) ?: return@update s
+                    s.copy(memberships = m, pendingRequests = r)
+                }
+                return@open
+            }
             val s = _state.value
             val relevant = when (table) {
                 "bubble_members" -> LiveTables.oldValue(action, "user_id")?.let { it == userId } ?: true
@@ -444,6 +465,7 @@ class SessionStore(
 
     suspend fun signOut() {
         runCatching { auth.signOut() }
+        clearInvite()
         applySignedOut()
     }
 
@@ -552,6 +574,28 @@ class SessionStore(
         return request
     }
 
+    // Invite links
+
+    /** An opened invite link; the preview shows once the user is in Onboarding or Main. */
+    fun openInvite(code: String) {
+        prefs.edit().putString(KEY_INVITE, code).apply()
+        _pendingInvite.value = code
+    }
+
+    fun clearInvite() {
+        prefs.edit().remove(KEY_INVITE).apply()
+        _pendingInvite.value = null
+    }
+
+    suspend fun invitePreview(code: String) = api.invitePreview(code)
+
+    /** Owner only; the reload brings the new code into the current bubble. */
+    suspend fun rotateInviteCode(bubbleId: String): String {
+        val code = api.rotateInviteCode(bubbleId)
+        reload()
+        return code
+    }
+
     suspend fun cancelRequest(request: JoinRequest) {
         api.cancelJoinRequest(request.id)
         reload()
@@ -571,6 +615,38 @@ class SessionStore(
         val bubble = _state.value.currentBubble ?: return
         api.updateBubble(bubble.id, name, description)
         reload()
+    }
+
+    /**
+     * Bubble logo (owner only): compress like an avatar (512 px, 2 MB), upload to `bubble.images/<bubble id>/`,
+     * point the row at it, then remove the previous object. A failed row update removes the new upload.
+     */
+    suspend fun setBubbleLogo(bubble: Bubble, jpeg: ByteArray) {
+        val url = api.uploadBubbleLogo(jpeg, bubble.id)
+        try {
+            api.updateBubbleLogo(bubble.id, url)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            api.deleteBubbleLogo(url, bubble.id)
+            throw e
+        }
+        mergeLogo(bubble.id, url)
+        if (bubble.logo != url) api.deleteBubbleLogo(bubble.logo, bubble.id)
+    }
+
+    suspend fun removeBubbleLogo(bubble: Bubble) {
+        api.updateBubbleLogo(bubble.id, null)
+        mergeLogo(bubble.id, null)
+        api.deleteBubbleLogo(bubble.logo, bubble.id)
+    }
+
+    private fun mergeLogo(bubbleId: String, logo: String?) {
+        _state.update { s ->
+            val b = s.bubbles.firstOrNull { it.id == bubbleId } ?: return@update s
+            val (m, r) = BubblePatch.merge(s.memberships, s.pendingRequests, BubblePatch(b.id, b.name, b.description, logo)) ?: return@update s
+            s.copy(memberships = m, pendingRequests = r)
+        }
     }
 
     // Safety
@@ -600,6 +676,7 @@ class SessionStore(
 
     companion object {
         private const val KEY_BUBBLE = "boolaa.currentBubbleID"
+        private const val KEY_INVITE = "boolaa.pendingInvite"
 
         /** Sign-up `options.data` (docs/auth-security.md §6). */
         fun signUpMetadata(name: String, locale: String): JsonObject = buildJsonObject {

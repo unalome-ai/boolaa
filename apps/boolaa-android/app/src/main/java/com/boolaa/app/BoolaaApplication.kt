@@ -15,6 +15,7 @@ class BoolaaApplication : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         container = AppContainer(this)
         container.session.start()
+        container.unread.start()
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

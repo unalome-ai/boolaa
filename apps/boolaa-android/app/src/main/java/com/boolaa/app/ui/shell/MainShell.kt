@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -83,8 +84,10 @@ import com.boolaa.app.ui.chat.ChatScreen
 import com.boolaa.app.ui.components.Avatar
 import com.boolaa.app.ui.components.BoolaaIcons
 import com.boolaa.app.ui.components.BubbleOrb
+import com.boolaa.app.ui.components.BubbleLogo
 import com.boolaa.app.ui.components.FitText
 import com.boolaa.app.ui.components.Haptics
+import com.boolaa.app.ui.components.UnreadBadge
 import com.boolaa.app.ui.components.bounceOn
 import com.boolaa.app.ui.components.clickableRipple
 import com.boolaa.app.ui.components.dashedBorder
@@ -144,7 +147,9 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
     if (tab != null) lastTab = tab
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var showAddBubble by rememberSaveable { mutableStateOf(false) }
-    val state by LocalAppContainer.current.session.state.collectAsStateWithLifecycle()
+    val container = LocalAppContainer.current
+    val state by container.session.state.collectAsStateWithLifecycle()
+    val unread by container.unread.counts.collectAsStateWithLifecycle()
     val view = LocalView.current
 
     LaunchedEffect(Unit) {
@@ -193,6 +198,7 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                 selected = lastTab,
                 onSelect = { if (it != tab) { Haptics.selection(view); navigator.openTab(it) } },
                 onChat = { Haptics.light(view); navigator.openChat() },
+                chatUnread = state.currentBubble?.let { unread[it.id]?.unreadCount } ?: 0,
             )
         }
     }
@@ -220,8 +226,10 @@ private fun BubbleGlow(hue: Hue) {
 /** Large rolling title, avatar button and the bubble chips with "+ New". No background: the glow shows through. */
 @Composable
 fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit) {
-    val session = LocalAppContainer.current.session
+    val container = LocalAppContainer.current
+    val session = container.session
     val state by session.state.collectAsStateWithLifecycle()
+    val unread by container.unread.counts.collectAsStateWithLifecycle()
     val view = LocalView.current
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 8.dp, bottom = 6.dp)) {
         Row(Modifier.padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -246,6 +254,7 @@ fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit) {
         }
         BubbleChips(
             bubbles = state.bubbles, currentId = state.currentBubble?.id,
+            unread = { unread[it]?.unreadCount ?: 0 },
             onSelect = { if (it.id != state.currentBubble?.id) { Haptics.bubble(view); session.selectBubble(it.id) } },
             onAdd = onAddBubble,
         )
@@ -257,7 +266,7 @@ fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit) {
  * new bubble's colour; the chip's orb pulses; the row scrolls the active chip to the centre.
  */
 @Composable
-private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, onSelect: (Bubble) -> Unit, onAdd: () -> Unit) {
+private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, unread: (String) -> Int, onSelect: (Bubble) -> Unit, onAdd: () -> Unit) {
     val c = BoolaaTheme.colors
     val scroll = rememberScrollState()
     // Chip id → (x, width) inside the row, for the sliding capsule and the inactive chip surfaces.
@@ -314,12 +323,14 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, onSelect: (Bu
                             .padding(start = 11.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
-                        BubbleOrb(
-                            chipHue,
-                            Modifier.size(16.dp).bounceOn(active, from = 1.45f, enabled = active)
+                        // Logo photo when set (a 20dp circle reads as a photo), else the bubble's 16dp orb.
+                        BubbleLogo(
+                            bubble.id, bubble.name, bubble.logo, size = if (bubble.logo.isNullOrBlank()) 16.dp else 20.dp,
+                            modifier = Modifier.bounceOn(active, from = 1.45f, enabled = active)
                                 .then(if (active) Modifier.border(1.5.dp, Color.White, CircleShape) else Modifier),
                         )
                         Text(bubble.name, color = textColor, style = Type.chip, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        UnreadBadge(unread(bubble.id), tag = "unread-chip-${bubble.name}")
                     }
                 }
             }
@@ -341,7 +352,7 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, onSelect: (Bu
 
 /** The dock: pill tab bar plus the chat button, floating above a fade that lets content dissolve underneath. */
 @Composable
-fun Dock(selected: MainTab, onSelect: (MainTab) -> Unit, onChat: () -> Unit, modifier: Modifier = Modifier) {
+fun Dock(selected: MainTab, onSelect: (MainTab) -> Unit, onChat: () -> Unit, modifier: Modifier = Modifier, chatUnread: Int = 0) {
     val c = BoolaaTheme.colors
     Box(
         modifier.fillMaxWidth().drawWithCache {
@@ -354,7 +365,7 @@ fun Dock(selected: MainTab, onSelect: (MainTab) -> Unit, onChat: () -> Unit, mod
             horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically,
         ) {
             PillTabBar(selected, onSelect, Modifier.weight(1f))
-            ChatButton(onChat)
+            ChatButton(onChat, unread = chatUnread)
         }
     }
 }
@@ -411,9 +422,9 @@ fun PillTabBar(selected: MainTab, onSelect: (MainTab) -> Unit, modifier: Modifie
     }
 }
 
-/** 60dp grape bubble orb that opens the chat; a ring pulses outward every 3.2 s. */
+/** 60dp grape bubble orb that opens the chat; a ring pulses outward every 3.2 s. [unread] shows as a badge. */
 @Composable
-fun ChatButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ChatButton(onClick: () -> Unit, modifier: Modifier = Modifier, unread: Int = 0) {
     val label = stringResource(R.string.open_chat)
     val time = rememberAmbientTime()
     var taps by remember { mutableIntStateOf(0) }
@@ -439,5 +450,6 @@ fun ChatButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             BubbleOrb(Hue.grape, Modifier.matchParentSize())
             Icon(BoolaaIcons.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp).bounceOn(taps))
         }
+        UnreadBadge(unread, Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp), tag = "chat-fab-badge")
     }
 }

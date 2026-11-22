@@ -19,7 +19,7 @@ const LOCALES = ["en", "ro", "fr", "es", "it"];
 // Values that are legitimately identical to English in a given language.
 const SAME_AS_EN = {
   ro: ["landing.copyright", "safety.reasons.spam", "nav.chat", "home.chat", "home.link", "auth.email", "links.url"],
-  fr: ["landing.copyright", "landing.navFaq", "safety.reasons.spam", "common.description", "common.photo", "chat.messageLabel", "nav.sidebar", "links.url"],
+  fr: ["landing.copyright", "landing.navFaq", "safety.reasons.spam", "common.description", "common.photo", "chat.photo", "chat.messageLabel", "nav.sidebar", "links.url"],
   es: ["landing.copyright", "safety.reasons.spam", "nav.chat", "home.chat", "links.url"],
   it: ["landing.copyright", "landing.navFaq", "landing.navPrivacy", "safety.reasons.spam", "nav.home", "nav.chat", "home.chat", "nav.links", "home.link", "settings.sharedLinks", "auth.email", "auth.password", "links.url"],
 };

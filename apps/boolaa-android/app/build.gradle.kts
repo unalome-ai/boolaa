@@ -112,6 +112,8 @@ dependencies {
     implementation(libs.androidx.browser)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    // QR codes for invite links (encoder only, no camera; ~0.5 MB jar before R8).
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

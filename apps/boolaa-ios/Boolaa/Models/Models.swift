@@ -67,6 +67,7 @@ struct BubbleMember: Codable, Hashable, Sendable, Identifiable {
 struct BubbleRef: Codable, Hashable, Sendable {
     let id: UUID
     var name: String
+    var logo: String?
 }
 
 /// `public.join_requests`
@@ -101,13 +102,18 @@ struct JoinRequest: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
-/// `public.chat_messages`
+/// `public.chat_messages` (photos and soft delete: 20261123120000_chat_improvements.sql)
 struct ChatMessage: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let bubbleId: UUID
     let senderId: UUID
+    /// The text, or the photo's caption (may be empty with a photo; always empty once deleted).
     var content: String
     var createdAt: Date
+    /// Object path in the private `chat.images` bucket (`<sender uid>/<file>.jpg`), shown through a signed URL.
+    var imagePath: String? = nil
+    /// Set when the author deleted the message: text and photo are wiped, a placeholder is shown.
+    var deletedAt: Date? = nil
     var sender: UserProfile?
 
     enum CodingKeys: String, CodingKey {
@@ -115,6 +121,38 @@ struct ChatMessage: Codable, Identifiable, Hashable, Sendable {
         case bubbleId = "bubble_id"
         case senderId = "sender_id"
         case createdAt = "created_at"
+        case imagePath = "image_path"
+        case deletedAt = "deleted_at"
+    }
+
+    var isDeleted: Bool { deletedAt != nil }
+
+    /// The placeholder of this message once its author deleted it (what the server's UPDATE carries).
+    func asDeleted(at date: Date = .now) -> ChatMessage {
+        var copy = self
+        copy.content = ""
+        copy.imagePath = nil
+        copy.deletedAt = date
+        return copy
+    }
+}
+
+/// One row of `chat_unread_counts()`.
+struct ChatUnread: Codable, Hashable, Sendable {
+    let bubbleId: UUID
+    /// Messages from others after the marker, capped at 100 by the server.
+    let unreadCount: Int
+    let lastReadAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case bubbleId = "bubble_id"
+        case unreadCount = "unread_count"
+        case lastReadAt = "last_read_at"
+    }
+
+    /// Badge text: nothing for 0, the number up to 99, "99+" above (docs/i18n-glossary.md, "Chat").
+    static func badgeText(_ count: Int) -> String? {
+        count <= 0 ? nil : count > 99 ? "99+" : String(count)
     }
 }
 
@@ -221,7 +259,13 @@ struct NewChatMessage: Encodable, Sendable {
     let bubbleId: UUID
     let senderId: UUID
     let content: String
-    enum CodingKeys: String, CodingKey { case content; case bubbleId = "bubble_id"; case senderId = "sender_id" }
+    var imagePath: String? = nil
+    enum CodingKeys: String, CodingKey {
+        case content
+        case bubbleId = "bubble_id"
+        case senderId = "sender_id"
+        case imagePath = "image_path"
+    }
 }
 
 struct EventInput: Encodable, Sendable {

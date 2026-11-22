@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AuthCard } from "@/components/auth-card";
 import { ErrorText } from "@/components/ui";
 import { getSupabase } from "@/lib/supabase/client";
@@ -11,6 +11,8 @@ import { hardNavigate } from "@/lib/utils";
 import { OAuthButtons, OrDivider } from "@/components/oauth-buttons";
 import { TERMS_VERSION } from "@/lib/device";
 import { useLocale } from "next-intl";
+import { safeNext } from "@/lib/auth-next";
+import { withNext } from "@/lib/invite";
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
@@ -24,6 +26,15 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
   const [checkEmail, setCheckEmail] = useState(false);
+  // `?next=/join/CODE` (invite links): continue there after the device gate instead of onboarding.
+  const [next, setNext] = useState<string | null>(null);
+
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get("next");
+    // One-off read of the URL on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (value) setNext(safeNext(value));
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -48,13 +59,13 @@ export default function RegisterPage() {
       setCheckEmail(true);
       return;
     }
-    hardNavigate("/verify?next=%2Fonboarding");
+    hardNavigate(`/verify?next=${encodeURIComponent(next ?? "/onboarding")}`);
   }
 
   if (checkEmail) {
     return (
       <AuthCard title={t("checkInboxTitle")} subtitle={t("checkInboxSubtitle", { email })}>
-        <Link href="/login" className="btn-primary w-full">
+        <Link href={withNext("/login", next)} className="btn-primary w-full">
           {t("backToSignIn")}
         </Link>
       </AuthCard>
@@ -63,7 +74,7 @@ export default function RegisterPage() {
 
   return (
     <AuthCard title={t("registerTitle")} subtitle={t("registerSubtitle")}>
-      <OAuthButtons />
+      <OAuthButtons next={next} />
       <OrDivider />
       <form onSubmit={submit} className="space-y-4">
         <div>
@@ -142,7 +153,7 @@ export default function RegisterPage() {
       </form>
       <p className="mt-5 text-center text-sm text-muted">
         {t("haveAccount")}{" "}
-        <Link href="/login" className="font-semibold text-brand-ink hover:underline">
+        <Link href={withNext("/login", next)} className="font-semibold text-brand-ink hover:underline">
           {t("signInLink")}
         </Link>
       </p>
