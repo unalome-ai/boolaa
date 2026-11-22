@@ -16,11 +16,7 @@
     <string name="approve">Approve</string>
     <string name="approved_waiting_for_spot">Approved, waiting for a free spot</string>
     <string name="auth_check_email">Check your email to confirm your account, then sign in.</string>
-    <string name="auth_create_account_title">Create your account</string>
-    <string name="auth_have_account">Already have an account? Sign in</string>
-    <string name="auth_no_account">New to Boolaa? Create account</string>
     <string name="auth_tagline">Your private bubbles of friends, flatmates and clubs.</string>
-    <string name="auth_welcome_back">Welcome back</string>
     <string name="back">Back</string>
     <string name="block">Block</string>
     <string name="block_explainer">You won\'t see each other\'s messages, events, food, items or links.</string>
@@ -94,6 +90,7 @@
     <string name="going">Going</string>
     <string name="home_empty_message">Say hi in the chat, plan an event or share some food.</string>
     <string name="home_empty_title">Nothing here yet</string>
+    <string name="home_greeting">Hi, %1$s!</string>
     <string name="invite_code">Invite code</string>
     <string name="invite_share_text">Join my bubble \"%1$s\" on Boolaa with invite code %2$s</string>
     <string name="join_a_bubble">Join a bubble</string>
@@ -109,6 +106,7 @@
     <string name="links">Links</string>
     <string name="links_empty_message">Share recipes, playlists or anything useful.</string>
     <string name="links_empty_title">No links yet</string>
+    <string name="loading">Loading</string>
     <string name="location">Location</string>
     <string name="market_empty_message">Give away or trade something with your bubble.</string>
     <string name="market_empty_title">Nothing here yet</string>
@@ -181,6 +179,7 @@
     <string name="title">Title</string>
     <string name="unblock">Unblock</string>
     <string name="url">Link (URL)</string>
+    <string name="whats_new">What\'s new</string>
     <string name="you">You</string>
     <string name="you_suffix">(you)</string>
     <string name="your_pending_requests">Your pending requests</string>
@@ -195,6 +194,10 @@
     <plurals name="going_count">
         <item quantity="one">%d going</item>
         <item quantity="other">%d going</item>
+    </plurals>
+    <plurals name="items_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
     </plurals>
     <plurals name="members_count">
         <item quantity="one">%d member</item>

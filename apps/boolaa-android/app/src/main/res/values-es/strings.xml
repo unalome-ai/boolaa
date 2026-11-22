@@ -9,11 +9,7 @@
     <string name="approve">Aprobar</string>
     <string name="approved_waiting_for_spot">Aprobado, esperando un hueco libre</string>
     <string name="auth_check_email">Revisa tu correo para confirmar tu cuenta y luego inicia sesión.</string>
-    <string name="auth_create_account_title">Crea tu cuenta</string>
-    <string name="auth_have_account">¿Ya tienes cuenta? Inicia sesión</string>
-    <string name="auth_no_account">¿Nuevo en Boolaa? Crea una cuenta</string>
     <string name="auth_tagline">Tus burbujas privadas de amigos, compañeros de piso y clubes.</string>
-    <string name="auth_welcome_back">Hola de nuevo</string>
     <string name="back">Atrás</string>
     <string name="block">Bloquear</string>
     <string name="block_explainer">No veréis los mensajes, eventos, comida, artículos ni enlaces del otro.</string>
@@ -87,6 +83,7 @@
     <string name="going">Voy</string>
     <string name="home_empty_message">Saluda en el chat, planea un evento o comparte algo de comida.</string>
     <string name="home_empty_title">Aún no hay nada aquí</string>
+    <string name="home_greeting">¡Hola, %1$s!</string>
     <string name="invite_code">Código de invitación</string>
     <string name="invite_share_text">Únete a mi burbuja «%1$s» en Boolaa con el código de invitación %2$s</string>
     <string name="join_a_bubble">Unirse a una burbuja</string>
@@ -102,6 +99,7 @@
     <string name="links">Enlaces</string>
     <string name="links_empty_message">Comparte recetas, listas de reproducción o cualquier cosa útil.</string>
     <string name="links_empty_title">Aún no hay enlaces</string>
+    <string name="loading">Cargando</string>
     <string name="location">Lugar</string>
     <string name="market_empty_message">Regala o intercambia algo con tu burbuja.</string>
     <string name="market_empty_title">Aún no hay nada aquí</string>
@@ -174,6 +172,7 @@
     <string name="title">Título</string>
     <string name="unblock">Desbloquear</string>
     <string name="url">Enlace (URL)</string>
+    <string name="whats_new">Novedades</string>
     <string name="you">Tú</string>
     <string name="you_suffix">(tú)</string>
     <string name="your_pending_requests">Tus solicitudes pendientes</string>
@@ -191,6 +190,11 @@
         <item quantity="one">%d va</item>
         <item quantity="many">%d van</item>
         <item quantity="other">%d van</item>
+    </plurals>
+    <plurals name="items_count">
+        <item quantity="one">%d artículo</item>
+        <item quantity="many">%d de artículos</item>
+        <item quantity="other">%d artículos</item>
     </plurals>
     <plurals name="members_count">
         <item quantity="one">%d miembro</item>

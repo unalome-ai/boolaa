@@ -9,11 +9,7 @@
     <string name="approve">Aprobă</string>
     <string name="approved_waiting_for_spot">Aprobat, așteaptă un loc liber</string>
     <string name="auth_check_email">Verifică-ți emailul ca să confirmi contul, apoi autentifică-te.</string>
-    <string name="auth_create_account_title">Creează-ți contul</string>
-    <string name="auth_have_account">Ai deja cont? Autentifică-te</string>
-    <string name="auth_no_account">Nou pe Boolaa? Creează cont</string>
     <string name="auth_tagline">Bulele tale private de prieteni, colegi de apartament și cluburi.</string>
-    <string name="auth_welcome_back">Bine ai revenit</string>
     <string name="back">Înapoi</string>
     <string name="block">Blochează</string>
     <string name="block_explainer">Nu veți mai vedea unul altuia mesajele, evenimentele, mâncarea, anunțurile sau linkurile.</string>
@@ -87,6 +83,7 @@
     <string name="going">Particip</string>
     <string name="home_empty_message">Salută în chat, plănuiește un eveniment sau împarte niște mâncare.</string>
     <string name="home_empty_title">Încă nimic aici</string>
+    <string name="home_greeting">Salut, %1$s!</string>
     <string name="invite_code">Cod de invitație</string>
     <string name="invite_share_text">Intră în bula mea „%1$s” pe Boolaa cu codul de invitație %2$s</string>
     <string name="join_a_bubble">Alătură-te unei bule</string>
@@ -102,6 +99,7 @@
     <string name="links">Linkuri</string>
     <string name="links_empty_message">Împarte rețete, playlisturi sau orice e util.</string>
     <string name="links_empty_title">Încă nu sunt linkuri</string>
+    <string name="loading">Se încarcă</string>
     <string name="location">Locație</string>
     <string name="market_empty_message">Oferă sau schimbă ceva cu bula ta.</string>
     <string name="market_empty_title">Încă nimic aici</string>
@@ -174,6 +172,7 @@
     <string name="title">Titlu</string>
     <string name="unblock">Deblochează</string>
     <string name="url">Link (URL)</string>
+    <string name="whats_new">Noutăți</string>
     <string name="you">Tu</string>
     <string name="you_suffix">(tu)</string>
     <string name="your_pending_requests">Cererile tale în așteptare</string>
@@ -191,6 +190,11 @@
         <item quantity="one">%d participant</item>
         <item quantity="few">%d participanți</item>
         <item quantity="other">%d de participanți</item>
+    </plurals>
+    <plurals name="items_count">
+        <item quantity="one">%d articol</item>
+        <item quantity="few">%d articole</item>
+        <item quantity="other">%d de articole</item>
     </plurals>
     <plurals name="members_count">
         <item quantity="one">%d membru</item>

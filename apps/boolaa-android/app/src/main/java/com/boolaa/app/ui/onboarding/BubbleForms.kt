@@ -1,23 +1,22 @@
 package com.boolaa.app.ui.onboarding
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -26,21 +25,30 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
 import com.boolaa.app.model.JoinRequest
 import com.boolaa.app.ui.BaseViewModel
+import com.boolaa.app.ui.components.BoolaaIcons
 import com.boolaa.app.ui.components.BoolaaTextField
+import com.boolaa.app.ui.components.BubbleOrb
 import com.boolaa.app.ui.components.PrimaryButton
+import com.boolaa.app.ui.components.RollingCount
+import com.boolaa.app.ui.components.SegmentedPill
 import com.boolaa.app.ui.components.boolaaCard
-import com.boolaa.app.ui.theme.Brand
+import com.boolaa.app.ui.components.clickableRipple
+import com.boolaa.app.ui.components.popIn
 import com.boolaa.app.ui.theme.BoolaaTheme
+import com.boolaa.app.ui.theme.Hue
+import com.boolaa.app.ui.theme.Radius
+import com.boolaa.app.ui.theme.Type
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.math.roundToInt
@@ -71,17 +79,14 @@ class BubbleFormsViewModel(private val container: AppContainer) : BaseViewModel(
 
 @Composable
 fun ModePicker(mode: BubbleFormMode, onChange: (BubbleFormMode) -> Unit) {
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        BubbleFormMode.entries.forEachIndexed { i, m ->
-            SegmentedButton(
-                selected = mode == m,
-                onClick = { onChange(m) },
-                shape = SegmentedButtonDefaults.itemShape(i, BubbleFormMode.entries.size),
-                colors = SegmentedButtonDefaults.colors(activeContainerColor = Brand.purple, activeContentColor = androidx.compose.ui.graphics.Color.White),
-                modifier = Modifier.testTag(if (m == BubbleFormMode.JOIN) "mode-join" else "mode-create"),
-            ) { Text(stringResource(if (m == BubbleFormMode.JOIN) R.string.join_a_bubble else R.string.create_a_bubble), maxLines = 1) }
-        }
-    }
+    SegmentedPill(
+        options = listOf(
+            BubbleFormMode.JOIN to stringResource(R.string.join_a_bubble),
+            BubbleFormMode.CREATE to stringResource(R.string.create_a_bubble),
+        ),
+        selected = mode, onSelect = onChange,
+        tagFor = { if (it == BubbleFormMode.JOIN) "mode-join" else "mode-create" },
+    )
 }
 
 @Composable
@@ -89,14 +94,15 @@ fun JoinBubbleForm(vm: BubbleFormsViewModel) {
     var code by rememberSaveable { mutableStateOf("") }
     val busy by vm.busy.collectAsStateWithLifecycle()
     val requested by vm.requested.collectAsStateWithLifecycle()
-    Column(Modifier.boolaaCard(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.join_a_bubble), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.join_hint), style = MaterialTheme.typography.bodyMedium, color = BoolaaTheme.colors.textSecondary)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.join_hint), style = Type.subheadline, color = BoolaaTheme.colors.textSecondary)
         BoolaaTextField(code, { code = it.uppercase() }, stringResource(R.string.invite_code), Modifier.testTag("invite-code-input"))
         requested?.let { r ->
+            // Success is mint: an inline banner that pops in.
             Text(
                 stringResource(R.string.join_request_sent, r.bubble?.name ?: stringResource(R.string.the_bubble)),
-                color = Brand.purple, style = MaterialTheme.typography.bodyMedium,
+                color = Hue.mint.text, style = Type.subheadline,
+                modifier = Modifier.fillMaxWidth().popIn().clip(RoundedCornerShape(Radius.field)).background(Hue.mint.wash).padding(12.dp),
             )
         }
         PrimaryButton(stringResource(R.string.request_to_join), onClick = { vm.join(code) }, enabled = code.isNotBlank(), loading = busy,
@@ -111,42 +117,54 @@ fun CreateBubbleForm(vm: BubbleFormsViewModel) {
     var size by rememberSaveable { mutableFloatStateOf(12f) }
     val busy by vm.busy.collectAsStateWithLifecycle()
     val maxSize = size.roundToInt()
-    Column(Modifier.boolaaCard(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.create_a_bubble), style = MaterialTheme.typography.titleMedium)
+    val c = BoolaaTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         BoolaaTextField(name, { name = it.take(60) }, stringResource(R.string.bubble_name), Modifier.testTag("bubble-name-input"))
         BoolaaTextField(description, { description = it }, stringResource(R.string.description), singleLine = false, minLines = 2)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.max_size), style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.weight(1f))
-            Text(pluralStringResource(R.plurals.members_count, maxSize, maxSize), color = Brand.purple, style = MaterialTheme.typography.labelLarge)
+        // Stepper-style shell (field fill, radius 16) around the platform slider; the value rolls in grape.
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.field)).background(c.field).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.max_size), style = Type.body, color = c.textPrimary)
+                Spacer(Modifier.weight(1f))
+                RollingCount(maxSize) { Text(pluralStringResource(R.plurals.members_count, it, it), color = Hue.grape.text, style = Type.headline) }
+            }
+            Slider(
+                value = size, onValueChange = { size = it }, valueRange = 2f..150f,
+                colors = SliderDefaults.colors(thumbColor = Hue.grape.fill, activeTrackColor = Hue.grape.fill, inactiveTrackColor = Hue.grape.wash),
+            )
         }
-        Slider(
-            value = size, onValueChange = { size = it }, valueRange = 2f..150f,
-            colors = SliderDefaults.colors(thumbColor = Brand.purple, activeTrackColor = Brand.purple),
-        )
         PrimaryButton(stringResource(R.string.create_bubble), onClick = { vm.create(name, description, maxSize) },
             enabled = name.isNotBlank(), loading = busy, modifier = Modifier.testTag("create-submit"))
     }
 }
 
-/** The caller's pending requests, each with its bubble name, approvals so far and a cancel button. */
+/** The caller's pending requests, each with its bubble's orb, approvals so far and a cancel button. */
 @Composable
 fun PendingRequestsList(requests: List<JoinRequest>, onCancel: (JoinRequest) -> Unit) {
+    val c = BoolaaTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        requests.forEach { r ->
-            Row(Modifier.boolaaCard().testTag("pending-request"), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.HourglassTop, contentDescription = null, tint = Brand.purple)
+        requests.forEachIndexed { index, r ->
+            val hue = Hue.forId(r.bubbleId)
+            Row(Modifier.popIn(index).boolaaCard().testTag("pending-request"), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    BubbleOrb(hue, Modifier.matchParentSize())
+                    Icon(BoolaaIcons.Pending, contentDescription = null, tint = hue.onFill, modifier = Modifier.size(22.dp))
+                }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(r.bubble?.name ?: stringResource(R.string.the_bubble), style = MaterialTheme.typography.titleMedium)
+                    Text(r.bubble?.name ?: stringResource(R.string.the_bubble), style = Type.headline, color = c.textPrimary)
                     Text(
                         pluralStringResource(R.plurals.approvals_so_far, r.approverIds.size, r.approverIds.size),
-                        style = MaterialTheme.typography.bodyMedium, color = BoolaaTheme.colors.textSecondary,
+                        style = Type.subheadline, color = c.textSecondary,
                     )
                 }
-                TextButton(onClick = { onCancel(r) }, modifier = Modifier.padding(start = 4.dp).testTag("cancel-request")) {
-                    Text(stringResource(R.string.cancel_request), color = Brand.danger)
-                }
+                Box(
+                    Modifier.padding(start = 8.dp).heightIn(min = 44.dp).clip(CircleShape)
+                        .background(c.dangerText.copy(alpha = if (c.isDark) 0.16f else 0.10f))
+                        .clickableRipple(role = Role.Button) { onCancel(r) }.testTag("cancel-request")
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text(stringResource(R.string.cancel_request), color = c.dangerText, style = Type.chip, maxLines = 1) }
             }
         }
     }

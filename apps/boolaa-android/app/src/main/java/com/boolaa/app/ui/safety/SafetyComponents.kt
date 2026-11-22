@@ -1,8 +1,11 @@
 package com.boolaa.app.ui.safety
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.boolaa.app.ui.components.BoolaaIcons
+import com.boolaa.app.ui.theme.Hue
+import com.boolaa.app.ui.theme.Radius
+import com.boolaa.app.ui.theme.Type
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -30,22 +33,21 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 import com.boolaa.app.R
 import com.boolaa.app.core.Legal
-import com.boolaa.app.ui.theme.Brand
 import com.boolaa.app.ui.theme.BoolaaTheme
 
 /** Overflow on another member: report the user, block or unblock. */
 @Composable
 fun MemberSafetyMenu(name: String, blocked: Boolean, onReport: () -> Unit, onBlock: () -> Unit, onUnblock: () -> Unit) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, modifier = Modifier.size(36.dp).testTag("member-menu-$name")) {
-        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_actions), tint = Brand.purple)
+    IconButton(onClick = { open = true }, modifier = Modifier.size(44.dp).testTag("member-menu-$name")) {
+        Icon(BoolaaIcons.More, contentDescription = stringResource(R.string.more_actions), tint = BoolaaTheme.colors.textSecondary)
     }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = BoolaaTheme.colors.card) {
         DropdownMenuItem(text = { Text(stringResource(R.string.report)) }, onClick = { open = false; onReport() },
             modifier = Modifier.testTag("menu-report"))
         if (blocked) DropdownMenuItem(text = { Text(stringResource(R.string.unblock)) }, onClick = { open = false; onUnblock() },
             modifier = Modifier.testTag("menu-unblock"))
-        else DropdownMenuItem(text = { Text(stringResource(R.string.block), color = Brand.danger) }, onClick = { open = false; onBlock() },
+        else DropdownMenuItem(text = { Text(stringResource(R.string.block), color = BoolaaTheme.colors.dangerText) }, onClick = { open = false; onBlock() },
             modifier = Modifier.testTag("menu-block"))
     }
 }
@@ -58,7 +60,7 @@ fun LegalAgreementText(modifier: Modifier = Modifier) {
     val template = stringResource(R.string.legal_agree)
     val terms = stringResource(R.string.terms_of_use)
     val privacy = stringResource(R.string.privacy_policy)
-    val linkStyle = TextLinkStyles(SpanStyle(color = Brand.purple, fontWeight = FontWeight.SemiBold))
+    val linkStyle = TextLinkStyles(SpanStyle(color = Hue.grape.text, fontWeight = FontWeight.SemiBold))
     val text: AnnotatedString = buildAnnotatedString {
         var rest = template
         while (rest.isNotEmpty()) {
@@ -74,5 +76,5 @@ fun LegalAgreementText(modifier: Modifier = Modifier) {
         }
     }
     Text(text, modifier = modifier.testTag("legal-agree"), color = BoolaaTheme.colors.textSecondary,
-        style = LocalTextStyle.current.copy(textAlign = TextAlign.Center))
+        style = Type.subheadline.copy(textAlign = TextAlign.Center))
 }

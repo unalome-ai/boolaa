@@ -4,51 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.PersonRemove
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
@@ -64,20 +19,7 @@ import com.boolaa.app.ui.safety.ReportSheet
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
-import com.boolaa.app.ui.components.Avatar
-import com.boolaa.app.ui.components.BoolaaTextField
-import com.boolaa.app.ui.components.CircleIconButton
-import com.boolaa.app.ui.components.ConfirmDialog
-import com.boolaa.app.ui.components.PrimaryButton
-import com.boolaa.app.ui.components.SecondaryButton
-import com.boolaa.app.ui.components.SectionHeader
-import com.boolaa.app.ui.components.StatusBadge
-import com.boolaa.app.ui.components.boolaaCard
-import com.boolaa.app.ui.components.clickableRipple
-import com.boolaa.app.ui.components.displayName
 import com.boolaa.app.ui.shell.ShellNavigator
-import com.boolaa.app.ui.theme.Brand
-import com.boolaa.app.ui.theme.BoolaaTheme
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -87,6 +29,156 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
 import com.boolaa.app.core.LiveTables
 import com.boolaa.app.core.TableWatch
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.boolaa.app.ui.components.AddButton
+import com.boolaa.app.ui.components.Avatar
+import com.boolaa.app.ui.components.BoolaaChip
+import com.boolaa.app.ui.components.BoolaaIcons
+import com.boolaa.app.ui.components.BoolaaRefreshBox
+import com.boolaa.app.ui.components.BoolaaSheet
+import com.boolaa.app.ui.components.BoolaaTextField
+import com.boolaa.app.ui.components.BubbleOrb
+import com.boolaa.app.ui.components.CircleIconButton
+import com.boolaa.app.ui.components.ConfettiOverlay
+import com.boolaa.app.ui.components.ConfettiState
+import com.boolaa.app.ui.components.ConfirmDialog
+import com.boolaa.app.ui.components.EmptyState
+import com.boolaa.app.ui.components.FeatureBadge
+import com.boolaa.app.ui.components.FitText
+import com.boolaa.app.ui.components.Haptics
+import com.boolaa.app.ui.components.HintCard
+import com.boolaa.app.ui.components.ItemMenu
+import com.boolaa.app.ui.components.MorphIcon
+import com.boolaa.app.ui.components.PhotoField
+import com.boolaa.app.ui.components.PrimaryButton
+import com.boolaa.app.ui.components.PushedHeader
+import com.boolaa.app.ui.components.RemoteImage
+import com.boolaa.app.ui.components.RollingCount
+import com.boolaa.app.ui.components.SecondaryButton
+import com.boolaa.app.ui.components.SectionHeader
+import com.boolaa.app.ui.components.SegmentedPill
+import com.boolaa.app.ui.components.SkeletonList
+import com.boolaa.app.ui.components.SkeletonTile
+import com.boolaa.app.ui.components.StatusBadge
+import com.boolaa.app.ui.components.boolaaCard
+import com.boolaa.app.ui.components.bounceOn
+import com.boolaa.app.ui.components.clickableRipple
+import com.boolaa.app.ui.components.dashedBorder
+import com.boolaa.app.ui.components.displayName
+import com.boolaa.app.ui.components.dockClearance
+import com.boolaa.app.ui.components.glow
+import com.boolaa.app.ui.components.popIn
+import com.boolaa.app.ui.components.scrollFade
+import com.boolaa.app.ui.components.uploadPicked
+import com.boolaa.app.ui.theme.BoolaaTheme
+import com.boolaa.app.ui.theme.Brand
+import com.boolaa.app.ui.theme.Display
+import com.boolaa.app.ui.theme.Feature
+import com.boolaa.app.ui.theme.Hue
+import com.boolaa.app.ui.theme.Motion
+import com.boolaa.app.ui.theme.Radius
+import com.boolaa.app.ui.theme.Type
 
 class SettingsViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
     private val _members = MutableStateFlow<List<BubbleMember>>(emptyList())
@@ -147,7 +239,6 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
 }
 
 /** Settings for the current bubble (spec §11). */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navigator: ShellNavigator) {
     val container = LocalAppContainer.current
@@ -163,40 +254,41 @@ fun SettingsScreen(navigator: ShellNavigator) {
     var reporting by remember { mutableStateOf<ReportTarget?>(null) }
     var blocking by remember { mutableStateOf<BubbleMember?>(null) }
     val isOwner = state.currentRole == MemberRole.OWNER
+    val c = BoolaaTheme.colors
 
-    PullToRefreshBox(isRefreshing = busy, onRefresh = { vm.load(refresh = true) }, modifier = Modifier.fillMaxSize().testTag("settings-screen")) {
+    BoolaaRefreshBox(isRefreshing = busy, onRefresh = { vm.load(refresh = true) }, modifier = Modifier.fillMaxSize().testTag("settings-screen")) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = Brand.tabBarClearance),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = dockClearance()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            item { InfoCard(bubble, members.size, isOwner, vm) }
-            item { InviteCard(bubble) }
-            item {
-                Row(
-                    Modifier.clip(RoundedCornerShape(Brand.cardRadius)).clickableRipple(navigator::openLinks).boolaaCard().testTag("settings-links"),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Default.Link, contentDescription = null, tint = Brand.purple)
-                    Text(stringResource(R.string.shared_links), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 10.dp).weight(1f))
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = BoolaaTheme.colors.textSecondary)
-                }
+            item(key = "info-${bubble.id}") { InfoCard(bubble, members.size, isOwner, vm, Modifier.popIn(0)) }
+            item(key = "invite-${bubble.id}") { InviteCard(bubble, Modifier.popIn(1)) }
+            item(key = "links") {
+                SettingsRow(BoolaaIcons.Link, Hue.sky, stringResource(R.string.shared_links), BoolaaIcons.Disclosure, navigator::openLinks,
+                    Modifier.popIn(2).testTag("settings-links"))
             }
-            item { SectionHeader(stringResource(R.string.members), members.size) }
-            item {
-                Column(Modifier.boolaaCard().testTag("members-list")) {
+            item(key = "members-header") { SectionHeader(stringResource(R.string.members), members.size, Modifier.popIn(3)) }
+            item(key = "members") {
+                Column(Modifier.popIn(4).boolaaCard().testTag("members-list")) {
                     members.forEachIndexed { i, m ->
-                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Avatar(m.user, 36.dp)
-                            Text(displayName(m.user), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 12.dp))
-                            if (m.userId == me) Text(stringResource(R.string.you_suffix), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.padding(start = 4.dp))
-                            Spacer(Modifier.weight(1f))
+                        Row(Modifier.fillMaxWidth().heightIn(min = 60.dp).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(m.user, 40.dp)
+                            val you = if (m.userId == me) stringResource(R.string.you_suffix) else null
+                            Text(
+                                buildAnnotatedString {
+                                    append(displayName(m.user))
+                                    if (you != null) withStyle(SpanStyle(color = c.textSecondary, fontWeight = FontWeight.Normal)) { append(" $you") }
+                                },
+                                style = Type.bodyStrong, color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(start = 12.dp).weight(1f),
+                            )
                             val blocked = m.userId in state.blockedIds
-                            if (blocked) StatusBadge(stringResource(R.string.blocked_badge), color = Brand.danger, modifier = Modifier.padding(end = 6.dp))
-                            if (m.role == MemberRole.OWNER) StatusBadge(stringResource(R.string.owner))
+                            if (blocked) StatusBadge(stringResource(R.string.blocked_badge), danger = true, modifier = Modifier.padding(start = 6.dp))
+                            if (m.role == MemberRole.OWNER) StatusBadge(stringResource(R.string.owner), hue = Hue.sunny, icon = BoolaaIcons.Crown, modifier = Modifier.padding(start = 6.dp))
                             else if (isOwner && m.userId != me) {
-                                CircleIconButton(Icons.Default.PersonRemove, stringResource(R.string.remove_member), onClick = { removing = m },
-                                    tint = Brand.danger, size = 34.dp, modifier = Modifier.testTag("remove-member-${displayName(m.user)}"))
+                                CircleIconButton(BoolaaIcons.RemoveMember, stringResource(R.string.remove_member), onClick = { removing = m },
+                                    danger = true, size = 36.dp, modifier = Modifier.testTag("remove-member-${displayName(m.user)}"))
                             }
                             if (m.userId != me) {
                                 val name = displayName(m.user)
@@ -205,20 +297,21 @@ fun SettingsScreen(navigator: ShellNavigator) {
                                     onBlock = { blocking = m }, onUnblock = { vm.unblock(m.userId) })
                             }
                         }
-                        if (i < members.lastIndex) HorizontalDivider(color = BoolaaTheme.colors.divider)
+                        if (i < members.lastIndex) HorizontalDivider(color = c.hairline)
                     }
                 }
             }
             val pending = requests.orEmpty()
-            item { SectionHeader(stringResource(R.string.pending_join_requests), pending.size) }
+            item(key = "pending-header") { SectionHeader(stringResource(R.string.pending_join_requests), pending.size) }
             if (requests != null && pending.isEmpty()) {
-                item { Text(stringResource(R.string.no_pending_requests), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.boolaaCard()) }
+                item(key = "pending-empty") { HintCard(stringResource(R.string.no_pending_requests)) }
             }
             items(pending, key = { it.id }) { r ->
-                RequestRow(r, members, bubble.maxSize, me, onApprove = { vm.approve(r) }, onReject = { vm.reject(r) })
+                RequestRow(r, members, bubble.maxSize, me, onApprove = { vm.approve(r) }, onReject = { vm.reject(r) },
+                    modifier = Modifier.animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()))
             }
-            item {
-                SecondaryButton(stringResource(R.string.leave_bubble), onClick = { confirmLeave = true }, color = Brand.danger,
+            item(key = "leave") {
+                SecondaryButton(stringResource(R.string.leave_bubble), onClick = { confirmLeave = true }, danger = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("leave-bubble"))
             }
         }
@@ -251,12 +344,29 @@ fun SettingsScreen(navigator: ShellNavigator) {
     ErrorDialogFor(vm)
 }
 
+/** Settings / profile row: 56 high, radius 20, a 34 badge in a hue, a label and a trailing symbol. */
 @Composable
-private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: SettingsViewModel) {
+fun SettingsRow(icon: ImageVector, hue: Hue, label: String, trailing: ImageVector?, onClick: () -> Unit, modifier: Modifier = Modifier, value: String? = null) {
+    val c = BoolaaTheme.colors
+    Row(
+        modifier.boolaaCard(0.dp, 20.dp).clickableRipple(role = Role.Button, onClick = onClick).heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        FeatureBadge(icon, hue, size = 34.dp)
+        Text(label, style = Type.body.copy(fontWeight = FontWeight.Medium), color = c.textPrimary, modifier = Modifier.padding(start = 12.dp).weight(1f))
+        if (value != null) Text(value, style = Type.body, color = c.textSecondary, modifier = Modifier.padding(end = 6.dp))
+        if (trailing != null) Icon(trailing, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(22.dp))
+    }
+}
+
+@Composable
+private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
     var editing by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf(bubble.name) }
     var description by rememberSaveable { mutableStateOf(bubble.description.orEmpty()) }
-    Column(Modifier.boolaaCard(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val c = BoolaaTheme.colors
+    val hue = Hue.forId(bubble.id)
+    Column(modifier.boolaaCard().animateContentSize(Motion.gentle()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (editing) {
             BoolaaTextField(name, { name = it.take(60) }, stringResource(R.string.bubble_name))
             BoolaaTextField(description, { description = it }, stringResource(R.string.description), singleLine = false, minLines = 2)
@@ -267,78 +377,96 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, isOwner: Boolean, vm: Set
             }
         } else {
             Row(verticalAlignment = Alignment.Top) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(bubble.name, style = MaterialTheme.typography.titleLarge)
-                    Text(bubble.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.no_description), color = BoolaaTheme.colors.textSecondary)
+                BubbleOrb(hue, Modifier.size(56.dp))
+                Column(Modifier.weight(1f).padding(start = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(bubble.name, style = Type.title2, color = c.textPrimary)
+                    Text(bubble.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.no_description), style = Type.subheadline, color = c.textSecondary)
                     Text(
                         pluralStringResource(R.plurals.members_of_max, bubble.maxSize, memberCount, bubble.maxSize),
-                        style = MaterialTheme.typography.labelMedium, color = BoolaaTheme.colors.textSecondary,
+                        style = Type.caption, color = Hue.grape.text,
+                        modifier = Modifier.padding(top = 4.dp).clip(CircleShape).background(Hue.grape.wash).padding(horizontal = 10.dp, vertical = 4.dp),
                     )
                 }
                 if (isOwner) {
-                    CircleIconButton(Icons.Default.Edit, stringResource(R.string.edit_bubble),
+                    CircleIconButton(BoolaaIcons.Edit, stringResource(R.string.edit_bubble),
                         onClick = { name = bubble.name; description = bubble.description.orEmpty(); editing = true },
-                        size = 36.dp, modifier = Modifier.testTag("edit-bubble"))
+                        size = 40.dp, modifier = Modifier.testTag("edit-bubble"))
                 }
             }
         }
     }
 }
 
+/** The invite code as a ticket: grape wash, dashed outline; the copy button morphs to a mint check for 1.5 s. */
 @Composable
-private fun InviteCard(bubble: Bubble) {
+private fun InviteCard(bubble: Bubble, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val view = LocalView.current
     var copied by remember { mutableStateOf(false) }
     val shareText = stringResource(R.string.invite_share_text, bubble.name, bubble.inviteCode)
     val shareTitle = stringResource(R.string.share_invite_code)
-    LaunchedEffect(copied) { if (copied) { delay(1500); copied = false } }
-    Column(Modifier.boolaaCard(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.invite_code).uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
-            color = BoolaaTheme.colors.textSecondary)
+    val copyLabel = stringResource(R.string.copy_invite_code)
+    val grape = Hue.grape
+    LaunchedEffect(copied) { if (copied) { delay(Motion.COPIED_MS); copied = false } }
+    Column(
+        modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.card)).background(grape.wash)
+            .dashedBorder(grape.text.copy(alpha = 0.45f), Radius.card, dash = 7.dp, gap = 6.dp).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(stringResource(R.string.invite_code).uppercase(LocalConfiguration.current.locales[0]), style = Type.caption.copy(fontWeight = FontWeight.Black),
+            color = grape.text)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(bubble.inviteCode, fontSize = 26.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Brand.purple,
-                modifier = Modifier.weight(1f).testTag("invite-code"))
-            CircleIconButton(if (copied) Icons.Default.Check else Icons.Default.ContentCopy, stringResource(R.string.copy_invite_code), onClick = {
-                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText(shareTitle, bubble.inviteCode))
-                copied = true
-            }, modifier = Modifier.testTag("copy-invite"))
+            Text(bubble.inviteCode, style = Type.title.copy(letterSpacing = 3.sp), color = grape.text, maxLines = 1, softWrap = false,
+                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).testTag("invite-code"))
+            val copyFill by animateColorAsState(if (copied) Hue.mint.fill else grape.fill.copy(alpha = 0.16f), Motion.fade())
+            Box(
+                Modifier.size(44.dp).bounceOn(copied, from = 0.8f, enabled = copied).clip(CircleShape).background(copyFill)
+                    .clickableRipple(scale = 0.88f) {
+                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cm.setPrimaryClip(ClipData.newPlainText(shareTitle, bubble.inviteCode))
+                        copied = true
+                        Haptics.success(view)
+                    }
+                    .semantics { contentDescription = copyLabel; role = Role.Button }
+                    .testTag("copy-invite"),
+                contentAlignment = Alignment.Center,
+            ) {
+                MorphIcon(if (copied) BoolaaIcons.Check else BoolaaIcons.Copy, tint = if (copied) Hue.mint.onFill else grape.text, modifier = Modifier.size(22.dp))
+            }
             Spacer(Modifier.width(8.dp))
-            CircleIconButton(Icons.Default.Share, shareTitle, onClick = {
+            CircleIconButton(BoolaaIcons.Share, shareTitle, onClick = {
                 val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareText) }
                 context.startActivity(Intent.createChooser(send, shareTitle))
-            }, modifier = Modifier.testTag("share-invite"))
+            }, filled = true, size = 44.dp, modifier = Modifier.testTag("share-invite"))
         }
     }
 }
 
 @Composable
-private fun RequestRow(request: JoinRequest, members: List<BubbleMember>, maxSize: Int, me: String, onApprove: () -> Unit, onReject: () -> Unit) {
+private fun RequestRow(request: JoinRequest, members: List<BubbleMember>, maxSize: Int, me: String, onApprove: () -> Unit, onReject: () -> Unit, modifier: Modifier = Modifier) {
     val needed = JoinRequest.approvalsNeeded(members.size)
     // Only current members' votes count (approve_join_request / try_admit_join_request).
     val approvals = JoinRequest.currentApprovals(request, members.map { it.userId })
     val waitingForSeat = approvals >= needed && members.size >= maxSize
     val alreadyApproved = me in request.approverIds
-    Row(Modifier.boolaaCard().testTag("join-request-${request.id}"), verticalAlignment = Alignment.CenterVertically) {
+    val c = BoolaaTheme.colors
+    Row(modifier.boolaaCard().testTag("join-request-${request.id}"), verticalAlignment = Alignment.CenterVertically) {
         Avatar(request.user, 40.dp)
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(displayName(request.user), style = MaterialTheme.typography.titleMedium)
-            Text(
-                pluralStringResource(R.plurals.approvals_of_needed, needed, approvals, needed),
-                style = MaterialTheme.typography.bodyMedium, color = BoolaaTheme.colors.textSecondary,
-            )
+            Text(displayName(request.user), style = Type.headline, color = c.textPrimary)
+            RollingCount(approvals) {
+                Text(pluralStringResource(R.plurals.approvals_of_needed, needed, it, needed), style = Type.subheadline, color = c.textSecondary)
+            }
             if (waitingForSeat) {
-                Text(stringResource(R.string.approved_waiting_for_spot), style = MaterialTheme.typography.bodySmall, color = Brand.purple,
-                    fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag("waiting-for-spot"))
+                Text(stringResource(R.string.approved_waiting_for_spot), style = Type.caption, color = Hue.mint.text,
+                    modifier = Modifier.testTag("waiting-for-spot"))
             }
         }
         if (!alreadyApproved) {
-            CircleIconButton(Icons.Default.Check, stringResource(R.string.approve), onApprove, filled = true, size = 38.dp,
+            CircleIconButton(BoolaaIcons.Check, stringResource(R.string.approve), onApprove, filled = true, hue = Hue.mint, size = 40.dp,
                 modifier = Modifier.testTag("approve-request"))
-            Spacer(Modifier.width(8.dp))
         }
-        CircleIconButton(Icons.Default.Close, stringResource(R.string.reject), onReject, tint = Brand.danger, size = 38.dp,
+        CircleIconButton(BoolaaIcons.Close, stringResource(R.string.reject), onReject, danger = true, size = 40.dp,
             modifier = Modifier.testTag("reject-request"))
     }
 }
-

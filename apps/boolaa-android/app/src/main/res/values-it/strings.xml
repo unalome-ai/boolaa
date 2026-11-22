@@ -9,11 +9,7 @@
     <string name="approve">Approva</string>
     <string name="approved_waiting_for_spot">Approvato, in attesa di un posto libero</string>
     <string name="auth_check_email">Controlla la tua email per confermare l\'account, poi accedi.</string>
-    <string name="auth_create_account_title">Crea il tuo account</string>
-    <string name="auth_have_account">Hai già un account? Accedi</string>
-    <string name="auth_no_account">Nuovo su Boolaa? Crea un account</string>
     <string name="auth_tagline">Le tue bolle private di amici, coinquilini e club.</string>
-    <string name="auth_welcome_back">Che bello rivederti</string>
     <string name="back">Indietro</string>
     <string name="block">Blocca</string>
     <string name="block_explainer">Non vedrete più messaggi, eventi, cibo, oggetti o link l\'uno dell\'altro.</string>
@@ -87,6 +83,7 @@
     <string name="going">Ci sono</string>
     <string name="home_empty_message">Saluta in chat, organizza un evento o condividi del cibo.</string>
     <string name="home_empty_title">Ancora niente qui</string>
+    <string name="home_greeting">Ciao, %1$s!</string>
     <string name="invite_code">Codice di invito</string>
     <string name="invite_share_text">Unisciti alla mia bolla «%1$s» su Boolaa con il codice di invito %2$s</string>
     <string name="join_a_bubble">Unisciti a una bolla</string>
@@ -102,6 +99,7 @@
     <string name="links">Link</string>
     <string name="links_empty_message">Condividi ricette, playlist o qualsiasi cosa utile.</string>
     <string name="links_empty_title">Ancora nessun link</string>
+    <string name="loading">Caricamento</string>
     <string name="location">Luogo</string>
     <string name="market_empty_message">Regala o scambia qualcosa con la tua bolla.</string>
     <string name="market_empty_title">Ancora niente qui</string>
@@ -174,6 +172,7 @@
     <string name="title">Titolo</string>
     <string name="unblock">Sblocca</string>
     <string name="url">Link (URL)</string>
+    <string name="whats_new">Novità</string>
     <string name="you">Tu</string>
     <string name="you_suffix">(tu)</string>
     <string name="your_pending_requests">Le tue richieste in attesa</string>
@@ -191,6 +190,11 @@
         <item quantity="one">%d partecipa</item>
         <item quantity="many">%d partecipano</item>
         <item quantity="other">%d partecipano</item>
+    </plurals>
+    <plurals name="items_count">
+        <item quantity="one">%d articolo</item>
+        <item quantity="many">%d di articoli</item>
+        <item quantity="other">%d articoli</item>
     </plurals>
     <plurals name="members_count">
         <item quantity="one">%d membro</item>

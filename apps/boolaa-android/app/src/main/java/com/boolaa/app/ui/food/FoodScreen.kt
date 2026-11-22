@@ -2,42 +2,6 @@ package com.boolaa.app.ui.food
 
 import android.content.ContentResolver
 import android.net.Uri
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
@@ -49,29 +13,159 @@ import com.boolaa.app.model.FoodPost
 import com.boolaa.app.model.ReportTarget
 import com.boolaa.app.model.ReportTargetType
 import com.boolaa.app.ui.safety.ReportSheet
-import com.boolaa.app.ui.components.ItemMenu
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
-import com.boolaa.app.ui.components.AddRow
-import com.boolaa.app.ui.components.Avatar
-import com.boolaa.app.ui.components.BoolaaTextField
-import com.boolaa.app.ui.components.ConfirmDialog
-import com.boolaa.app.ui.components.EmptyState
-import com.boolaa.app.ui.components.LoadingBox
-import com.boolaa.app.ui.components.OwnerMenu
-import com.boolaa.app.ui.components.PhotoField
-import com.boolaa.app.ui.components.PrimaryButton
-import com.boolaa.app.ui.components.RemoteImage
-import com.boolaa.app.ui.components.SectionHeader
-import com.boolaa.app.ui.components.boolaaCard
-import com.boolaa.app.ui.components.displayName
-import com.boolaa.app.ui.components.uploadPicked
-import com.boolaa.app.ui.theme.Brand
-import com.boolaa.app.ui.theme.BoolaaTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.boolaa.app.ui.components.AddButton
+import com.boolaa.app.ui.components.Avatar
+import com.boolaa.app.ui.components.BoolaaChip
+import com.boolaa.app.ui.components.BoolaaIcons
+import com.boolaa.app.ui.components.BoolaaRefreshBox
+import com.boolaa.app.ui.components.BoolaaSheet
+import com.boolaa.app.ui.components.BoolaaTextField
+import com.boolaa.app.ui.components.BubbleOrb
+import com.boolaa.app.ui.components.CircleIconButton
+import com.boolaa.app.ui.components.ConfettiOverlay
+import com.boolaa.app.ui.components.ConfettiState
+import com.boolaa.app.ui.components.ConfirmDialog
+import com.boolaa.app.ui.components.EmptyState
+import com.boolaa.app.ui.components.FeatureBadge
+import com.boolaa.app.ui.components.FitText
+import com.boolaa.app.ui.components.Haptics
+import com.boolaa.app.ui.components.HintCard
+import com.boolaa.app.ui.components.ItemMenu
+import com.boolaa.app.ui.components.MorphIcon
+import com.boolaa.app.ui.components.PhotoField
+import com.boolaa.app.ui.components.PrimaryButton
+import com.boolaa.app.ui.components.PushedHeader
+import com.boolaa.app.ui.components.RemoteImage
+import com.boolaa.app.ui.components.RollingCount
+import com.boolaa.app.ui.components.SecondaryButton
+import com.boolaa.app.ui.components.SectionHeader
+import com.boolaa.app.ui.components.SegmentedPill
+import com.boolaa.app.ui.components.SkeletonList
+import com.boolaa.app.ui.components.SkeletonTile
+import com.boolaa.app.ui.components.StatusBadge
+import com.boolaa.app.ui.components.boolaaCard
+import com.boolaa.app.ui.components.bounceOn
+import com.boolaa.app.ui.components.clickableRipple
+import com.boolaa.app.ui.components.dashedBorder
+import com.boolaa.app.ui.components.displayName
+import com.boolaa.app.ui.components.dockClearance
+import com.boolaa.app.ui.components.glow
+import com.boolaa.app.ui.components.popIn
+import com.boolaa.app.ui.components.scrollFade
+import com.boolaa.app.ui.components.uploadPicked
+import com.boolaa.app.ui.theme.BoolaaTheme
+import com.boolaa.app.ui.theme.Brand
+import com.boolaa.app.ui.theme.Display
+import com.boolaa.app.ui.theme.Feature
+import com.boolaa.app.ui.theme.Hue
+import com.boolaa.app.ui.theme.Motion
+import com.boolaa.app.ui.theme.Radius
+import com.boolaa.app.ui.theme.Type
 
 class FoodViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
     private val _posts = MutableStateFlow<List<FoodPost>?>(null)
@@ -104,7 +198,6 @@ class FoodViewModel(private val container: AppContainer, private val bubbleId: S
 }
 
 /** "My posts" and "From the bubble" with photo upload (spec §8). */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodScreen() {
     val container = LocalAppContainer.current
@@ -119,30 +212,41 @@ fun FoodScreen() {
     var deleting by remember { mutableStateOf<FoodPost?>(null) }
     var reporting by remember { mutableStateOf<ReportTarget?>(null) }
     val someone = stringResource(R.string.someone)
+    val hue = Feature.FOOD.hue
+    val listState = rememberLazyListState()
 
-    PullToRefreshBox(isRefreshing = busy && posts != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
+    BoolaaRefreshBox(isRefreshing = busy && posts != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("food-screen")) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = Brand.tabBarClearance),
+            state = listState,
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = dockClearance()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            item { AddRow(stringResource(R.string.new_food_post), onClick = { creating = true }) }
             val list = posts
-            if (list == null) { item { LoadingBox() }; return@LazyColumn }
+            val mine = list.orEmpty().filter { it.userId == me }
+            val others = list.orEmpty().filter { it.userId != me }
+            item(key = "my-header") {
+                SectionHeader(stringResource(R.string.my_posts), if (list == null) null else mine.size, hue = hue,
+                    action = { AddButton(stringResource(R.string.new_food_post), onClick = { creating = true }, hue = hue) })
+            }
+            if (list == null) { item(key = "loading") { SkeletonList() }; return@LazyColumn }
             if (list.isEmpty()) {
-                item { EmptyState(Icons.Default.Restaurant, stringResource(R.string.food_empty_title), stringResource(R.string.food_empty_message)) }
+                item(key = "empty") { EmptyState(BoolaaIcons.Food, stringResource(R.string.food_empty_title), stringResource(R.string.food_empty_message), hue = hue) }
                 return@LazyColumn
             }
-            val mine = list.filter { it.userId == me }
-            val others = list.filter { it.userId != me }
-            item { SectionHeader(stringResource(R.string.my_posts), mine.size) }
-            if (mine.isEmpty()) item { Text(stringResource(R.string.my_posts_empty), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.boolaaCard()) }
-            items(mine, key = { it.id }) { p -> FoodCard(p, onEdit = { editing = p }, onDelete = { deleting = p }) }
-            item { SectionHeader(stringResource(R.string.from_the_bubble), others.size) }
-            if (others.isEmpty()) item { Text(stringResource(R.string.from_the_bubble_empty), color = BoolaaTheme.colors.textSecondary, modifier = Modifier.boolaaCard()) }
-            items(others, key = { it.id }) { p ->
-                FoodCard(p, onEdit = null, onDelete = null, onReport = {
+            if (mine.isEmpty()) item(key = "my-empty") {
+                EmptyState(BoolaaIcons.Food, stringResource(R.string.food_empty_title), stringResource(R.string.my_posts_empty), hue = hue)
+            }
+            itemsIndexed(mine, key = { _, p -> p.id }) { index, p ->
+                FoodCard(p, onEdit = { editing = p }, onDelete = { deleting = p }, modifier = Modifier.scrollFade(listState, p.id).popIn(index + 1))
+            }
+            item(key = "bubble-header") { SectionHeader(stringResource(R.string.from_the_bubble), others.size, hue = hue) }
+            if (others.isEmpty()) item(key = "bubble-empty") {
+                EmptyState(BoolaaIcons.Takeout, stringResource(R.string.food_empty_title), stringResource(R.string.from_the_bubble_empty), hue = hue)
+            }
+            itemsIndexed(others, key = { _, p -> p.id }) { index, p ->
+                FoodCard(p, onEdit = null, onDelete = null, modifier = Modifier.scrollFade(listState, p.id).popIn(mine.size + index + 2), onReport = {
                     reporting = ReportTarget(ReportTargetType.FOOD_POST, p.id, p.userId, p.user?.name?.takeIf { it.isNotBlank() } ?: someone)
                 })
             }
@@ -162,42 +266,44 @@ fun FoodScreen() {
     ErrorDialogFor(vm)
 }
 
+/** Full-width photo with the author pill floating bottom-left; description and the overflow menu below. */
 @Composable
-fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null) {
+fun FoodCard(post: FoodPost, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, modifier: Modifier = Modifier, onReport: (() -> Unit)? = null) {
     val locale = LocalConfiguration.current.locales[0]
-    Column(Modifier.boolaaCard(0.dp).testTag("food-${post.id}")) {
-        RemoteImage(post.image, Modifier.fillMaxWidth().height(200.dp), post.description)
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            post.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    val c = BoolaaTheme.colors
+    Column(modifier.boolaaCard(0.dp).testTag("food-${post.id}")) {
+        Box {
+            RemoteImage(post.image, Modifier.fillMaxWidth().height(210.dp), post.description)
+            Row(
+                Modifier.align(Alignment.BottomStart).padding(10.dp).clip(CircleShape).background(c.card.copy(alpha = 0.9f))
+                    .padding(start = 4.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Avatar(post.user, 24.dp)
-                Text(
-                    "${displayName(post.user)} · ${Formats.relative(post.createdAt, locale)}",
-                    style = MaterialTheme.typography.bodySmall, color = BoolaaTheme.colors.textSecondary,
-                    modifier = Modifier.padding(start = 6.dp).weight(1f),
-                )
-                if (onDelete != null || onReport != null) ItemMenu(onEdit, onDelete, onReport)
+                Text(displayName(post.user), style = Type.caption, color = c.textPrimary, maxLines = 1)
+                Text(Formats.relative(post.createdAt, locale), style = Type.caption2, color = c.textSecondary, maxLines = 1)
+            }
+        }
+        val description = post.description?.takeIf { it.isNotBlank() }
+        val hasMenu = onDelete != null || onReport != null
+        if (description != null || hasMenu) {
+            Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp).heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(description.orEmpty(), style = Type.body.copy(fontWeight = FontWeight.Medium), color = c.textPrimary, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
+                if (hasMenu) ItemMenu(onEdit, onDelete, onReport)
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodEditor(existing: FoodPost?, busy: Boolean, onDismiss: () -> Unit, onSave: (Uri?, String) -> Unit) {
     var picked by remember { mutableStateOf<Uri?>(null) }
     var description by rememberSaveable { mutableStateOf(existing?.description.orEmpty()) }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = BoolaaTheme.colors.background) {
-        Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 20.dp).padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(stringResource(if (existing == null) R.string.new_food_post else R.string.edit_food_post), style = MaterialTheme.typography.titleLarge)
-            PhotoField(existing?.image, picked, onPick = { picked = it }, modifier = Modifier.clip(RoundedCornerShape(Brand.cardRadius)))
-            BoolaaTextField(description, { description = it }, stringResource(R.string.description), singleLine = false, minLines = 2)
-            PrimaryButton(stringResource(R.string.save), onClick = { onSave(picked, description) },
-                enabled = picked != null || existing != null, loading = busy)
-        }
+    val hue = Feature.FOOD.hue
+    BoolaaSheet(onDismiss, stringResource(if (existing == null) R.string.new_food_post else R.string.edit_food_post), spacing = 12.dp) {
+        PhotoField(existing?.image, picked, onPick = { picked = it }, hue = hue)
+        BoolaaTextField(description, { description = it }, stringResource(R.string.description), singleLine = false, minLines = 2)
+        PrimaryButton(stringResource(R.string.save), onClick = { onSave(picked, description) },
+            enabled = picked != null || existing != null, loading = busy, hue = hue, modifier = Modifier.padding(top = 4.dp))
     }
 }

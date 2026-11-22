@@ -1,35 +1,44 @@
 package com.boolaa.app.ui.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BubbleChart
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,20 +48,23 @@ import com.boolaa.app.AppContainer
 import com.boolaa.app.R
 import com.boolaa.app.core.UserFacingError
 import com.boolaa.app.ui.BaseViewModel
-import com.boolaa.app.ui.safety.LegalAgreementText
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.ui.semantics.Role
 import com.boolaa.app.ui.ErrorDialogFor
 import com.boolaa.app.ui.LocalAppContainer
+import com.boolaa.app.ui.components.BoolaaLogo
 import com.boolaa.app.ui.components.BoolaaTextField
+import com.boolaa.app.ui.components.BubbleBackdrop
+import com.boolaa.app.ui.components.Haptics
 import com.boolaa.app.ui.components.PrimaryButton
+import com.boolaa.app.ui.components.SegmentedPill
 import com.boolaa.app.ui.components.boolaaCard
-import com.boolaa.app.ui.theme.Brand
+import com.boolaa.app.ui.components.popIn
+import com.boolaa.app.ui.components.shake
+import com.boolaa.app.ui.safety.LegalAgreementText
 import com.boolaa.app.ui.theme.BoolaaTheme
+import com.boolaa.app.ui.theme.Hue
+import com.boolaa.app.ui.theme.Motion
+import com.boolaa.app.ui.theme.Radius
+import com.boolaa.app.ui.theme.Type
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -70,79 +82,109 @@ class AuthViewModel(private val container: AppContainer) : BaseViewModel() {
     }
 }
 
-/** Login and register (spec §1). The name is sent as sign-up metadata { name }. */
+/**
+ * Login and register (spec §1). The name is sent as sign-up metadata { name }.
+ * The joyful first impression: bubbles drifting up a soft sky, a bobbing logo, the wordmark's letters dropping in
+ * one after another, then the tagline and a frosted form panel.
+ */
 @Composable
 fun AuthScreen() {
     val container = LocalAppContainer.current
     val vm: AuthViewModel = viewModel { AuthViewModel(container) }
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val error by vm.error.collectAsStateWithLifecycle()
     val needsConfirmation by vm.needsConfirmation.collectAsStateWithLifecycle()
     var register by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var ageConfirmed by rememberSaveable { mutableStateOf(false) }
+    var shakes by remember { mutableIntStateOf(0) }
+    val view = LocalView.current
+    val c = BoolaaTheme.colors
+    LaunchedEffect(error) { if (error != null) { shakes++; Haptics.error(view) } }
 
-    Box(
-        Modifier.fillMaxSize().background(BoolaaTheme.colors.background).statusBarsPadding().imePadding().testTag("auth-screen"),
-    ) {
+    Box(Modifier.fillMaxSize().testTag("auth-screen")) {
+        BubbleBackdrop()
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()
+                .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Box(
-                Modifier.padding(top = 40.dp).size(84.dp).clip(CircleShape).background(Brand.purple),
-                contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Filled.BubbleChart, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp)) }
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.displaySmall, color = Brand.purple)
+            BoolaaLogo(92.dp, Modifier.padding(top = 36.dp).popIn(0))
+            Wordmark(Modifier.padding(top = 6.dp))
             Text(
                 stringResource(R.string.auth_tagline),
-                style = MaterialTheme.typography.bodyLarge,
-                color = BoolaaTheme.colors.textSecondary,
-                textAlign = TextAlign.Center,
+                style = Type.chip, color = c.textSecondary, textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp, start = 12.dp, end = 12.dp).popIn(6),
             )
-            Column(Modifier.boolaaCard(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    stringResource(if (register) R.string.auth_create_account_title else R.string.auth_welcome_back),
-                    style = MaterialTheme.typography.titleLarge,
+            Column(
+                Modifier.padding(top = 24.dp).popIn(7)
+                    // Frosted panel: Compose has no backdrop blur, so the card colour is simply translucent.
+                    .boolaaCard(18.dp, Radius.hero, c.card.copy(alpha = if (c.isDark) 0.78f else 0.72f))
+                    .animateContentSize(Motion.gentle()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SegmentedPill(
+                    options = listOf(false to stringResource(R.string.sign_in), true to stringResource(R.string.create_account)),
+                    selected = register, onSelect = { register = it },
+                    // The tag follows the segment that flips the mode, as the old toggle link did.
+                    tagFor = { if (it != register) "auth-toggle" else null },
+                    modifier = Modifier.padding(bottom = 4.dp),
                 )
-                if (register) {
+                AnimatedVisibility(register) {
                     BoolaaTextField(name, { name = it }, stringResource(R.string.name), Modifier.testTag("name"))
                 }
                 BoolaaTextField(email, { email = it }, stringResource(R.string.email), Modifier.testTag("email"), keyboardType = KeyboardType.Email)
                 BoolaaTextField(password, { password = it }, stringResource(R.string.password), Modifier.testTag("password"), isPassword = true)
-                if (register) {
-                    Row(
-                        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
-                            .toggleable(value = ageConfirmed, role = Role.Checkbox, onValueChange = { ageConfirmed = it })
-                            .testTag("age-confirm"),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = ageConfirmed, onCheckedChange = null, colors = CheckboxDefaults.colors(checkedColor = Brand.purple))
-                        Text(stringResource(R.string.age_confirm), modifier = Modifier.padding(start = 8.dp))
+                AnimatedVisibility(register) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.small))
+                                .toggleable(value = ageConfirmed, role = Role.Checkbox, onValueChange = { ageConfirmed = it })
+                                .padding(vertical = 6.dp).testTag("age-confirm"),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(checked = ageConfirmed, onCheckedChange = null,
+                                colors = CheckboxDefaults.colors(checkedColor = Hue.grape.fill, checkmarkColor = Hue.grape.onFill, uncheckedColor = c.textSecondary))
+                            Text(stringResource(R.string.age_confirm), style = Type.body, color = c.textPrimary, modifier = Modifier.padding(start = 10.dp))
+                        }
+                        LegalAgreementText(Modifier.fillMaxWidth())
                     }
                 }
                 if (needsConfirmation && register) {
-                    Text(stringResource(R.string.auth_check_email), color = Brand.purple, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        stringResource(R.string.auth_check_email), color = Hue.mint.text, style = Type.subheadline, textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().popIn().clip(RoundedCornerShape(Radius.field)).background(Hue.mint.wash).padding(12.dp),
+                    )
                 }
                 PrimaryButton(
                     text = stringResource(if (register) R.string.create_account else R.string.sign_in),
                     onClick = { if (register) vm.signUp(name, email, password) else vm.signIn(email, password) },
                     enabled = email.isNotBlank() && password.isNotBlank() && (!register || (name.isNotBlank() && ageConfirmed)),
                     loading = busy,
-                    modifier = Modifier.testTag("auth-submit"),
-                )
-                if (register) LegalAgreementText(Modifier.fillMaxWidth())
-            }
-            TextButton(onClick = { register = !register }, modifier = Modifier.fillMaxWidth().testTag("auth-toggle")) {
-                Text(
-                    stringResource(if (register) R.string.auth_have_account else R.string.auth_no_account),
-                    color = Brand.purple,
-                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp).shake(shakes).testTag("auth-submit"),
                 )
             }
         }
     }
     ErrorDialogFor(vm)
+}
+
+/** "Boolaa" in the heavy display face; the letters drop in one after another. A fixed size, by design. */
+@Composable
+fun Wordmark(modifier: Modifier = Modifier) {
+    val name = stringResource(R.string.app_name)
+    val size = with(LocalDensity.current) { 46.dp.toSp() }
+    val ink = BoolaaTheme.colors.textPrimary
+    val grape = Hue.grape.text
+    Row(modifier.clearAndSetSemantics { contentDescription = name; heading() }) {
+        name.forEachIndexed { index, letter ->
+            Text(
+                letter.toString(), style = Type.wordmark.copy(fontSize = size, lineHeight = size * 1.15f),
+                color = if (index == 1 || index == 2) grape else ink,
+                modifier = Modifier.popIn(index + 1, rise = (-26).dp),
+            )
+        }
+    }
 }
