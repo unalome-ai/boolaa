@@ -1,6 +1,6 @@
 name: Boolaa
 options:
-  bundleIdPrefix: com.boolaa
+  bundleIdPrefix: ro.boolaa
   deploymentTarget:
     iOS: "18.0"
   createIntermediateGroups: true
@@ -25,6 +25,9 @@ packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     from: "2.55.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "10.1.0"
 
 targets:
   Boolaa:
@@ -35,6 +38,12 @@ targets:
     dependencies:
       - package: Supabase
         product: Supabase
+      - package: GoogleSignIn
+        product: GoogleSignIn
+    entitlements:
+      path: Boolaa/Resources/Boolaa.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
     info:
       path: Boolaa/Resources/Info.plist
       properties:
@@ -49,12 +58,21 @@ targets:
         SupabaseURL: $(SUPABASE_URL)
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
         WebBaseURL: $(WEB_BASE_URL)
+        # OAuth / email-link callback (ro.boolaa.app://auth/callback, PKCE) and Google Sign-In's
+        # reversed iOS client ID. Client IDs are public identifiers (docs/oauth-clients.md).
+        CFBundleURLTypes:
+          - CFBundleURLName: ro.boolaa.app.auth
+            CFBundleURLSchemes: [ro.boolaa.app]
+          - CFBundleURLName: com.googleusercontent.apps.ios
+            CFBundleURLSchemes: [com.googleusercontent.apps.816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7]
+        GIDClientID: 816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7.apps.googleusercontent.com
+        GIDServerClientID: 816126337836-0k4begddfi0f1usm1hg2e6va9fddni3m.apps.googleusercontent.com
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         NSPhotoLibraryUsageDescription: Boolaa uses your photos for avatars, food posts and marketplace items.
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.boolaa.app
+        PRODUCT_BUNDLE_IDENTIFIER: ro.boolaa.app
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -69,7 +87,7 @@ targets:
       - target: Boolaa
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.boolaa.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: ro.boolaa.app.tests
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/Boolaa.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Boolaa
         BUNDLE_LOADER: $(TEST_HOST)
@@ -83,7 +101,7 @@ targets:
       - target: Boolaa
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.boolaa.app.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: ro.boolaa.app.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Boolaa
 

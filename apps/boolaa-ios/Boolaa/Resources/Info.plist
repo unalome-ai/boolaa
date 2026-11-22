@@ -26,8 +26,31 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ro.boolaa.app.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ro.boolaa.app</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.googleusercontent.apps.ios</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>GIDClientID</key>
+	<string>816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>816126337836-0k4begddfi0f1usm1hg2e6va9fddni3m.apps.googleusercontent.com</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

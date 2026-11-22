@@ -4,6 +4,16 @@ import Supabase
 /// Maps backend, auth and network failures to translated messages (docs/i18n-glossary.md, "Backend errors").
 /// Raw Postgres / GoTrue English is never shown to the user.
 enum UserFacingError: Equatable, Sendable, CaseIterable {
+    static let allCases: [UserFacingError] = [
+        .invalidInviteCode, .alreadyMember, .bubbleFull, .notMember, .requestNotFound, .eventNotFound, .ownerOnlyRemove,
+        .removeSelf, .memberNotFound, .cannotReportSelf, .reportTargetNotFound, .notAuthenticated, .permissionDenied,
+        .invalidCredentials, .emailTaken, .weakPassword, .network, .generic,
+        .sessionNotVerified, .ageConfirmationRequired, .reauthenticationRequired, .invalidDeviceId, .invalidTermsVersion,
+        .codeWrong(attemptsLeft: 1), .codeWrong(attemptsLeft: 3), .codeWrongOrExpired, .codeFormat, .codeExpired,
+        .noActiveCode, .tooManyCodeAttempts, .tooManyCodes, .emailSendFailed, .emailRateLimited, .samePassword,
+        .oauthFailed, .accountSuspended, .userBanned, .invalidEmail,
+    ]
+
     case invalidInviteCode
     case alreadyMember
     case bubbleFull
@@ -22,9 +32,41 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     case weakPassword
     case network
     case generic
+    // Auth security (docs/auth-security.md §3, glossary "Auth security errors")
+    case sessionNotVerified
+    case ageConfirmationRequired
+    case reauthenticationRequired
+    case invalidDeviceId
+    case invalidTermsVersion
+    case codeWrong(attemptsLeft: Int)
+    case codeWrongOrExpired
+    case codeFormat
+    case codeExpired
+    case noActiveCode
+    case tooManyCodeAttempts
+    case tooManyCodes
+    case emailSendFailed
+    case emailRateLimited
+    case samePassword
+    case oauthFailed
+    // Moderation (docs/moderation.md)
+    case accountSuspended
+    case userBanned
+    case invalidEmail
 
     /// Classifies any error thrown by the SDK or by URLSession.
     static func classify(_ error: any Error) -> UserFacingError {
+        let result = classifyWithoutEvents(error)
+        switch result {
+        case .sessionNotVerified: SecurityEvents.post(.sessionNotVerified)
+        case .accountSuspended: SecurityEvents.post(.accountSuspended)
+        default: break
+        }
+        return result
+    }
+
+    private static func classifyWithoutEvents(_ error: any Error) -> UserFacingError {
+        if let code = error as? DeviceCodeError { return classify(deviceCode: code) }
         if let urlError = error as? URLError {
             return urlError.code == .cancelled ? .generic : .network
         }
@@ -34,6 +76,12 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             case .userAlreadyExists, .emailExists: return .emailTaken
             case .weakPassword: return .weakPassword
             case .sessionNotFound, .sessionExpired: return .notAuthenticated
+            case .otpExpired, .reauthenticationNotValid: return .codeWrongOrExpired
+            case .reauthenticationNeeded: return .reauthenticationRequired
+            case .overEmailSendRateLimit, .overRequestRateLimit: return .emailRateLimited
+            case .samePassword: return .samePassword
+            case .userBanned: return .userBanned
+            case .validationFailed: return .invalidEmail
             default: return classify(message: auth.message, code: nil) ?? .generic
             }
         }
@@ -61,6 +109,13 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             ("cannot report yourself", .cannotReportSelf),
             ("report target not found", .reportTargetNotFound),
             ("not authenticated", .notAuthenticated),
+            ("session not verified", .sessionNotVerified),
+            ("age confirmation required", .ageConfirmationRequired),
+            ("reauthentication required", .reauthenticationRequired),
+            ("invalid device id", .invalidDeviceId),
+            ("invalid terms version", .invalidTermsVersion),
+            ("account suspended", .accountSuspended),
+            ("user is banned", .userBanned),
             ("invalid login credentials", .invalidCredentials),
             ("user already registered", .emailTaken),
             ("row-level security", .permissionDenied),
@@ -69,6 +124,22 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         if let hit = table.first(where: { text.contains($0.0) }) { return hit.1 }
         if code == "42501" { return .permissionDenied }
         return nil
+    }
+
+    /// The `device-code` function's `error` codes (docs/auth-security.md §3).
+    static func classify(deviceCode error: DeviceCodeError) -> UserFacingError {
+        switch error.code {
+        case "invalid_request": .codeFormat
+        case "invalid_code": error.attemptsLeft.map { .codeWrong(attemptsLeft: $0) } ?? .codeWrongOrExpired
+        case "unauthorized": .notAuthenticated
+        case "session_not_verified": .sessionNotVerified
+        case "no_active_code": .noActiveCode
+        case "code_expired": .codeExpired
+        case "too_many_attempts": .tooManyCodeAttempts
+        case "rate_limited": .tooManyCodes
+        case "email_failed": .emailSendFailed
+        default: .generic
+        }
     }
 
     var message: LocalizedStringResource {
@@ -91,6 +162,25 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .weakPassword: "Choose a stronger password (at least 6 characters)."
         case .network: "Can't reach Boolaa. Check your connection and try again."
         case .generic: "Something went wrong. Try again."
+        case .sessionNotVerified: "Confirm this device first: enter the code we email you."
+        case .ageConfirmationRequired: "Confirm that you're 16 or older to continue."
+        case .reauthenticationRequired: "For your safety, confirm it's you with the code we email you."
+        case .invalidDeviceId: "We couldn't recognise this device. Restart the app and try again."
+        case .invalidTermsVersion: "We couldn't save your confirmation. Restart the app and try again."
+        case .codeWrong(let left): "That code isn't right. \(left) tries left."
+        case .codeWrongOrExpired: "That code is wrong or expired."
+        case .codeFormat: "Enter the 6-digit code."
+        case .codeExpired: "That code has expired. Send a new one."
+        case .noActiveCode: "There's no active code. Send a new one."
+        case .tooManyCodeAttempts: "Too many wrong tries. Send a new code."
+        case .tooManyCodes: "Too many codes. Try again later."
+        case .emailSendFailed: "Couldn't send the email. Try again."
+        case .emailRateLimited: "We just sent you an email. Wait a minute before asking for another."
+        case .samePassword: "Your new password must be different from the old one."
+        case .oauthFailed: "Couldn't sign you in with that account. Try again."
+        case .accountSuspended: "Your account is suspended, so you can't do that right now."
+        case .userBanned: "This account can't sign in right now: it's suspended or banned."
+        case .invalidEmail: "Enter a valid email address."
         }
     }
 }

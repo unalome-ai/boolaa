@@ -9,7 +9,7 @@ final class BoolaaUITests: XCTestCase {
     @MainActor
     func testLoginChatSwitchBubbleSettings() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-UITestSignOut", "YES", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchArguments = ["-UITestSignOut", "YES", "-UITestDeviceID", "boolaa-test-device", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
 
         // Login
@@ -66,6 +66,7 @@ final class BoolaaUITests: XCTestCase {
     }
 
     /// Taps until the field owns keyboard focus (the chat field can miss the first tap while the list auto-scrolls).
+    @MainActor
     private func focus(_ element: XCUIElement) {
         for _ in 0..<5 {
             element.tap()
@@ -75,6 +76,7 @@ final class BoolaaUITests: XCTestCase {
         XCTFail("Could not focus \(element)")
     }
 
+    @MainActor
     private func attach(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name

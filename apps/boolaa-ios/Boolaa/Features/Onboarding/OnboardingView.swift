@@ -5,6 +5,8 @@ struct OnboardingView: View {
     @Environment(SessionStore.self) private var session
     @State private var mode: Mode = DebugHooks.string("UITestOnboarding").flatMap(Mode.init(rawValue:)) ?? .join
     @State private var error: String?
+    /// Profile (security, delete account, legal) must be reachable before joining a bubble too.
+    @State private var showProfile = false
 
     enum Mode: String, CaseIterable {
         case join, create
@@ -29,6 +31,8 @@ struct OnboardingView: View {
                     }
                     Spacer()
                     Menu {
+                        Button { showProfile = true } label: { Label("Profile", systemImage: "person.crop.circle") }
+                            .accessibilityIdentifier("onboarding-open-profile")
                         Button("Sign out", role: .destructive) { Task { await session.signOut() } }
                     } label: {
                         AvatarView(user: session.profile, size: 44)
@@ -60,6 +64,7 @@ struct OnboardingView: View {
         .refreshable { await session.reload() }
         .background { AuthBackdrop(intensity: 0.7) }
         .errorAlert($error)
+        .sheet(isPresented: $showProfile) { ProfileSheet().boolaaSheet() }
     }
 }
 

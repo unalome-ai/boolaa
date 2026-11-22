@@ -25,6 +25,9 @@ struct AppConfig: Sendable {
         return AppConfig(supabaseURL: url, supabaseAnonKey: key)
     }
 
+    /// OAuth and email-link callback (PKCE). Allow-listed in Supabase Auth's redirect URLs.
+    static let authCallbackURL = URL(string: "ro.boolaa.app://auth/callback")!
+
     /// Base URL of the web app (legal pages). Falls back to production when the key is missing.
     static var webBaseURL: URL { webBaseURL(from: .main) }
     static func webBaseURL(from bundle: Bundle) -> URL {

@@ -21,7 +21,7 @@ THEMES="${THEMES:-light dark}"
 SCREENS="${SCREENS:-home chat events food market links settings requests join create pending}"
 WIDTH="${WIDTH:-660}"      # output width in px (the simulator renders 1206); shown at up to 330 CSS px
 QUALITY="${QUALITY:-80}"
-BUNDLE_ID=com.boolaa.app
+BUNDLE_ID=ro.boolaa.app
 DERIVED="$IOS_DIR/build/MarketingDerivedData"
 RAW="${RAW_DIR:-$(mktemp -d)}"
 

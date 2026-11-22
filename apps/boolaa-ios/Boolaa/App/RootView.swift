@@ -13,6 +13,14 @@ struct RootView: View {
                 LaunchView().transition(.opacity)
             case .auth:
                 AuthView().transition(screenTransition)
+            case .resetPassword:
+                NewPasswordView().transition(screenTransition)
+            case .deviceCode:
+                DeviceCodeView().transition(screenTransition)
+            case .ageConfirmation:
+                AgeConfirmationView().transition(screenTransition)
+            case .suspended:
+                SuspendedView().transition(.opacity)
             case .onboarding:
                 OnboardingView().transition(screenTransition)
             case .main:

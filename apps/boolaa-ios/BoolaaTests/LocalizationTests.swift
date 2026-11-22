@@ -92,6 +92,8 @@ struct ErrorMappingTests {
         #expect(try resolve(UserFacingError.alreadyMember.message, "es") == "Ya eres miembro de esta burbuja.")
         #expect(try resolve(UserFacingError.network.message, "it") == "Impossibile raggiungere Boolaa. Controlla la connessione e riprova.")
         for error in UserFacingError.allCases {
+            // Plural messages compile to a stringsdict; AuthSecurityTests.triesLeftPlurals resolves them per language.
+            if case .codeWrong = error { continue }
             let english = try resolve(error.message, "en")
             for lang in ["ro", "fr", "es", "it"] {
                 let text = try resolve(error.message, lang)

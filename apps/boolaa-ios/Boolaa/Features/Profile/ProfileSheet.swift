@@ -14,7 +14,7 @@ struct ProfileSheet: View {
     @State private var legalPage: LegalPage?
     @State private var showDeleteAccount = false
 
-    enum ProfileDestination: Hashable { case blocked }
+    enum ProfileDestination: Hashable { case blocked, security }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -43,6 +43,11 @@ struct ProfileSheet: View {
                     .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty || name == session.profile?.name)
 
                     VStack(spacing: 10) {
+                        NavigationLink(value: ProfileDestination.security) {
+                            ProfileRow(title: "Sign-in & security", icon: "lock.fill", trailing: "chevron.right", hue: .indigo)
+                        }
+                        .buttonStyle(.squish)
+                        .accessibilityIdentifier("security-row")
                         LanguageRow()
                         NavigationLink(value: ProfileDestination.blocked) {
                             ProfileRow(title: "Blocked users", icon: "hand.raised.fill", trailing: "chevron.right", hue: .coral)
@@ -82,7 +87,12 @@ struct ProfileSheet: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .navigationDestination(for: ProfileDestination.self) { _ in BlockedUsersView() }
+            .navigationDestination(for: ProfileDestination.self) { destination in
+                switch destination {
+                case .blocked: BlockedUsersView()
+                case .security: SecurityView()
+                }
+            }
             .legalPageSheet($legalPage)
             .sheet(isPresented: $showDeleteAccount) {
                 DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() }).boolaaSheet()
@@ -91,6 +101,7 @@ struct ProfileSheet: View {
                 name = session.profile?.name ?? ""
                 switch DebugHooks.consumeProfileOpen() {
                 case "blocked": path = [.blocked]
+                case "security": path = [.security]
                 case "deleteAccount": showDeleteAccount = true
                 default: break
                 }

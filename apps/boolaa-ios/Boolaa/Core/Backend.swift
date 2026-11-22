@@ -15,9 +15,9 @@ enum Backend {
     static func makeClient(config: AppConfig, authStorage: (any AuthLocalStorage)? = nil) -> SupabaseClient {
         let auth: SupabaseClientOptions.AuthOptions
         if let authStorage {
-            auth = .init(storage: authStorage, emitLocalSessionAsInitialSession: true)
+            auth = .init(storage: authStorage, redirectToURL: AppConfig.authCallbackURL, emitLocalSessionAsInitialSession: true)
         } else {
-            auth = .init(emitLocalSessionAsInitialSession: true)
+            auth = .init(redirectToURL: AppConfig.authCallbackURL, emitLocalSessionAsInitialSession: true)
         }
         return SupabaseClient(
             supabaseURL: config.supabaseURL,

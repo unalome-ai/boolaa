@@ -719,6 +719,34 @@
         }
       }
     },
+    "6-digit code": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cod din 6 cifre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code à 6 chiffres"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de 6 dígitos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice di 6 cifre"
+          }
+        }
+      }
+    },
     "Add link": {
       "localizations": {
         "ro": {
@@ -771,6 +799,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tutti"
+          }
+        }
+      }
+    },
+    "Almost done: confirm the change from the emails we sent to your current address and to %@.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aproape gata: confirmă schimbarea din emailurile trimise pe adresa actuală și la %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presque fini : confirme le changement depuis les e-mails envoyés à ton adresse actuelle et à %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Casi listo: confirma el cambio desde los correos que enviamos a tu dirección actual y a %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quasi fatto: conferma il cambio dalle email che abbiamo inviato al tuo indirizzo attuale e a %@."
           }
         }
       }
@@ -915,6 +971,34 @@
         }
       }
     },
+    "At least 8 characters is best.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideal, cel puțin 8 caractere."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Au moins 8 caractères, c'est l'idéal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo mejor es que tenga al menos 8 caracteres."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meglio almeno 8 caratteri."
+          }
+        }
+      }
+    },
     "Avatar of %@": {
       "localizations": {
         "ro": {
@@ -967,6 +1051,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Indietro"
+          }
+        }
+      }
+    },
+    "Back to sign in": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înapoi la autentificare"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour à la connexion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a iniciar sesión"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Torna all'accesso"
           }
         }
       }
@@ -1107,6 +1219,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utenti bloccati"
+          }
+        }
+      }
+    },
+    "Browsers and phones you've signed in on. Remove one you don't recognise.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browserele și telefoanele de pe care te-ai conectat. Elimină-l pe cel pe care nu-l recunoști."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les navigateurs et téléphones où tu t'es connecté. Retire celui que tu ne reconnais pas."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navegadores y teléfonos donde has iniciado sesión. Quita el que no reconozcas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I browser e i telefoni da cui hai effettuato l'accesso. Rimuovi quello che non riconosci."
           }
         }
       }
@@ -1279,6 +1419,62 @@
         }
       }
     },
+    "Change email": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schimbă emailul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer d'e-mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar correo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia email"
+          }
+        }
+      }
+    },
+    "Change password": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schimbă parola"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer le mot de passe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar contraseña"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia password"
+          }
+        }
+      }
+    },
     "Chat": {
       "localizations": {
         "ro": {
@@ -1307,6 +1503,34 @@
         }
       }
     },
+    "Check your email": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifică-ți emailul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulte tes e-mails"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu correo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla la tua email"
+          }
+        }
+      }
+    },
     "Check your inbox to confirm your email, then sign in.": {
       "localizations": {
         "ro": {
@@ -1331,6 +1555,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Controlla la posta per confermare l'email, poi accedi."
+          }
+        }
+      }
+    },
+    "Choose a new password": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alege o parolă nouă"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisis un nouveau mot de passe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una contraseña nueva"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli una nuova password"
           }
         }
       }
@@ -1419,6 +1671,174 @@
         }
       }
     },
+    "Collapsed": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restrâns"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replié"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraído"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compresso"
+          }
+        }
+      }
+    },
+    "Confirm that you're 16 or older to continue.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmă că ai cel puțin 16 ani ca să continui."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirme que tu as 16 ans ou plus pour continuer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que tienes 16 años o más para continuar."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conferma di avere almeno 16 anni per continuare."
+          }
+        }
+      }
+    },
+    "Confirm these two things and you're in.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmă aceste două lucruri și gata."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirme ces deux points et c'est parti."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma estas dos cosas y listo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conferma queste due cose e sei dentro."
+          }
+        }
+      }
+    },
+    "Confirm this device first: enter the code we email you.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmă mai întâi acest dispozitiv: introdu codul pe care ți-l trimitem pe email."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirme d'abord cet appareil : saisis le code qu'on t'envoie par e-mail."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero confirma este dispositivo: introduce el código que te enviamos por correo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima conferma questo dispositivo: inserisci il codice che ti mandiamo via email."
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuă"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua"
+          }
+        }
+      }
+    },
+    "Continue with Google": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuă cu Google"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer avec Google"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar con Google"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua con Google"
+          }
+        }
+      }
+    },
     "Copy invite code": {
       "localizations": {
         "ro": {
@@ -1443,6 +1863,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copia il codice di invito"
+          }
+        }
+      }
+    },
+    "Couldn't send the email. Try again.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am putut trimite emailul. Încearcă din nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'envoyer l'e-mail. Réessaie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos podido enviar el correo. Inténtalo de nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non siamo riusciti a inviare l'email. Riprova."
+          }
+        }
+      }
+    },
+    "Couldn't sign you in with that account. Try again.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu te-am putut conecta cu acel cont. Încearcă din nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de te connecter avec ce compte. Réessaie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos podido iniciar sesión con esa cuenta. Inténtalo de nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non siamo riusciti a farti accedere con quell'account. Riprova."
           }
         }
       }
@@ -1699,6 +2175,34 @@
         }
       }
     },
+    "Delete my account": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Șterge-mi contul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer mon compte"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar mi cuenta"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina il mio account"
+          }
+        }
+      }
+    },
     "Delete this link?": {
       "localizations": {
         "ro": {
@@ -1891,6 +2395,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dettagli (facoltativo)"
+          }
+        }
+      }
+    },
+    "Didn't get it?": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu l-ai primit?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien reçu ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿No te ha llegado?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è arrivato?"
           }
         }
       }
@@ -2091,6 +2623,146 @@
         }
       }
     },
+    "Enter a valid email address.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdu o adresă de email validă."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis une adresse e-mail valide."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce un correo electrónico válido."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci un indirizzo email valido."
+          }
+        }
+      }
+    },
+    "Enter the 6-digit code we just emailed you. Your account will be deleted right after.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdu codul din 6 cifre pe care tocmai ți l-am trimis. Contul tău va fi șters imediat după."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis le code à 6 chiffres qu'on vient de t'envoyer. Ton compte sera supprimé juste après."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el código de 6 dígitos que te acabamos de enviar. Tu cuenta se eliminará justo después."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci il codice di 6 cifre che ti abbiamo appena inviato. Il tuo account verrà eliminato subito dopo."
+          }
+        }
+      }
+    },
+    "Enter the 6-digit code we sent to %@.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdu codul din 6 cifre pe care l-am trimis la %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis le code à 6 chiffres envoyé à %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el código de 6 dígitos que enviamos a %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci il codice di 6 cifre che abbiamo inviato a %@."
+          }
+        }
+      }
+    },
+    "Enter the 6-digit code.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdu codul din 6 cifre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis le code à 6 chiffres."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el código de 6 dígitos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci il codice di 6 cifre."
+          }
+        }
+      }
+    },
+    "Enter your email and we'll send you a 6-digit code.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrie-ți emailul și îți trimitem un cod din 6 cifre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisis ton e-mail et on t'envoie un code à 6 chiffres."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe tu correo y te enviamos un código de 6 dígitos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci la tua email e ti mandiamo un codice di 6 cifre."
+          }
+        }
+      }
+    },
     "Events": {
       "localizations": {
         "ro": {
@@ -2147,6 +2819,62 @@
         }
       }
     },
+    "Expanded": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extins"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplié"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expandido"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espanso"
+          }
+        }
+      }
+    },
+    "First we'll send a code to your current email. After that, both addresses get an email to confirm the change.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mai întâi îți trimitem un cod pe emailul actual. Apoi ambele adrese primesc un email ca să confirmi schimbarea."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On envoie d'abord un code à ton e-mail actuel. Ensuite, les deux adresses reçoivent un e-mail pour confirmer le changement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero te enviamos un código a tu correo actual. Después, las dos direcciones reciben un correo para confirmar el cambio."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima ti mandiamo un codice all'email attuale. Poi entrambi gli indirizzi ricevono un'email per confermare il cambio."
+          }
+        }
+      }
+    },
     "Food Circle": {
       "localizations": {
         "ro": {
@@ -2199,6 +2927,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ad esempio: %@"
+          }
+        }
+      }
+    },
+    "For your safety, confirm it's you with the code we email you.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pentru siguranța ta, confirmă că ești tu cu codul pe care ți-l trimitem pe email."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour ta sécurité, confirme que c'est bien toi avec le code qu'on t'envoie par e-mail."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por tu seguridad, confirma que eres tú con el código que te enviamos por correo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per la tua sicurezza, conferma che sei tu con il codice che ti mandiamo via email."
+          }
+        }
+      }
+    },
+    "Forgot password?": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai uitat parola?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe oublié ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidaste tu contraseña?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password dimenticata?"
           }
         }
       }
@@ -2427,6 +3211,34 @@
         }
       }
     },
+    "I accept the [Terms of Use](boolaa-legal://terms) and I've read the [Privacy Policy](boolaa-legal://privacy).": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept [Termenii de utilizare](boolaa-legal://terms) și am citit [Politica de confidențialitate](boolaa-legal://privacy)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J'accepte les [Conditions d'utilisation](boolaa-legal://terms) et j'ai lu la [Politique de confidentialité](boolaa-legal://privacy)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto los [Términos de uso](boolaa-legal://terms) y he leído la [Política de privacidad](boolaa-legal://privacy)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accetto i [Termini di utilizzo](boolaa-legal://terms) e ho letto l’[Informativa sulla privacy](boolaa-legal://privacy)."
+          }
+        }
+      }
+    },
     "I confirm I'm 16 or older": {
       "localizations": {
         "ro": {
@@ -2455,6 +3267,62 @@
         }
       }
     },
+    "I'm 16 or older": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am cel puțin 16 ani"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J'ai 16 ans ou plus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tengo 16 años o más"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ho almeno 16 anni"
+          }
+        }
+      }
+    },
+    "If an account exists for %@, we've sent it a 6-digit code. It's valid for 10 minutes.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dacă există un cont pentru %@, i-am trimis un cod din 6 cifre. E valabil 10 minute."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si un compte existe pour %@, on lui a envoyé un code à 6 chiffres. Il est valable 10 minutes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si existe una cuenta para %@, le hemos enviado un código de 6 dígitos. Es válido durante 10 minutos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se esiste un account per %@, gli abbiamo inviato un codice di 6 cifre. È valido per 10 minuti."
+          }
+        }
+      }
+    },
     "Invite code": {
       "localizations": {
         "ro": {
@@ -2479,6 +3347,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Codice di invito"
+          }
+        }
+      }
+    },
+    "It will need a new code from your email before it can see your bubbles again.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Va avea nevoie de un cod nou pe email înainte să-ți vadă din nou bulele."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il lui faudra un nouveau code reçu par e-mail avant de revoir tes bulles."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesitará un código nuevo de tu correo antes de volver a ver tus burbujas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli servirà un nuovo codice via email prima di poter rivedere le tue bolle."
           }
         }
       }
@@ -2563,6 +3459,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lingua"
+          }
+        }
+      }
+    },
+    "Last active %@": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activ ultima dată %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière activité %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última actividad %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultima attività %@"
           }
         }
       }
@@ -3211,6 +4135,34 @@
         }
       }
     },
+    "New email": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email nou"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvel e-mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo nuevo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuova email"
+          }
+        }
+      }
+    },
     "New event": {
       "localizations": {
         "ro": {
@@ -3267,6 +4219,34 @@
         }
       }
     },
+    "New password": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parolă nouă"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau mot de passe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña nueva"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuova password"
+          }
+        }
+      }
+    },
     "No blocked users": {
       "localizations": {
         "ro": {
@@ -3319,6 +4299,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessuna descrizione"
+          }
+        }
+      }
+    },
+    "No devices yet.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încă niciun dispozitiv."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun appareil pour l'instant."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay dispositivos."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessun dispositivo."
           }
         }
       }
@@ -3627,6 +4635,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "OK"
+          }
+        }
+      }
+    },
+    "One last thing": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un ultim lucru"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une dernière chose"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una última cosa"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un'ultima cosa"
           }
         }
       }
@@ -3995,6 +5031,34 @@
         }
       }
     },
+    "Reason: %@": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motiv: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motif : %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motivo: %@"
+          }
+        }
+      }
+    },
     "Reject": {
       "localizations": {
         "ro": {
@@ -4019,6 +5083,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rifiuta"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimină"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi"
+          }
+        }
+      }
+    },
+    "Remove %@": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimină %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi %@"
+          }
+        }
+      }
+    },
+    "Remove %@?": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimini %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer %@ ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar %@?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovere %@?"
+          }
+        }
+      }
+    },
+    "Remove device": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimină dispozitivul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer l'appareil"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar dispositivo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi dispositivo"
           }
         }
       }
@@ -4331,6 +5507,90 @@
         }
       }
     },
+    "Resend code": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retrimite codul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvoyer le code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenviar código"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia di nuovo il codice"
+          }
+        }
+      }
+    },
+    "Resend code in %lld s": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retrimite codul în %lld s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvoyer le code dans %lld s"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenviar código en %lld s"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia di nuovo tra %lld s"
+          }
+        }
+      }
+    },
+    "Reset your password": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetează-ți parola"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réinitialise ton mot de passe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablece tu contraseña"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimposta la password"
+          }
+        }
+      }
+    },
     "Save": {
       "localizations": {
         "ro": {
@@ -4355,6 +5615,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salva"
+          }
+        }
+      }
+    },
+    "Save password": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvează parola"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer le mot de passe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar contraseña"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva password"
           }
         }
       }
@@ -4439,6 +5727,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invia"
+          }
+        }
+      }
+    },
+    "Send code": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trimite codul"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer le code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar código"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia codice"
           }
         }
       }
@@ -4691,6 +6007,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esci"
+          }
+        }
+      }
+    },
+    "Sign-in & security": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autentificare și securitate"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion et sécurité"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión y seguridad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso e sicurezza"
           }
         }
       }
@@ -4975,6 +6319,180 @@
         }
       }
     },
+    "That code has expired. Send a new one.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codul a expirat. Cere unul nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code a expiré. Demandes-en un nouveau."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese código ha caducado. Pide uno nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il codice è scaduto. Chiedine uno nuovo."
+          }
+        }
+      }
+    },
+    "That code is wrong or expired.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codul e greșit sau a expirat."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code est erroné ou a expiré."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese código es incorrecto o ha caducado."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il codice è sbagliato o scaduto."
+          }
+        }
+      }
+    },
+    "That code isn't right. %lld tries left.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "That code isn't right. %lld try left."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "That code isn't right. %lld tries left."
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Codul nu e corect. Mai ai %lld încercare."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Codul nu e corect. Mai ai %lld încercări."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Codul nu e corect. Mai ai %lld de încercări."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ce code n'est pas bon. Il te reste %lld essai."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ce code n'est pas bon. Il te reste %lld essais."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ce code n'est pas bon. Il te reste %lld essais."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ese código no es correcto. Te queda %lld intento."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ese código no es correcto. Te quedan %lld intentos."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ese código no es correcto. Te quedan %lld intentos."
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Il codice non è corretto. Ti resta %lld tentativo."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Il codice non è corretto. Ti restano %lld tentativi."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Il codice non è corretto. Ti restano %lld tentativi."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "That invite code doesn't exist. Check it and try again.": {
       "localizations": {
         "ro": {
@@ -5031,6 +6549,34 @@
         }
       }
     },
+    "There's no active code. Send a new one.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu ai niciun cod activ. Cere unul nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun code actif. Demandes-en un nouveau."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay ningún código activo. Pide uno nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non c'è nessun codice attivo. Chiedine uno nuovo."
+          }
+        }
+      }
+    },
     "They can ask to join again with the invite code.": {
       "localizations": {
         "ro": {
@@ -5055,6 +6601,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Potrà chiedere di nuovo di unirsi con il codice di invito."
+          }
+        }
+      }
+    },
+    "Think this is a mistake? Write to [privacy@boolaa.ro](mailto:privacy@boolaa.ro) and tell us why.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crezi că e o greșeală? Scrie-ne la [privacy@boolaa.ro](mailto:privacy@boolaa.ro) și spune-ne de ce."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu penses que c'est une erreur ? Écris-nous à [privacy@boolaa.ro](mailto:privacy@boolaa.ro) et explique-nous pourquoi."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Crees que es un error? Escríbenos a [privacy@boolaa.ro](mailto:privacy@boolaa.ro) y cuéntanos por qué."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pensi che sia un errore? Scrivici a [privacy@boolaa.ro](mailto:privacy@boolaa.ro) e spiegaci perché."
+          }
+        }
+      }
+    },
+    "This account can't sign in right now: it's suspended or banned.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest cont nu se poate autentifica acum: este suspendat sau blocat."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce compte ne peut pas se connecter pour le moment : il est suspendu ou banni."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cuenta no puede iniciar sesión ahora mismo: está suspendida o bloqueada."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo account non può accedere al momento: è sospeso o bloccato."
           }
         }
       }
@@ -5111,6 +6713,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "L'operazione non si può annullare. Il tuo profilo, le foto, i messaggi, gli eventi, i post di cibo, gli oggetti e i link verranno eliminati definitivamente e lascerai tutte le tue bolle."
+          }
+        }
+      }
+    },
+    "This device": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest dispozitiv"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet appareil"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo dispositivo"
           }
         }
       }
@@ -5255,6 +6885,34 @@
         }
       }
     },
+    "To confirm it's you, we'll send a code to %@.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ca să confirmi că ești tu, îți trimitem un cod la %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour confirmer que c'est bien toi, on t'envoie un code à %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para confirmar que eres tú, te enviaremos un código a %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per confermare che sei tu, ti mandiamo un codice a %@."
+          }
+        }
+      }
+    },
     "To confirm, type %@ below.": {
       "localizations": {
         "ro": {
@@ -5279,6 +6937,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Per confermare, scrivi %@ qui sotto."
+          }
+        }
+      }
+    },
+    "To make sure it's you, we'll email you a 6-digit code first.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ca să fim siguri că ești tu, îți trimitem mai întâi un cod din 6 cifre pe email."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour être sûrs que c'est bien toi, on t'envoie d'abord un code à 6 chiffres par e-mail."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para asegurarnos de que eres tú, primero te enviaremos un código de 6 dígitos por correo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per essere sicuri che sei tu, prima ti mandiamo un codice di 6 cifre via email."
           }
         }
       }
@@ -5311,6 +6997,62 @@
         }
       }
     },
+    "Too many codes. Try again later.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prea multe coduri. Încearcă din nou mai târziu."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trop de codes. Réessaie plus tard."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiados códigos. Inténtalo más tarde."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Troppi codici. Riprova più tardi."
+          }
+        }
+      }
+    },
+    "Too many wrong tries. Send a new code.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prea multe încercări greșite. Cere un cod nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trop d'essais ratés. Demande un nouveau code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiados intentos fallidos. Pide un código nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Troppi tentativi sbagliati. Chiedi un nuovo codice."
+          }
+        }
+      }
+    },
     "Trade": {
       "localizations": {
         "ro": {
@@ -5335,6 +7077,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scambio"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încearcă din nou"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riprova"
           }
         }
       }
@@ -5395,6 +7165,62 @@
         }
       }
     },
+    "Unknown device": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitiv necunoscut"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareil inconnu"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivo desconocido"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivo sconosciuto"
+          }
+        }
+      }
+    },
+    "Until then you can't see your bubbles or post anything.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Până atunci nu îți poți vedea bulele și nu poți posta nimic."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "D'ici là, tu ne peux ni voir tes bulles ni rien publier."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta entonces no puedes ver tus burbujas ni publicar nada."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fino ad allora non puoi vedere le tue bolle né pubblicare nulla."
+          }
+        }
+      }
+    },
     "Upcoming event": {
       "localizations": {
         "ro": {
@@ -5419,6 +7245,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "Evento in arrivo"
+          }
+        }
+      }
+    },
+    "Use another account": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folosește alt cont"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser un autre compte"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar otra cuenta"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa un altro account"
+          }
+        }
+      }
+    },
+    "Use another email": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folosește alt email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser un autre e-mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar otro correo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa un'altra email"
+          }
+        }
+      }
+    },
+    "Verify": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifică"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifica"
           }
         }
       }
@@ -5451,6 +7361,118 @@
         }
       }
     },
+    "We couldn't check this device.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am putut verifica acest dispozitiv."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de vérifier cet appareil."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos podido comprobar este dispositivo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non siamo riusciti a verificare questo dispositivo."
+          }
+        }
+      }
+    },
+    "We couldn't recognise this device. Restart the app and try again.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am putut recunoaște acest dispozitiv. Repornește aplicația și încearcă din nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de reconnaître cet appareil. Redémarre l'app et réessaie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos podido reconocer este dispositivo. Reinicia la app e inténtalo de nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riusciamo a riconoscere questo dispositivo. Riavvia l'app e riprova."
+          }
+        }
+      }
+    },
+    "We couldn't save your confirmation. Restart the app and try again.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am putut salva confirmarea. Repornește aplicația și încearcă din nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'enregistrer ta confirmation. Redémarre l'app et réessaie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hemos podido guardar tu confirmación. Reinicia la app e inténtalo de nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non siamo riusciti a salvare la conferma. Riavvia l'app e riprova."
+          }
+        }
+      }
+    },
+    "We just sent you an email. Wait a minute before asking for another.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocmai ți-am trimis un email. Așteaptă un minut înainte să ceri altul."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On vient de t'envoyer un e-mail. Attends une minute avant d'en demander un autre."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te acabamos de enviar un correo. Espera un minuto antes de pedir otro."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ti abbiamo appena inviato un'email. Aspetta un minuto prima di chiederne un'altra."
+          }
+        }
+      }
+    },
     "We'll review your report and take action if it breaks the rules.": {
       "localizations": {
         "ro": {
@@ -5475,6 +7497,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esamineremo la tua segnalazione e interverremo se viola le regole."
+          }
+        }
+      }
+    },
+    "We've sent you a new code.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ți-am trimis un cod nou."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On t'a envoyé un nouveau code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te hemos enviado un código nuevo."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ti abbiamo inviato un nuovo codice."
           }
         }
       }
@@ -5647,6 +7697,34 @@
         }
       }
     },
+    "You can use Boolaa again from %@.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poți folosi Boolaa din nou începând cu %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu pourras de nouveau utiliser Boolaa le %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podrás volver a usar Boolaa el %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Potrai usare di nuovo Boolaa dal %@."
+          }
+        }
+      }
+    },
     "You can't report your own content.": {
       "localizations": {
         "ro": {
@@ -5671,6 +7749,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Non puoi segnalare i tuoi contenuti."
+          }
+        }
+      }
+    },
+    "You can't use Boolaa with this account anymore.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu mai poți folosi Boolaa cu acest cont."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu ne peux plus utiliser Boolaa avec ce compte."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya no puedes usar Boolaa con esta cuenta."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non puoi più usare Boolaa con questo account."
           }
         }
       }
@@ -5759,6 +7865,34 @@
         }
       }
     },
+    "You're almost back in.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mai e foarte puțin."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu y es presque."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya casi estás dentro."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ci sei quasi."
+          }
+        }
+      }
+    },
     "You're already a member of this bubble.": {
       "localizations": {
         "ro": {
@@ -5815,6 +7949,146 @@
         }
       }
     },
+    "You're signing in on a new device. Enter the 6-digit code we sent to %@.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te conectezi de pe un dispozitiv nou. Introdu codul din 6 cifre pe care l-am trimis la %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu te connectes depuis un nouvel appareil. Saisis le code à 6 chiffres envoyé à %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estás iniciando sesión en un dispositivo nuevo. Introduce el código de 6 dígitos que enviamos a %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stai accedendo da un nuovo dispositivo. Inserisci il codice di 6 cifre che abbiamo inviato a %@."
+          }
+        }
+      }
+    },
+    "Your account is banned": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contul tău a fost blocat definitiv"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton compte a été banni"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cuenta está bloqueada para siempre"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo account è bloccato per sempre"
+          }
+        }
+      }
+    },
+    "Your account is suspended": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contul tău este suspendat"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton compte est suspendu"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cuenta está suspendida"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo account è sospeso"
+          }
+        }
+      }
+    },
+    "Your account is suspended, so you can't do that right now.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contul tău este suspendat, așa că nu poți face asta acum."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton compte est suspendu, tu ne peux donc pas faire ça pour le moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cuenta está suspendida, así que ahora no puedes hacer eso."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo account è sospeso, quindi ora non puoi farlo."
+          }
+        }
+      }
+    },
+    "Your devices": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitivele tale"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes appareils"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus dispositivos"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I tuoi dispositivi"
+          }
+        }
+      }
+    },
     "Your name": {
       "localizations": {
         "ro": {
@@ -5839,6 +8113,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Il tuo nome"
+          }
+        }
+      }
+    },
+    "Your new password must be different from the old one.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola nouă trebuie să fie diferită de cea veche."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton nouveau mot de passe doit être différent de l'ancien."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu contraseña nueva tiene que ser distinta de la anterior."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La nuova password deve essere diversa da quella vecchia."
+          }
+        }
+      }
+    },
+    "Your password has been changed.": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola ta a fost schimbată."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton mot de passe a été changé."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu contraseña se ha cambiado."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua password è stata cambiata."
           }
         }
       }
@@ -5979,6 +8309,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "di %@"
+          }
+        }
+      }
+    },
+    "or": {
+      "localizations": {
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sau"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ou"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "oppure"
           }
         }
       }

@@ -13,6 +13,7 @@ struct AuthView: View {
     @State private var error: String?
     @State private var info: String?
     @State private var shakes = 0
+    @State private var showForgot = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var canSubmit: Bool {
@@ -21,8 +22,17 @@ struct AuthView: View {
     }
 
     var body: some View {
+        if showForgot {
+            ForgotPasswordView(email: email, onBack: { showForgot = false })
+                .transition(.opacity)
+        } else {
+            form
+        }
+    }
+
+    private var form: some View {
         let reduce = reduceMotion
-        ScrollView {
+        return ScrollView {
             VStack(spacing: 24) {
                 VStack(spacing: 10) {
                     BoolaaLogo(size: 92)
@@ -38,6 +48,8 @@ struct AuthView: View {
                 .padding(.top, 36)
 
                 VStack(spacing: 16) {
+                    SocialSignInButtons(error: $error)
+                    OrDivider()
                     SegmentedPill(selection: $isRegistering, options: [
                         .init(value: false, label: "Sign in"),
                         .init(value: true, label: "Create account"),
@@ -64,7 +76,17 @@ struct AuthView: View {
                             .accessibilityIdentifier("auth-password")
                     }
 
-                    if isRegistering { legalConsent.transition(.opacity) }
+                    if isRegistering {
+                        legalConsent.transition(.opacity)
+                    } else {
+                        Button {
+                            showForgot = true
+                        } label: {
+                            Text("Forgot password?").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.brandText)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
+                        }
+                        .accessibilityIdentifier("forgot-password")
+                    }
 
                     if let info {
                         Text(verbatim: info).font(.footnote.weight(.medium)).foregroundStyle(Hue.mint.text).multilineTextAlignment(.center)

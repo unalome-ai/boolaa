@@ -13,6 +13,8 @@ import Foundation
 ///     -UITestJoinCode FLAT2026             pre-fills the invite code field
 ///     -UITestBubbleName "Flat 4B"          pre-fills the Create a bubble form (with -UITestBubbleDescription)
 ///     -UITestScrollTo requests             Settings scrolls to the pending join requests
+///     -UITestDeviceID boolaa-test-device   use this device id instead of the Keychain one (the seed trusts it)
+///     -UITestOpen security                 opens Profile → Sign-in & security
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {
@@ -34,11 +36,22 @@ enum DebugHooks {
                 session.lastError = "Auto-login failed: \(error.userMessage)"
             }
         }
-        while session.userID != nil && session.memberships == nil { try? await Task.sleep(for: .milliseconds(50)) }
+        while session.userID != nil && session.memberships == nil && session.route == .launching {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
         if let name = defaults.string(forKey: "UITestBubble"),
            let bubble = session.bubbles.first(where: { $0.name == name }) {
             session.selectBubble(bubble.id)
         }
+        #endif
+    }
+
+    /// Device id override for tests: seeded users trust `boolaa-test-device`. Always nil in release builds.
+    static var deviceIDOverride: String? {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: "UITestDeviceID")?.nilIfEmpty
+        #else
+        nil
         #endif
     }
 
