@@ -32,10 +32,10 @@ services:
         value: "1"
         scope: RUN_AND_BUILD_TIME
       - key: NEXT_PUBLIC_SUPABASE_URL
-        value: __SET_AFTER_SUPABASE_PROJECT_IS_CREATED__
+        value: https://rstugahfcpwllumgxwrm.supabase.co
         scope: RUN_AND_BUILD_TIME
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        value: __SET_AFTER_SUPABASE_PROJECT_IS_CREATED__
+        value: sb_publishable_lZqGuZemtWZ4ndBtWh-btQ_9BQ5OtJ8
         scope: RUN_AND_BUILD_TIME
       - key: NEXT_PUBLIC_SITE_URL
         value: https://boolaa.ro
