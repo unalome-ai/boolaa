@@ -56,3 +56,15 @@ insert into public.market_items (bubble_id, owner_id, image, title, description,
 insert into public.shared_links (bubble_id, user_id, url, title, tags) values
   ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
    'https://www.bbcgoodfood.com/recipes/collection/budget-recipes', 'Budget recipes', '{food,cheap}');
+
+-- Device verification (docs/auth-security.md): the device id "boolaa-test-device"
+-- is pre-trusted for alice, bob and carol, so client test suites that send it to
+-- start_device_check pass straight through without an emailed code.
+insert into public.trusted_devices (user_id, device_hash, label)
+select u.id, encode(extensions.digest('boolaa-test-device', 'sha256'), 'hex'), 'Seeded test device'
+from auth.users u where u.email in ('alice@boolaa.test', 'bob@boolaa.test', 'carol@boolaa.test');
+
+-- Moderation alerts (docs/moderation.md): local function URL and shared secret.
+-- The secret must equal REPORT_ALERT_SECRET in supabase/functions/.env.
+select vault.create_secret('http://kong:8000/functions/v1/report-alert', 'report_alert_url');
+select vault.create_secret('local-report-alert-secret-change-me', 'report_alert_secret');

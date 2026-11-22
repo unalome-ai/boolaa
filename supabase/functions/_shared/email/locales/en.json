@@ -1,0 +1,88 @@
+{
+  "greeting": "Hi {name},",
+  "greeting_noname": "Hi there,",
+  "code_label": "Your code",
+  "code_expiry": "The code works for {minutes} minutes.",
+  "link_alternative": "Or use this link instead:",
+  "ignore": "Didn't ask for this? You can ignore this email. Nothing changes until someone enters the code.",
+  "footer": "You're getting this because of your Boolaa account.",
+  "privacy": "Privacy",
+  "signup": {
+    "subject": "Confirm your email for Boolaa",
+    "preheader": "One tap and you're in.",
+    "title": "Welcome to Boolaa!",
+    "intro": "Confirm your email and you're ready to join your bubbles.",
+    "button": "Confirm email"
+  },
+  "recovery": {
+    "subject": "Your Boolaa password reset code",
+    "preheader": "Enter this code in the app to choose a new password.",
+    "title": "Reset your password",
+    "intro": "Enter this code in Boolaa to choose a new password.",
+    "button": "Reset with a link"
+  },
+  "magiclink": {
+    "subject": "Your Boolaa sign-in code",
+    "preheader": "Use this code to sign in.",
+    "title": "Sign in to Boolaa",
+    "intro": "Enter this code in Boolaa to sign in.",
+    "button": "Sign in with a link"
+  },
+  "invite": {
+    "subject": "You're invited to Boolaa",
+    "preheader": "Someone saved you a spot.",
+    "title": "You're invited!",
+    "intro": "You've been invited to Boolaa, the private home for your small groups. Accept the invite to set up your account.",
+    "button": "Accept invite"
+  },
+  "email_change_current": {
+    "subject": "Confirm your new Boolaa email",
+    "preheader": "Confirm the change from this address.",
+    "title": "Changing your email",
+    "intro": "You asked to change your Boolaa email from {old_email} to {new_email}. Confirm it from this address too.",
+    "button": "Confirm change"
+  },
+  "email_change_new": {
+    "subject": "Confirm your new Boolaa email",
+    "preheader": "Confirm this is your new address.",
+    "title": "Confirm your new email",
+    "intro": "You asked to change your Boolaa email from {old_email} to {new_email}. Confirm this new address.",
+    "button": "Confirm email"
+  },
+  "reauthentication": {
+    "subject": "Your Boolaa confirmation code",
+    "preheader": "Enter this code to confirm it's you.",
+    "title": "Confirm it's you",
+    "intro": "Enter this code in Boolaa to confirm the change to your account."
+  },
+  "device": {
+    "subject": "Your Boolaa sign-in code",
+    "preheader": "Enter this code to sign in on a new device.",
+    "title": "New device sign-in",
+    "intro": "Someone is signing in to your account on a new device ({device}). If it's you, enter this code to continue.",
+    "unknown_device": "unknown device",
+    "warning": "Not you? Don't share the code, and change your password."
+  },
+  "sensitive_action": {
+    "subject": "Your Boolaa confirmation code",
+    "preheader": "Enter this code to confirm it's you.",
+    "title": "Confirm it's you",
+    "intro": "Enter this code in Boolaa to confirm: {action}.",
+    "actions": {
+      "delete_account": "delete your account",
+      "generic": "a change to your account"
+    }
+  },
+  "password_changed": {
+    "subject": "Your Boolaa password was changed",
+    "preheader": "Your password was just changed.",
+    "title": "Password changed",
+    "intro": "Your Boolaa password was just changed. If this wasn't you, reset your password right away."
+  },
+  "generic": {
+    "subject": "A message about your Boolaa account",
+    "preheader": "Something changed on your account.",
+    "title": "Account update",
+    "intro": "There's an update about your Boolaa account."
+  }
+}

@@ -149,7 +149,14 @@ enabled = true
 # in emails.
 site_url = "http://127.0.0.1:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# Web app (dev on :3100, prod boolaa.ro) and the native apps' deep link.
+additional_redirect_urls = [
+  "https://127.0.0.1:3000",
+  "http://127.0.0.1:3100/auth/callback",
+  "http://localhost:3100/auth/callback",
+  "https://boolaa.ro/auth/callback",
+  "boolaa://auth/callback",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to the local API URL (http://127.0.0.1:<port>/auth/v1).
@@ -174,8 +181,9 @@ minimum_password_length = 6
 password_requirements = ""
 
 [auth.rate_limit]
-# Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+# Number of emails that can be sent per hour (project-wide). Local: generous for the test
+# suites. Production: see docs/auth-security.md.
+email_sent = 200
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -183,7 +191,7 @@ anonymous_users = 30
 # Number of sessions that can be refreshed in a 5 minute interval per IP address.
 token_refresh = 150
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).
-sign_in_sign_ups = 30
+sign_in_sign_ups = 100
 # Number of OTP / Magic link verifications that can be made in a 5 minute interval per IP address.
 token_verifications = 30
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
@@ -200,17 +208,21 @@ web3 = 30
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
-double_confirm_changes = true
+double_confirm_changes = true  # = "Secure email change" in the dashboard
 # If enabled, users need to confirm their email address before signing in.
+# Kept OFF locally: the client test suites (web Playwright, iOS SafetyIntegrationTests)
+# sign up and expect a session straight away. Production has it ON (docs/auth-security.md);
+# supabase/tests covers the confirmation email through resend().
 enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = false
+secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
-max_frequency = "1s"
+max_frequency = "60s"
 # Number of characters used in the email OTP.
 otp_length = 6
-# Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+# Number of seconds before the email OTP expires (defaults to 1 hour). The emails say
+# "10 minutes": keep AUTH_OTP_EXPIRY_MINUTES in supabase/functions/.env in step.
+otp_expiry = 600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -255,9 +267,19 @@ max_frequency = "5s"
 # inactivity_timeout = "8h"
 
 # This hook runs before a new user is created and allows developers to reject the request based on the incoming user object.
-# [auth.hook.before_user_created]
-# enabled = true
-# uri = "pg-functions://postgres/auth/before-user-created-hook"
+# Boolaa: rejects email sign-ups without user_metadata.age_confirmed = true, only while
+# app_settings.age_confirmation_required is on (docs/auth-security.md).
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/hook_before_user_created"
+
+# Boolaa: localized branded emails rendered by the send-email Edge Function (Resend in
+# production, Mailpit locally). The secret must equal SEND_EMAIL_HOOK_SECRET in
+# supabase/functions/.env; config.toml reads it from supabase/.env or the shell.
+[auth.hook.send_email]
+enabled = true
+uri = "http://host.docker.internal:55321/functions/v1/send-email"
+secrets = "env(SEND_EMAIL_HOOK_SECRET)"
 
 # This hook runs before a token is issued and allows you to add additional claims based on the authentication method used.
 # [auth.hook.custom_access_token]
@@ -298,9 +320,12 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+# Sign in with Apple (docs/auth-security.md, "Sign in with Apple and Google"). Disabled until
+# the Services ID and key exist. client_id: the Services ID (web) and the bundle id
+# ro.boolaa.app, comma-separated. secret: the client-secret JWT generated from the .p8 key.
 [auth.external.apple]
 enabled = false
-client_id = ""
+client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Overrides the default auth redirectUrl.
@@ -311,6 +336,18 @@ url = ""
 # If enabled, the nonce check will be skipped. Required for local sign in with Google auth.
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
+email_optional = false
+
+# Sign in with Google (client IDs: docs/oauth-clients.md). Kept disabled locally; to try it,
+# set the two env vars (supabase/.env) and switch enabled to true. client_id = Web,iOS,Android
+# client IDs, comma-separated, web first.
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
 email_optional = false
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
@@ -363,6 +400,16 @@ deno_version = 2
 
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
+# Function secrets come from supabase/functions/.env (gitignored; see .env.example).
+
+[functions.send-email]
+verify_jwt = false  # Auth hook: authenticated by its standardwebhooks signature
+
+[functions.device-code]
+verify_jwt = false  # validates the user JWT itself (auth.getUser), works with asymmetric keys
+
+[functions.report-alert]
+verify_jwt = false  # called by the reports trigger with a shared secret header
 
 [analytics]
 enabled = true

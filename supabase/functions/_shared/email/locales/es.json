@@ -1,0 +1,88 @@
+{
+  "greeting": "Hola, {name}:",
+  "greeting_noname": "Hola:",
+  "code_label": "Tu código",
+  "code_expiry": "El código vale durante {minutes} minutos.",
+  "link_alternative": "O usa este enlace:",
+  "ignore": "¿No lo has pedido tú? Puedes ignorar este correo. No cambia nada hasta que alguien introduzca el código.",
+  "footer": "Recibes este correo porque tienes una cuenta de Boolaa.",
+  "privacy": "Privacidad",
+  "signup": {
+    "subject": "Confirma tu correo para Boolaa",
+    "preheader": "Un toque y ya estás dentro.",
+    "title": "¡Te damos la bienvenida a Boolaa!",
+    "intro": "Confirma tu correo y podrás unirte a tus burbujas.",
+    "button": "Confirmar correo"
+  },
+  "recovery": {
+    "subject": "Tu código para restablecer la contraseña de Boolaa",
+    "preheader": "Introduce este código en la app para elegir una contraseña nueva.",
+    "title": "Restablece tu contraseña",
+    "intro": "Introduce este código en Boolaa para elegir una contraseña nueva.",
+    "button": "Restablecer con un enlace"
+  },
+  "magiclink": {
+    "subject": "Tu código para iniciar sesión en Boolaa",
+    "preheader": "Usa este código para iniciar sesión.",
+    "title": "Inicia sesión en Boolaa",
+    "intro": "Introduce este código en Boolaa para iniciar sesión.",
+    "button": "Iniciar sesión con un enlace"
+  },
+  "invite": {
+    "subject": "Te han invitado a Boolaa",
+    "preheader": "Alguien te ha guardado un sitio.",
+    "title": "¡Tienes una invitación!",
+    "intro": "Te han invitado a Boolaa, el espacio privado de tus grupos pequeños. Acepta la invitación para crear tu cuenta.",
+    "button": "Aceptar invitación"
+  },
+  "email_change_current": {
+    "subject": "Confirma tu nuevo correo de Boolaa",
+    "preheader": "Confirma el cambio desde esta dirección.",
+    "title": "Cambio de correo",
+    "intro": "Has pedido cambiar tu correo de Boolaa de {old_email} a {new_email}. Confirma el cambio también desde esta dirección.",
+    "button": "Confirmar cambio"
+  },
+  "email_change_new": {
+    "subject": "Confirma tu nuevo correo de Boolaa",
+    "preheader": "Confirma que esta es tu nueva dirección.",
+    "title": "Confirma tu nuevo correo",
+    "intro": "Has pedido cambiar tu correo de Boolaa de {old_email} a {new_email}. Confirma esta nueva dirección.",
+    "button": "Confirmar correo"
+  },
+  "reauthentication": {
+    "subject": "Tu código de confirmación de Boolaa",
+    "preheader": "Introduce este código para confirmar que eres tú.",
+    "title": "Confirma que eres tú",
+    "intro": "Introduce este código en Boolaa para confirmar el cambio en tu cuenta."
+  },
+  "device": {
+    "subject": "Tu código para iniciar sesión en Boolaa",
+    "preheader": "Introduce este código para iniciar sesión en un dispositivo nuevo.",
+    "title": "Inicio de sesión en un dispositivo nuevo",
+    "intro": "Alguien está iniciando sesión en tu cuenta desde un dispositivo nuevo ({device}). Si eres tú, introduce este código para continuar.",
+    "unknown_device": "dispositivo desconocido",
+    "warning": "¿No eres tú? No compartas el código y cambia tu contraseña."
+  },
+  "sensitive_action": {
+    "subject": "Tu código de confirmación de Boolaa",
+    "preheader": "Introduce este código para confirmar que eres tú.",
+    "title": "Confirma que eres tú",
+    "intro": "Introduce este código en Boolaa para confirmar: {action}.",
+    "actions": {
+      "delete_account": "eliminar tu cuenta",
+      "generic": "un cambio en tu cuenta"
+    }
+  },
+  "password_changed": {
+    "subject": "Se ha cambiado tu contraseña de Boolaa",
+    "preheader": "Tu contraseña se acaba de cambiar.",
+    "title": "Contraseña cambiada",
+    "intro": "Tu contraseña de Boolaa se acaba de cambiar. Si no has sido tú, restablécela ahora mismo."
+  },
+  "generic": {
+    "subject": "Un mensaje sobre tu cuenta de Boolaa",
+    "preheader": "Algo ha cambiado en tu cuenta.",
+    "title": "Novedades de tu cuenta",
+    "intro": "Hay novedades sobre tu cuenta de Boolaa."
+  }
+}

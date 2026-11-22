@@ -1,0 +1,88 @@
+{
+  "greeting": "Salut {name},",
+  "greeting_noname": "Salut,",
+  "code_label": "Ton code",
+  "code_expiry": "Le code est valable {minutes} minutes.",
+  "link_alternative": "Ou utilise plutôt ce lien :",
+  "ignore": "Tu n'as rien demandé ? Tu peux ignorer cet e-mail. Rien ne change tant que personne ne saisit le code.",
+  "footer": "Tu reçois cet e-mail parce que tu as un compte Boolaa.",
+  "privacy": "Confidentialité",
+  "signup": {
+    "subject": "Confirme ton e-mail pour Boolaa",
+    "preheader": "Un geste et c'est parti.",
+    "title": "Bienvenue sur Boolaa !",
+    "intro": "Confirme ton e-mail et tu pourras rejoindre tes bulles.",
+    "button": "Confirmer l'e-mail"
+  },
+  "recovery": {
+    "subject": "Ton code pour réinitialiser ton mot de passe Boolaa",
+    "preheader": "Saisis ce code dans l'appli pour choisir un nouveau mot de passe.",
+    "title": "Réinitialise ton mot de passe",
+    "intro": "Saisis ce code dans Boolaa pour choisir un nouveau mot de passe.",
+    "button": "Réinitialiser avec un lien"
+  },
+  "magiclink": {
+    "subject": "Ton code de connexion Boolaa",
+    "preheader": "Utilise ce code pour te connecter.",
+    "title": "Connexion à Boolaa",
+    "intro": "Saisis ce code dans Boolaa pour te connecter.",
+    "button": "Se connecter avec un lien"
+  },
+  "invite": {
+    "subject": "Tu es invité sur Boolaa",
+    "preheader": "Quelqu'un t'a gardé une place.",
+    "title": "Tu es invité !",
+    "intro": "Tu as été invité sur Boolaa, l'espace privé de tes petits groupes. Accepte l'invitation pour créer ton compte.",
+    "button": "Accepter l'invitation"
+  },
+  "email_change_current": {
+    "subject": "Confirme ta nouvelle adresse e-mail Boolaa",
+    "preheader": "Confirme le changement depuis cette adresse.",
+    "title": "Changement d'e-mail",
+    "intro": "Tu as demandé à changer ton e-mail Boolaa de {old_email} à {new_email}. Confirme aussi le changement depuis cette adresse.",
+    "button": "Confirmer le changement"
+  },
+  "email_change_new": {
+    "subject": "Confirme ta nouvelle adresse e-mail Boolaa",
+    "preheader": "Confirme que c'est ta nouvelle adresse.",
+    "title": "Confirme ton nouvel e-mail",
+    "intro": "Tu as demandé à changer ton e-mail Boolaa de {old_email} à {new_email}. Confirme cette nouvelle adresse.",
+    "button": "Confirmer l'e-mail"
+  },
+  "reauthentication": {
+    "subject": "Ton code de confirmation Boolaa",
+    "preheader": "Saisis ce code pour confirmer que c'est bien toi.",
+    "title": "Confirme que c'est toi",
+    "intro": "Saisis ce code dans Boolaa pour confirmer la modification de ton compte."
+  },
+  "device": {
+    "subject": "Ton code de connexion Boolaa",
+    "preheader": "Saisis ce code pour te connecter sur un nouvel appareil.",
+    "title": "Connexion sur un nouvel appareil",
+    "intro": "Quelqu'un se connecte à ton compte sur un nouvel appareil ({device}). Si c'est toi, saisis ce code pour continuer.",
+    "unknown_device": "appareil inconnu",
+    "warning": "Ce n'est pas toi ? Ne partage pas le code et change ton mot de passe."
+  },
+  "sensitive_action": {
+    "subject": "Ton code de confirmation Boolaa",
+    "preheader": "Saisis ce code pour confirmer que c'est bien toi.",
+    "title": "Confirme que c'est toi",
+    "intro": "Saisis ce code dans Boolaa pour confirmer : {action}.",
+    "actions": {
+      "delete_account": "la suppression de ton compte",
+      "generic": "une modification de ton compte"
+    }
+  },
+  "password_changed": {
+    "subject": "Ton mot de passe Boolaa a été modifié",
+    "preheader": "Ton mot de passe vient d'être modifié.",
+    "title": "Mot de passe modifié",
+    "intro": "Ton mot de passe Boolaa vient d'être modifié. Si ce n'était pas toi, réinitialise-le tout de suite."
+  },
+  "generic": {
+    "subject": "Un message à propos de ton compte Boolaa",
+    "preheader": "Quelque chose a changé sur ton compte.",
+    "title": "Mise à jour du compte",
+    "intro": "Il y a du nouveau sur ton compte Boolaa."
+  }
+}
