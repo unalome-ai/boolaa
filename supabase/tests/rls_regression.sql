@@ -11,6 +11,9 @@
 \set carol '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated","session_id":"00000000-0000-0000-0000-0000000ca201","amr":[{"method":"password","timestamp":1}]}'
 \set alice_otp '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","session_id":"00000000-0000-0000-0000-00000000a11d","amr":[{"method":"otp","timestamp":1}]}'
 \set alice_oauth '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","session_id":"00000000-0000-0000-0000-00000000a11e","amr":[{"method":"oauth","timestamp":1}]}'
+\set mod   '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated","session_id":"00000000-0000-0000-0000-00000000a0d1","amr":[{"method":"password","timestamp":1}]}'
+\set dave  '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated","session_id":"00000000-0000-0000-0000-00000000da7e","amr":[{"method":"password","timestamp":1}]}'
+\set erin  '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated","session_id":"00000000-0000-0000-0000-0000000e4141","amr":[{"method":"password","timestamp":1}]}'
 
 \echo '1. flags OFF: pre-existing behaviour'
 begin;
@@ -152,5 +155,222 @@ do $$ begin
   assert not has_function_privilege('authenticated', 'public.hook_before_user_created(jsonb)', 'execute'), 'hook closed to clients';
   assert (select device_verification_enforced = false and age_confirmation_required = false from public.app_settings), 'flags default OFF';
 end $$;
+
+\echo '6. moderation: admin RPCs are admin-only'
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', :'alice', true);
+do $$ declare c text; begin
+  assert not public.is_admin(), 'alice is not an admin';
+  foreach c in array array[
+    $q$select public.admin_list_reports('open', 10, 0)$q$,
+    $q$select public.admin_get_report('dddddddd-0000-0000-0000-000000000001')$q$,
+    $q$select public.admin_resolve_report('dddddddd-0000-0000-0000-000000000001', 'dismiss', null, null)$q$,
+    $q$select public.admin_unsuspend('55555555-5555-5555-5555-555555555555', null)$q$,
+    $q$select public.admin_find_users('Dave', 10)$q$] loop
+    begin
+      execute c;
+      assert false, 'non-admin ran: ' || c;
+    exception when insufficient_privilege then
+      assert sqlerrm = 'permission denied', format('%s -> %s', c, sqlerrm);
+    end;
+  end loop;
+  assert (select count(*) from public.moderation_actions) = 0, 'non-admin reads no audit log';
+end $$;
+rollback;
+do $$ begin
+  assert not has_table_privilege('authenticated', 'public.admins', 'select'), 'admins closed';
+  assert not has_table_privilege('authenticated', 'public.moderation_actions', 'insert'), 'audit log append-only for clients';
+  assert not has_column_privilege('authenticated', 'public.users', 'status', 'update'), 'status not writable';
+  assert not has_function_privilege('anon', 'public.admin_list_reports(text,int,int)', 'execute'), 'anon list closed';
+  assert not has_function_privilege('anon', 'public.admin_resolve_report(uuid,text,text,int)', 'execute'), 'anon resolve closed';
+  assert not has_function_privilege('authenticated', 'public.set_account_status(uuid,text,text,timestamptz)', 'execute'), 'set_account_status internal';
+  assert not has_function_privilege('authenticated', 'public.require_admin()', 'execute'), 'require_admin internal';
+end $$;
+
+\echo '7. moderation: suspend blocks the user (own row stays readable), unsuspend restores'
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ declare r jsonb; begin
+  assert public.is_admin(), 'mod is admin';
+  assert (public.admin_list_reports('open', 200, 0) -> 'items') @> '[{"id": "dddddddd-0000-0000-0000-000000000001"}]', 'seeded report listed';
+  r := public.admin_resolve_report('dddddddd-0000-0000-0000-000000000001', 'suspend', 'first warning', 7);
+  assert r ->> 'status' = 'actioned', r::text;
+  assert (select count(*) from public.moderation_actions where action = 'suspend' and created_at = now()) = 1, 'audit row readable by admin';
+end $$;
+reset role;
+do $$ begin
+  assert (select banned_until between now() + interval '6 days 23 hours' and now() + interval '7 days 1 hour'
+            from auth.users where id = '55555555-5555-5555-5555-555555555555'), 'GoTrue ban until the end of the suspension';
+  assert (select status = 'suspended' and status_reason = 'harassment' from public.users where id = '55555555-5555-5555-5555-555555555555'), 'status set';
+  assert (select handled_note = 'first warning' and handled_at is not null from public.reports where id = 'dddddddd-0000-0000-0000-000000000001'), 'report handled';
+  assert (select status = 'open' from public.reports where id = 'dddddddd-0000-0000-0000-000000000002'), 'other target stays open';
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claims', :'dave', true);
+do $$ begin
+  assert not public.is_session_verified(), 'suspended session not verified';
+  assert (select count(*) from chat_messages) = 0, 'suspended user reads no chat';
+  assert (select count(*) from bubbles) = 0, 'no bubbles';
+  assert (select count(*) from users) = 1, 'only own row';
+  assert (select status from users where id = auth.uid()) = 'suspended', 'reads own status';
+  begin
+    insert into chat_messages (bubble_id, sender_id, content) values ('aaaaaaaa-0000-0000-0000-000000000003', auth.uid(), 'x');
+    assert false, 'suspended insert should fail';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.report_content('user', '66666666-6666-6666-6666-666666666666', 'spam', null);
+    assert false, 'report should fail';
+  exception when insufficient_privilege then assert sqlerrm = 'account suspended', sqlerrm; end;
+  update users set name = 'x' where id = auth.uid();
+  assert not found, 'suspended user can''t rename';
+end $$;
+select set_config('request.jwt.claims', :'erin', true);
+do $$ begin
+  assert (select count(*) from chat_messages where sender_id = '55555555-5555-5555-5555-555555555555') = 3, 'content of a suspended user stays visible';
+end $$;
+-- An ended suspension counts as active without any job.
+reset role;
+update public.users set status_until = now() - interval '1 minute' where id = '55555555-5555-5555-5555-555555555555';
+set local role authenticated;
+select set_config('request.jwt.claims', :'dave', true);
+do $$ begin
+  assert (select count(*) from chat_messages) > 0, 'expired suspension: access back';
+end $$;
+reset role;
+update public.users set status_until = now() + interval '1 day' where id = '55555555-5555-5555-5555-555555555555';
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ declare r jsonb; begin
+  r := public.admin_unsuspend('55555555-5555-5555-5555-555555555555', 'appeal accepted');
+  assert r ->> 'previous_status' = 'suspended', r::text;
+end $$;
+select set_config('request.jwt.claims', :'dave', true);
+do $$ begin
+  assert (select count(*) from chat_messages) > 0, 'unsuspended user reads chat again';
+  assert (select status from users where id = auth.uid()) = 'active', 'active';
+end $$;
+reset role;
+do $$ begin
+  assert (select banned_until is null from auth.users where id = '55555555-5555-5555-5555-555555555555'), 'GoTrue ban lifted';
+end $$;
+rollback;
+
+\echo '8. moderation: each action, duplicates closed, ban, suspended user may delete the account'
+begin;
+-- A duplicate report on the same message (as if a second member reported it).
+insert into public.reports (reporter_id, bubble_id, target_type, target_id, reported_user_id, reason, alert_sent_at)
+values ('66666666-6666-6666-6666-666666666666', 'aaaaaaaa-0000-0000-0000-000000000003', 'chat_message',
+        'cccccccc-0000-0000-0000-000000000004', '55555555-5555-5555-5555-555555555555', 'hate', now());
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ declare r jsonb; begin
+  r := public.admin_resolve_report('dddddddd-0000-0000-0000-000000000001', 'delete_content', 'removed', null);
+  assert (r ->> 'duplicates_closed')::int = 1 and (r ->> 'rows_deleted')::int = 1, r::text;
+  assert not exists (select 1 from public.reports where target_id = 'cccccccc-0000-0000-0000-000000000004' and status = 'open'), 'duplicates closed';
+  assert (public.admin_get_report('dddddddd-0000-0000-0000-000000000001') -> 'snapshot' ->> 'deleted')::boolean, 'snapshot says deleted';
+  begin
+    perform public.admin_resolve_report('dddddddd-0000-0000-0000-000000000001', 'dismiss', null, null);
+    assert false, 'handled twice';
+  exception when others then assert sqlerrm = 'report already handled', sqlerrm; end;
+  begin
+    perform public.admin_resolve_report('dddddddd-0000-0000-0000-000000000002', 'suspend', null, 0);
+    assert false, 'bad days';
+  exception when others then assert sqlerrm = 'invalid suspension length', sqlerrm; end;
+  begin
+    perform public.admin_resolve_report('dddddddd-0000-0000-0000-000000000002', 'delete_content', null, null);
+    assert false, 'user report has no content';
+  exception when others then assert sqlerrm = 'a user report has no content to delete', sqlerrm; end;
+  r := public.admin_resolve_report('dddddddd-0000-0000-0000-000000000002', 'remove_from_bubble', null, null);
+  assert r ->> 'status' = 'actioned', r::text;
+end $$;
+reset role;
+do $$ begin
+  assert not exists (select 1 from public.bubble_members where user_id = '55555555-5555-5555-5555-555555555555'), 'dave removed from Book Club';
+  assert (select role from public.bubble_members where user_id = '66666666-6666-6666-6666-666666666666') = 'owner', 'erin still owner';
+  assert (select count(*) from public.moderation_actions where created_at = now()) = 2, 'two audit rows';
+end $$;
+-- Dismiss and ban on fresh reports.
+insert into public.reports (id, reporter_id, bubble_id, target_type, target_id, reported_user_id, reason, alert_sent_at) values
+  ('dddddddd-0000-0000-0000-0000000000a1', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'user', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', 'spam', now()),
+  ('dddddddd-0000-0000-0000-0000000000a2', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'user', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', 'other', now());
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ declare r jsonb; begin
+  r := public.admin_resolve_report('dddddddd-0000-0000-0000-0000000000a1', 'dismiss', 'not spam', null);
+  assert r ->> 'status' = 'dismissed' and (r ->> 'duplicates_closed')::int = 1, r::text;
+  assert (public.admin_list_reports('dismissed', 200, 0) -> 'items') @> '[{"id": "dddddddd-0000-0000-0000-0000000000a2", "status": "dismissed"}]', 'dismissed tab shows the closed duplicate';
+end $$;
+reset role;
+update public.reports set status = 'open', handled_at = null where id = 'dddddddd-0000-0000-0000-0000000000a2';
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ declare r jsonb; begin
+  r := public.admin_resolve_report('dddddddd-0000-0000-0000-0000000000a2', 'ban', 'spam bot', null);
+  assert (r ->> 'bubbles_left')::int = 2, r::text;
+end $$;
+reset role;
+do $$ begin
+  assert (select status = 'banned' and status_until is null from public.users where id = '22222222-2222-2222-2222-222222222222'), 'banned';
+  assert (select banned_until > now() + interval '50 years' from auth.users where id = '22222222-2222-2222-2222-222222222222'), 'GoTrue ban';
+  assert (select role from public.bubble_members where bubble_id = 'aaaaaaaa-0000-0000-0000-000000000002'
+            and user_id = '11111111-1111-1111-1111-111111111111') = 'owner', 'ownership handed to alice';
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claims', :'bob', true);
+do $$ begin
+  assert (select count(*) from users) = 1 and (select status from users) = 'banned', 'banned user reads own status only';
+  perform public.delete_my_account();
+end $$;
+reset role;
+do $$ begin
+  assert not exists (select 1 from auth.users where id = '22222222-2222-2222-2222-222222222222'), 'banned user could delete the account';
+end $$;
+rollback;
+
+\echo '9. moderation with device enforcement ON'
+begin;
+update public.app_settings set device_verification_enforced = true;
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ begin
+  begin
+    perform public.admin_list_reports('open', 10, 0);
+    assert false, 'unverified admin';
+  exception when insufficient_privilege then assert sqlerrm = 'session not verified', sqlerrm; end;
+end $$;
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  begin
+    perform public.admin_list_reports('open', 10, 0);
+    assert false, 'non-admin';
+  exception when insufficient_privilege then assert sqlerrm = 'permission denied', sqlerrm; end;
+end $$;
+reset role;
+insert into auth.sessions (id, user_id, created_at, updated_at, aal) values
+  ('00000000-0000-0000-0000-00000000a0d1', '44444444-4444-4444-4444-444444444444', now(), now(), 'aal1'),
+  ('00000000-0000-0000-0000-00000000da7e', '55555555-5555-5555-5555-555555555555', now(), now(), 'aal1');
+insert into public.verified_sessions (session_id, user_id) values
+  ('00000000-0000-0000-0000-00000000a0d1', '44444444-4444-4444-4444-444444444444'),
+  ('00000000-0000-0000-0000-00000000da7e', '55555555-5555-5555-5555-555555555555');
+set local role authenticated;
+select set_config('request.jwt.claims', :'mod', true);
+do $$ begin
+  perform public.admin_resolve_report('dddddddd-0000-0000-0000-000000000001', 'suspend', null, 1);
+end $$;
+select set_config('request.jwt.claims', :'dave', true);
+do $$ begin
+  assert (select count(*) from chat_messages) = 0, 'suspended (verified device) reads no chat';
+  assert (select status from users where id = auth.uid()) = 'suspended', 'reads own status';
+end $$;
+-- Same user on an unverified session: not even the own row.
+select set_config('request.jwt.claims', replace(:'dave', '00000000-0000-0000-0000-00000000da7e', '00000000-0000-0000-0000-00000000da7f'), true);
+do $$ begin
+  assert (select count(*) from users) = 0, 'unverified device: nothing';
+end $$;
+rollback;
 
 \echo 'ALL RLS CHECKS PASSED'

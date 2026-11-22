@@ -156,6 +156,8 @@ additional_redirect_urls = [
   "http://localhost:3100/auth/callback",
   "https://boolaa.ro/auth/callback",
   "boolaa://auth/callback",
+  # Android (applicationId ro.boolaa.app): Sign in with Apple in a Custom Tab, and email links.
+  "ro.boolaa.app://auth/callback",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -410,6 +412,9 @@ verify_jwt = false  # validates the user JWT itself (auth.getUser), works with a
 
 [functions.report-alert]
 verify_jwt = false  # called by the reports trigger with a shared secret header
+
+[functions.push-dispatch]
+verify_jwt = false  # called by pg_net (triggers, pg_cron) with a shared secret header
 
 [analytics]
 enabled = true

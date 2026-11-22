@@ -1,0 +1,41 @@
+{
+  "app": "Boolaa",
+  "someone": "Qualcuno",
+  "chat": {
+    "title": "{name} in {bubble}",
+    "more": { "one": "+# altro messaggio", "other": "+# altri messaggi" },
+    "private": { "one": "Nuovo messaggio in {bubble}", "other": "# nuovi messaggi in {bubble}" }
+  },
+  "join_request": {
+    "body": "{name} vuole unirsi",
+    "private": "Nuova richiesta di adesione in {bubble}"
+  },
+  "approval": {
+    "title": "Ora fai parte di {bubble}!",
+    "body": "La tua richiesta di adesione è stata approvata. Saluta tutti!",
+    "private": "La tua richiesta di adesione a {bubble} è stata approvata."
+  },
+  "new_event": {
+    "title": "Nuovo evento in {bubble}",
+    "body": "{name} ha aggiunto {event}",
+    "private": "Nuovo evento in {bubble}"
+  },
+  "event_reminder": {
+    "body": "Inizia tra 1 ora",
+    "bodyWithPlace": "Inizia tra 1 ora · {location}",
+    "private": "Un evento di {bubble} inizia tra 1 ora"
+  },
+  "food": {
+    "title": "Cerchio del cibo · {bubble}",
+    "body": "{name}: {text}",
+    "bodyNoText": "{name} ha condiviso qualcosa da mangiare",
+    "private": "Nuovo post nel Cerchio del cibo di {bubble}"
+  },
+  "market": {
+    "title": "Mercatino · {bubble}",
+    "body": "{name}: {item} ({status})",
+    "free": "Gratis",
+    "trade": "Scambio",
+    "private": "Nuovo oggetto nel Mercatino di {bubble}"
+  }
+}

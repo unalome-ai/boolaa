@@ -7,7 +7,7 @@
 // Flags in app_settings are switched per test and always restored to OFF.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import {
-  admin, API, assert, assertEq, claims, cleanupUsers, client, codeOf, countMail, createUser, deviceCode,
+  admin, API, assert, assertEq, claims, cleanupUsers, client, codeOf, countMail, createUser, deviceCode, MAILPIT,
   PASSWORD, setFlags, sha256Hex, signIn, sleep, sql, TEST_DEVICE, token, trackUser, uniqueEmail, waitMail,
 } from "./helpers.ts";
 
@@ -404,16 +404,19 @@ Deno.test("age confirmation: stored at sign-up; flag ON rejects sign-up without 
 
 Deno.test("moderation alert: emailed once per target per 10 min, URGENT for self-harm, never blocks the report", opts, async () => {
   const MOD = "moderation@boolaa.ro";
+  // Earlier runs (and moderation.test.ts) leave alerts with the same subjects in Mailpit.
+  await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${MOD}"`)}`, { method: "DELETE" })).body?.cancel();
   const alice = await signIn("alice@boolaa.test");
   const msg = await sql`select id from public.chat_messages where sender_id = '22222222-2222-2222-2222-222222222222' and bubble_id = ${FLATMATES} limit 1`;
   const before = await countMail(MOD);
   const r1 = await alice.rpc("report_content", { p_target_type: "chat_message", p_target_id: msg[0].id, p_reason: "spam", p_details: "test details" });
   assert(!r1.error, `report: ${r1.error?.message}`);
-  const m = await waitMail(MOD, { subject: /spam report on a chat message/, timeoutMs: 15000 });
+  const m = await waitMail(MOD, { subject: /spam report on a chat message in "Flatmates"/, timeoutMs: 15000 });
   assert(m.text.includes("Flatmates") && m.text.includes("Guilty. Buying more today.") && m.text.includes("test details"), "content in alert");
   assert(m.text.includes("Bob (22222222-2222-2222-2222-222222222222)") && m.text.includes(`Alice (${ALICE})`), "names and ids");
   assert(/Open reports against this user \(30 days\): \d+/.test(m.text), "open count");
   assert(!/@boolaa\.test/.test(m.text + m.html), "no email addresses in the body");
+  assert(m.text.includes(`https://boolaa.ro/admin?report=${r1.data}`), "link to the admin view");
 
   const r2 = await alice.rpc("report_content", { p_target_type: "chat_message", p_target_id: msg[0].id, p_reason: "harassment" });
   assert(!r2.error, "second report");

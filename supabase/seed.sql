@@ -68,3 +68,62 @@ from auth.users u where u.email in ('alice@boolaa.test', 'bob@boolaa.test', 'car
 -- The secret must equal REPORT_ALERT_SECRET in supabase/functions/.env.
 select vault.create_secret('http://kong:8000/functions/v1/report-alert', 'report_alert_url');
 select vault.create_secret('local-report-alert-secret-change-me', 'report_alert_secret');
+
+-- Moderation (docs/moderation.md). mod@boolaa.test is an admin (public.admins) and belongs to
+-- no bubble. Dave and Erin share "Book Club"; Erin has reported one of Dave's messages (21 h
+-- ago, so the admin queue shows it as close to the 24 h limit) and Dave's profile.
+-- Logins: mod@ / dave@ / erin@boolaa.test, password: password123.
+insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                        raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+                        confirmation_token, recovery_token, email_change, email_change_token_new)
+values
+  ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-4444-444444444444', 'authenticated', 'authenticated',
+   'mod@boolaa.test', crypt('password123', gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"name":"Moderator","age_confirmed":"true"}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '55555555-5555-5555-5555-555555555555', 'authenticated', 'authenticated',
+   'dave@boolaa.test', crypt('password123', gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"name":"Dave","age_confirmed":"true"}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '66666666-6666-6666-6666-666666666666', 'authenticated', 'authenticated',
+   'erin@boolaa.test', crypt('password123', gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"name":"Erin","age_confirmed":"true"}', now(), now(), '', '', '', '');
+
+insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select gen_random_uuid(), u.id, u.id::text,
+       jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
+       'email', now(), now(), now()
+from auth.users u where u.email in ('mod@boolaa.test', 'dave@boolaa.test', 'erin@boolaa.test');
+
+insert into public.admins (user_id) values ('44444444-4444-4444-4444-444444444444');
+
+insert into public.trusted_devices (user_id, device_hash, label)
+select u.id, encode(extensions.digest('boolaa-test-device', 'sha256'), 'hex'), 'Seeded test device'
+from auth.users u where u.email in ('mod@boolaa.test', 'dave@boolaa.test', 'erin@boolaa.test');
+
+insert into public.bubbles (id, name, description, max_size, invite_code, created_by) values
+  ('aaaaaaaa-0000-0000-0000-000000000003', 'Book Club', 'One book a month', 12, 'BOOK2026', '66666666-6666-6666-6666-666666666666');
+insert into public.bubble_members (user_id, bubble_id, approved, role) values
+  ('66666666-6666-6666-6666-666666666666', 'aaaaaaaa-0000-0000-0000-000000000003', true, 'owner'),
+  ('55555555-5555-5555-5555-555555555555', 'aaaaaaaa-0000-0000-0000-000000000003', true, 'member');
+
+insert into public.chat_messages (id, bubble_id, sender_id, content, created_at) values
+  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000003', '66666666-6666-6666-6666-666666666666', 'Next pick: The Left Hand of Darkness?', now() - interval '23 hours'),
+  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000003', '55555555-5555-5555-5555-555555555555', 'Boring. Pick something else.', now() - interval '22 hours 30 minutes'),
+  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000003', '66666666-6666-6666-6666-666666666666', 'Happy to vote on it.', now() - interval '22 hours'),
+  ('cccccccc-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000003', '55555555-5555-5555-5555-555555555555', 'Nobody cares what you think, Erin. Leave the group.', now() - interval '21 hours 30 minutes'),
+  ('cccccccc-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000003', '66666666-6666-6666-6666-666666666666', 'That is not ok.', now() - interval '21 hours 20 minutes'),
+  ('cccccccc-0000-0000-0000-000000000006', 'aaaaaaaa-0000-0000-0000-000000000003', '55555555-5555-5555-5555-555555555555', 'Whatever.', now() - interval '21 hours 10 minutes');
+
+-- alert_sent_at is set so the seed doesn't email the moderation inbox.
+insert into public.reports (id, reporter_id, bubble_id, target_type, target_id, reported_user_id, reason, details, created_at, alert_sent_at) values
+  ('dddddddd-0000-0000-0000-000000000001', '66666666-6666-6666-6666-666666666666', 'aaaaaaaa-0000-0000-0000-000000000003',
+   'chat_message', 'cccccccc-0000-0000-0000-000000000004', '55555555-5555-5555-5555-555555555555', 'harassment',
+   'He keeps telling me to leave.', now() - interval '21 hours', now()),
+  ('dddddddd-0000-0000-0000-000000000002', '66666666-6666-6666-6666-666666666666', 'aaaaaaaa-0000-0000-0000-000000000003',
+   'user', '55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555', 'harassment',
+   null, now() - interval '2 hours', now());
+
+-- Push notifications (docs/push-notifications.md): local dispatcher URL and shared secret.
+-- The secret must equal PUSH_DISPATCH_SECRET in supabase/functions/.env. The seed registers
+-- no push tokens, so nothing above was queued.
+select vault.create_secret('http://kong:8000/functions/v1/push-dispatch', 'push_dispatch_url');
+select vault.create_secret('local-push-dispatch-secret-change-me', 'push_dispatch_secret');

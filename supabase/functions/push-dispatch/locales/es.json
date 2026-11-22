@@ -1,0 +1,41 @@
+{
+  "app": "Boolaa",
+  "someone": "Alguien",
+  "chat": {
+    "title": "{name} en {bubble}",
+    "more": { "one": "+# mensaje más", "other": "+# mensajes más" },
+    "private": { "one": "Nuevo mensaje en {bubble}", "other": "# mensajes nuevos en {bubble}" }
+  },
+  "join_request": {
+    "body": "{name} quiere unirse",
+    "private": "Nueva solicitud para unirse en {bubble}"
+  },
+  "approval": {
+    "title": "¡Ya formas parte de {bubble}!",
+    "body": "Han aprobado tu solicitud para unirte. ¡Saluda!",
+    "private": "Han aprobado tu solicitud para unirte a {bubble}."
+  },
+  "new_event": {
+    "title": "Nuevo evento en {bubble}",
+    "body": "{name} ha añadido {event}",
+    "private": "Nuevo evento en {bubble}"
+  },
+  "event_reminder": {
+    "body": "Empieza en 1 hora",
+    "bodyWithPlace": "Empieza en 1 hora · {location}",
+    "private": "Un evento de {bubble} empieza en 1 hora"
+  },
+  "food": {
+    "title": "Círculo de comida · {bubble}",
+    "body": "{name}: {text}",
+    "bodyNoText": "{name} ha compartido algo de comer",
+    "private": "Nueva publicación en el Círculo de comida de {bubble}"
+  },
+  "market": {
+    "title": "Mercadillo · {bubble}",
+    "body": "{name}: {item} ({status})",
+    "free": "Gratis",
+    "trade": "Intercambio",
+    "private": "Nuevo artículo en el Mercadillo de {bubble}"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "app": "Boolaa",
+  "someone": "Quelqu'un",
+  "chat": {
+    "title": "{name} dans {bubble}",
+    "more": { "one": "+# autre message", "other": "+# autres messages" },
+    "private": { "one": "Nouveau message dans {bubble}", "other": "# nouveaux messages dans {bubble}" }
+  },
+  "join_request": {
+    "body": "{name} veut rejoindre la bulle",
+    "private": "Nouvelle demande d'adhésion dans {bubble}"
+  },
+  "approval": {
+    "title": "Tu fais maintenant partie de {bubble} !",
+    "body": "Ta demande d'adhésion a été acceptée. Dis bonjour !",
+    "private": "Ta demande d'adhésion à {bubble} a été acceptée."
+  },
+  "new_event": {
+    "title": "Nouvel événement dans {bubble}",
+    "body": "{name} a ajouté {event}",
+    "private": "Nouvel événement dans {bubble}"
+  },
+  "event_reminder": {
+    "body": "Commence dans 1 heure",
+    "bodyWithPlace": "Commence dans 1 heure · {location}",
+    "private": "Un événement de {bubble} commence dans 1 heure"
+  },
+  "food": {
+    "title": "Cercle gourmand · {bubble}",
+    "body": "{name} : {text}",
+    "bodyNoText": "{name} a partagé quelque chose à manger",
+    "private": "Nouveau post dans le Cercle gourmand de {bubble}"
+  },
+  "market": {
+    "title": "Marché · {bubble}",
+    "body": "{name} : {item} ({status})",
+    "free": "Gratuit",
+    "trade": "Échange",
+    "private": "Nouvel article sur le Marché de {bubble}"
+  }
+}

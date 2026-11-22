@@ -29,6 +29,7 @@ The RPCs, called with named params:
   - The departed member's votes are removed.
   - Queued requests that now have a majority are admitted.
 - **Realtime tables**: `chat_messages`, `join_requests` and `bubble_members`. Pending screens and Settings should subscribe to them instead of polling.
+- **Push notifications** (`docs/push-notifications.md`): clients call `register_push_token(...)` after the device check and on every start, and `unregister_push_token(p_token)` before signing out. They read and update their own `notification_prefs` row (master switch, per type, `preview_content`) and `bubble_mutes` rows. Pushes carry `{type, bubble_id, target_id}` for deep links.
 - `reject_join_request(p_request_id)` takes the request id and returns nothing.
 - `toggle_rsvp(p_event_id)` returns the new `rsvp_list`.
 
@@ -46,11 +47,16 @@ Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabas
   - Target types: `user`, `chat_message`, `event`, `food_post`, `market_item`, `shared_link`.
   - Reasons: `spam`, `harassment`, `hate`, `sexual`, `violence`, `self_harm`, `other`.
   - The server works out the author and bubble. Errors: `cannot report yourself`, `report target not found`.
-  - Reports go to a moderation queue that only the service role can read.
+  - Reports go to a moderation queue that only admins (`public.admins`, through the admin RPCs) and the service role can read. Each report emails moderation@boolaa.ro with a link to `/admin`.
   - After reporting, offer "Also block <name>?".
 - **Delete account**: `delete_my_account()`. First list and remove every object under `<uid>/` in `avatars`, `food.images` and `market.images`, ignoring failures. Then call the RPC and sign out locally.
   - The deletion cascades to the user's profile, memberships and all their content. Owned bubbles pass to the next member, and bubbles left empty are deleted.
   - The UI must warn clearly that this can't be undone and ask for a confirmation step.
+- **Suspended or banned accounts** (`users.status`: `active` / `suspended` / `banned`, plus `status_reason`, `status_until`, `status_changed_at`). Moderators set them from the web admin view (`/admin`, see `docs/moderation.md`).
+  - An inactive account (banned, or suspended with `status_until` null or in the future) reads nothing and can't post or call RPCs (`account suspended`). It can still read its own `users` row and call `delete_my_account()`. A suspension ends by itself at `status_until`.
+  - Sign-in and token refresh fail with the Auth error code `user_banned` while it lasts.
+  - Every client shows a **suspended screen** instead of the app: title, "You can use Boolaa again from <date>" (suspended), the reason (report-reason labels), an appeal link to privacy@boolaa.ro, and sign out. On `user_banned` at sign-in, show it without date or reason. Texts: `suspended.*` in the web's `messages/*.json`.
+  - Their posts stay visible to their bubbles; a ban also removes them from every bubble.
 
 ## Screens and flows
 

@@ -1,0 +1,41 @@
+{
+  "app": "Boolaa",
+  "someone": "Cineva",
+  "chat": {
+    "title": "{name} în {bubble}",
+    "more": { "one": "+# mesaj nou", "few": "+# mesaje noi", "other": "+# de mesaje noi" },
+    "private": { "one": "Mesaj nou în {bubble}", "few": "# mesaje noi în {bubble}", "other": "# de mesaje noi în {bubble}" }
+  },
+  "join_request": {
+    "body": "{name} vrea să se alăture",
+    "private": "Cerere de alăturare nouă în {bubble}"
+  },
+  "approval": {
+    "title": "Acum faci parte din {bubble}!",
+    "body": "Cererea ta de alăturare a fost aprobată. Salută-i pe toți!",
+    "private": "Cererea ta de alăturare la {bubble} a fost aprobată."
+  },
+  "new_event": {
+    "title": "Eveniment nou în {bubble}",
+    "body": "{name} a adăugat {event}",
+    "private": "Eveniment nou în {bubble}"
+  },
+  "event_reminder": {
+    "body": "Începe într-o oră",
+    "bodyWithPlace": "Începe într-o oră · {location}",
+    "private": "Un eveniment din {bubble} începe într-o oră"
+  },
+  "food": {
+    "title": "Cercul culinar · {bubble}",
+    "body": "{name}: {text}",
+    "bodyNoText": "{name} a împărțit ceva de mâncare",
+    "private": "Postare nouă în Cercul culinar din {bubble}"
+  },
+  "market": {
+    "title": "Piață · {bubble}",
+    "body": "{name}: {item} ({status})",
+    "free": "Gratuit",
+    "trade": "Schimb",
+    "private": "Anunț nou în Piața din {bubble}"
+  }
+}

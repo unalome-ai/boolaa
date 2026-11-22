@@ -1,7 +1,8 @@
 // Moderation alert: called by the AFTER INSERT trigger on public.reports (pg_net)
 // with {"report_id": "..."} and the header x-report-alert-secret. Emails the
 // moderation inbox in English. Never includes email addresses. Setup: docs/moderation.md.
-// Env: REPORT_ALERT_SECRET, MODERATION_EMAIL (default moderation@boolaa.ro), RESEND_API_KEY.
+// Env: REPORT_ALERT_SECRET, MODERATION_EMAIL (default moderation@boolaa.ro), RESEND_API_KEY,
+// ADMIN_URL (default https://boolaa.ro/admin; the email links to <ADMIN_URL>?report=<id>).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { escapeHtml, layout } from "../_shared/email/render.ts";
 import { sendMail } from "../_shared/mailer.ts";
@@ -20,6 +21,8 @@ function timingSafeEqual(a: string, b: string): boolean {
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+const ADMIN_URL = (Deno.env.get("ADMIN_URL") || "https://boolaa.ro/admin").replace(/\/+$/, "");
 
 const TARGET_LABEL: Record<string, string> = {
   user: "user profile", chat_message: "chat message", event: "event",
@@ -47,6 +50,7 @@ function renderAlert(a: any) {
     ["Open reports against this user (30 days)", String(a.open_reports_against_user_30d)],
     ["Reports on this target (10 min)", String(a.reports_on_target_10m)],
     ["Report id", a.report_id],
+    ["Open in admin", `${ADMIN_URL}?report=${encodeURIComponent(a.report_id)}`],
   ];
   const shown = rows.filter(([, v]) => v);
   const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;">` +
@@ -55,7 +59,7 @@ function renderAlert(a: any) {
       return `<tr><td class="bl-muted" style="padding:6px 12px 6px 0;color:#6A6382;vertical-align:top;white-space:nowrap;">${escapeHtml(k)}</td>` +
         `<td class="bl-ink" style="padding:6px 0;color:#1E1638;word-break:break-word;">${val}</td></tr>`;
     }).join("") +
-    `</table><p class="bl-muted" style="margin:16px 0 0;font-family:system-ui,sans-serif;font-size:13px;color:#6A6382;">Apple expects reports to be handled within 24 hours. Mark it handled in reports.status / handled_at / handled_note.</p>`;
+    `</table><p class="bl-muted" style="margin:16px 0 0;font-family:system-ui,sans-serif;font-size:13px;color:#6A6382;">Apple expects reports to be handled within 24 hours. <a href="${escapeHtml(`${ADMIN_URL}?report=${encodeURIComponent(a.report_id)}`)}" style="color:#5B3FD9;font-weight:600;">Open it in the admin view</a> to act on it.</p>`;
   const text = shown.map(([k, v]) => `${k}: ${v}`).join("\n");
   return {
     subject,

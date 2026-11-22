@@ -1,0 +1,41 @@
+{
+  "app": "Boolaa",
+  "someone": "Someone",
+  "chat": {
+    "title": "{name} in {bubble}",
+    "more": { "one": "+# more message", "other": "+# more messages" },
+    "private": { "one": "New message in {bubble}", "other": "# new messages in {bubble}" }
+  },
+  "join_request": {
+    "body": "{name} wants to join",
+    "private": "New join request in {bubble}"
+  },
+  "approval": {
+    "title": "You're in {bubble}!",
+    "body": "Your join request was approved. Say hi!",
+    "private": "Your request to join {bubble} was approved."
+  },
+  "new_event": {
+    "title": "New event in {bubble}",
+    "body": "{name} added {event}",
+    "private": "New event in {bubble}"
+  },
+  "event_reminder": {
+    "body": "Starts in 1 hour",
+    "bodyWithPlace": "Starts in 1 hour · {location}",
+    "private": "An event in {bubble} starts in 1 hour"
+  },
+  "food": {
+    "title": "Food Circle · {bubble}",
+    "body": "{name}: {text}",
+    "bodyNoText": "{name} shared something to eat",
+    "private": "New post in the Food Circle of {bubble}"
+  },
+  "market": {
+    "title": "Marketplace · {bubble}",
+    "body": "{name}: {item} ({status})",
+    "free": "Free",
+    "trade": "Trade",
+    "private": "New item in the Marketplace of {bubble}"
+  }
+}

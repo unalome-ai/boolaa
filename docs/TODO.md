@@ -10,10 +10,8 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ✅ **Database: block users**, two-way, enforced by the database's access rules (RLS), including live chat.
 - ✅ **Database: report content and users** (`report_content`), into a moderation queue.
 - ✅ **Report and block UI** on every message, post, item, event, link and member, plus a "Blocked users" list in the profile.
-- 🔄 **Moderation process.** Apple requires acting on reports within 24 hours. ✅ Email alert per report to moderation@boolaa.ro (live). ⬜ Still needed:
-  - an alert to the team for each new report (database webhook → email or Slack);
-  - an admin view of open reports with actions: delete content, remove the user from a bubble, suspend the account.
-- ⬜ **Suspended/banned accounts** (`users.status`): blocked at sign-in and hidden from everyone.
+- 🔄 **Moderation process.** Apple requires acting on reports within 24 hours. ✅ Email alert per report to moderation@boolaa.ro (live), linking to the report in the admin view. ✅ Admin view at `/admin` (web, admins only, 404 for everyone else): queue with context, dismiss / delete content / remove from bubble / suspend 1-7-30 days / ban, user search and unsuspend, audit log (`moderation_actions`); local only so far. ⬜ Production rollout (`docs/moderation.md`: push the migration, insert the admin, redeploy `report-alert`, deploy web). ⬜ Daily queue check as a team habit.
+- 🔄 **Suspended/banned accounts** (`users.status`): ✅ backend (RLS blocks inactive accounts, GoTrue `banned_until` blocks sign-in; content stays visible, a ban leaves every bubble) and the web suspended screen (5 languages). ⬜ Suspended screen in iOS and Android (`docs/moderation.md` → Clients). ⬜ Optional: delete a removed post's uploaded image from storage automatically.
 - ✅ **Privacy Policy and Terms of Service pages** (web, all 5 languages), linked from register, the profile/settings screens and the store listings.
 - 🔄 **Legal texts**: ✅ rewritten for a private, not-for-profit individual controller (Bogdan Raduta), free/no ads/no AI training, Apache 2.0, Apple/Google sign-in, processors (Zurich/Frankfurt); no placeholders left. ⬜ Optional review by a lawyer, then remove the "Draft" banner.
 - ⬜ **App Store EU "trader" status (DSA)**: App Store Connect asks before the first EU submission. Saying *trader* publishes the address, phone and email on the EU store page. A free, ad-free, non-profit app by an individual is likely a **non-trader**; decide deliberately before submitting.
