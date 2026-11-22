@@ -101,13 +101,16 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant C as Client
+  participant F as device-code function
   participant A as Supabase Auth
-  C->>A: reauthenticate()
-  A-->>C: (email) "Your Boolaa confirmation code"
-  C->>A: updateUser({ password, nonce: code })
-  A-->>C: ok / reauthentication_not_valid
+  C->>F: POST {action:"send", purpose:"sensitive_action", sensitive_action:"change_password"}
+  F-->>C: 200 sent (email: "confirm: change your password")
+  C->>F: POST {action:"verify", purpose:"sensitive_action", code}
+  F-->>C: 200 verified
+  C->>A: updateUser({ password })  (within 10 min)
+  A-->>C: ok / 500 "Database error updating user" (no fresh proof)
 ```
-`secure_password_change = true`. **GoTrue only enforces the nonce for sessions older than 24 hours** (tested): a session younger than that may change the password with no nonce, or a wrong one. Clients must **always** run reauthenticate → code → `updateUser({ password, nonce })`, so the UX is the same for every session.
+GoTrue's own nonce (`reauthenticate()`, *secure password change*) is **not used**: measured on v2.186, it is only checked for sessions older than 24 hours, and a younger session passes with no nonce or a wrong one. Instead the `guard_sensitive_auth_change` trigger on `auth.users` (migration `20261122220000`) refuses a password change unless, within the last 10 minutes, the user verified a `sensitive_action` code or used a password-reset / magic-link code (one new password per reset code). The same trigger refuses an email change request without a fresh `sensitive_action` code. It runs only while `device_verification_enforced` is on, like `delete_my_account`. `secure_password_change` is **off**, otherwise sessions older than 24 h would need both codes. The trigger can't see the session, so a proof from any session of the user counts; a thief without the mailbox can't make one.
 
 ### Flow: delete account
 ```mermaid
@@ -211,7 +214,7 @@ GoTrue calls `send-email` for every auth email. The function verifies the `stand
 - **Language** comes from `user.user_metadata.locale` (`en`, `ro`, `fr`, `es`, `it`), with `en` as the fallback. Clients **must** send `locale` at sign-up and call `updateUser({ data: { locale } })` whenever the user changes language, and once after the first OAuth sign-in.
 - **Look**: "Soft pop", table-based and inline-styled, with the CSS orb logo (no images), the grape code box and a pill button. Dark mode uses `prefers-color-scheme` and Outlook's `[data-ogsc]`. The footer links to https://boolaa.ro/privacy.
 - **Links** use `AUTH_PUBLIC_URL/auth/v1/verify?token=<hash>&type=<type>&redirect_to=<redirect_to>`. PKCE `pkce_` token hashes work the same way.
-- **Email change**: measured on v2.186, `token` verifies with the current address and `token_new` with the new one. **A single verified code completes the change**, even with `secure_email_change` (double confirm) on. Clients should therefore ask for a `sensitive_action` code before calling `updateUser({ email })`. That is a UX gate only (see Risks).
+- **Email change**: measured on v2.186, `token` verifies with the current address and `token_new` with the new one. **A single verified code completes the change**, even with `secure_email_change` (double confirm) on. Clients therefore ask for a `sensitive_action` code (`change_email`) before calling `updateUser({ email })`, and the server requires it (see the change-password flow).
 
 ## 6. Age confirmation (16+)
 
@@ -267,8 +270,8 @@ Common to web, iOS and Android:
 3. **Age screen** when `needs_age_confirmation` is true: `confirm_age(TERMS_VERSION)`.
 4. **Sign-up** metadata: `{ name, locale, age_confirmed: true, terms_version }`. On a language change: `updateUser({ data: { locale } })`.
 5. **Forgot password** (section 2): Login "Forgot password?" → email → code → new password → signed in.
-6. **Change password** in the profile: `reauthenticate()` → code → `updateUser({ password, nonce })`.
-7. **Change email** (if offered): `sensitive_action` code first, then `updateUser({ email })`. Tell the user both addresses get an email.
+6. **Change password** in the profile: `sensitive_action` code (`change_password`) → verify → `updateUser({ password })`.
+7. **Change email** (if offered): `sensitive_action` code (`change_email`) first, then `updateUser({ email })`. Tell the user both addresses get an email.
 8. **Delete account**: `sensitive_action` code (`sensitive_action: "delete_account"`) → delete storage objects → `delete_my_account()` within 10 minutes in the same session → sign out locally.
 9. **Your devices** in the profile: `list_my_devices()`, "This device" marked by comparing hashes, last seen as a relative time, and a revoke button with a confirmation that hides revoke on the current device.
 10. **Error mapping**: the new texts and codes in section 3, in all 5 languages, following the glossary.
@@ -305,7 +308,7 @@ Platform notes:
 7. **Auth settings** (dashboard or Management API):
    - Email OTP expiry 600 s (`mailer_otp_exp`).
    - OTP length 6.
-   - *Secure password change* on (`security_update_password_require_reauthentication`).
+   - *Secure password change* **off** (`security_update_password_require_reauthentication`): the `guard_sensitive_auth_change` trigger replaces it. Switch it off together with shipping the clients that send `change_password` codes.
    - *Secure email change* on.
    - Minimum interval per user 60 s (`smtp_max_frequency`).
    - Confirm email on.
@@ -324,8 +327,8 @@ Platform notes:
     Every existing session becomes unverified until the next `start_device_check`. Devices trusted while the flag was off pass silently, and others get one code. The rollback is the same line with `false`.
 
 ## 11. Risks and limits
-- **Password change without a nonce for sessions younger than 24 h** (GoTrue behaviour). A stolen fresh session can change the password. It is mitigated by the device gate, since a stolen token from another device is still bound to its session, which must already be verified.
-- **Email change completes with one code** (measured on v2.186), despite double confirm. The `sensitive_action` code before `updateUser({ email })` is enforced in the UI only. A server-side gate would need an `auth.users` trigger; ask before adding one.
+- **Password and email changes are gated by a trigger on `auth.users`** (`guard_sensitive_auth_change`), only while `device_verification_enforced` is on. Before that, a stolen fresh session can change the password or request an email change. Admin API password/email changes (service role) are refused too while it is on, unless the user has a fresh proof. An operator changes them in SQL inside a transaction with `set local boolaa.bypass_auth_guard = 'on';`. A blocked change returns GoTrue's opaque 500, which clients show as the generic error.
+- **Email change completes with one code** (measured on v2.186), despite double confirm. The server-required `sensitive_action` code before the request covers it.
 - **OAuth `amr` value not measured locally**: it is a single constant to adjust after the first staging login.
 - **Revocation doesn't sign out** the revoked device. It loses access to data until it verifies again. Sign-out everywhere is `auth.signOut({ scope: 'global' })`.
 - **`signInWithOtp` creates users** (`shouldCreateUser` defaults to true) without running the before-user-created hook. The RLS age gate still applies. Clients should pass `shouldCreateUser: false` for email-code sign-in.

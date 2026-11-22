@@ -441,13 +441,15 @@ final class SessionStore {
         try await api.deviceCode(BoolaaAPI.DeviceCodeBody.verifySensitive(code: code))
     }
 
-    /// Emails a reauthentication code (always, so every session sees the same flow).
+    /// Emails a `change_password` code. The server refuses a password change without one
+    /// (guard_sensitive_auth_change, docs/auth-security.md → Sensitive actions).
     func requestPasswordChangeCode() async throws {
-        try await client.auth.reauthenticate()
+        try await sendSensitiveActionCode(.changePassword)
     }
 
-    func changePassword(_ newPassword: String, code: String) async throws {
-        _ = try await client.auth.update(user: UserAttributes(password: newPassword, nonce: code))
+    /// After a verified `change_password` code (within 10 minutes).
+    func changePassword(_ newPassword: String) async throws {
+        _ = try await client.auth.update(user: UserAttributes(password: newPassword))
     }
 
     /// Call after a verified `sensitive_action` code. Both addresses get an email to confirm.

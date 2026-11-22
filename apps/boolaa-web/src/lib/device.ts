@@ -112,7 +112,7 @@ export class DeviceCodeError extends Error {
 type DeviceCodeBody =
   | { action: "send"; purpose: "device"; device_id: string; label: string; locale?: string }
   | { action: "verify"; purpose: "device"; device_id: string; label: string; code: string }
-  | { action: "send"; purpose: "sensitive_action"; sensitive_action: "delete_account" | "generic"; locale?: string }
+  | { action: "send"; purpose: "sensitive_action"; sensitive_action: SensitiveAction; locale?: string }
   | { action: "verify"; purpose: "sensitive_action"; code: string };
 
 async function invokeDeviceCode(supabase: BoolaaClient, body: DeviceCodeBody) {
@@ -150,7 +150,9 @@ export const sendDeviceCode = (supabase: BoolaaClient, locale?: string) =>
 export const verifyDeviceCode = (supabase: BoolaaClient, code: string) =>
   deviceCode(supabase, { action: "verify", purpose: "device", device_id: getDeviceId(), label: deviceLabel(), code });
 
-export const sendSensitiveCode = (supabase: BoolaaClient, action: "delete_account" | "generic", locale?: string) =>
+export type SensitiveAction = "delete_account" | "change_password" | "change_email" | "generic";
+
+export const sendSensitiveCode = (supabase: BoolaaClient, action: SensitiveAction, locale?: string) =>
   deviceCode(supabase, { action: "send", purpose: "sensitive_action", sensitive_action: action, locale });
 
 export const verifySensitiveCode = (supabase: BoolaaClient, code: string) =>

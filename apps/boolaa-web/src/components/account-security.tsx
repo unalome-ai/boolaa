@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { KeyRound, Laptop, Mail, Smartphone, X } from "lucide-react";
 import { useBoolaa } from "@/components/boolaa-provider";
@@ -13,10 +13,14 @@ import { cx } from "@/lib/utils";
 
 type Step = "idle" | "form" | "code" | "done";
 
-/** Change password: new password → reauthenticate() emails a code → updateUser({ password, nonce }). */
+/**
+ * Change password: new password → a `sensitive_action` code ("change_password") → updateUser({ password }).
+ * The server refuses the change without a fresh code (docs/auth-security.md → Sensitive actions).
+ */
 function ChangePassword() {
   const { supabase, email } = useBoolaa();
   const t = useTranslations();
+  const locale = useLocale();
   const errorText = useErrorText();
   const [step, setStep] = useState<Step>("idle");
   const [password, setPassword] = useState("");
@@ -25,6 +29,7 @@ function ChangePassword() {
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
   const cooldown = useCooldown();
+  const proven = useRef(false);
 
   const fail = (e: unknown) => {
     setError(errorText(e));
@@ -36,8 +41,12 @@ function ChangePassword() {
     e?.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.reauthenticate();
-    if (error) return fail(error);
+    proven.current = false;
+    try {
+      await sendSensitiveCode(supabase, "change_password", locale);
+    } catch (err) {
+      return fail(err);
+    }
     cooldown.start(RESEND_COOLDOWN_S);
     setCode("");
     setStep("code");
@@ -47,11 +56,17 @@ function ChangePassword() {
   async function save(value: string) {
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.updateUser({ password, nonce: value });
-    if (error) {
-      setCode("");
-      return fail(error);
+    if (!proven.current) {
+      try {
+        await verifySensitiveCode(supabase, value);
+        proven.current = true; // a code works once: a retry after e.g. same_password reuses the proof
+      } catch (err) {
+        setCode("");
+        return fail(err);
+      }
     }
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) return fail(error);
     setBusy(false);
     setPassword("");
     setStep("done");
@@ -126,8 +141,8 @@ function ChangePassword() {
 }
 
 /**
- * Change email: a `sensitive_action` code first (UI gate, docs/auth-security.md §5: GoTrue completes
- * the change with one code), then updateUser({ email }). Both addresses get an email.
+ * Change email: a `sensitive_action` code ("change_email") first, which the server requires, then
+ * updateUser({ email }). Both addresses get an email.
  */
 function ChangeEmail() {
   const { supabase, email } = useBoolaa();
@@ -153,7 +168,7 @@ function ChangeEmail() {
     setBusy(true);
     setError(null);
     try {
-      await sendSensitiveCode(supabase, "generic", locale);
+      await sendSensitiveCode(supabase, "change_email", locale);
     } catch (err) {
       return fail(err);
     }

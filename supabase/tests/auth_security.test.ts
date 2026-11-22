@@ -233,30 +233,6 @@ Deno.test("password reset by code: email, verifyOtp, new password; recovery sess
     assert((await client().auth.signInWithPassword({ email: u.email, password: PASSWORD })).error, "old password fails");
   }));
 
-Deno.test("reauthenticate() code then updateUser({ password, nonce })", opts, async () => {
-  const u = await createUser({ locale: "it" });
-  const c = await signIn(u.email);
-  // GoTrue only demands the nonce from sessions older than 24 h (see docs). Age this one.
-  await sql`update auth.sessions set created_at = now() - interval '25 hours' where id = ${claims(await token(c)).session_id}`;
-  const none = await c.auth.updateUser({ password: "another-pass-2" });
-  assertEq(none.error?.code, "reauthentication_needed", "old session without nonce refused");
-  const r = await c.auth.reauthenticate();
-  assert(!r.error, `reauthenticate: ${r.error?.message}`);
-  const m = await waitMail(u.email);
-  assertEq(m.subject, "Il tuo codice di conferma Boolaa", "it reauth subject");
-  const wrong = await c.auth.updateUser({ password: "another-pass-2", nonce: codeOf(m) === "000000" ? "111111" : "000000" });
-  assert(wrong.error, "wrong nonce refused");
-  const ok = await c.auth.updateUser({ password: "another-pass-2", nonce: codeOf(m) });
-  assert(!ok.error, `with nonce: ${ok.error?.message}`);
-  assert(!(await client().auth.signInWithPassword({ email: u.email, password: "another-pass-2" })).error, "new password works");
-  // Documented GoTrue behaviour: a session younger than 24 h may change the password
-  // without (or with any) nonce, even with secure_password_change on.
-  const fresh = await signIn(u.email, "another-pass-2");
-  const noNonce = await fresh.auth.updateUser({ password: "third-pass-3" });
-  assert(!noNonce.error, "GoTrue: recent session may skip the nonce (see docs)");
-  await cleanupUsers();
-});
-
 Deno.test("delete_my_account needs a fresh sensitive_action code from the same session", opts, () =>
   withFlags({ device: true }, async () => {
     const u = await createUser({ locale: "fr" });
@@ -297,6 +273,63 @@ Deno.test("delete_my_account needs a fresh sensitive_action code from the same s
     const wc = await signIn(w.email);
     s = await deviceCode(wc, { action: "send", purpose: "sensitive_action" });
     assertEq([s.status, s.body.error], [403, "session_not_verified"], "sensitive code needs a verified session");
+  }));
+
+Deno.test("password and email changes need a fresh sensitive_action code (or a used reset code) on the server", opts, () =>
+  withFlags({ device: true }, async () => {
+    const u = await createUser({ locale: "ro" });
+    const device = `pw-${crypto.randomUUID()}`;
+    const a = await signIn(u.email); // younger than 24 h: GoTrue itself would accept any nonce
+    await verifyDeviceByEmail(a, u.email, device);
+    const refused = (e: { message?: string } | null, what: string) => assert(e, `${what} must be refused`);
+
+    refused((await a.auth.updateUser({ password: "gate-pass-1" })).error, "password, no proof");
+    await a.auth.reauthenticate();
+    await waitMail(u.email);
+    refused((await a.auth.updateUser({ password: "gate-pass-1", nonce: "000000" })).error, "password, wrong GoTrue nonce");
+    refused((await a.auth.updateUser({ email: `new-${u.email}` })).error, "email change, no proof");
+    assert(!(await client().auth.signInWithPassword({ email: u.email, password: PASSWORD })).error, "old password still works");
+
+    const s = await deviceCode(a, { action: "send", purpose: "sensitive_action", sensitive_action: "change_password" });
+    assertEq(s.status, 200, "send sensitive code");
+    const m = await waitMail(u.email, { subject: /confirmare/ });
+    assert(m.text.includes("schimbarea parolei tale"), "action named in email");
+    assertEq((await deviceCode(a, { action: "verify", purpose: "sensitive_action", code: codeOf(m) })).status, 200, "verify");
+    // Sessions older than 24 h too: GoTrue's own nonce check (secure_password_change) is off,
+    // this gate replaces it.
+    await sql`update auth.sessions set created_at = now() - interval '25 hours' where id = ${claims(await token(a)).session_id}`;
+    const ok = await a.auth.updateUser({ password: "gate-pass-1" });
+    assert(!ok.error, `password with proof: ${ok.error?.message}`);
+    const em = await a.auth.updateUser({ email: `new-${u.email}` });
+    assert(!em.error, `email change with proof: ${em.error?.message}`);
+
+    // Stale proof (> 10 min) no longer counts.
+    await sql`update public.email_challenges set consumed_at = now() - interval '11 minutes' where user_id = ${u.id} and purpose = 'sensitive_action'`;
+    refused((await a.auth.updateUser({ password: "gate-pass-2" })).error, "password, stale proof");
+
+    // Forgot password: a used reset code allows exactly one new password.
+    const r = client();
+    await r.auth.resetPasswordForEmail(u.email);
+    const rm = await waitMail(u.email);
+    assert(!(await r.auth.verifyOtp({ email: u.email, token: codeOf(rm), type: "recovery" })).error, "verify reset code");
+    assert(!(await r.auth.updateUser({ password: "gate-pass-3" })).error, "new password after reset");
+    refused((await r.auth.updateUser({ password: "gate-pass-4" })).error, "second password on the same reset code");
+    // Asking for a reset email alone (anyone can) grants nothing.
+    await client().auth.resetPasswordForEmail(u.email);
+    await waitMail(u.email);
+    refused((await a.auth.updateUser({ password: "gate-pass-5" })).error, "password after an unused reset email");
+    assert(!(await client().auth.signInWithPassword({ email: u.email, password: "gate-pass-3" })).error, "reset password is current");
+
+    // Operators: plain SQL is refused too, unless the transaction opts out explicitly.
+    const bump = (tx: typeof sql) => tx`update auth.users set encrypted_password = crypt('gate-pass-6', gen_salt('bf')) where id = ${u.id}`;
+    let sqlError = "";
+    await sql.begin(bump).catch((e) => (sqlError = e.message));
+    assertEq(sqlError, "reauthentication required", "SQL without the bypass");
+    await sql.begin(async (tx) => {
+      await tx`set local boolaa.bypass_auth_guard = 'on'`;
+      await bump(tx);
+    });
+    assert(!(await client().auth.signInWithPassword({ email: u.email, password: "gate-pass-6" })).error, "operator bypass works");
   }));
 
 Deno.test("revoking a device forces re-verification on it", opts, () =>

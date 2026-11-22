@@ -70,6 +70,8 @@
     "intro": "Enter this code in Boolaa to confirm: {action}.",
     "actions": {
       "delete_account": "delete your account",
+      "change_password": "change your password",
+      "change_email": "change your email address",
       "generic": "a change to your account"
     }
   },

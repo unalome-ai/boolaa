@@ -23,7 +23,7 @@ import { createClient } from "@supabase/supabase-js";
 
 /**
  * Auth security client flows (docs/auth-security.md): sign-up age, forgot password, device codes,
- * trusted devices, revoke, change password with reauthentication, OAuth buttons + callback, and the
+ * trusted devices, revoke, change password with an emailed code, OAuth buttons + callback, and the
  * 16+ screen. Codes are read from the local Mailpit. Flags are switched on per test and restored.
  * Throwaway users only; selectors avoid UI text so the suite works in every locale.
  */
@@ -249,7 +249,7 @@ test("delete account with an emailed code while enforcement is on", async ({ bro
   await d.context.close();
 });
 
-test("change password: reauthenticate, emailed code, new password", async ({ browser }) => {
+test("change password: emailed change_password code, new password", async ({ browser }) => {
   const who = await userWithBubble("Rekeyer");
   const d = await device(browser);
   await signIn(d.page, who.email);

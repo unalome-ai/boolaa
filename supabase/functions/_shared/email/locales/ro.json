@@ -70,6 +70,8 @@
     "intro": "Introdu acest cod în Boolaa ca să confirmi: {action}.",
     "actions": {
       "delete_account": "ștergerea contului tău",
+      "change_password": "schimbarea parolei tale",
+      "change_email": "schimbarea adresei tale de email",
       "generic": "o schimbare în contul tău"
     }
   },

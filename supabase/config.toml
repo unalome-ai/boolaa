@@ -217,7 +217,7 @@ double_confirm_changes = true  # = "Secure email change" in the dashboard
 # supabase/tests covers the confirmation email through resend().
 enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = true
+secure_password_change = false  # replaced by the guard_sensitive_auth_change trigger (GoTrue only checked sessions > 24 h)
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "60s"
 # Number of characters used in the email OTP.

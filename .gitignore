@@ -48,3 +48,6 @@ supabase/.branches/
 
 # Backup of the legacy app's own git history
 .legacy-git/
+
+# Firebase config: injected at build time from ~/.boolaa-signing, never committed
+google-services.json

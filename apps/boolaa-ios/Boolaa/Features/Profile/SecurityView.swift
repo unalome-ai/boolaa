@@ -56,7 +56,7 @@ private struct SecurityCard<Content: View>: View {
 
 private enum SecurityStep { case form, code }
 
-/// Change password: new password → `reauthenticate()` emails a code → `updateUser({ password, nonce })`.
+/// Change password: new password → emailed `change_password` code → verify → `updateUser({ password })`.
 private struct ChangePasswordPanel: View {
     @Environment(SessionStore.self) private var session
     @State private var open = false
@@ -68,6 +68,7 @@ private struct ChangePasswordPanel: View {
     @State private var error: String?
     @State private var done = false
     @State private var shakes = 0
+    @State private var proven = false
 
     var body: some View {
         VStack(spacing: 10) {
@@ -119,7 +120,7 @@ private struct ChangePasswordPanel: View {
 
     private func sendCode() async {
         busy = true; defer { busy = false }
-        error = nil; done = false
+        error = nil; done = false; proven = false
         do {
             try await session.requestPasswordChangeCode()
             sentAt = .now; code = ""; step = .code
@@ -131,7 +132,11 @@ private struct ChangePasswordPanel: View {
         busy = true; defer { busy = false }
         error = nil
         do {
-            try await session.changePassword(password, code: value)
+            if !proven {
+                try await session.verifySensitiveActionCode(value)
+                proven = true // a code works once: a retry after e.g. same_password reuses the proof
+            }
+            try await session.changePassword(password)
             Haptics.success()
             password = ""; code = ""; step = .form; open = false; done = true
         } catch { code = ""; shakes += 1; self.error = error.userMessage }
@@ -210,7 +215,7 @@ private struct ChangeEmailPanel: View {
         busy = true; defer { busy = false }
         error = nil; sentTo = nil
         do {
-            try await session.sendSensitiveActionCode(.generic)
+            try await session.sendSensitiveActionCode(.changeEmail)
             sentAt = .now; code = ""; step = .code
         } catch { shakes += 1; self.error = error.userMessage }
     }
