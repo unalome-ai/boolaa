@@ -2,8 +2,8 @@ package com.boolaa.app.state
 
 import com.boolaa.app.model.Bubble
 
-/** Top-level destinations decided by the routing gate (spec §2, docs/auth-security.md §8). */
-enum class AppRoute { LAUNCHING, AUTH, RESET_PASSWORD, DEVICE_CODE, AGE_CONFIRMATION, ONBOARDING, MAIN }
+/** Top-level destinations decided by the routing gate (spec §2, docs/auth-security.md §8, docs/moderation.md). */
+enum class AppRoute { LAUNCHING, AUTH, RESET_PASSWORD, DEVICE_CODE, AGE_CONFIRMATION, SUSPENDED, ONBOARDING, MAIN }
 
 /** Where the signed-in session stands in the device check (`start_device_check`). */
 enum class DeviceGate { CHECKING, CODE_REQUIRED, VERIFIED }
@@ -13,6 +13,7 @@ object RouteGate {
     /**
      * @param approvedBubbleCount null until the signed-in user's memberships have loaded.
      * @param recoveringPassword the session came from a reset code and still needs its new password.
+     * @param suspended the account is suspended or banned (signed in), or sign-in answered `user_banned` (signed out).
      */
     fun resolve(
         isRestoringSession: Boolean,
@@ -21,13 +22,15 @@ object RouteGate {
         deviceGate: DeviceGate = DeviceGate.VERIFIED,
         needsAgeConfirmation: Boolean = false,
         recoveringPassword: Boolean = false,
+        suspended: Boolean = false,
     ): AppRoute = when {
         isRestoringSession -> AppRoute.LAUNCHING
-        !isSignedIn -> AppRoute.AUTH
+        !isSignedIn -> if (suspended) AppRoute.SUSPENDED else AppRoute.AUTH
         recoveringPassword -> AppRoute.RESET_PASSWORD
         // Unverified sessions never reach the bubble screens.
         deviceGate == DeviceGate.CHECKING -> AppRoute.LAUNCHING
         deviceGate == DeviceGate.CODE_REQUIRED -> AppRoute.DEVICE_CODE
+        suspended -> AppRoute.SUSPENDED
         needsAgeConfirmation -> AppRoute.AGE_CONFIRMATION
         approvedBubbleCount == null -> AppRoute.LAUNCHING
         approvedBubbleCount == 0 -> AppRoute.ONBOARDING

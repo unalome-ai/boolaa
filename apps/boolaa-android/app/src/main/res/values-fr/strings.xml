@@ -284,4 +284,16 @@
         <item quantity="many">%1$d chiffres sur %2$d</item>
         <item quantity="other">%1$d chiffres sur %2$d</item>
     </plurals>
+    <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
+    <string name="error_account_suspended">Ton compte est suspendu, tu ne peux donc pas faire ça pour le moment.</string>
+    <string name="error_user_banned">Ce compte ne peut pas se connecter pour le moment : il est suspendu ou banni.</string>
+    <string name="suspended_title_suspended">Ton compte est suspendu</string>
+    <string name="suspended_title_banned">Ton compte a été banni</string>
+    <string name="suspended_until">Tu pourras de nouveau utiliser Boolaa le %1$s.</string>
+    <string name="suspended_blocked">D\'ici là, tu ne peux ni voir tes bulles ni rien publier.</string>
+    <string name="suspended_banned">Tu ne peux plus utiliser Boolaa avec ce compte.</string>
+    <string name="suspended_sign_in_blocked">Ce compte ne peut pas se connecter pour le moment : il est suspendu ou banni.</string>
+    <string name="suspended_reason">Motif : %1$s</string>
+    <string name="suspended_appeal">Tu penses que c\'est une erreur ? Écris-nous à %1$s et explique-nous pourquoi.</string>
+    <string name="suspended_back_to_sign_in">Retour à la connexion</string>
 </resources>

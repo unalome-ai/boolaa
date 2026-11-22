@@ -16,6 +16,10 @@ object Formats {
     fun dateTime(instant: Instant, locale: Locale, zone: ZoneId = ZoneId.systemDefault()): String =
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone))
 
+    /** "22 November 2026, 21:30": long date, short time (the suspended screen's end date, as on web). */
+    fun longDateTime(instant: Instant, locale: Locale, zone: ZoneId = ZoneId.systemDefault()): String =
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(locale).format(instant.atZone(zone))
+
     fun date(instant: Instant, locale: Locale, zone: ZoneId = ZoneId.systemDefault()): String =
         DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale).format(instant.atZone(zone))
 

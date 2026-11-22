@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import com.boolaa.app.core.UserBanned
+import com.boolaa.app.core.UserFacingError
 import com.boolaa.app.ui.AppRoot
 import com.boolaa.app.ui.LocalAppContainer
 import com.boolaa.app.ui.theme.BoolaaTheme
@@ -45,6 +47,11 @@ class MainActivity : AppCompatActivity() {
     /** `ro.boolaa.app://auth/callback?code=...` from the Apple Custom Tab or an email link (PKCE exchange). */
     private fun handleAuthDeeplink(intent: Intent?) {
         if (intent?.data?.scheme != com.boolaa.app.core.Backend.AUTH_SCHEME) return
-        container.api.client.handleDeeplinks(intent, onSessionSuccess = {}, onError = { Log.w("Boolaa", "auth deep link failed", it) })
+        // A suspended or banned account comes back with error_code=user_banned: the "can't sign in" screen.
+        if (UserBanned.inCallback(intent.dataString)) { container.session.markSignInBlocked(); return }
+        container.api.client.handleDeeplinks(intent, onSessionSuccess = {}, onError = {
+            Log.w("Boolaa", "auth deep link failed", it)
+            if (UserFacingError.classify(it) == UserFacingError.USER_BANNED) container.session.markSignInBlocked()
+        })
     }
 }

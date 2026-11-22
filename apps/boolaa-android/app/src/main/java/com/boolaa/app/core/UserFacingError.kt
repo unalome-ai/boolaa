@@ -53,6 +53,9 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     GOOGLE_NO_ACCOUNT(R.string.error_google_no_account),
     SIGN_IN_PROVIDER_FAILED(R.string.error_sign_in_provider_failed),
     SIGN_IN_PROVIDER_UNAVAILABLE(R.string.error_sign_in_provider_unavailable),
+    // Moderation (docs/moderation.md): RPCs raise "account suspended"; GoTrue answers `user_banned` at sign-in/refresh.
+    ACCOUNT_SUSPENDED(R.string.error_account_suspended),
+    USER_BANNED(R.string.error_user_banned),
     GENERIC(R.string.error_generic);
 
     companion object {
@@ -72,6 +75,7 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 AuthErrorCode.OverRequestRateLimit -> TOO_MANY_CODES
                 AuthErrorCode.SamePassword -> SAME_PASSWORD
                 AuthErrorCode.EmailAddressInvalid -> INVALID_EMAIL
+                AuthErrorCode.UserBanned -> USER_BANNED
                 AuthErrorCode.ProviderDisabled, AuthErrorCode.OauthProviderNotSupported -> SIGN_IN_PROVIDER_UNAVAILABLE
                 AuthErrorCode.BadOauthState, AuthErrorCode.BadOauthCallback, AuthErrorCode.BadCodeVerifier,
                 AuthErrorCode.FlowStateNotFound, AuthErrorCode.FlowStateExpired, AuthErrorCode.UnexpectedAudience -> SIGN_IN_PROVIDER_FAILED
@@ -118,6 +122,9 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 "reauthentication required" to REAUTHENTICATION_REQUIRED,
                 "invalid device id" to INVALID_DEVICE_ID,
                 "invalid terms version" to INVALID_TERMS_VERSION,
+                "account suspended" to ACCOUNT_SUSPENDED,
+                "user_banned" to USER_BANNED,
+                "user is banned" to USER_BANNED,
                 "not authenticated" to NOT_AUTHENTICATED,
                 "jwt expired" to NOT_AUTHENTICATED,
                 "invalid login credentials" to INVALID_CREDENTIALS,

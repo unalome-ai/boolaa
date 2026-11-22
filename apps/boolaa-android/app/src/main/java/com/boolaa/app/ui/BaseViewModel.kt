@@ -41,7 +41,8 @@ abstract class BaseViewModel : ViewModel() {
         Log.w("Boolaa", "request failed", e)
         val kind = UserFacingError.classify(e)
         // Another device revoked this one (or enforcement just switched on): back to the device gate.
-        if (kind == UserFacingError.SESSION_NOT_VERIFIED) com.boolaa.app.state.SecurityEvents.sessionNotVerified.tryEmit(Unit)
+        // "account suspended" (a moderator acted meanwhile): to the suspended screen.
+        com.boolaa.app.state.SecurityEvents.emitFor(kind)
         _error.value = kind.message
     }
 

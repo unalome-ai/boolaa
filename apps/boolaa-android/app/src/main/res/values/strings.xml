@@ -283,4 +283,17 @@
         <item quantity="one">%1$d of %2$d digit</item>
         <item quantity="other">%1$d of %2$d digits</item>
     </plurals>
+    <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
+    <string name="error_account_suspended">Your account is suspended, so you can\'t do that right now.</string>
+    <string name="error_user_banned">This account can\'t sign in right now: it\'s suspended or banned.</string>
+    <string name="suspended_title_suspended">Your account is suspended</string>
+    <string name="suspended_title_banned">Your account is banned</string>
+    <string name="suspended_until">You can use Boolaa again from %1$s.</string>
+    <string name="suspended_blocked">Until then you can\'t see your bubbles or post anything.</string>
+    <string name="suspended_banned">You can\'t use Boolaa with this account anymore.</string>
+    <string name="suspended_sign_in_blocked">This account can\'t sign in right now: it\'s suspended or banned.</string>
+    <string name="suspended_reason">Reason: %1$s</string>
+    <string name="suspended_appeal">Think this is a mistake? Write to %1$s and tell us why.</string>
+    <string name="suspended_back_to_sign_in">Back to sign in</string>
+    <string name="appeal_email" translatable="false">privacy@boolaa.ro</string>
 </resources>

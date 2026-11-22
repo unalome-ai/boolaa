@@ -79,4 +79,21 @@ class LocalizationTest {
         assertTrue(fr, fr.contains("nov.") && fr.contains("15:26"))
         assertNotEquals(Formats.relative(t, Locale.ENGLISH, t.plusSeconds(600)), Formats.relative(t, Locale.forLanguageTag("ro"), t.plusSeconds(600)))
     }
+
+    /** The suspended screen reuses the web `suspended.*` wording in every language (docs/moderation.md "Clients"). */
+    @Test fun suspended_screen_strings_per_locale() {
+        val until = Formats.longDateTime(Instant.parse("2026-11-29T18:30:00Z"), Locale.forLanguageTag("ro"), ZoneOffset.UTC)
+        assertEquals("Poți folosi Boolaa din nou începând cu $until.", ctx("ro").getString(R.string.suspended_until, until))
+        assertTrue(until, until.contains("noiembrie 2026") && until.contains("18:30"))
+        assertEquals("Your account is banned", ctx("en").getString(R.string.suspended_title_banned))
+        assertEquals("Ton compte est suspendu", ctx("fr").getString(R.string.suspended_title_suspended))
+        assertEquals("Motivo: Acoso o intimidación", ctx("es").getString(R.string.suspended_reason, ctx("es").getString(R.string.report_reason_harassment)))
+        assertEquals(
+            "Pensi che sia un errore? Scrivici a privacy@boolaa.ro e spiegaci perché.",
+            ctx("it").getString(R.string.suspended_appeal, ctx("it").getString(R.string.appeal_email)),
+        )
+        listOf("en", "ro", "fr", "es", "it").forEach { tag ->
+            assertEquals(ctx(tag).getString(R.string.suspended_sign_in_blocked), ctx(tag).getString(R.string.error_user_banned))
+        }
+    }
 }

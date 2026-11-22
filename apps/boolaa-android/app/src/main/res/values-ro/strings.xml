@@ -284,4 +284,16 @@
         <item quantity="few">%1$d din %2$d cifre</item>
         <item quantity="other">%1$d din %2$d de cifre</item>
     </plurals>
+    <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
+    <string name="error_account_suspended">Contul tău este suspendat, așa că nu poți face asta acum.</string>
+    <string name="error_user_banned">Acest cont nu se poate autentifica acum: este suspendat sau blocat.</string>
+    <string name="suspended_title_suspended">Contul tău este suspendat</string>
+    <string name="suspended_title_banned">Contul tău a fost blocat definitiv</string>
+    <string name="suspended_until">Poți folosi Boolaa din nou începând cu %1$s.</string>
+    <string name="suspended_blocked">Până atunci nu îți poți vedea bulele și nu poți posta nimic.</string>
+    <string name="suspended_banned">Nu mai poți folosi Boolaa cu acest cont.</string>
+    <string name="suspended_sign_in_blocked">Acest cont nu se poate autentifica acum: este suspendat sau blocat.</string>
+    <string name="suspended_reason">Motiv: %1$s</string>
+    <string name="suspended_appeal">Crezi că e o greșeală? Scrie-ne la %1$s și spune-ne de ce.</string>
+    <string name="suspended_back_to_sign_in">Înapoi la autentificare</string>
 </resources>

@@ -106,5 +106,29 @@ object LocalStack {
         return Throwaway(email, "password123", BoolaaApi(client), client.auth.currentUserOrNull()!!.id)
     }
 
+    /** Sets a throwaway user's `users.status` row as a moderator would (service role; never a seeded user). */
+    suspend fun setAccountStatus(userId: String, status: String, reason: String?, until: String?) = withContext(Dispatchers.IO) {
+        val body = buildString {
+            append("""{"status":"$status","status_reason":""")
+            append(if (reason == null) "null" else "\"$reason\"")
+            append(""","status_until":""")
+            append(if (until == null) "null" else "\"$until\"")
+            append("}")
+        }.toRequestBody("application/json".toMediaType())
+        http.newCall(admin("$restUrl/users?id=eq.$userId").patch(body).build()).execute().use { check(it.isSuccessful) { "status -> ${it.code}" } }
+    }
+
+    /** GoTrue ban (`banned_until`) for a throwaway user: sign-in and refresh then answer 400 `user_banned`. */
+    suspend fun banAuthUser(userId: String, duration: String = "24h") = withContext(Dispatchers.IO) {
+        val body = """{"ban_duration":"$duration"}""".toRequestBody("application/json".toMediaType())
+        http.newCall(admin("${BuildConfig.SUPABASE_URL}/auth/v1/admin/users/$userId").put(body).build()).execute()
+            .use { check(it.isSuccessful) { "ban -> ${it.code}" } }
+    }
+
+    /** Deletes a throwaway auth user (the `users` row cascades). */
+    suspend fun deleteAuthUser(userId: String) = withContext(Dispatchers.IO) {
+        http.newCall(admin("${BuildConfig.SUPABASE_URL}/auth/v1/admin/users/$userId").delete().build()).execute().use { }
+    }
+
     fun randomDeviceId(): String = "android-test-" + UUID.randomUUID()
 }

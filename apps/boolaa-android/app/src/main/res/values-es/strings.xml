@@ -284,4 +284,16 @@
         <item quantity="many">%1$d de %2$d dígitos</item>
         <item quantity="other">%1$d de %2$d dígitos</item>
     </plurals>
+    <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
+    <string name="error_account_suspended">Tu cuenta está suspendida, así que ahora no puedes hacer eso.</string>
+    <string name="error_user_banned">Esta cuenta no puede iniciar sesión ahora mismo: está suspendida o bloqueada.</string>
+    <string name="suspended_title_suspended">Tu cuenta está suspendida</string>
+    <string name="suspended_title_banned">Tu cuenta está bloqueada para siempre</string>
+    <string name="suspended_until">Podrás volver a usar Boolaa el %1$s.</string>
+    <string name="suspended_blocked">Hasta entonces no puedes ver tus burbujas ni publicar nada.</string>
+    <string name="suspended_banned">Ya no puedes usar Boolaa con esta cuenta.</string>
+    <string name="suspended_sign_in_blocked">Esta cuenta no puede iniciar sesión ahora mismo: está suspendida o bloqueada.</string>
+    <string name="suspended_reason">Motivo: %1$s</string>
+    <string name="suspended_appeal">¿Crees que es un error? Escríbenos a %1$s y cuéntanos por qué.</string>
+    <string name="suspended_back_to_sign_in">Volver a iniciar sesión</string>
 </resources>

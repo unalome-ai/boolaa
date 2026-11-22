@@ -11,7 +11,13 @@ import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.SensitiveAction
 import com.boolaa.app.core.TERMS_VERSION
 import com.boolaa.app.core.UserFacingError
+import com.boolaa.app.core.AccountStatusRow
+import com.boolaa.app.core.DeviceCheck
+import com.boolaa.app.core.DeviceGateDecision
+import com.boolaa.app.core.Suspension
+import com.boolaa.app.core.accountStatus
 import com.boolaa.app.core.confirmAge
+import com.boolaa.app.core.isDeviceVerified
 import com.boolaa.app.core.deviceCode
 import com.boolaa.app.core.listMyDevices
 import com.boolaa.app.core.revokeDevice
@@ -73,10 +79,14 @@ data class SessionState(
     val recoveringPassword: Boolean = false,
     /** When the last device code was emailed (for the 60 s auto-send / resend rule). */
     val deviceCodeSentAt: Long? = null,
+    /** Suspended or banned (signed in), or sign-in answered `user_banned` (signed out) (docs/moderation.md). */
+    val suspension: Suspension? = null,
 ) {
     val blockedIds: Set<String> get() = blocks.mapTo(mutableSetOf()) { it.blockedId }
     val route: AppRoute
-        get() = RouteGate.resolve(isRestoringSession, userId != null, memberships?.size, deviceGate, needsAgeConfirmation, recoveringPassword)
+        get() = RouteGate.resolve(
+            isRestoringSession, userId != null, memberships?.size, deviceGate, needsAgeConfirmation, recoveringPassword, suspension != null,
+        )
     val bubbles: List<Bubble> get() = memberships.orEmpty().mapNotNull { it.bubble }
     val currentBubble: Bubble? get() = RouteGate.pickCurrentBubble(storedBubbleId, bubbles)
     val currentRole: MemberRole? get() = currentBubble?.let { b -> memberships?.firstOrNull { it.bubbleId == b.id }?.role }
@@ -107,6 +117,8 @@ class SessionStore(
         if (authJob != null) return
         // Any RPC answering "session not verified" (e.g. another device revoked this one) runs the device gate again.
         scope.launch { SecurityEvents.sessionNotVerified.collect { recheckDevice() } }
+        // Any RPC answering "account suspended": run the whole gate again, which shows the suspended screen.
+        scope.launch { SecurityEvents.accountSuspended.collect { recheckAccount() } }
         authJob = scope.launch {
             auth.sessionStatus.collect { status ->
                 when (status) {
@@ -132,7 +144,7 @@ class SessionStore(
             stopLive()
             _state.update {
                 it.copy(memberships = null, profile = null, pendingRequests = emptyList(), blocks = emptyList(),
-                    deviceGate = DeviceGate.CHECKING, needsAgeConfirmation = false, deviceCodeSentAt = null)
+                    deviceGate = DeviceGate.CHECKING, needsAgeConfirmation = false, deviceCodeSentAt = null, suspension = null)
             }
         }
         _state.update { it.copy(userId = user.id, email = user.email, isRestoringSession = false) }
@@ -142,69 +154,152 @@ class SessionStore(
 
     /**
      * The device gate (docs/auth-security.md §8): `start_device_check` after every sign-in and session restore, then the
-     * age screen if due, and only then realtime and the bubble data. Unverified sessions stay on the code screen.
+     * account status (docs/moderation.md), the age screen if due, and only then realtime and the bubble data.
+     * Unverified sessions stay on the code screen. [force] runs it again even when everything is loaded.
      */
-    suspend fun gate() = gateMutex.withLock { runGate() }
+    suspend fun gate(force: Boolean = false) = gateMutex.withLock { runGate(force) }
 
-    private suspend fun runGate() {
+    private suspend fun runGate(force: Boolean) {
         val userId = _state.value.userId ?: return
-        if (_state.value.deviceGate == DeviceGate.VERIFIED && _state.value.memberships != null && !_state.value.needsAgeConfirmation) return
+        val current = _state.value
+        if (!force && current.deviceGate == DeviceGate.VERIFIED && current.memberships != null && !current.needsAgeConfirmation &&
+            current.suspension == null) return
         val check = try {
             api.startDeviceCheck(device.id, deviceLabel())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
             Log.w("Boolaa", "start_device_check failed", e)
-            if (UserFacingError.classify(e) == UserFacingError.NOT_AUTHENTICATED) {
-                scope.launch { signOut() }
-                return
-            }
+            if (endSessionOn(e)) return
             // Offline with a stored session: carry on as before. The server still enforces RLS, and its
             // "session not verified" answer brings this gate back.
             null
         }
         if (_state.value.userId != userId) return
-        if (check != null && !check.verified) {
-            stopLive()
-            _state.update { it.copy(deviceGate = DeviceGate.CODE_REQUIRED, needsAgeConfirmation = check.needsAgeConfirmation) }
-            return
+        // `code_required` only blocks while enforcement is on: is_device_verified() is true when it's off
+        // (same rule as web `gateState` and iOS `DeviceGateDecision`). A failed call keeps the gate closed.
+        val deviceVerified = if (check != null && !check.verified) {
+            try {
+                api.isDeviceVerified()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Log.w("Boolaa", "is_device_verified failed", e)
+                if (endSessionOn(e)) return
+                null
+            }
+        } else null
+        val effective = check ?: DeviceCheck("verified")
+        val account = if (DeviceGateDecision.gateOpen(effective, deviceVerified)) readAccount(userId) else null
+        if (_state.value.userId != userId) return
+        apply(DeviceGateDecision.decide(effective, deviceVerified, account, isOAuthUser()), userId)
+    }
+
+    /** "Not authenticated" signs out; `user_banned` (a refresh refused) signs out to the "can't sign in" screen. */
+    private fun endSessionOn(e: Throwable): Boolean = when (UserFacingError.classify(e)) {
+        UserFacingError.NOT_AUTHENTICATED -> { scope.launch { signOut() }; true }
+        UserFacingError.USER_BANNED -> { scope.launch { signOut(); markSignInBlocked() }; true }
+        else -> false
+    }
+
+    private suspend fun readAccount(userId: String): AccountStatusRow? = try {
+        api.accountStatus(userId)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        Log.w("Boolaa", "account status failed", e)
+        null
+    }
+
+    private suspend fun apply(decision: DeviceGateDecision, userId: String) {
+        when (decision) {
+            DeviceGateDecision.Code -> {
+                stopLive()
+                _state.update { it.copy(deviceGate = DeviceGate.CODE_REQUIRED, needsAgeConfirmation = false, suspension = null) }
+            }
+            is DeviceGateDecision.Suspended -> {
+                // RLS hides everything but the own row: nothing to load or listen to.
+                stopLive()
+                _state.update {
+                    it.copy(deviceGate = DeviceGate.VERIFIED, needsAgeConfirmation = false, suspension = decision.suspension, memberships = null)
+                }
+            }
+            DeviceGateDecision.Age -> {
+                stopLive()
+                _state.update { it.copy(deviceGate = DeviceGate.VERIFIED, needsAgeConfirmation = true, suspension = null) }
+            }
+            DeviceGateDecision.Ok -> {
+                _state.update { it.copy(deviceGate = DeviceGate.VERIFIED, needsAgeConfirmation = false, suspension = null) }
+                if (live == null) startLive(userId)
+                reload()
+            }
         }
-        val needsAge = (check?.needsAgeConfirmation ?: false) || firstOAuthAgeDue(userId)
-        _state.update { it.copy(deviceGate = DeviceGate.VERIFIED, needsAgeConfirmation = needsAge) }
-        if (needsAge) { stopLive(); return }
-        if (live == null) startLive(userId)
-        reload()
     }
 
     /**
      * Google/Apple accounts are created without the sign-up checkbox. The server asks for `confirm_age` only once
      * `age_confirmation_required` is on; the app asks after the first OAuth sign-in regardless.
      */
-    private suspend fun firstOAuthAgeDue(userId: String): Boolean {
+    private fun isOAuthUser(): Boolean {
         val provider = auth.currentUserOrNull()?.appMetadata?.get("provider")?.jsonPrimitive?.contentOrNull ?: return false
-        if (provider == "email") return false
-        return runCatching {
-            val rows = api.client.from("users").select(io.github.jan.supabase.postgrest.query.Columns.list("age_confirmed_at")) {
-                filter { eq("id", userId) }
-            }.decodeList<JsonObject>()
-            rows.firstOrNull()?.get("age_confirmed_at")?.jsonPrimitive?.contentOrNull == null
-        }.getOrDefault(false)
+        return provider != "email"
     }
 
-    /** Re-runs the device check, e.g. after a "session not verified" error or when the app comes back to the front. */
+    /**
+     * Re-runs the device check, e.g. after a "session not verified" error or when the app comes back to the front.
+     * On the suspended screen it runs the whole gate instead, since a suspension ends by itself at `status_until`.
+     */
     fun recheckDevice() {
         val s = _state.value
-        if (s.userId == null || s.recoveringPassword) return
+        val userId = s.userId ?: return
+        if (s.recoveringPassword) return
+        if (s.suspension != null) { recheckAccount(throttle = false); return }
         scope.launch {
             val check = runCatching { api.startDeviceCheck(device.id, deviceLabel()) }.getOrNull() ?: return@launch
-            if (!check.verified) {
+            val deviceVerified = if (!check.verified) runCatching { api.isDeviceVerified() }.getOrNull() else null
+            if (_state.value.userId != userId) return@launch
+            if (!DeviceGateDecision.gateOpen(check, deviceVerified)) {
                 stopLive()
                 _state.update { it.copy(deviceGate = DeviceGate.CODE_REQUIRED, needsAgeConfirmation = check.needsAgeConfirmation) }
-            } else if (check.needsAgeConfirmation && !_state.value.needsAgeConfirmation) {
-                stopLive()
-                _state.update { it.copy(needsAgeConfirmation = true) }
+                return@launch
+            }
+            // Gate open: also catch a suspension or ban that happened while the app was in the background.
+            val suspension = readAccount(userId)?.let { Suspension.from(it) }
+            if (_state.value.userId != userId) return@launch
+            when {
+                suspension != null -> apply(DeviceGateDecision.Suspended(suspension), userId)
+                _state.value.deviceGate == DeviceGate.CODE_REQUIRED -> gate(force = true)
+                check.needsAgeConfirmation && !_state.value.needsAgeConfirmation -> {
+                    stopLive()
+                    _state.update { it.copy(needsAgeConfirmation = true) }
+                }
             }
         }
+    }
+
+    /** "account suspended" from any RPC, or the suspended screen coming back to the front: run the gate again. */
+    fun recheckAccount(throttle: Boolean = true) {
+        val s = _state.value
+        if (s.userId == null || s.recoveringPassword) return
+        if (throttle) {
+            if (s.suspension != null) return
+            // Never loop: if the server keeps disagreeing, re-check at most every 5 s.
+            val now = System.currentTimeMillis()
+            if (now - lastAccountRecheck < 5_000) return
+            lastAccountRecheck = now
+        }
+        scope.launch { gate(force = true) }
+    }
+    private var lastAccountRecheck = 0L
+
+    /** Sign-in or refresh answered `user_banned`: the suspended screen without details (no session to read them). */
+    fun markSignInBlocked() {
+        _state.update { it.copy(suspension = Suspension.signInBlocked) }
+    }
+
+    /** Leaves the "can't sign in" screen for the login screen. */
+    fun dismissSignInBlocked() {
+        _state.update { if (it.suspension?.kind == Suspension.Kind.SIGN_IN_BLOCKED) it.copy(suspension = null) else it }
     }
 
     /** Emails sign-in locale changes to Auth so its emails come in the app's language (§5). */
@@ -250,7 +345,9 @@ class SessionStore(
         _state.update {
             it.copy(userId = null, email = null, profile = null, memberships = null,
                 pendingRequests = emptyList(), blocks = emptyList(), isRestoringSession = false,
-                deviceGate = DeviceGate.CHECKING, needsAgeConfirmation = false, recoveringPassword = false, deviceCodeSentAt = null)
+                deviceGate = DeviceGate.CHECKING, needsAgeConfirmation = false, recoveringPassword = false, deviceCodeSentAt = null,
+                // The "can't sign in" screen outlives the (refused) session; a real suspension belongs to the session.
+                suspension = it.suspension?.takeIf { s -> s.kind == Suspension.Kind.SIGN_IN_BLOCKED })
         }
     }
 
@@ -274,7 +371,7 @@ class SessionStore(
                 null
             },
             onFailure = { e ->
-                if (UserFacingError.classify(e) == UserFacingError.SESSION_NOT_VERIFIED) SecurityEvents.sessionNotVerified.tryEmit(Unit)
+                SecurityEvents.emitFor(UserFacingError.classify(e))
                 _state.update { if (it.memberships == null) it.copy(memberships = emptyList()) else it }
                 e
             },
@@ -293,11 +390,24 @@ class SessionStore(
     // Auth actions
 
     suspend fun signIn(email: String, password: String) {
-        auth.signInWith(Email) {
-            this.email = email.trim()
-            this.password = password
+        try {
+            auth.signInWith(Email) {
+                this.email = email.trim()
+                this.password = password
+            }
+        } catch (e: Throwable) {
+            if (blockedSignIn(e)) return
+            throw e
         }
+        dismissSignInBlocked()
         auth.currentUserOrNull()?.let { applySignedIn(it) }
+    }
+
+    /** GoTrue's `user_banned` (suspended or banned): shows the suspended screen instead of an error. */
+    private fun blockedSignIn(e: Throwable): Boolean {
+        if (e is CancellationException || UserFacingError.classify(e) != UserFacingError.USER_BANNED) return false
+        markSignInBlocked()
+        return true
     }
 
     /**
@@ -317,7 +427,13 @@ class SessionStore(
 
     /** Google: an ID token from Credential Manager, checked against the raw nonce whose sha256 Google signed. */
     suspend fun signInWithGoogle(idToken: String, rawNonce: String) {
-        auth.signInWith(IDToken, config = com.boolaa.app.core.GoogleSignIn.idTokenConfig(idToken, rawNonce))
+        try {
+            auth.signInWith(IDToken, config = com.boolaa.app.core.GoogleSignIn.idTokenConfig(idToken, rawNonce))
+        } catch (e: Throwable) {
+            if (blockedSignIn(e)) return
+            throw e
+        }
+        dismissSignInBlocked()
         auth.currentUserOrNull()?.let { applySignedIn(it) }
     }
 
@@ -345,6 +461,7 @@ class SessionStore(
             auth.verifyEmailOtp(OtpType.Email.RECOVERY, email = email.trim(), token = code)
         } catch (e: Throwable) {
             _state.update { it.copy(recoveringPassword = false) }
+            if (blockedSignIn(e)) return
             throw e
         }
         auth.currentUserOrNull()?.let { applySignedIn(it) }
@@ -354,7 +471,7 @@ class SessionStore(
     suspend fun finishPasswordReset(newPassword: String) {
         auth.updateUser { password = newPassword }
         _state.update { it.copy(recoveringPassword = false) }
-        gate()
+        gate(force = true)
     }
 
     // Device verification
@@ -390,17 +507,15 @@ class SessionStore(
         api.deviceCode(DeviceCodeBody.verify(CodePurpose.SENSITIVE_ACTION, code, null, null))
     }
 
-    /** Change password, step 1: Auth emails a reauthentication code. */
-    suspend fun requestPasswordChangeCode() {
-        auth.reauthenticate()
-    }
+    /**
+     * Change password, step 1: emails a `change_password` code. The server refuses a password change
+     * without one (guard_sensitive_auth_change, docs/auth-security.md → Sensitive actions).
+     */
+    suspend fun requestPasswordChangeCode() = sendSensitiveActionCode(SensitiveAction.CHANGE_PASSWORD)
 
-    /** Change password, step 2: always with the nonce, so every session gets the same UX (§2). */
-    suspend fun changePassword(newPassword: String, code: String) {
-        auth.updateUser {
-            password = newPassword
-            nonce = code
-        }
+    /** Change password, step 2: after a verified `change_password` code (within 10 minutes). */
+    suspend fun changePassword(newPassword: String) {
+        auth.updateUser { password = newPassword }
     }
 
     /** After a verified `sensitive_action` code. Both addresses get an email; the change completes from the link or code. */
@@ -499,4 +614,14 @@ class SessionStore(
 /** App-wide security signals raised outside the store (any ViewModel that sees "session not verified"). */
 object SecurityEvents {
     val sessionNotVerified = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val accountSuspended = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** "session not verified" goes back to the device gate, "account suspended" to the suspended screen. */
+    fun emitFor(kind: UserFacingError) {
+        when (kind) {
+            UserFacingError.SESSION_NOT_VERIFIED -> sessionNotVerified.tryEmit(Unit)
+            UserFacingError.ACCOUNT_SUSPENDED -> accountSuspended.tryEmit(Unit)
+            else -> Unit
+        }
+    }
 }

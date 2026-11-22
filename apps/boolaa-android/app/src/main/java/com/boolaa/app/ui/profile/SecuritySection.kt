@@ -167,18 +167,20 @@ private fun DeviceRow(device: TrustedDevice, isThis: Boolean, locale: Locale, on
     }
 }
 
-// MARK: Change password (reauthenticate -> code -> updateUser with the nonce)
+// MARK: Change password (change_password code -> verify -> updateUser({ password }))
 
 class ChangePasswordViewModel(private val container: AppContainer) : CodeStepViewModel() {
     var newPassword: String = ""
     private val _done = MutableStateFlow(false)
     val done = _done.asStateFlow()
+    private var proven = false
     override suspend fun sendCode() = container.session.requestPasswordChangeCode()
     override suspend fun verifyCode(code: String) {
-        container.session.changePassword(newPassword, code)
+        if (!proven) { container.session.verifySensitiveActionCode(code); proven = true }
+        container.session.changePassword(newPassword)
         _done.value = true
     }
-    fun restart() = resetSent()
+    fun restart() { proven = false; resetSent() }
 }
 
 @Composable
@@ -227,7 +229,7 @@ class ChangeEmailViewModel(private val container: AppContainer) : CodeStepViewMo
     private val _done = MutableStateFlow(false)
     val done = _done.asStateFlow()
     private var proven = false
-    override suspend fun sendCode() = container.session.sendSensitiveActionCode(SensitiveAction.GENERIC)
+    override suspend fun sendCode() = container.session.sendSensitiveActionCode(SensitiveAction.CHANGE_EMAIL)
     override suspend fun verifyCode(code: String) {
         if (!proven) { container.session.verifySensitiveActionCode(code); proven = true }
         container.session.changeEmail(newEmail)

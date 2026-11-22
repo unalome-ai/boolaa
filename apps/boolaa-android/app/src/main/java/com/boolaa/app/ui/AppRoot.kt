@@ -30,6 +30,7 @@ import com.boolaa.app.ui.auth.AgeConfirmScreen
 import com.boolaa.app.ui.auth.AuthScreen
 import com.boolaa.app.ui.auth.DeviceCodeScreen
 import com.boolaa.app.ui.auth.ResetPasswordScreen
+import com.boolaa.app.ui.auth.SuspendedScreen
 import com.boolaa.app.ui.onboarding.OnboardingScreen
 import com.boolaa.app.ui.shell.MainShell
 import com.boolaa.app.ui.theme.BoolaaTheme
@@ -37,7 +38,8 @@ import com.boolaa.app.ui.theme.BoolaaTheme
 val LocalAppContainer = staticCompositionLocalOf<AppContainer> { error("AppContainer not provided") }
 
 /**
- * Routing gate (spec §2, docs/auth-security.md §8): Auth, then the device code / age / new password steps when due,
+ * Routing gate (spec §2, docs/auth-security.md §8, docs/moderation.md): Auth, then the device code / suspended / age /
+ * new password steps when due,
  * then Onboarding or Main, decided by [com.boolaa.app.state.RouteGate].
  */
 @Composable
@@ -71,6 +73,7 @@ fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
                 AppRoute.RESET_PASSWORD -> ResetPasswordScreen()
                 AppRoute.DEVICE_CODE -> DeviceCodeScreen()
                 AppRoute.AGE_CONFIRMATION -> AgeConfirmScreen()
+                AppRoute.SUSPENDED -> SuspendedScreen()
                 AppRoute.ONBOARDING -> OnboardingScreen()
                 AppRoute.MAIN -> MainShell(initialTab = debugHooks.tab, initialOpen = debugHooks.open)
             }
