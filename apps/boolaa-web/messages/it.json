@@ -294,7 +294,8 @@
     "lastUpdated": "Ultimo aggiornamento: {date}",
     "draft": "Bozza in attesa di revisione legale. Il testo non è ancora definitivo.",
     "backToTop": "Torna su",
-    "home": "Home di Boolaa"
+    "home": "Home di Boolaa",
+    "otherLanguages": "Disponibile anche in"
   },
   "landing": {
     "metaTitle": "Boolaa · La tua gente, in una bolla accogliente",
@@ -351,6 +352,10 @@
     "finalTitle": "Vuoi creare la tua bolla?",
     "finalBody": "Ci vuole un minuto. La tua gente ti aspetta.",
     "footerTagline": "Bolle private per le persone con cui vivi e ti diverti.",
-    "copyright": "© {year} Boolaa"
+    "copyright": "© {year} Boolaa",
+    "footerMadeBy": "Gratuito, senza pubblicità, open source (Apache 2.0), fatto con gioia da Bogdan Raduta.",
+    "sourceCode": "Codice sorgente",
+    "faq7Q": "Chi fa Boolaa?",
+    "faq7A": "Boolaa è fatto con gioia da Bogdan Raduta, un privato, non un'azienda. È gratuito, senza pubblicità e open source con licenza Apache 2.0: il codice è su <github>GitHub</github>."
   }
 }

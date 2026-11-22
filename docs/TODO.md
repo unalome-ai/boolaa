@@ -10,19 +10,20 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ✅ **Database: block users**, two-way, enforced by the database's access rules (RLS), including live chat.
 - ✅ **Database: report content and users** (`report_content`), into a moderation queue.
 - ✅ **Report and block UI** on every message, post, item, event, link and member, plus a "Blocked users" list in the profile.
-- ⬜ **Moderation process.** Apple requires acting on reports within 24 hours. It needs:
+- 🔄 **Moderation process.** Apple requires acting on reports within 24 hours. ✅ Email alert per report to moderation@boolaa.ro (live). ⬜ Still needed:
   - an alert to the team for each new report (database webhook → email or Slack);
   - an admin view of open reports with actions: delete content, remove the user from a bubble, suspend the account.
 - ⬜ **Suspended/banned accounts** (`users.status`): blocked at sign-in and hidden from everyone.
 - ✅ **Privacy Policy and Terms of Service pages** (web, all 5 languages), linked from register, the profile/settings screens and the store listings.
-- ⬜ **Legal review** of the Privacy Policy and Terms. Fill in the controller's company name, address, contact email and DPO (if any).
+- 🔄 **Legal texts**: ✅ rewritten for a private, not-for-profit individual controller (Bogdan Raduta), free/no ads/no AI training, Apache 2.0, Apple/Google sign-in, processors (Zurich/Frankfurt); no placeholders left. ⬜ Optional review by a lawyer, then remove the "Draft" banner.
+- ⬜ **App Store EU "trader" status (DSA)**: App Store Connect asks before the first EU submission. Saying *trader* publishes the address, phone and email on the EU store page. A free, ad-free, non-profit app by an individual is likely a **non-trader**; decide deliberately before submitting.
 - 🔄 **Age rating: 16+** (decided; matches the GDPR digital-consent age in Romania). ✅ "I'm 16 or older" checkbox at sign-up on web, iOS and Android, and the 16+ clause in Privacy and Terms, in all 5 languages. ⬜ Store questionnaires: App Store age rating **16+**, Google Play target audience **16+** only (no under-16 groups, so the Families policy doesn't apply).
 
 ### Auth
-- ⬜ **Forgot password and reset**, by email link, with a deep link into the apps.
+- 🔄 **Forgot password, emailed device codes, branded emails, age record**: ✅ backend live in production (2026-11-22: migrations, `send-email`/`device-code`/`report-alert` functions, Send Email + before-user-created hooks, 6-digit codes valid 10 min; flags `device_verification_enforced` and `age_confirmation_required` still **off**). ⬜ Client screens in web, iOS and Android (`docs/auth-security.md` §9), then turn the flags on.
 - ✅ **Email confirmation** using a real email provider (custom SMTP such as Resend or Postmark), with branded email templates in all 5 languages.
 - 🔄 **Sign in with Apple and Google**: ✅ Google (4 clients) and Apple (Services ID, key, secret) are enabled on production Supabase; see `docs/oauth-clients.md`. ⬜ Client buttons, plus the 16+ screen after the first OAuth sign-in. ⬜ **Renew the Apple secret before 2027-05-21** (`node scripts/apple-client-secret.mjs`).
-- ⬜ **Rate limits and CAPTCHA** on sign-up (Supabase Auth settings).
+- 🔄 **Rate limits and CAPTCHA** on sign-up: ✅ rate limits set (emails 100/h, 60 s per user). ⬜ Cloudflare Turnstile CAPTCHA.
 
 ### Infrastructure and release
 - ✅ **Git repository** and **Remote** (`unalome-ai/boolaa`). ⬜ and **CI**: build, lint and test all 3 apps, and run migrations against a fresh database.
@@ -49,7 +50,7 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ✅ **Native Android app**, at parity with iOS.
 - ✅ **Live membership** (pending screen, members list) and the remove-member UI.
 - ⬜ **Push notifications** (APNs, FCM, Web Push) for new chat messages, join requests (to members), approval (to the requester), event reminders and new events. Includes per-bubble mute and notification settings.
-- ⬜ **Invite links and universal/app links** (`https://boolaa.app/join/CODE`) that open the app or the store. Optionally a QR code.
+- ⬜ **Invite links and universal/app links** (`https://boolaa.ro/join/CODE`) that open the app or the store. Optionally a QR code.
 - ⬜ **Chat**: load older messages, delete your own message, send photos, unread counts and a last-read marker.
 - ⬜ **Live updates** for events, food, market and links, not only chat.
 - ⬜ **Bubble logo/cover image**: upload and display.
@@ -70,6 +71,6 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - ⬜ Data export (GDPR right of access): download everything about me as JSON or ZIP.
 
 ## Housekeeping
-- ⬜ Delete the legacy Expo app (`apps/boolaa`), `docker-compose.yml` and `supabase/Dockerfile`, and rewrite the root README.
+- ⬜ Delete the legacy Expo app (`apps/boolaa`), `docker-compose.yml` and `supabase/Dockerfile`. ✅ Root README rewritten; repo public (Apache 2.0).
 - ⬜ Remove the dead Unalome types in `packages/supabase-config`, or delete the package.
 - ⬜ Upgrade the Supabase CLI (v2.75 → v3.x).

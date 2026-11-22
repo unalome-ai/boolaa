@@ -4,20 +4,29 @@ import { Fragment, type ReactNode } from "react";
 import { FileWarning } from "lucide-react";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { localeNames, locales, type Locale } from "@/i18n/config";
+import { CompactLocalePicker } from "@/i18n/locale-picker";
 import { legalDoc, type LegalKind } from "@/lib/legal";
-import { LEGAL_UPDATED, pageUrls } from "@/lib/site";
+import { LEGAL_UPDATED, localizedUrls } from "@/lib/site";
 
-/** Highlights "[Placeholder]" text that still has to be filled in before publishing. */
+const TOKEN = /(\[[^\]]+\]|https?:\/\/[^\s)]+[^\s).,;:]|[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[a-z]{2,})/g;
+
+/** Turns URLs and email addresses into links, and highlights "[Placeholder]" text still to fill in. */
 function withPlaceholders(text: string): ReactNode {
-  return text.split(/(\[[^\]]+\])/g).map((part, i) =>
-    /^\[[^\]]+\]$/.test(part) ? (
-      <mark key={i} className="rounded bg-sunny/40 px-1 text-inherit">
+  return text.split(TOKEN).map((part, i) => {
+    if (i % 2 === 0) return <Fragment key={i}>{part}</Fragment>;
+    if (part.startsWith("["))
+      return (
+        <mark key={i} className="rounded bg-sunny/40 px-1 text-inherit">
+          {part}
+        </mark>
+      );
+    const href = part.includes("@") && !part.startsWith("http") ? `mailto:${part}` : part;
+    return (
+      <a key={i} href={href} className="break-words font-semibold text-brand-ink underline underline-offset-2" {...(href.startsWith("http") ? { rel: "noopener" } : {})}>
         {part}
-      </mark>
-    ) : (
-      <Fragment key={i}>{part}</Fragment>
-    ),
-  );
+      </a>
+    );
+  });
 }
 
 /** Paragraphs, with runs of "- " items rendered as a bullet list. */
@@ -64,21 +73,7 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
             <BubbleLogo size={28} animated={false} />
             <span className="font-display text-[22px] font-black tracking-tight">Boolaa</span>
           </Link>
-          <nav aria-label="Language" className="flex flex-wrap gap-1 text-sm">
-            {locales.map((l) => (
-              <a
-                key={l}
-                href={`?lang=${l}`}
-                hrefLang={l}
-                lang={l}
-                aria-current={l === locale ? "true" : undefined}
-                title={localeNames[l]}
-                className={`rounded-full px-2.5 py-1 font-display font-bold uppercase ${l === locale ? "bg-brand text-white" : "text-muted hover:bg-field"}`}
-              >
-                {l}
-              </a>
-            ))}
-          </nav>
+          <CompactLocalePicker />
         </div>
       </header>
 
@@ -120,6 +115,16 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
           <Link href={`/${other}`} className="font-semibold text-brand-ink hover:underline">
             {t(other)}
           </Link>
+          <nav aria-label={t("otherLanguages")} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+            <span>{t("otherLanguages")}:</span>
+            {locales
+              .filter((l) => l !== locale)
+              .map((l) => (
+                <a key={l} href={`?lang=${l}`} hrefLang={l} lang={l} className="font-semibold text-brand-ink hover:underline">
+                  {localeNames[l]}
+                </a>
+              ))}
+          </nav>
           <a href="#top" className="text-muted hover:text-fg">
             {t("backToTop")} ↑
           </a>
@@ -129,16 +134,9 @@ export async function LegalPage({ kind }: { kind: LegalKind }) {
   );
 }
 
-export async function legalMetadata(kind: LegalKind) {
+export async function legalMetadata(kind: LegalKind, lang?: string | string[]) {
   const locale = (await getLocale()) as Locale;
   const doc = legalDoc(locale, kind);
-  return {
-    title: doc.title,
-    description: doc.intro.slice(0, 160),
-    openGraph: { ...pageUrls(`/${kind}`).openGraph, title: doc.title },
-    alternates: {
-      canonical: `/${kind}`,
-      languages: Object.fromEntries(locales.map((l) => [l, `/${kind}?lang=${l}`])),
-    },
-  };
+  const description = doc.intro.slice(0, 160);
+  return { title: doc.title, description, ...localizedUrls(`/${kind}`, { lang, locale, title: doc.title, description }) };
 }

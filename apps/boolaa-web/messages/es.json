@@ -294,7 +294,8 @@
     "lastUpdated": "Última actualización: {date}",
     "draft": "Borrador pendiente de revisión legal. Este texto aún no es definitivo.",
     "backToTop": "Volver arriba",
-    "home": "Inicio de Boolaa"
+    "home": "Inicio de Boolaa",
+    "otherLanguages": "También disponible en"
   },
   "landing": {
     "metaTitle": "Boolaa · Tu gente, en una burbuja acogedora",
@@ -351,6 +352,10 @@
     "finalTitle": "¿Te animas a crear tu burbuja?",
     "finalBody": "Lleva un minuto. Tu gente te espera.",
     "footerTagline": "Burbujas privadas para la gente con la que vives y te diviertes.",
-    "copyright": "© {year} Boolaa"
+    "copyright": "© {year} Boolaa",
+    "footerMadeBy": "Gratis, sin anuncios, de código abierto (Apache 2.0), hecho con alegría por Bogdan Raduta.",
+    "sourceCode": "Código fuente",
+    "faq7Q": "¿Quién hace Boolaa?",
+    "faq7A": "Boolaa lo hace con alegría Bogdan Raduta, un particular, no una empresa. Es gratis, sin anuncios y de código abierto con licencia Apache 2.0: el código está en <github>GitHub</github>."
   }
 }

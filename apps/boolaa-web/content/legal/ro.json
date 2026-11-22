@@ -1,36 +1,52 @@
 {
   "privacy": {
     "title": "Politica de confidențialitate",
-    "intro": "Boolaa este o aplicație privată, doar pe bază de invitație, pentru grupuri mici („bule”). Această politică explică ce date personale prelucrăm când folosești aplicația și site-ul Boolaa, de ce le prelucrăm și ce drepturi ai.",
+    "intro": "Boolaa este o aplicație gratuită, privată, doar pe bază de invitație, pentru grupuri mici („bule”). Această politică explică ce date personale prelucrăm când folosești aplicația și site-ul Boolaa, de ce le prelucrăm și ce drepturi ai. Pe scurt: folosim datele tale doar ca să funcționeze Boolaa și pentru nimic altceva.",
     "sections": [
       {
         "id": "controller",
         "title": "Cine suntem",
         "body": [
-          "Operatorul de date este [Company legal name], [Registered address]. Ne poți scrie la [Contact email] pentru orice întrebare legată de datele tale.",
-          "Prelucrăm datele personale conform Regulamentului general privind protecția datelor (GDPR) și legislației române aplicabile. Autoritatea de supraveghere este Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP)."
+          "Boolaa nu este o companie. Este un proiect gratuit, non-profit, făcut cu drag de o singură persoană fizică, Bogdan Raduta, care este operatorul datelor tale personale. În această politică, „noi” înseamnă el.",
+          "Scrie la privacy@boolaa.ro pentru confidențialitate și cereri privind datele, la hello@boolaa.ro pentru întrebări generale și la moderation@boolaa.ro pentru raportări de siguranță. O adresă poștală a operatorului se oferă la cerere, prin privacy@boolaa.ro.",
+          "Boolaa nu are obligația de a numi un responsabil cu protecția datelor (DPO). Cererile trimise la privacy@boolaa.ro ajung direct la persoana care răspunde de datele tale.",
+          "Prelucrăm datele personale conform Regulamentului general privind protecția datelor (GDPR) și legislației românești aplicabile. Autoritatea de supraveghere este Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP)."
         ]
       },
       {
         "id": "data",
         "title": "Ce date colectăm",
         "body": [
-          "- Datele contului: adresa de e-mail, numele și, dacă adaugi una, fotografia de profil.",
-          "- Conținutul pe care îl publici: mesaje de chat, evenimente (titlu, descriere, dată, loc, cine participă), postări cu mâncare, obiecte din piață, linkuri și imaginile pe care le încarci.",
-          "- Datele de membru: bulele pe care le creezi sau din care faci parte, rolul tău, cererile de alăturare și aprobările.",
-          "- Datele de siguranță: persoanele pe care le blochezi și rapoartele pe care le trimiți sau care te privesc.",
-          "- Datele tehnice: jurnale de server (de exemplu adresa IP, tipul dispozitivului și al browserului, ora cererilor și erorile), necesare pentru funcționarea și securitatea serviciului.",
+          "Colectăm doar ce e necesar pentru funcționarea serviciului: o adresă de email pentru cont și ce alegi să publici.",
+          "- Datele contului: adresa de email, numele și, dacă adaugi, fotografia de profil, plus confirmarea că ai cel puțin 16 ani și versiunea termenilor pe care ai acceptat-o.",
+          "- Conținutul publicat: mesaje de chat, evenimente (titlu, descriere, dată, loc, cine participă), postări cu mâncare, obiecte din piață, linkuri distribuite și imaginile încărcate.",
+          "- Date despre apartenență: bulele pe care le creezi sau din care faci parte, rolul tău, cererile de alăturare și aprobările.",
+          "- Date de siguranță: persoanele pe care le blochezi și raportările pe care le trimiți sau care te privesc.",
+          "- Date de securitate: dispozitivele în care ai ales să ai încredere și codurile de securitate de scurtă durată pe care ți le trimitem pe email.",
+          "- Date tehnice: jurnale de server (de exemplu adresa IP, tipul de dispozitiv și de browser, ora cererilor și erorile), necesare pentru funcționarea și securitatea serviciului.",
           "Nu cerem și nu dorim date sensibile. Te rugăm să nu publici în bule informații despre sănătate, finanțe sau altele similare."
+        ]
+      },
+      {
+        "id": "signin",
+        "title": "Autentificarea cu Apple sau Google",
+        "body": [
+          "Dacă alegi să te autentifici cu Apple sau Google, primim de la ei doar numele și adresa ta de email. Dacă folosești „Ascunde adresa de email” de la Apple, primim o adresă intermediară Apple care redirecționează mesajele către tine. Nu primim parola ta și nimic altceva din contul tău Apple sau Google.",
+          "Apple și Google gestionează această autentificare conform propriilor politici de confidențialitate. Dacă te autentifici cu email și parolă, ei nu sunt implicați."
         ]
       },
       {
         "id": "purposes",
         "title": "De ce folosim datele și pe ce temei legal",
         "body": [
-          "- Pentru a furniza Boolaa (contul tău, bulele tale și tot ce împărtășești în ele): executarea contractului cu tine (art. 6 alin. (1) lit. b) GDPR).",
-          "- Pentru siguranța Boolaa (gestionarea rapoartelor, blocarea, prevenirea abuzurilor și securizarea sistemelor): interesul nostru legitim pentru o comunitate sigură (art. 6 alin. (1) lit. f)).",
-          "- Pentru îndeplinirea obligațiilor legale (de exemplu răspunsul la solicitări legale ale autorităților): obligație legală (art. 6 alin. (1) lit. c)).",
-          "Nu folosim datele tale pentru publicitate, nu le vindem și nu folosim tracking sau analize de la terți."
+          "- Pentru a oferi Boolaa (contul tău, bulele tale și tot ce distribui în ele): executarea contractului cu tine (art. 6 alin. (1) lit. b) GDPR).",
+          "- Pentru siguranța Boolaa (coduri de securitate și verificarea dispozitivelor noi, gestionarea raportărilor, blocare, prevenirea abuzurilor și securizarea sistemelor): interesul nostru legitim pentru un serviciu sigur (art. 6 alin. (1) lit. f)).",
+          "- Pentru a respecta obligațiile legale (de exemplu răspunsuri la cereri legale ale autorităților): obligație legală (art. 6 alin. (1) lit. c)).",
+          "Datele tale sunt folosite doar pentru funcționarea serviciului. Mai exact:",
+          "- Nu vindem datele tale și nu le distribuim în scopuri de marketing.",
+          "- Nu afișăm reclame și nu te urmărim și nu îți creăm profiluri. Nu există trackere sau instrumente de analiză ale terților.",
+          "- Nu folosim conținutul sau datele tale pentru a antrena modele de inteligență artificială sau de învățare automată și nu permitem nimănui altcuiva să o facă.",
+          "- Boolaa este gratuit: fără taxe, fără abonamente și fără cumpărături în aplicație, așa că nu deținem date de plată."
         ]
       },
       {
@@ -38,9 +54,12 @@
         "title": "Cine îți poate vedea datele",
         "body": [
           "Conținutul publicat într-o bulă este vizibil doar membrilor acelei bule. Numele și fotografia ta sunt vizibile persoanelor cu care ai o bulă în comun. Persoanele pe care le blochezi și cele care te blochează nu mai văd conținutul celuilalt.",
-          "Folosim următorii împuterniciți, care au semnat acorduri de prelucrare a datelor:",
+          "Folosim următorii împuterniciți, care au semnat acorduri de prelucrare a datelor, doar pentru funcționarea serviciului:",
           "- Supabase (bază de date, autentificare și stocare de fișiere); datele noastre sunt găzduite la Zurich, în Elveția.",
           "- DigitalOcean, care găzduiește site-ul și serverul aplicației la Frankfurt, în Germania.",
+          "- Resend, care trimite emailurile noastre (de exemplu confirmarea înregistrării și codurile de securitate).",
+          "- Cloudflare, pentru DNS și pentru redirecționarea emailurilor trimise la adresele noastre @boolaa.ro.",
+          "- Apple și Google, doar dacă alegi să te autentifici cu ei.",
           "Transmitem date autorităților doar atunci când legea o cere."
         ]
       },
@@ -48,15 +67,17 @@
         "id": "transfers",
         "title": "Transferuri internaționale",
         "body": [
-          "Datele tale sunt stocate în Elveția (Supabase, Zurich) și servite din UE (DigitalOcean, Frankfurt). Elveția beneficiază de o decizie de adecvare a Comisiei Europene, așa că GDPR permite transferul datelor acolo fără garanții suplimentare. Dacă un împuternicit ar avea vreodată nevoie să le acceseze dintr-o altă țară din afara UE/SEE, ne bazăm pe Clauzele contractuale standard (SCC) ale Comisiei Europene sau pe un alt mecanism de transfer valid."
+          "Datele tale sunt stocate în Elveția (Supabase, Zurich) și servite din UE (DigitalOcean, Frankfurt). Elveția beneficiază de o decizie de adecvare a Comisiei Europene, așa că GDPR permite transferul datelor acolo fără garanții suplimentare.",
+          "Unii împuterniciți (Resend, Cloudflare și, dacă te autentifici cu ei, Apple sau Google) pot prelucra date limitate, cum ar fi adresa ta de email, în afara UE/SEE. În acest caz ne bazăm pe Clauzele contractuale standard (SCC) ale Comisiei Europene, pe Cadrul UE-SUA privind protecția datelor sau pe un alt mecanism de transfer valid."
         ]
       },
       {
         "id": "retention",
         "title": "Cât timp păstrăm datele",
         "body": [
-          "Păstrăm datele cât timp ai un cont. Când îți ștergi contul din aplicație, ștergem profilul, conținutul și imaginile tale și te scoatem din bule.",
-          "Rapoartele trimise pot fi păstrate până la 12 luni după închidere, fără legătură cu contul tău, pentru a gestiona abuzurile repetate. Jurnalele tehnice se păstrează o perioadă scurtă (de regulă până la 30 de zile), cu excepția cazului în care sunt necesare pentru investigarea unui incident de securitate."
+          "Păstrăm datele tale cât timp ai cont. Când îți ștergi contul din aplicație, îți ștergem profilul, conținutul și imaginile și te scoatem din bule.",
+          "Codurile de securitate expiră în câteva minute. Dispozitivele de încredere rămân pe listă până când le elimini sau îți ștergi contul.",
+          "Raportările trimise de tine pot fi păstrate până la 12 luni după închidere, fără legătură cu contul tău, pentru a gestiona abuzurile repetate. Jurnalele tehnice se păstrează o perioadă scurtă (de obicei până la 30 de zile), cu excepția cazului în care sunt necesare pentru investigarea unui incident de securitate."
         ]
       },
       {
@@ -64,7 +85,7 @@
         "title": "Drepturile tale",
         "body": [
           "Ai dreptul de acces la date, de rectificare, de ștergere, de a le primi într-un format portabil, de restricționare sau de opoziție la prelucrare și de a-ți retrage oricând consimțământul.",
-          "Îți poți modifica profilul și îți poți șterge conținutul sau întregul cont direct din aplicație. Pentru orice altceva, scrie-ne la [Contact email]. Răspundem în cel mult o lună.",
+          "Îți poți modifica profilul și îți poți șterge conținutul sau întregul cont direct din aplicație. Pentru orice altceva, scrie la privacy@boolaa.ro. Răspundem în cel mult o lună.",
           "Ai și dreptul de a depune o plângere la ANSPDCP (www.dataprotection.ro) sau la autoritatea de supraveghere din țara în care locuiești."
         ]
       },
@@ -72,14 +93,16 @@
         "id": "age",
         "title": "Vârsta minimă",
         "body": [
-          "Boolaa este pentru persoane de cel puțin 16 ani. Dacă aflăm că o persoană mai tânără are un cont, îl ștergem."
+          "Boolaa este pentru persoane de cel puțin 16 ani, iar vârsta o confirmi la înregistrare. Dacă aflăm că o persoană mai tânără are cont, îl ștergem."
         ]
       },
       {
         "id": "security",
         "title": "Securitate",
         "body": [
-          "Datele sunt criptate în tranzit, accesul este restricționat prin securitate la nivel de rând, astfel încât doar persoanele potrivite pot citi fiecare bulă, iar parolele sunt stocate sub formă de hash. Niciun sistem nu este perfect sigur, așa că folosește o parolă puternică și unică."
+          "Datele sunt criptate în tranzit, accesul este restricționat prin securitate la nivel de rând, astfel încât doar persoanele potrivite pot citi fiecare bulă, iar parolele sunt stocate sub formă de hash.",
+          "Când te autentifici pe un dispozitiv nou, îți putem trimite pe email un cod de securitate ca să confirmăm că ești tu și îți putem cere un cod nou înaintea acțiunilor sensibile, cum ar fi ștergerea contului. Poți vedea în aplicație lista dispozitivelor de încredere și poți elimina oricare dintre ele.",
+          "Niciun sistem nu este perfect sigur, așa că te rugăm să folosești o parolă puternică și unică."
         ]
       },
       {
@@ -93,14 +116,17 @@
         "id": "contact",
         "title": "Contact",
         "body": [
-          "[Company legal name], [Registered address], [Contact email]."
+          "Bogdan Raduta, operatorul Boolaa:",
+          "- Confidențialitate și cereri privind datele: privacy@boolaa.ro",
+          "- Întrebări generale: hello@boolaa.ro",
+          "- Raportări de siguranță: moderation@boolaa.ro"
         ]
       }
     ]
   },
   "terms": {
     "title": "Termeni de utilizare",
-    "intro": "Acești termeni reprezintă acordul dintre tine și [Company legal name] pentru utilizarea Boolaa. Prin crearea unui cont îi accepți, împreună cu Politica noastră de confidențialitate.",
+    "intro": "Acești termeni reprezintă acordul dintre tine și Bogdan Raduta, persoana fizică ce administrează Boolaa, pentru utilizarea serviciului Boolaa pe boolaa.ro și în aplicațiile Boolaa. În acești termeni, „noi” înseamnă el. Prin crearea unui cont îi accepți, împreună cu Politica noastră de confidențialitate.",
     "sections": [
       {
         "id": "eligibility",
@@ -113,7 +139,8 @@
         "id": "service",
         "title": "Serviciul",
         "body": [
-          "Boolaa îți permite să creezi bule private, să inviți oameni cu un cod și să vorbești, să planifici evenimente, să împarți mâncare, să faci schimb de obiecte și să trimiți linkuri membrilor bulei. Serviciul este gratuit. Putem modifica, adăuga sau elimina funcții în timp."
+          "Boolaa îți permite să creezi bule private, să inviți oameni cu un cod și să vorbești, să planifici evenimente, să împarți mâncare, să schimbi obiecte și să distribui linkuri cu membrii bulei tale.",
+          "Boolaa este gratuit și non-profit: fără taxe, fără abonamente, fără cumpărături în aplicație și fără reclame. Nu este administrat de o companie, ci făcut cu drag de o singură persoană. Putem schimba, adăuga sau elimina funcții în timp ori putem opri serviciul; dacă îl oprim, te anunțăm din timp ca să poți salva ce contează pentru tine."
         ]
       },
       {
@@ -134,7 +161,7 @@
         "id": "safety",
         "title": "Raportare, blocare și moderare",
         "body": [
-          "Avem toleranță zero față de conținutul inacceptabil și utilizatorii abuzivi. Poți raporta din aplicație orice mesaj, eveniment, postare, obiect, link sau membru și poți bloca pe oricine, astfel încât să nu mai vedeți conținutul celuilalt.",
+          "Avem toleranță zero față de conținutul inacceptabil și utilizatorii abuzivi. Poți raporta din aplicație orice mesaj, eveniment, postare, obiect, link sau membru și poți bloca pe oricine, ca să nu vă mai vedeți conținutul. Ne poți scrie și la moderation@boolaa.ro.",
           "Verificăm rapoartele în cel mult 24 de ore. Putem elimina conținut și putem suspenda sau închide conturile celor care încalcă acești termeni, fără notificare atunci când este necesar pentru a-i proteja pe ceilalți."
         ]
       },
@@ -142,8 +169,16 @@
         "id": "content",
         "title": "Conținutul tău",
         "body": [
-          "Ce publici îți aparține. Ne acorzi o licență neexclusivă, gratuită și valabilă în întreaga lume de a stoca, prelucra și afișa conținutul tău membrilor bulelor în care îl publici, doar pentru a face Boolaa să funcționeze. Licența încetează când ștergi conținutul sau contul.",
+          "Rămâi proprietarul a tot ce publici. Ne acorzi doar licența necesară pentru funcționarea Boolaa: o licență neexclusivă, gratuită, valabilă în întreaga lume, de a stoca, prelucra și afișa conținutul tău membrilor bulelor în care îl publici. Nu folosim conținutul tău în niciun alt scop, inclusiv pentru reclame sau pentru antrenarea modelelor de inteligență artificială. Licența încetează când ștergi conținutul sau contul.",
           "Confirmi că ai dreptul să împărtășești ce publici."
+        ]
+      },
+      {
+        "id": "opensource",
+        "title": "Cod sursă deschis",
+        "body": [
+          "Codul sursă al Boolaa este deschis, sub licența Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Această licență acoperă codul: îl poți folosi, modifica și distribui în condițiile ei. Codul este public la https://github.com/unalome-ai/boolaa.",
+          "Licența nu acoperă serviciul găzduit. Folosirea Boolaa pe boolaa.ro și în aplicațiile Boolaa, inclusiv contul și conținutul tău, este guvernată de acești termeni. Licența Apache nu acordă drepturi asupra numelui sau siglei Boolaa."
         ]
       },
       {
@@ -157,8 +192,8 @@
         "id": "disclaimers",
         "title": "Limitarea răspunderii",
         "body": [
-          "Boolaa este oferit „ca atare”. Ne străduim să fie disponibil și sigur, dar nu putem garanta că va funcționa mereu fără întreruperi sau erori.",
-          "În măsura permisă de lege, nu răspundem pentru pierderi indirecte sau pentru conținutul publicat de alți utilizatori. Nimic din acești termeni nu limitează răspunderea care nu poate fi limitată prin lege și nici drepturile tale de consumator."
+          "Boolaa este un serviciu gratuit, necomercial, administrat de o singură persoană. Este oferit „ca atare” și „în măsura disponibilității”, fără garanții de niciun fel, în limitele permise de lege. Ne străduim să îl menținem disponibil și sigur, dar nu putem garanta că va funcționa mereu fără întreruperi sau erori ori că nu se va pierde niciodată conținut.",
+          "În limitele permise de lege, nu răspundem pentru pierderi indirecte sau consecutive, pentru pierderea datelor sau a conținutului ori pentru conținutul publicat de alți utilizatori, cu excepția prejudiciilor cauzate cu intenție sau din culpă gravă. Nimic din acești termeni nu limitează răspunderea care nu poate fi limitată prin lege sau drepturile tale de consumator."
         ]
       },
       {
@@ -186,7 +221,10 @@
         "id": "contact",
         "title": "Contact",
         "body": [
-          "[Company legal name], [Registered address], [Contact email]."
+          "Bogdan Raduta, care administrează Boolaa:",
+          "- Confidențialitate și cereri privind datele: privacy@boolaa.ro",
+          "- Întrebări generale: hello@boolaa.ro",
+          "- Raportări de siguranță: moderation@boolaa.ro"
         ]
       }
     ]

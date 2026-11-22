@@ -1,36 +1,52 @@
 {
   "privacy": {
     "title": "Informativa sulla privacy",
-    "intro": "Boolaa è un'app privata, solo su invito, per piccoli gruppi («bolle»). Questa informativa spiega quali dati personali trattiamo quando usi l'app e il sito di Boolaa, perché e quali sono i tuoi diritti.",
+    "intro": "Boolaa è un'app gratuita, privata e solo su invito per piccoli gruppi (le «bolle»). Questa informativa spiega quali dati personali trattiamo quando usi l'app e il sito di Boolaa, perché e quali sono i tuoi diritti. In breve: usiamo i tuoi dati solo per far funzionare Boolaa, e per nient'altro.",
     "sections": [
       {
         "id": "controller",
         "title": "Chi siamo",
         "body": [
-          "Il titolare del trattamento è [Company legal name], [Registered address]. Puoi scriverci a [Contact email] per qualsiasi domanda sui tuoi dati.",
-          "Trattiamo i dati personali in base al Regolamento generale sulla protezione dei dati (GDPR) e alla normativa rumena applicabile. L'autorità di controllo è l'Autorità nazionale rumena di vigilanza sul trattamento dei dati personali (ANSPDCP)."
+          "Boolaa non è un'azienda. È un progetto gratuito e senza scopo di lucro, fatto con gioia da un privato, Bogdan Raduta, che è il titolare del trattamento dei tuoi dati personali. In questa informativa, «noi» indica lui.",
+          "Scrivi a privacy@boolaa.ro per la privacy e le richieste sui tuoi dati, a hello@boolaa.ro per domande generali e a moderation@boolaa.ro per le segnalazioni di sicurezza. Un indirizzo postale del titolare viene fornito su richiesta tramite privacy@boolaa.ro.",
+          "Boolaa non è tenuto a nominare un responsabile della protezione dei dati (RPD/DPO). Le richieste inviate a privacy@boolaa.ro arrivano direttamente alla persona responsabile dei tuoi dati.",
+          "Trattiamo i dati personali in base al Regolamento generale sulla protezione dei dati (GDPR) e alla legge rumena applicabile. L'autorità di controllo è l'Autorità nazionale rumena di vigilanza sul trattamento dei dati personali (ANSPDCP)."
         ]
       },
       {
         "id": "data",
         "title": "Quali dati raccogliamo",
         "body": [
-          "- Dati dell'account: indirizzo email, nome e, se la aggiungi, foto profilo.",
-          "- Contenuti che pubblichi: messaggi in chat, eventi (titolo, descrizione, data, luogo, chi partecipa), post di cibo, oggetti del mercatino, link e le immagini che carichi.",
+          "Raccogliamo solo ciò che serve per far funzionare il servizio: un indirizzo email per il tuo account e ciò che scegli di pubblicare.",
+          "- Dati dell'account: indirizzo email, nome e, se la aggiungi, la foto del profilo, oltre alla conferma di avere almeno 16 anni e alla versione dei termini che hai accettato.",
+          "- Contenuti pubblicati: messaggi della chat, eventi (titolo, descrizione, data, luogo, chi partecipa), post di cibo, oggetti del mercatino, link condivisi e le immagini che carichi.",
           "- Dati di appartenenza: le bolle che crei o di cui fai parte, il tuo ruolo, le richieste di adesione e le approvazioni.",
           "- Dati di sicurezza: le persone che blocchi e le segnalazioni che invii o che ti riguardano.",
-          "- Dati tecnici: log del server (ad esempio indirizzo IP, tipo di dispositivo e browser, orario delle richieste ed errori) necessari per far funzionare e proteggere il servizio.",
-          "Non chiediamo né vogliamo dati sensibili. Per favore non pubblicare nelle bolle informazioni sanitarie, finanziarie o simili."
+          "- Dati di verifica: i dispositivi che hai scelto come attendibili e i codici di sicurezza temporanei che ti inviamo via email.",
+          "- Dati tecnici: log del server (come indirizzo IP, tipo di dispositivo e browser, orario delle richieste ed errori) necessari per far funzionare e proteggere il servizio.",
+          "Non chiediamo né vogliamo dati sensibili. Per favore non pubblicare informazioni sanitarie, finanziarie o simili nelle tue bolle."
+        ]
+      },
+      {
+        "id": "signin",
+        "title": "Accesso con Apple o Google",
+        "body": [
+          "Se scegli di accedere con Apple o Google, da loro riceviamo solo il tuo nome e il tuo indirizzo email. Se usi «Nascondi la mia email» di Apple, riceviamo un indirizzo di inoltro Apple che reindirizza i messaggi alla tua casella. Non riceviamo la tua password né altri dati del tuo account Apple o Google.",
+          "Apple e Google gestiscono questo accesso secondo le proprie informative sulla privacy. Se accedi con email e password, non sono coinvolti."
         ]
       },
       {
         "id": "purposes",
         "title": "Perché usiamo i tuoi dati e su quale base giuridica",
         "body": [
-          "- Per fornire Boolaa (il tuo account, le tue bolle e tutto ciò che condividi): esecuzione del contratto con te (art. 6, par. 1, lett. b) GDPR).",
-          "- Per mantenere Boolaa sicuro (gestione delle segnalazioni, blocchi, prevenzione degli abusi e protezione dei sistemi): nostro legittimo interesse a una comunità sicura (art. 6, par. 1, lett. f)).",
+          "- Per offrirti Boolaa (il tuo account, le tue bolle e tutto ciò che condividi): esecuzione del contratto con te (art. 6, par. 1, lett. b) GDPR).",
+          "- Per mantenere Boolaa sicuro (codici di sicurezza e verifica dei nuovi dispositivi, gestione delle segnalazioni, blocchi, prevenzione degli abusi e protezione dei sistemi): il nostro legittimo interesse a un servizio sicuro (art. 6, par. 1, lett. f)).",
           "- Per adempiere a obblighi di legge (ad esempio rispondere a richieste legittime delle autorità): obbligo legale (art. 6, par. 1, lett. c)).",
-          "Non usiamo i tuoi dati per la pubblicità, non li vendiamo e non usiamo tracciamento o analisi di terze parti."
+          "I tuoi dati sono usati solo per far funzionare il servizio. In particolare:",
+          "- Non vendiamo i tuoi dati e non li condividiamo per scopi di marketing.",
+          "- Non mostriamo pubblicità, non ti tracciamo e non ti profiliamo. Non ci sono tracker né strumenti di analisi di terze parti.",
+          "- Non usiamo i tuoi contenuti o i tuoi dati per addestrare modelli di intelligenza artificiale o di apprendimento automatico, e non permettiamo a nessun altro di farlo.",
+          "- Boolaa è gratuito: niente costi, niente abbonamenti e niente acquisti in-app, quindi non conserviamo dati di pagamento."
         ]
       },
       {
@@ -38,9 +54,12 @@
         "title": "Chi può vedere i tuoi dati",
         "body": [
           "I contenuti pubblicati in una bolla sono visibili solo ai suoi membri. Nome e foto sono visibili alle persone con cui condividi una bolla. Le persone che blocchi, e quelle che ti bloccano, non vedono più i contenuti dell'altro.",
-          "Ci avvaliamo di questi responsabili del trattamento, vincolati da accordi sul trattamento dei dati:",
+          "Ci avvaliamo di questi responsabili del trattamento, vincolati da accordi sul trattamento dei dati e solo per far funzionare il servizio:",
           "- Supabase (database, autenticazione e archiviazione dei file), con i nostri dati ospitati a Zurigo, in Svizzera.",
           "- DigitalOcean, che ospita il sito e il server dell'app a Francoforte, in Germania.",
+          "- Resend, che invia le nostre email (come le conferme di registrazione e i codici di sicurezza).",
+          "- Cloudflare, per il DNS e per l'inoltro delle email inviate ai nostri indirizzi @boolaa.ro.",
+          "- Apple e Google, solo se scegli di accedere con loro.",
           "Condividiamo dati con le autorità solo quando la legge lo richiede."
         ]
       },
@@ -48,15 +67,17 @@
         "id": "transfers",
         "title": "Trasferimenti internazionali",
         "body": [
-          "I tuoi dati sono conservati in Svizzera (Supabase, Zurigo) e serviti dall'UE (DigitalOcean, Francoforte). La Svizzera beneficia di una decisione di adeguatezza della Commissione europea, quindi il GDPR consente di trasferirvi i dati senza garanzie aggiuntive. Se un responsabile dovesse accedere ai tuoi dati da un altro paese fuori UE/SEE, ci baseremmo sulle Clausole contrattuali standard (SCC) della Commissione europea o su un altro meccanismo di trasferimento valido."
+          "I tuoi dati sono conservati in Svizzera (Supabase, Zurigo) e serviti dall'UE (DigitalOcean, Francoforte). La Svizzera beneficia di una decisione di adeguatezza della Commissione europea, quindi il GDPR consente di trasferirvi i dati senza garanzie aggiuntive.",
+          "Alcuni responsabili (Resend, Cloudflare e, se accedi con loro, Apple o Google) possono trattare dati limitati, come il tuo indirizzo email, fuori dall'UE/SEE. In tal caso ci basiamo sulle Clausole contrattuali standard (SCC) della Commissione europea, sul quadro UE-USA per la protezione dei dati o su un altro meccanismo di trasferimento valido."
         ]
       },
       {
         "id": "retention",
         "title": "Per quanto tempo conserviamo i dati",
         "body": [
-          "Conserviamo i tuoi dati finché hai un account. Quando elimini l'account dall'app, cancelliamo profilo, contenuti e immagini e ti rimuoviamo dalle bolle.",
-          "Le segnalazioni che hai inviato possono essere conservate fino a 12 mesi dalla chiusura, scollegate dal tuo account, per gestire abusi ripetuti. I log tecnici sono conservati per poco tempo (di solito fino a 30 giorni), salvo che servano per indagare su un incidente di sicurezza."
+          "Conserviamo i tuoi dati finché hai un account. Quando elimini l'account dall'app, cancelliamo il tuo profilo, i tuoi contenuti e le tue immagini e ti rimuoviamo dalle tue bolle.",
+          "I codici di sicurezza scadono in pochi minuti. I dispositivi attendibili restano nel tuo elenco finché non li rimuovi o elimini l'account.",
+          "Le segnalazioni che hai inviato possono essere conservate fino a 12 mesi dopo la chiusura, senza collegamento al tuo account, per gestire abusi ripetuti. I log tecnici sono conservati per poco tempo (di solito fino a 30 giorni), salvo che servano per indagare su un incidente di sicurezza."
         ]
       },
       {
@@ -64,7 +85,7 @@
         "title": "I tuoi diritti",
         "body": [
           "Hai il diritto di accedere ai tuoi dati, rettificarli, cancellarli, riceverli in un formato portabile, limitarne il trattamento od opporti, e revocare il consenso in qualsiasi momento.",
-          "Puoi modificare il profilo ed eliminare i tuoi contenuti o l'intero account direttamente dall'app. Per tutto il resto scrivi a [Contact email]. Rispondiamo entro un mese.",
+          "Puoi modificare il profilo ed eliminare i tuoi contenuti o l'intero account direttamente dall'app. Per tutto il resto scrivi a privacy@boolaa.ro. Rispondiamo entro un mese.",
           "Puoi anche presentare reclamo all'ANSPDCP (www.dataprotection.ro) o all'autorità di controllo del paese in cui vivi."
         ]
       },
@@ -72,14 +93,16 @@
         "id": "age",
         "title": "Età minima",
         "body": [
-          "Boolaa è per persone di almeno 16 anni. Se scopriamo che una persona più giovane ha un account, lo eliminiamo."
+          "Boolaa è per persone dai 16 anni in su, e confermi la tua età al momento della registrazione. Se scopriamo che una persona più giovane ha un account, lo eliminiamo."
         ]
       },
       {
         "id": "security",
         "title": "Sicurezza",
         "body": [
-          "I dati sono cifrati in transito, l'accesso è limitato con sicurezza a livello di riga così che solo le persone giuste possano leggere ogni bolla, e le password sono memorizzate con hash. Nessun sistema è perfettamente sicuro: usa una password forte e unica."
+          "I dati sono cifrati in transito, l'accesso è limitato dalla sicurezza a livello di riga, così solo le persone giuste possono leggere ogni bolla, e le password sono salvate in forma di hash.",
+          "Quando accedi da un nuovo dispositivo, possiamo inviarti via email un codice di sicurezza per confermare che sei tu, e chiederti un nuovo codice prima di azioni delicate come l'eliminazione dell'account. Nell'app puoi vedere l'elenco dei tuoi dispositivi attendibili e rimuoverne qualsiasi.",
+          "Nessun sistema è perfettamente sicuro, quindi usa una password robusta e unica."
         ]
       },
       {
@@ -93,14 +116,17 @@
         "id": "contact",
         "title": "Contatti",
         "body": [
-          "[Company legal name], [Registered address], [Contact email]."
+          "Bogdan Raduta, titolare del trattamento di Boolaa:",
+          "- Privacy e richieste sui tuoi dati: privacy@boolaa.ro",
+          "- Domande generali: hello@boolaa.ro",
+          "- Segnalazioni di sicurezza: moderation@boolaa.ro"
         ]
       }
     ]
   },
   "terms": {
     "title": "Termini di utilizzo",
-    "intro": "Questi termini sono l'accordo tra te e [Company legal name] per l'uso di Boolaa. Creando un account li accetti, insieme alla nostra Informativa sulla privacy.",
+    "intro": "Questi termini sono l'accordo tra te e Bogdan Raduta, il privato che gestisce Boolaa, per l'uso del servizio Boolaa su boolaa.ro e nelle app Boolaa. In questi termini, «noi» indica lui. Creando un account li accetti, insieme alla nostra Informativa sulla privacy.",
     "sections": [
       {
         "id": "eligibility",
@@ -113,7 +139,8 @@
         "id": "service",
         "title": "Il servizio",
         "body": [
-          "Boolaa ti permette di creare bolle private, invitare persone con un codice e chattare, organizzare eventi, condividere cibo, scambiare oggetti e condividere link con i membri della tua bolla. Il servizio è gratuito. Possiamo modificare, aggiungere o rimuovere funzioni nel tempo."
+          "Boolaa ti permette di creare bolle private, invitare persone con un codice, chattare, organizzare eventi, condividere cibo, scambiare oggetti e condividere link con i membri della tua bolla.",
+          "Boolaa è gratuito e senza scopo di lucro: niente costi, niente abbonamenti, niente acquisti in-app e niente pubblicità. Non è gestito da un'azienda, ma fatto con gioia da una sola persona. Possiamo modificare, aggiungere o rimuovere funzioni nel tempo, oppure interrompere il servizio; se lo interrompiamo, te lo diremo in anticipo così potrai salvare ciò che ti interessa."
         ]
       },
       {
@@ -134,7 +161,7 @@
         "id": "safety",
         "title": "Segnalazioni, blocchi e moderazione",
         "body": [
-          "Abbiamo tolleranza zero verso contenuti inaccettabili e utenti violenti o molesti. Dall'app puoi segnalare qualsiasi messaggio, evento, post, oggetto, link o membro, e bloccare chiunque per non vedere più i contenuti dell'altro.",
+          "Abbiamo tolleranza zero verso i contenuti inaccettabili e gli utenti molesti. Dall'app puoi segnalare qualsiasi messaggio, evento, post, oggetto, link o membro, e bloccare chiunque per non vedere più i rispettivi contenuti. Puoi anche scrivere a moderation@boolaa.ro.",
           "Esaminiamo le segnalazioni entro 24 ore. Possiamo rimuovere contenuti e sospendere o chiudere gli account di chi viola questi termini, senza preavviso quando serve a proteggere gli altri."
         ]
       },
@@ -142,8 +169,16 @@
         "id": "content",
         "title": "I tuoi contenuti",
         "body": [
-          "Ciò che pubblichi resta tuo. Ci concedi una licenza non esclusiva, gratuita e mondiale per conservare, trattare e mostrare i tuoi contenuti ai membri delle bolle in cui li pubblichi, solo per far funzionare Boolaa. La licenza termina quando elimini il contenuto o l'account.",
+          "Resti proprietario di tutto ciò che pubblichi. Ci concedi solo la licenza necessaria per far funzionare Boolaa: una licenza non esclusiva, gratuita e mondiale per archiviare, trattare e mostrare i tuoi contenuti ai membri delle bolle in cui li pubblichi. Non usiamo i tuoi contenuti per nient'altro, né per la pubblicità né per addestrare modelli di IA. La licenza termina quando elimini il contenuto o l'account.",
           "Confermi di avere il diritto di condividere ciò che pubblichi."
+        ]
+      },
+      {
+        "id": "opensource",
+        "title": "Open source",
+        "body": [
+          "Il codice sorgente di Boolaa è open source con licenza Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Questa licenza riguarda il codice: puoi usarlo, modificarlo e condividerlo secondo le sue condizioni. Il codice è pubblico su https://github.com/unalome-ai/boolaa.",
+          "La licenza non riguarda il servizio ospitato. L'uso di Boolaa su boolaa.ro e nelle app Boolaa, compresi il tuo account e i tuoi contenuti, è regolato da questi termini. La licenza Apache non concede diritti sul nome o sul logo di Boolaa."
         ]
       },
       {
@@ -157,8 +192,8 @@
         "id": "disclaimers",
         "title": "Esclusioni e responsabilità",
         "body": [
-          "Boolaa è fornito «così com'è». Lavoriamo perché sia disponibile e sicuro, ma non possiamo garantire che funzioni sempre senza interruzioni o errori.",
-          "Nei limiti consentiti dalla legge, non rispondiamo di perdite indirette né dei contenuti pubblicati da altri utenti. Nulla in questi termini limita la responsabilità che per legge non può essere limitata, né i tuoi diritti di consumatore."
+          "Boolaa è un servizio gratuito e non commerciale gestito da un privato. È fornito «così com'è» e «secondo disponibilità», senza garanzie di alcun tipo, nei limiti consentiti dalla legge. Ci impegniamo a mantenerlo disponibile e sicuro, ma non possiamo garantire che funzioni sempre senza interruzioni o errori, né che nessun contenuto vada mai perso.",
+          "Nei limiti consentiti dalla legge, non siamo responsabili per perdite indirette o consequenziali, per la perdita di dati o contenuti, né per i contenuti pubblicati da altri utenti, salvo i danni causati con dolo o colpa grave. Nulla in questi termini limita la responsabilità che per legge non può essere limitata, né i tuoi diritti di consumatore."
         ]
       },
       {
@@ -186,7 +221,10 @@
         "id": "contact",
         "title": "Contatti",
         "body": [
-          "[Company legal name], [Registered address], [Contact email]."
+          "Bogdan Raduta, che gestisce Boolaa:",
+          "- Privacy e richieste sui tuoi dati: privacy@boolaa.ro",
+          "- Domande generali: hello@boolaa.ro",
+          "- Segnalazioni di sicurezza: moderation@boolaa.ro"
         ]
       }
     ]

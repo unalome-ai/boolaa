@@ -64,3 +64,67 @@ test("canonical and Open Graph URLs always use https://boolaa.ro, also when serv
     expect(ogImage, path).toMatch(/^https:\/\/boolaa\.ro\/opengraph-image/);
   }
 });
+
+test("the landing page switches language from the header menu (keyboard too) and keeps it", async ({ page, context }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  const header = page.locator("header").first();
+  await header.getByTestId("language-button").click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitemradio")).toHaveCount(5);
+  await expect(menu.getByRole("menuitemradio", { name: "English" })).toHaveAttribute("aria-checked", "true");
+  await menu.getByRole("menuitemradio", { name: "Română" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ro");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("bulă");
+  expect((await context.cookies()).find((c) => c.name === "boolaa_locale")?.value).toBe("ro");
+  await expect(page).toHaveTitle(/Boolaa/);
+  await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "ro");
+
+  // Keyboard: open with ArrowDown, move to French, Enter.
+  await header.getByTestId("language-button").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitemradio", { name: "Română" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitemradio", { name: "Français" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await header.getByTestId("language-button").click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(header.getByTestId("language-button")).toBeFocused();
+});
+
+test("hreflang alternates, ?lang= canonical, and ?lang= winning over the cookie", async ({ page, context }) => {
+  await context.addCookies([{ name: "boolaa_locale", value: "it", url: "http://localhost:3100" }]);
+  for (const path of ["/", "/login", "/register", "/privacy", "/terms"]) {
+    const q = path;
+    await page.goto(`${path}?lang=es`);
+    await expect(page.locator("html")).toHaveAttribute("lang", "es");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `https://boolaa.ro${q}?lang=es`);
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", `https://boolaa.ro${q}?lang=es`);
+    for (const l of ["en", "ro", "fr", "es", "it"])
+      await expect(page.locator(`link[rel="alternate"][hreflang="${l}"]`)).toHaveAttribute("href", `https://boolaa.ro${q}?lang=${l}`);
+    await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute("href", new RegExp(`^https://boolaa\\.ro${path === "/" ? "/?" : path}$`));
+  }
+  // ?lang= was persisted in the cookie, so the plain URL now renders Spanish with a plain canonical.
+  expect((await context.cookies()).find((c) => c.name === "boolaa_locale")?.value).toBe("es");
+  await page.goto("/privacy");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://boolaa.ro/privacy");
+});
+
+test("legal pages name the controller, link the contacts, the licence and the source; the footer credits", async ({ page }) => {
+  for (const l of LOCALES) {
+    await page.goto(`/privacy?lang=${l}`);
+    await expect(page.getByTestId("legal-privacy")).toContainText("Bogdan Raduta");
+    await expect(page.getByTestId("legal-privacy").locator('a[href="mailto:privacy@boolaa.ro"]').first()).toBeVisible();
+    await expect(page.getByTestId("legal-privacy")).not.toContainText("[");
+    await page.goto(`/terms?lang=${l}`);
+    await expect(page.locator('#opensource a[href="https://www.apache.org/licenses/LICENSE-2.0"]')).toBeVisible();
+    await expect(page.locator('#opensource a[href="https://github.com/unalome-ai/boolaa"]')).toBeVisible();
+    await expect(page.getByTestId("legal-terms")).not.toContainText("[");
+  }
+  await page.goto("/?lang=en");
+  await expect(page.getByTestId("made-by")).toContainText("Apache 2.0");
+  await expect(page.getByTestId("source-code")).toHaveAttribute("href", "https://github.com/unalome-ai/boolaa");
+});

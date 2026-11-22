@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowRight,
   ArrowUp,
+  CodeXml,
   CalendarDays,
   EyeOff,
   KeyRound,
@@ -19,30 +20,17 @@ import {
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CompactLocalePicker } from "@/i18n/locale-picker";
-import { locales } from "@/i18n/config";
 import { AmbientBackdrop, BubbleLogo, FeatureBadge, Orb } from "@/components/orb";
 import { hueClass, type Hue } from "@/lib/hue";
-import { pageUrls } from "@/lib/site";
+import { REPO_URL, localizedUrls } from "@/lib/site";
 
 // Signed-in users never get here: the proxy sends them to /home or /onboarding.
 
-export async function generateMetadata(): Promise<Metadata> {
-  const [t, locale] = await Promise.all([getTranslations("landing"), getLocale()]);
+export async function generateMetadata({ searchParams }: PageProps<"/">): Promise<Metadata> {
+  const [t, locale, { lang }] = await Promise.all([getTranslations("landing"), getLocale(), searchParams]);
   const title = t("metaTitle");
   const description = t("metaDescription");
-  return {
-    title: { absolute: title },
-    description,
-    alternates: pageUrls("/").alternates,
-    openGraph: {
-      ...pageUrls("/").openGraph,
-      title,
-      description,
-      locale,
-      alternateLocale: locales.filter((l) => l !== locale),
-    },
-    twitter: { card: "summary_large_image", title, description },
-  };
+  return { title: { absolute: title }, description, ...localizedUrls("/", { lang, locale, title, description }) };
 }
 
 const FEATURES = [
@@ -72,6 +60,11 @@ export default async function Landing() {
   const tn = await getTranslations("nav");
   const tl = await getTranslations("legal");
   const em = (chunks: ReactNode) => <em className="text-gradient not-italic">{chunks}</em>;
+  const ghLink = (chunks: ReactNode) => (
+    <a href={REPO_URL} className="font-semibold text-brand-ink underline underline-offset-2" rel="noopener">
+      {chunks}
+    </a>
+  );
 
   return (
     <div className="relative overflow-x-clip" data-testid="landing">
@@ -187,7 +180,7 @@ export default async function Landing() {
           <div className="mx-auto max-w-3xl px-5">
             <h2 className="reveal text-center text-3xl font-black tracking-tight sm:text-[40px]">{t("faqTitle")}</h2>
             <div className="mt-10 space-y-3">
-              {([1, 2, 3, 4, 5, 6] as const).map((n, i) => (
+              {([1, 2, 3, 4, 5, 6, 7] as const).map((n, i) => (
                 <details key={n} className="reveal group rounded-card bg-card p-5 shadow-soft" style={at(i)}>
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold [&::-webkit-details-marker]:hidden">
                     {t(`faq${n}Q`)}
@@ -195,7 +188,7 @@ export default async function Landing() {
                       <Plus size={18} strokeWidth={3} />
                     </span>
                   </summary>
-                  <p className="mt-3 text-muted">{t(`faq${n}A`)}</p>
+                  <p className="mt-3 text-muted">{n === 7 ? t.rich("faq7A", { github: ghLink }) : t(`faq${n}A`)}</p>
                 </details>
               ))}
             </div>
@@ -221,6 +214,7 @@ export default async function Landing() {
           <div>
             <Logo />
             <p className="mt-2 text-sm text-muted">{t("footerTagline")}</p>
+            <p className="mt-1 text-sm text-muted" data-testid="made-by">{t("footerMadeBy")}</p>
             <p className="mt-1 text-xs text-muted">{t("copyright", { year: new Date().getFullYear() })}</p>
           </div>
           <nav className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-semibold" aria-label={t("navPrivacy")}>
@@ -230,7 +224,10 @@ export default async function Landing() {
             <Link href="/terms" className="hover:text-brand-ink">
               {tl("terms")}
             </Link>
-            <CompactLocalePicker />
+            <a href={REPO_URL} className="inline-flex items-center gap-1.5 hover:text-brand-ink" rel="noopener" data-testid="source-code">
+              <CodeXml size={16} strokeWidth={2.4} aria-hidden /> {t("sourceCode")}
+            </a>
+            <CompactLocalePicker up />
           </nav>
         </div>
       </footer>
@@ -269,6 +266,7 @@ function Header({ labels }: { labels: Record<"how" | "features" | "privacy" | "f
           </a>
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <CompactLocalePicker />
           <Link href="/login" className="press hidden rounded-full px-4 py-2 font-display text-[15px] font-bold text-brand-ink hover:bg-brand/10 sm:inline-flex" data-testid="landing-sign-in">
             {labels.signIn}
           </Link>

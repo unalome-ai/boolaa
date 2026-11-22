@@ -132,6 +132,9 @@ const loadLegal = (l) => {
   }
 };
 const placeholders = (doc) => [...new Set(JSON.stringify(doc).match(/\[[^\]"]+\]/g) ?? [])].sort().join(" ");
+// URLs and email addresses must be the same in every language (they become links).
+const links = (doc) =>
+  [...new Set(JSON.stringify(doc).match(/https?:\/\/[^\s)"]+[^\s)".,;:]|[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[a-z]{2,}/g) ?? [])].sort().join(" ");
 const legalEn = loadLegal("en");
 for (const locale of LOCALES) {
   const legal = locale === "en" ? legalEn : loadLegal(locale);
@@ -152,6 +155,7 @@ for (const locale of LOCALES) {
         fail(`legal ${locale}/${kind}#${sec.id}: empty title or body`);
     }
     if (placeholders(doc) !== placeholders(ref)) fail(`legal ${locale}/${kind}: placeholders differ from en`);
+    if (links(doc) !== links(ref)) fail(`legal ${locale}/${kind}: URLs or email addresses differ from en`);
     if (locale === "ro" && /[şţŞŢ]/.test(JSON.stringify(doc))) fail(`legal ro/${kind}: uses cedilla ş/ţ`);
   }
 }

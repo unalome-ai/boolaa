@@ -294,7 +294,8 @@
     "lastUpdated": "Dernière mise à jour : {date}",
     "draft": "Brouillon en attente de validation juridique. Ce texte n'est pas encore définitif.",
     "backToTop": "Retour en haut",
-    "home": "Accueil Boolaa"
+    "home": "Accueil Boolaa",
+    "otherLanguages": "Aussi disponible en"
   },
   "landing": {
     "metaTitle": "Boolaa · Tes proches, dans une bulle douillette",
@@ -351,6 +352,10 @@
     "finalTitle": "Envie de créer ta bulle ?",
     "finalBody": "Ça prend une minute. Tes proches t'attendent.",
     "footerTagline": "Des bulles privées pour les gens avec qui tu vis et tu t'amuses.",
-    "copyright": "© {year} Boolaa"
+    "copyright": "© {year} Boolaa",
+    "footerMadeBy": "Gratuit, sans pub, open source (Apache 2.0), fait avec joie par Bogdan Raduta.",
+    "sourceCode": "Code source",
+    "faq7Q": "Qui fait Boolaa ?",
+    "faq7A": "Boolaa est fait avec joie par Bogdan Raduta, un particulier, pas une entreprise. C'est gratuit, sans pub et open source sous licence Apache 2.0 : le code est sur <github>GitHub</github>."
   }
 }

@@ -294,7 +294,8 @@
     "lastUpdated": "Last updated: {date}",
     "draft": "Draft, pending legal review. This text is not yet final.",
     "backToTop": "Back to top",
-    "home": "Boolaa home"
+    "home": "Boolaa home",
+    "otherLanguages": "Also available in"
   },
   "landing": {
     "metaTitle": "Boolaa · Your people, in one cosy bubble",
@@ -351,6 +352,10 @@
     "finalTitle": "Ready to make your bubble?",
     "finalBody": "It takes a minute. Your people are waiting.",
     "footerTagline": "Private bubbles for the people you live and play with.",
-    "copyright": "© {year} Boolaa"
+    "copyright": "© {year} Boolaa",
+    "footerMadeBy": "Free, no ads, open source (Apache 2.0), made with joy by Bogdan Raduta.",
+    "sourceCode": "Source code",
+    "faq7Q": "Who makes Boolaa?",
+    "faq7A": "Boolaa is made with joy by Bogdan Raduta, a private individual, not a company. It's free, has no ads and is open source under the Apache 2.0 licence: the code is on <github>GitHub</github>."
   }
 }

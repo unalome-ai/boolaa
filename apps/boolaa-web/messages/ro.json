@@ -294,7 +294,8 @@
     "lastUpdated": "Ultima actualizare: {date}",
     "draft": "Ciornă, în curs de verificare juridică. Textul nu este încă final.",
     "backToTop": "Înapoi sus",
-    "home": "Pagina principală Boolaa"
+    "home": "Pagina principală Boolaa",
+    "otherLanguages": "Disponibil și în"
   },
   "landing": {
     "metaTitle": "Boolaa · Oamenii tăi, într-o bulă cozy",
@@ -351,6 +352,10 @@
     "finalTitle": "Gata să-ți faci bula?",
     "finalBody": "Durează un minut. Oamenii tăi te așteaptă.",
     "footerTagline": "Bule private pentru oamenii cu care locuiești și te distrezi.",
-    "copyright": "© {year} Boolaa"
+    "copyright": "© {year} Boolaa",
+    "footerMadeBy": "Gratuit, fără reclame, open source (Apache 2.0), făcut cu drag de Bogdan Raduta.",
+    "sourceCode": "Cod sursă",
+    "faq7Q": "Cine face Boolaa?",
+    "faq7A": "Boolaa e făcut cu drag de Bogdan Raduta, o persoană fizică, nu o companie. E gratuit, fără reclame și open source, sub licența Apache 2.0: codul e pe <github>GitHub</github>."
   }
 }

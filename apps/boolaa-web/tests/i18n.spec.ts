@@ -30,7 +30,8 @@ test("Accept-Language picks the locale when there is no cookie; the cookie wins 
   await expect(page.locator('form button[type="submit"]')).toHaveText("Se connecter");
 
   // Compact picker on the auth screen: switch to Italian, persisted in the cookie.
-  await page.getByTestId("locale-select").selectOption("it");
+  await page.getByTestId("language-button").click();
+  await page.getByRole("menuitemradio", { name: "Italiano" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "it");
   await expect(page.locator('form button[type="submit"]')).toHaveText("Accedi");
   expect((await ctx.cookies()).find((c) => c.name === "boolaa_locale")?.value).toBe("it");
