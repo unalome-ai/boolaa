@@ -73,7 +73,8 @@ class DesignTokensTest {
         }
         // Header glow strengths and radii.
         assertTrue(ios.contains("MAINLIGHT = ${Glow.MAIN_LIGHT}") && ios.contains("SIDELIGHT = ${Glow.SIDE_LIGHT}"))
-        assertTrue(web.contains("--GLOW-A: ${(Glow.MAIN_LIGHT * 100).toInt()}%; --GLOW-B: ${(Glow.SIDE_LIGHT * 100).toInt()}%"))
+        // The web replaced the header glow with the §8.1 feature bands (06aa313); the band tokens get
+        // their own cross-platform check when Android adopts §8.
         assertTrue(web.contains("--RADIUS-SMALL: ${Radius.small.value.toInt()}PX") && web.contains("--RADIUS-CARD: ${Radius.card.value.toInt()}PX"))
     }
 }
