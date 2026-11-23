@@ -20,7 +20,7 @@ struct RootView: View {
             case .ageConfirmation:
                 AgeConfirmationView().transition(screenTransition)
             case .suspended:
-                SuspendedView().transition(.opacity)
+                SuspendedView().calmSurface().transition(.opacity)
             case .onboarding:
                 OnboardingView().transition(screenTransition)
             case .main:

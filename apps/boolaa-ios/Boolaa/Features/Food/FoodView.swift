@@ -53,8 +53,15 @@ struct FoodView: View {
                 }
                 LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
                 if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
-                if model.loaded && mine.isEmpty {
-                    EmptyStateView(icon: "fork.knife", title: "Nothing shared yet", message: "Leftovers? Snap a photo and share them.", hue: hue)
+                if model.loaded && model.posts.isEmpty {
+                    // Nothing at all: one empty state (§8.4), no "From the bubble" section.
+                    EmptyStateView(title: LocalizedStringResource("Empty table", comment: "Food Circle empty state title"),
+                                   message: LocalizedStringResource("Leftovers? Cooked too much? Snap it and share it.", comment: "Food Circle empty state hint (nothing at all)"),
+                                   hue: MascotPlace.food.hue(bubble: hue))
+                } else if model.loaded && mine.isEmpty {
+                    EmptyStateView(title: LocalizedStringResource("Got leftovers?", comment: "Food, empty “My posts” title"),
+                                   message: LocalizedStringResource("Share what you've got before it goes off.", comment: "Food, empty “My posts” hint"),
+                                   hue: MascotPlace.food.hue(bubble: hue))
                 }
                 ForEach(Array(mine.enumerated()), id: \.element.id) { index, post in
                     FoodCard(post: post,
@@ -67,9 +74,13 @@ struct FoodView: View {
                         .popIn(index)
                         .pushHighlightTarget(post.id)
                 }
-                SectionHeader(title: "From the bubble", count: others.count, hue: hue)
-                if model.loaded && others.isEmpty {
-                    EmptyStateView(icon: "takeoutbag.and.cup.and.straw.fill", title: "No food posts", message: "Posts from other members show up here.", hue: hue)
+                if !(model.loaded && model.posts.isEmpty) {
+                    SectionHeader(title: "From the bubble", count: others.count, hue: hue)
+                }
+                if model.loaded && others.isEmpty && !model.posts.isEmpty {
+                    EmptyStateView(title: LocalizedStringResource("Nothing shared yet", comment: "Food, empty “From the bubble” title"),
+                                   message: LocalizedStringResource("When someone shares food, it lands here.", comment: "Food, empty “From the bubble” hint"),
+                                   hue: MascotPlace.food.hue(bubble: hue))
                 }
                 ForEach(Array(others.enumerated()), id: \.element.id) { index, post in
                     FoodCard(post: post,
@@ -95,7 +106,10 @@ struct FoodView: View {
         }
         .autoRetry(failed: model.failed) { await reload() }
         .sheet(item: $editing) { target in
-            FoodEditor(target: target) { Task { await reload() } }.boolaaSheet()
+            FoodEditor(target: target) {
+                if case .new = target, mine.isEmpty { CheerCenter.shared.show(CheerCenter.firstPost, hue: .tangerine) }
+                Task { await reload() }
+            }.boolaaSheet()
         }
         .errorAlert($model.error)
     }
@@ -176,7 +190,7 @@ struct FoodCard: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
         .cardChrome()
         .confirmationDialog("Delete this post?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { onDelete?() }
+            Button("Delete", role: .destructive) { Interaction.destructiveConfirm.play(); onDelete?() }
         }
     }
 }

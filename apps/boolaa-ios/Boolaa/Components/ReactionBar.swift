@@ -9,6 +9,8 @@ struct ReactionBar: View {
     /// The "Add a reaction" button. Hidden when `addOnlyWithChips` and there is nothing yet (chat).
     var showsAdd = true
     var addOnlyWithChips = false
+    /// Chat (§8.2): your reactions are the grape gradient with white, whatever the bubble's hue.
+    var filledMine = false
     var onToggle: (ReactionKind) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -17,20 +19,31 @@ struct ReactionBar: View {
         if !summaries.isEmpty || add {
             FlowLayout(spacing: 6) {
                 ForEach(summaries) { s in
-                    ReactionChip(summary: s, hue: hue) { onToggle(s.kind) }
+                    ReactionChip(summary: s, hue: hue, filledMine: filledMine) { onToggle(s.kind) }
+                        // A chip that appears pops 0.4 → 1 (`bouncy`); one whose count reaches 0 just goes.
+                        .transition(.asymmetric(insertion: reduceMotion ? .opacity : .scale(scale: 0.4).combined(with: .opacity),
+                                                removal: .identity))
                 }
                 if add { AddReactionButton(hue: hue, onPick: onToggle) }
             }
-            .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: summaries)
-            .sensoryFeedback(.selection, trigger: summaries)
+            .animation(reduceMotion ? Motion.fade : Motion.bouncy, value: summaries)
+            // Adding yours: a light impact; taking it back: a selection tick (§8.3).
+            .sensoryFeedback(trigger: summaries) { old, new in
+                Self.mineCount(new) > Self.mineCount(old) ? Interaction.reactionAdded.haptic.feedback
+                    : Self.mineCount(new) < Self.mineCount(old) ? Interaction.reactionRemoved.haptic.feedback : nil
+            }
         }
     }
+
+    static func mineCount(_ summaries: [ReactionSummary]) -> Int { summaries.filter(\.mine).count }
 }
 
 struct ReactionChip: View {
     var summary: ReactionSummary
     var hue: Hue
+    var filledMine = false
     var action: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button(action: action) {
@@ -39,12 +52,18 @@ struct ReactionChip: View {
                 Text(summary.count, format: .number)
                     .font(.rounded(.footnote, weight: .bold)).monospacedDigit()
                     .contentTransition(.numericText(value: Double(summary.count)))
+                    // A changed count pops softly 0.9 → 1 (`bouncy`); in place under Reduce Motion.
+                    .phaseAnimator(reduceMotion ? [1.0] : [1.0, 0.9, 1.0], trigger: summary.count) { count, scale in
+                        count.scaleEffect(scale)
+                    } animation: { scale in scale == 0.9 ? .linear(duration: 0.01) : Motion.bouncy }
             }
-            .foregroundStyle(summary.mine ? hue.text : Theme.inkSecondary)
+            .foregroundStyle(summary.mine ? (filledMine ? Hue.grape.onFill : hue.text) : (filledMine ? Theme.ink : Theme.inkSecondary))
             .padding(.horizontal, 10)
             .frame(minHeight: 32)
             .background {
-                if summary.mine {
+                if summary.mine && filledMine {
+                    Capsule().fill(Hue.grape.gradient)
+                } else if summary.mine {
                     Capsule().fill(hue.wash).overlay(Capsule().strokeBorder(hue.text.opacity(0.6), lineWidth: 1.5))
                 } else {
                     Capsule().fill(Theme.chipInactive)

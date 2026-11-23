@@ -47,13 +47,21 @@ extension CacheFirstModel {
 struct LoadFailedView: View {
     var retry: @MainActor () async -> Void
     @State private var busy = false
+    @Environment(Connectivity.self) private var connectivity
+    @Environment(\.calm) private var calm
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "wifi.exclamationmark")
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(Theme.brandText)
-                .accessibilityHidden(true)
+            if calm {
+                // Safety surfaces keep the plain system symbol (§6.9); the mascot never draws there.
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(Theme.brandText)
+                    .accessibilityHidden(true)
+            } else {
+                // Sleepy while there is no connection, worried when the server answered with an error (§8.4).
+                Mascot(expression: MascotExpression.for(.loadError(connectivity.status)), hue: MascotPlace.loadError.hue(bubble: .grape), size: 72)
+            }
             Text("Couldn't load this. Check your connection and try again.",
                  comment: "Inline error when a screen could not load")
                 .font(.subheadline).multilineTextAlignment(.center).foregroundStyle(Theme.inkSecondary)

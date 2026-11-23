@@ -21,8 +21,8 @@ final class AccessibilityUITests: XCTestCase {
     @MainActor
     func testKeyControlsHaveLabelsAndStates() throws {
         let app = launch()
-        // Dock: one labelled button per tab, the current one selected.
-        let tabs = ["home": "Home", "events": "Events", "food": "Food Circle", "marketplace": "Marketplace", "settings": "Settings"]
+        // Dock: one labelled button per tab (the short dock names, design-system §8.3), the current one selected.
+        let tabs = ["home": "Home", "events": "Events", "food": "Food", "marketplace": "Market", "settings": "Settings"]
         for (id, label) in tabs {
             XCTAssertEqual(app.buttons["tab-\(id)"].label, label)
         }
@@ -35,6 +35,10 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertTrue(app.buttons["bubble-chip-Flatmates"].isSelected)
         XCTAssertFalse(app.buttons["bubble-chip-Climbing Crew"].isSelected)
         XCTAssertEqual(app.staticTexts["screen-title"].label, "Home")
+        // The screen title keeps the full name; the dock says "Food".
+        app.buttons["tab-food"].tap()
+        XCTAssertTrue(app.buttons["tab-food"].isSelected)
+        XCTAssertEqual(app.staticTexts["screen-title"].label, "Food Circle")
 
         // Marketplace filter chips expose the selected state.
         app.buttons["tab-marketplace"].tap()

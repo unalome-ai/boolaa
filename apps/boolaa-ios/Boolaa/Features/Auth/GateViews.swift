@@ -173,7 +173,7 @@ struct AgeConfirmationView: View {
         }
         .sensoryFeedback(.error, trigger: shakes)
         .legalPageSheet($legalPage)
-        .sheet(isPresented: $showDelete) { DeleteAccountSheet(onDeleted: { showDelete = false }).boolaaSheet() }
+        .sheet(isPresented: $showDelete) { DeleteAccountSheet(onDeleted: { showDelete = false }).calmSurface().boolaaSheet() }
     }
 
     private func submit() async {

@@ -22,9 +22,14 @@ import Foundation
 ///     -UITestSimulateOffline YES           start with the network "off": Supabase requests fail fast and the
 ///                                          offline banner shows; the hidden `debug-network-toggle` button
 ///                                          in the banner area turns it on and off
+///     -UITestCheer joined                  Home plays the "You're in" cheer once (screenshots)
+///     -UITestOpen mascots                  a sheet with the four mascot expressions (screenshots)
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {
+    /// `-UITestCheer` fires once per launch.
+    @MainActor static var cheerConsumed = false
+
     @MainActor
     static func applyAutoLogin(session: SessionStore) async {
         #if DEBUG

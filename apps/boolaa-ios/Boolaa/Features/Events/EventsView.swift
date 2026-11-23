@@ -83,8 +83,15 @@ struct EventsView: View {
                 }
                 LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
                 if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
-                if model.loaded && mine.isEmpty {
-                    EmptyStateView(icon: "calendar.badge.plus", title: "No events from you", message: "Plan something for the bubble.", hue: hue)
+                if model.loaded && model.events.isEmpty {
+                    // Nothing at all in this bubble: one empty state (§8.4), no "Bubble events" section.
+                    EmptyStateView(title: LocalizedStringResource("Quiet week…", comment: "Events empty state title"),
+                                   message: LocalizedStringResource("Plan the next thing and your bubble can join in.", comment: "Events empty state hint (no events at all)"),
+                                   hue: MascotPlace.events.hue(bubble: hue))
+                } else if model.loaded && mine.isEmpty {
+                    EmptyStateView(title: LocalizedStringResource("Got a plan?", comment: "Events, empty “My events” title"),
+                                   message: LocalizedStringResource("Dinner, a hike, a film night: start something.", comment: "Events, empty “My events” hint"),
+                                   hue: MascotPlace.events.hue(bubble: hue))
                 }
                 ForEach(Array(mine.enumerated()), id: \.element.id) { index, event in
                     EventCard(event: event, myID: session.userID,
@@ -99,9 +106,13 @@ struct EventsView: View {
                         .pushHighlightTarget(event.id)
                 }
 
-                SectionHeader(title: "Bubble events", count: others.count, hue: hue)
-                if model.loaded && others.isEmpty {
-                    EmptyStateView(icon: "calendar", title: "Nothing planned", message: "Events from other members show up here.", hue: hue)
+                if !(model.loaded && model.events.isEmpty) {
+                    SectionHeader(title: "Bubble events", count: others.count, hue: hue)
+                }
+                if model.loaded && others.isEmpty && !model.events.isEmpty {
+                    EmptyStateView(title: LocalizedStringResource("Quiet week…", comment: "Events empty state title"),
+                                   message: LocalizedStringResource("Nobody else has planned anything yet.", comment: "Events, empty “Bubble events” hint"),
+                                   hue: MascotPlace.events.hue(bubble: hue))
                 }
                 ForEach(Array(others.enumerated()), id: \.element.id) { index, event in
                     EventCard(event: event, myID: session.userID,
@@ -136,7 +147,11 @@ struct EventsView: View {
             }
         }
         .sheet(item: $editing) { target in
-            EventEditor(target: target) { Task { await reload() } }.boolaaSheet()
+            EventEditor(target: target) {
+                // "First" = none upcoming of yours in this bubble before the save (§8.4).
+                if case .new = target, mine.isEmpty { CheerCenter.shared.show(CheerCenter.firstEvent, hue: .coral) }
+                Task { await reload() }
+            }.boolaaSheet()
         }
         .sheet(item: $exporting) { event in
             AddToCalendarSheet(fields: CalendarEventFields(event)) { exporting = nil }.ignoresSafeArea()
@@ -392,12 +407,15 @@ struct EventCard: View {
         .animation(Motion.resolve(Motion.bouncy, reduceMotion: reduceMotion), value: going)
         .animation(Motion.snappy, value: event.rsvpList.count)
         .onChange(of: going) { _, now in
-            if now { bursts += 1 }
+            // The server confirmed your RSVP: confetti and the cheer toast (which plays the success haptic).
+            if now && taps > 0 {
+                bursts += 1
+                CheerCenter.shared.show(CheerCenter.going, hue: .mint)
+            }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
-        .sensoryFeedback(.success, trigger: bursts)
+        .haptic(.rsvpTap, trigger: taps)
         .confirmationDialog(Text("Delete “\(event.title)”?", comment: "Confirmation title; the argument is the event title"), isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { onDelete?() }
+            Button("Delete", role: .destructive) { Interaction.destructiveConfirm.play(); onDelete?() }
         }
     }
 }

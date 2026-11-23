@@ -69,6 +69,7 @@ struct DeleteAccountSheet: View {
                         if let error { FormMessage(text: error) }
                         ResendCodeButton(sentAt: sentAt, busy: busy) { Task { await sendCode() } }
                         Button(role: .destructive) {
+                            Interaction.destructiveConfirm.play()
                             Task { await verifyAndDelete(code) }
                         } label: {
                             if busy { ProgressView() } else { Text("Delete my account") }

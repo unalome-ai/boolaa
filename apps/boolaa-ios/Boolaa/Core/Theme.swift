@@ -165,6 +165,42 @@ enum Theme {
 
     /// Bottom inset that keeps scroll content clear of the floating dock.
     static let tabBarClearance: CGFloat = 112
+
+    /// Brand redesign tokens (design-system.md §8). The web keeps the same numbers in `src/lib/brand.ts` and
+    /// `globals.css`; Android in its theme. Contrast of the new pairs: §8.6, checked in `BrandContrastTests`.
+    enum Brand {
+        /// §8.1 Feature band: the hue `fill` at this strength over the background, opaque to 45 % of the band
+        /// height, then fading to transparent at its bottom edge.
+        static let bandLight = 0.28, bandDark = 0.22
+        static let bandFadeStart = 0.45
+        /// Band circles: white 20 % in light mode, the background at 40 % in dark mode.
+        static let bandCircleLight = 0.20, bandCircleDark = 0.40
+        /// Band tint cross-fade on a tab or bubble change (200 ms under Reduce Motion).
+        static let bandFade = 0.4
+        /// §8.2 Chat: orbs behind the thread, and the thread panel (card at 50 % over the background).
+        static let chatOrbLight = 0.06, chatOrbDark = 0.10
+        static let chatPanel = 0.5
+        /// §8.3 Dock glass: card at this opacity over the material.
+        static let glassLight = 0.72, glassDark = 0.80
+        static let glassEdgeLight = 0.75, glassEdgeDark = 0.14
+        /// §8.4 Mascot face colours.
+        static let mascotCheek = Color(hex: 0xFF4F8B)
+        static let mascotTongue = Color(hex: 0xFF6B8A)
+        /// §8.5 Sticker die-cut edge (both modes).
+        static let stickerEdge = Color.white.opacity(0.95)
+        /// §8.4 Cheer toast: how long it stays.
+        static let cheerSeconds = 2.8
+
+        /// §8.5 Brand gradient for the Home title: the hue *text* shades grape → pink (55 %) → tangerine, so the
+        /// lightest stop still passes 3:1 on the Home band (large text only).
+        static var titleGradient: Gradient {
+            Gradient(stops: [.init(color: Hue.grape.text, location: 0), .init(color: Hue.pink.text, location: 0.55),
+                             .init(color: Hue.tangerine.text, location: 1)])
+        }
+        /// CSS `100deg` (leading → trailing, slightly downwards) as unit points.
+        static let titleGradientStart = UnitPoint(x: 0, y: 0.41)
+        static let titleGradientEnd = UnitPoint(x: 1, y: 0.59)
+    }
 }
 
 extension Color {

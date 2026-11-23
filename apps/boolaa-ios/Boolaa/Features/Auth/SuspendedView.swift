@@ -66,7 +66,7 @@ struct SuspendedView: View {
                 AuthTextLink(title: "Delete account", icon: "trash", id: "suspended-delete", hue: .coral) { showDelete = true }
             }
         }
-        .sheet(isPresented: $showDelete) { DeleteAccountSheet(onDeleted: { showDelete = false }).boolaaSheet() }
+        .sheet(isPresented: $showDelete) { DeleteAccountSheet(onDeleted: { showDelete = false }).calmSurface().boolaaSheet() }
         .onChange(of: scenePhase) { _, phase in
             // A suspension ends by itself: check again when the app comes back to the front.
             if phase == .active, suspension.kind != .signInBlocked { Task { await session.continueAfterVerification() } }

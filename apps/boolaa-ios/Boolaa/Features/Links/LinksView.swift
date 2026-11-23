@@ -57,12 +57,18 @@ struct LinksView: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+        PushedHeader(title: "Links", backID: "links-back", onBack: { dismiss() }) {
+            BubbleNameTag(bubble: session.currentBubble)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
+        // §8.1: Links keeps sky, like a feature list.
+        .background { FeatureBand(hue: BandScreen.links.hue(bubble: Hue.forID(session.currentBubble?.id))).ignoresSafeArea(edges: .top) }
+        ConnectivityBanner()
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                PushedHeader(title: "Links", backID: "links-back", onBack: { dismiss() }) {
-                    BubbleNameTag(bubble: session.currentBubble)
-                }
-                ConnectivityBanner().padding(.horizontal, -16)
 
                 VStack(spacing: 10) {
                     TextField(text: $url, prompt: Text(verbatim: "https://…")) { Text("Link address") }
@@ -103,7 +109,9 @@ struct LinksView: View {
                 LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
                 if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
                 if model.loaded && visible.isEmpty {
-                    EmptyStateView(icon: "link", title: "No links yet", message: "Share recipes, playlists, anything useful.", hue: hue)
+                    EmptyStateView(title: LocalizedStringResource("Nothing saved yet", comment: "Links empty state title"),
+                                   message: LocalizedStringResource("Recipes, playlists, that one article: keep them here.", comment: "Links empty state hint"),
+                                   hue: MascotPlace.links.hue(bubble: hue))
                 }
                 ForEach(Array(visible.enumerated()), id: \.element.id) { index, link in
                     LinkRow(link: link, isMine: link.userId == session.userID,
@@ -125,9 +133,10 @@ struct LinksView: View {
         .scrollDismissesKeyboard(.interactively)
         // A link opened from search (docs/boolaa-spec.md, "Search"): scrolled to and ringed briefly.
         .scrollsToPushHighlight(model.links.map(\.id))
-        .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
-        .toolbar(.hidden, for: .navigationBar)
         .refreshFeedback { await reload() }
+        }
+        .background { ShellBackground() }
+        .toolbar(.hidden, for: .navigationBar)
         .onChange(of: safety.contentVersion) { Task { await reload() } }
         // Keyed by bubble: resubscribes when it changes (this screen sits outside the rebuilt tab content).
         // Also after reconnecting or coming back to the foreground (Connectivity.refreshGeneration).
@@ -238,7 +247,7 @@ struct LinkRow: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: onOpen)
         .confirmationDialog("Delete this link?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive, action: onDelete)
+            Button("Delete", role: .destructive) { Interaction.destructiveConfirm.play(); onDelete() }
         }
     }
 }

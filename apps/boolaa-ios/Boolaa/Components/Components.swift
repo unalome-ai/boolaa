@@ -75,7 +75,9 @@ struct ChipView: View {
             if isActive {
                 Capsule().fill(hue.gradient).shadow(color: hue.fill.opacity(0.3), radius: 6, y: 3)
             } else if outlined {
-                Capsule().strokeBorder(hue.text.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                // On a card fill: it may sit on a feature band (§8.1), where only opaque controls go.
+                Capsule().fill(Theme.card)
+                    .overlay(Capsule().strokeBorder(hue.text.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
             } else {
                 Capsule().fill(Theme.chipInactive)
             }
@@ -117,7 +119,7 @@ struct SectionHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             // The heading carries the count as its value ("My events, heading, 3"); the badge itself is hidden.
-            Text(title).font(.rounded(.title3, weight: .heavy)).lineLimit(3)
+            Text(title).font(.rounded(.title3, weight: .black)).lineLimit(3)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityValue(count.map { Text($0, format: .number) } ?? Text(verbatim: ""))
             if let count {
@@ -159,17 +161,16 @@ struct SectionHeaderWithAction<Action: View>: View {
     }
 }
 
-/// Friendly empty state: a floating bubble cluster, a title and one warm line.
+/// Friendly empty state (§8.4): the curious mascot in the screen's hue, a short title and one warm line.
 struct EmptyStateView: View {
-    var icon: String
     var title: LocalizedStringResource
     var message: LocalizedStringResource
     var hue: Hue = .grape
     var body: some View {
         VStack(spacing: 8) {
-            BubbleCluster(icon: icon, hue: hue, size: 84)
+            Mascot(expression: MascotExpression.for(.empty), hue: hue, size: 96)
                 .padding(.bottom, 8)
-            Text(title).font(.rounded(.headline)).multilineTextAlignment(.center)
+            Text(title).font(.system(.headline, design: .rounded, weight: .heavy)).multilineTextAlignment(.center)
             Text(message).font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -207,7 +208,7 @@ struct AddButton: View {
             .shadow(color: hue.fill.opacity(0.35), radius: 8, y: 4)
         }
         .buttonStyle(.squish)
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+        .haptic(.add, trigger: taps)
         .accessibilityIdentifier("add-\(id)")
     }
 }
@@ -232,7 +233,7 @@ struct PushedHeader<Subtitle: View>: View {
             .accessibilityLabel("Back")
             .accessibilityIdentifier(backID)
             VStack(alignment: .leading, spacing: 0) {
-                Text(title).font(.rounded(.title, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.7)
+                DisplayTitle(title: title, pushed: true)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("screen-title")
                 subtitle
@@ -289,6 +290,10 @@ struct BubbleNameTag: View {
             BubbleLogo(id: bubble?.id, name: bubble?.name ?? "", logo: bubble?.logo, size: 14)
             Text(verbatim: bubble?.name ?? "").font(.rounded(.subheadline, weight: .semibold)).foregroundStyle(hue.text).lineLimit(1)
         }
+        // Its own card surface: it sits on the feature band of Chat and Links (§8.1).
+        .padding(.leading, 6).padding(.trailing, 10).padding(.vertical, 3)
+        .background(Capsule().fill(Theme.card))
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -316,7 +321,7 @@ private struct RefreshFeedback: ViewModifier {
                 await action()
                 finished += 1
             }
-            .sensoryFeedback(.success, trigger: finished)
+            .haptic(.refreshFinished, trigger: finished)
     }
 }
 

@@ -111,7 +111,9 @@ struct MarketplaceView: View {
                     }
                 }
                 if model.loaded && visible.isEmpty {
-                    EmptyStateView(icon: "tag.fill", title: "Nothing listed", message: "Give away or trade things with your bubble.", hue: hue)
+                    EmptyStateView(title: LocalizedStringResource("Empty stall", comment: "Marketplace empty state title"),
+                                   message: LocalizedStringResource("Got something you don't need? Give it away or trade it.", comment: "Marketplace empty state hint"),
+                                   hue: MascotPlace.marketplace.hue(bubble: hue))
                 }
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(Array(visible.enumerated()), id: \.element.id) { index, item in
@@ -145,9 +147,15 @@ struct MarketplaceView: View {
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
         .autoRetry(failed: model.failed) { await reload() }
-        .sensoryFeedback(.selection, trigger: filter)
+        .haptic(.toggle, trigger: filter)
+        .haptic(.toggle, trigger: hideTaken)
         .sheet(item: $editing) { target in
-            MarketEditor(target: target) { Task { await reload() } }.boolaaSheet()
+            MarketEditor(target: target) {
+                if case .new = target, !model.items.contains(where: { $0.ownerId == session.userID }) {
+                    CheerCenter.shared.show(CheerCenter.firstItem, hue: .mint)
+                }
+                Task { await reload() }
+            }.boolaaSheet()
         }
         .sheet(item: $detail) { item in
             // The live row, so a status change made meanwhile shows in the open sheet.
@@ -397,7 +405,7 @@ struct MarketDetail: View {
         }
         .presentationDetents([.large])
         .confirmationDialog(Text("Delete “\(item.title)”?", comment: "Confirmation title; the argument is the item title"), isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive, action: onDelete)
+            Button("Delete", role: .destructive) { Interaction.destructiveConfirm.play(); onDelete() }
         }
     }
 }

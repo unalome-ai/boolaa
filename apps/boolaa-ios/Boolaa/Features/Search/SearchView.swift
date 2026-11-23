@@ -120,7 +120,7 @@ struct SearchView: View {
             .accessibilityIdentifier("search-error")
         case .done(let query, let hits):
             if hits.isEmpty {
-                EmptyStateView(icon: "magnifyingglass", title: "No results for “\(query)”",
+                EmptyStateView(title: "No results for “\(query)”",
                                message: "Try another word, or fewer letters.")
                     .padding(.top, 20)
                     .accessibilityIdentifier("search-empty")

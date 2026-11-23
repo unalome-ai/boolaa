@@ -279,6 +279,7 @@ struct ChatView: View {
     @State private var draft = ""
     @State private var sending = false
     @State private var sentCount = 0
+    @State private var pickerTaps = 0
     /// Messages present after the first load; only ones that arrive later pop in.
     @State private var initialIDs: Set<UUID>?
     @State private var visible = false
@@ -314,8 +315,9 @@ struct ChatView: View {
                             Delayed { ProgressView().padding(.top, 40).accessibilityLabel(Text("Loading")) }
                         }
                         if model.loaded && model.messages.isEmpty && pending.isEmpty {
-                            EmptyStateView(icon: "bubble.left.and.bubble.right.fill", title: "No messages yet",
-                                           message: "Be the first to say something.")
+                            EmptyStateView(title: LocalizedStringResource("Say hi!", comment: "Chat empty state title"),
+                                           message: LocalizedStringResource("Nobody's talked yet. Break the ice.", comment: "Chat empty state hint"),
+                                           hue: MascotPlace.chat.hue(bubble: bubbleHue))
                                 .padding(.top, 40)
                         }
                         ForEach(Array(model.messages.enumerated()), id: \.element.id) { index, message in
@@ -326,6 +328,7 @@ struct ChatView: View {
                                 if message.id == model.dividerID { NewMessagesDivider() }
                                 MessageRow(message: message,
                                            isMine: isMine,
+                                           bubbleHue: bubbleHue,
                                            showAuthor: previous?.senderId != message.senderId || message.id == model.dividerID,
                                            endsGroup: next?.senderId != message.senderId,
                                            photoURL: model.images.url(for: message.imagePath),
@@ -358,7 +361,7 @@ struct ChatView: View {
                                 if !message.isDeleted {
                                     let chips = model.reactions.summary(for: message.id, me: session.userID)
                                     if !chips.isEmpty {
-                                        ReactionBar(summaries: chips, hue: .grape, addOnlyWithChips: true) { react(message, $0) }
+                                        ReactionBar(summaries: chips, hue: .grape, addOnlyWithChips: true, filledMine: true) { react(message, $0) }
                                             .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
                                             .padding(isMine ? .trailing : .leading, isMine ? 4 : 38)
                                     }
@@ -369,6 +372,7 @@ struct ChatView: View {
                         // ForEach blocks of one LazyVStack left the stale "Sending…" row on screen.
                         ForEach(pending, id: \.pendingRowID) { message in
                             PendingMessageRow(message: message,
+                                              hue: bubbleHue,
                                               onRetry: { Task { await outbox.retry(message.id) } },
                                               onDiscard: { discard(message) })
                                 .transition(.opacity)
@@ -380,6 +384,19 @@ struct ChatView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .defaultScrollAnchor(.bottom)
+                // §8.2 thread panel: card at 50 % over the background, radius 32, level-1 shadow, the bubble's
+                // orbs behind the thread.
+                .background {
+                    ZStack {
+                        Theme.card.opacity(Theme.Brand.chatPanel)
+                        ChatOrbs(hue: bubbleHue)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
+                    .cardChrome(radius: Theme.Radius.hero)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
                 // A new scroll view per load: after a bubble switch (e.g. a tapped push for another bubble
                 // while the chat is open) it starts at the newest message like a fresh open, instead of
                 // keeping the old offset, landing at the top and paging in older messages.
@@ -420,7 +437,7 @@ struct ChatView: View {
             }
             composer
         }
-        .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
+        .background { ShellBackground() }
         .toolbar(.hidden, for: .navigationBar)
         // Reload (and resubscribe) after a block/unblock: RLS hides or shows the other person's messages.
         // Back online or in the foreground (Connectivity.refreshGeneration): the same load only fetches what
@@ -480,6 +497,7 @@ struct ChatView: View {
         .alert("Delete this message?", isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
                presenting: pendingDelete) { message in
             Button("Delete", role: .destructive) {
+                Interaction.destructiveConfirm.play()
                 Task { await delete(message) }
             }
             .accessibilityIdentifier("chat-delete-confirm")
@@ -493,16 +511,23 @@ struct ChatView: View {
             guard let item else { return }
             Task { await preparePhoto(item) }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: sentCount)
+        .haptic(.send, trigger: sentCount)
+        .haptic(.add, trigger: pickerTaps)
         .errorAlert($model.error)
     }
+
+    /// The bubble's colour: your messages, the send button, the orbs and (Chat only) the header band.
+    private var bubbleHue: Hue { Hue.forID(session.currentBubble?.id) }
 
     private var header: some View {
         PushedHeader(title: "Chat", backID: "chat-back", onBack: { dismiss() }) {
             BubbleNameTag(bubble: session.currentBubble)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
+        // Chat is the bubble's own room: its band takes the bubble's colour (§8.1).
+        .background { FeatureBand(hue: BandScreen.chat.hue(bubble: bubbleHue)).ignoresSafeArea(edges: .top) }
     }
 
     @ViewBuilder
@@ -529,7 +554,7 @@ struct ChatView: View {
         VStack(alignment: .leading, spacing: 8) {
             if photo != nil || preparingPhoto { photoPreview }
             HStack(alignment: .bottom, spacing: 8) {
-                Button { showPicker = true } label: {
+                Button { pickerTaps += 1; showPicker = true } label: {
                     Image(systemName: "photo.on.rectangle.angled")
                         .font(.system(size: 19, weight: .bold))
                         .foregroundStyle(Hue.grape.text)
@@ -556,11 +581,11 @@ struct ChatView: View {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 19, weight: .heavy))
                         .symbolEffect(.bounce, value: sentCount)
-                        .foregroundStyle(canSend ? Color.white : Theme.inkSecondary)
+                        .foregroundStyle(canSend ? bubbleHue.onFill : Theme.inkSecondary)
                         .frame(width: 48, height: 48)
                         .background {
                             if canSend {
-                                Circle().fill(Hue.grape.gradient).shadow(color: Hue.grape.fill.opacity(0.4), radius: 8, y: 4)
+                                Circle().fill(bubbleHue.gradient).shadow(color: bubbleHue.fill.opacity(0.4), radius: 8, y: 4)
                             } else {
                                 Circle().fill(Theme.field)
                             }
@@ -784,38 +809,105 @@ private struct RetryOnTap: ViewModifier {
     }
 }
 
-/// A message the server hasn't confirmed: dimmed own bubble with "Sending…", or "Not sent — tap to retry"
-/// (tap retries; long press offers Try again / Don't send).
+/// Shapes and fills of chat bubbles (design-system.md §8.2), shared by sent and pending messages.
+enum ChatBubbleStyle {
+    static func shape(isMine: Bool, tail: Bool) -> UnevenRoundedRectangle {
+        UnevenRoundedRectangle(topLeadingRadius: 21, bottomLeadingRadius: !isMine && tail ? 6 : 21,
+                               bottomTrailingRadius: isMine && tail ? 6 : 21, topTrailingRadius: 21, style: .continuous)
+    }
+
+    /// Message text with its links underlined: onFill at 70 % on your messages, the sender's text shade at 60 %
+    /// on others' (both ≥ 4.5:1, §8.6).
+    static func text(_ content: String, isMine: Bool, bubbleHue: Hue, senderHue: Hue) -> AttributedString {
+        var text = Linkify.attributed(content)
+        let link = isMine ? bubbleHue.onFill : senderHue.text
+        for run in text.runs where run.link != nil {
+            text[run.range].underlineStyle = nil
+            text[run.range].swiftUI.underlineStyle = Text.LineStyle(pattern: .solid, color: link.opacity(isMine ? 0.7 : 0.6))
+        }
+        return text
+    }
+}
+
+/// Your message's fill: the bubble's gradient with its glow, plus the gloss pill (not on photos). `glow` is off
+/// while it is sending.
+private struct MineBubbleBackground: View {
+    var hue: Hue
+    var shape: UnevenRoundedRectangle
+    var glow = true
+    var gloss = true
+
+    var body: some View {
+        shape.fill(hue.gradient)
+            .overlay(alignment: .topLeading) {
+                if gloss {
+                    // 26 × 6, white 45 %, −4°, at (14, 3): inside the 10 pt top padding, never touching text.
+                    Capsule().fill(.white.opacity(0.45)).frame(width: 26, height: 6)
+                        .rotationEffect(.degrees(-4)).offset(x: 14, y: 3)
+                        .accessibilityHidden(true)
+                }
+            }
+            .shadow(color: hue.fill.opacity(glow ? 0.4 : 0), radius: 8, y: 4)
+    }
+}
+
+/// Someone else's fill: their wash over the card, a 3 pt edge in their fill on the leading side (inside the
+/// shape) and the level-1 card shadow.
+private struct OtherBubbleBackground: View {
+    var hue: Hue
+    var shape: UnevenRoundedRectangle
+
+    var body: some View {
+        shape.fill(Theme.card)
+            .overlay(shape.fill(hue.wash))
+            .overlay(alignment: .leading) { Rectangle().fill(hue.fill).frame(width: 3) }
+            .clipShape(shape)
+            .shadow(color: Color(light: Color(hex: 0x2A1B5E, opacity: 0.08), dark: .black.opacity(0.28)), radius: 12, x: 0, y: 6)
+    }
+}
+
+/// A message the server hasn't confirmed (§8.2). "Sending…": full colours (no dimming, so the text keeps its
+/// contrast) without the glow, and a clock + "Sending…". "Not sent": full colours, a 2 pt dangerText outline
+/// offset 2, a warning triangle + "Not sent — tap to retry" (tap retries; long press offers Try again / Don't send).
 struct PendingMessageRow: View {
     var message: PendingMessage
+    var hue: Hue = .grape
     var onRetry: () -> Void
     var onDiscard: () -> Void
+    @State private var failures = 0
+    @ScaledMetric(relativeTo: .body) private var photoSide: CGFloat = 220
 
     private var failed: Bool { message.state == .failed }
-    private var bubbleShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(topLeadingRadius: 21, bottomLeadingRadius: 21, bottomTrailingRadius: 6,
-                               topTrailingRadius: 21, style: .continuous)
-    }
+    private var bubbleShape: UnevenRoundedRectangle { ChatBubbleStyle.shape(isMine: true, tail: true) }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             Spacer(minLength: 56)
             VStack(alignment: .trailing, spacing: 3) {
-                if let photo = message.photo, let image = UIImage(data: photo) {
-                    Image(uiImage: image).resizable().scaledToFill()
-                        .frame(width: 220, height: 220)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .accessibilityLabel(Text("Photo"))
-                        .opacity(failed ? 1 : 0.6)
+                VStack(alignment: .leading, spacing: 0) {
+                    if let photo = message.photo, let image = UIImage(data: photo) {
+                        Image(uiImage: image).resizable().scaledToFill()
+                            .frame(width: min(photoSide, 300), height: min(photoSide, 300))
+                            .clipped()
+                            .accessibilityLabel(Text("Photo"))
+                    }
+                    if !message.content.isEmpty {
+                        Text(ChatBubbleStyle.text(message.content, isMine: true, bubbleHue: hue, senderHue: hue))
+                            .tint(hue.onFill)
+                            .foregroundStyle(hue.onFill)
+                            .padding(.horizontal, 15).padding(.vertical, 10)
+                            .frame(maxWidth: message.photo == nil ? nil : min(photoSide, 300), alignment: .leading)
+                    }
                 }
-                if !message.content.isEmpty {
-                    Text(verbatim: message.content)
-                        .padding(.horizontal, 15).padding(.vertical, 10)
-                        .foregroundStyle(Color.white)
-                        .background(bubbleShape.fill(Hue.grape.gradient))
-                        .opacity(failed ? 1 : 0.6)
+                .clipShape(bubbleShape)
+                .background(MineBubbleBackground(hue: hue, shape: bubbleShape, glow: false, gloss: message.photo == nil))
+                .overlay {
+                    if failed {
+                        bubbleShape.stroke(Theme.dangerText, lineWidth: 2).padding(-3)
+                            .accessibilityHidden(true)
+                    }
                 }
-                // Full opacity so the status keeps its contrast (spec "Accessibility").
+                .padding(failed ? 3 : 0)
                 status
             }
         }
@@ -838,20 +930,24 @@ struct PendingMessageRow: View {
         }
         .accessibilityIdentifier(failed ? "chat-not-sent" : "chat-sending")
         .onChange(of: failed) { _, now in
-            if now { A11y.announce(String(localized: "Not sent — tap to retry", comment: "Under a chat message that failed to send")) }
+            if now {
+                failures += 1
+                A11y.announce(String(localized: "Not sent — tap to retry", comment: "Under a chat message that failed to send"))
+            }
         }
+        .haptic(.error, trigger: failures)
     }
 
     @ViewBuilder private var status: some View {
         if failed {
             Label { Text("Not sent — tap to retry", comment: "Under a chat message that failed to send") }
-                icon: { Image(systemName: "exclamationmark.circle.fill") }
-                .font(.caption2.weight(.semibold))
+                icon: { Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 13, weight: .bold)) }
+                .font(.caption.weight(.bold))
                 .foregroundStyle(Theme.dangerText)
                 .padding(.horizontal, 6)
         } else {
             Label { Text("Sending…", comment: "Under a chat message while it is being sent") }
-                icon: { Image(systemName: "clock") }
+                icon: { Image(systemName: "clock").font(.system(size: 12)) }
                 .font(.caption2).foregroundStyle(Theme.inkSecondary)
                 .padding(.horizontal, 6)
         }
@@ -861,6 +957,8 @@ struct PendingMessageRow: View {
 struct MessageRow: View {
     var message: ChatMessage
     var isMine: Bool
+    /// The current bubble's colour: your own messages wear it (§8.2).
+    var bubbleHue: Hue = .grape
     var showAuthor: Bool
     /// Last message of a run from the same sender: gets the "tail" corner and the timestamp.
     var endsGroup = true
@@ -894,30 +992,16 @@ struct MessageRow: View {
                         .padding(.horizontal, 6)
                 }
                 if message.isDeleted {
+                    // Unchanged on every hue: dashed 1.5 hairline, no fill, italic placeholder.
                     Label("This message was deleted", systemImage: "nosign")
                         .font(.subheadline.italic())
                         .foregroundStyle(Theme.inkSecondary)
                         .padding(.horizontal, 15)
                         .padding(.vertical, 10)
-                        .overlay(bubbleShape.strokeBorder(Theme.hairline, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+                        .overlay(bubbleShape.strokeBorder(Theme.hairline, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])))
                         .accessibilityIdentifier("chat-deleted")
-                } else {
-                    if message.imagePath != nil { photo }
-                    if !message.content.isEmpty {
-                        // Links are tappable and open in the browser (no previews in chat).
-                        Text(Linkify.attributed(message.content))
-                            .tint(isMine ? Color.white : Hue.grape.text)
-                            .padding(.horizontal, 15)
-                            .padding(.vertical, 10)
-                            .foregroundStyle(isMine ? Color.white : Color.primary)
-                            .background {
-                                if isMine {
-                                    bubbleShape.fill(Hue.grape.gradient)
-                                } else {
-                                    bubbleShape.fill(Theme.otherBubble).overlay(bubbleShape.strokeBorder(Theme.hairline, lineWidth: 1))
-                                }
-                            }
-                    }
+                } else if message.imagePath != nil || !message.content.isEmpty {
+                    bubble(senderHue: hue)
                 }
                 if endsGroup {
                     Text(message.createdAt.formatted(date: .omitted, time: .shortened))
@@ -942,20 +1026,41 @@ struct MessageRow: View {
         .accessibilityIdentifier("message-\(message.id.uuidString)")
     }
 
-    private var bubbleShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: 21, bottomLeadingRadius: !isMine && endsGroup ? 6 : 21,
-            bottomTrailingRadius: isMine && endsGroup ? 6 : 21, topTrailingRadius: 21, style: .continuous)
+    private var bubbleShape: UnevenRoundedRectangle { ChatBubbleStyle.shape(isMine: isMine, tail: endsGroup) }
+
+    /// The bubble: a photo fills it edge to edge, the caption sits below on the fill (§8.2).
+    private func bubble(senderHue: Hue) -> some View {
+        let hasPhoto = message.imagePath != nil
+        let side = min(photoSide, 300)
+        return VStack(alignment: .leading, spacing: 0) {
+            if hasPhoto { photo(side: side) }
+            if !message.content.isEmpty {
+                // Links are tappable and open in the browser (no previews in chat).
+                Text(ChatBubbleStyle.text(message.content, isMine: isMine, bubbleHue: bubbleHue, senderHue: senderHue))
+                    .tint(isMine ? bubbleHue.onFill : senderHue.text)
+                    .foregroundStyle(isMine ? bubbleHue.onFill : Theme.ink)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: hasPhoto ? side : nil, alignment: .leading)
+            }
+        }
+        // The content is clipped to the bubble (the photo's corners); the fill and its shadow are not.
+        .clipShape(bubbleShape)
+        .background {
+            if isMine {
+                MineBubbleBackground(hue: bubbleHue, shape: bubbleShape, gloss: !hasPhoto)
+            } else {
+                OtherBubbleBackground(hue: senderHue, shape: bubbleShape)
+            }
+        }
     }
 
-    private var photo: some View {
+    private func photo(side: CGFloat) -> some View {
         Button {
             if let photoURL { onPhotoTap(photoURL) }
         } label: {
-            RemoteImage(url: photoURL?.absoluteString, hue: isMine ? .grape : Hue.forID(message.senderId))
-                .frame(width: min(photoSide, 300), height: min(photoSide, 300))
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            RemoteImage(url: photoURL?.absoluteString, hue: isMine ? bubbleHue : Hue.forID(message.senderId))
+                .frame(width: side, height: side)
         }
         .buttonStyle(.squish)
         .accessibilityLabel(isMine ? Text("Photo") : Text(verbatim: A11y.photoFrom(message.sender?.displayName ?? "")))

@@ -249,6 +249,7 @@ struct SettingsView: View {
             presenting: memberToRemove
         ) { member in
             Button("Remove member", role: .destructive) {
+                Interaction.destructiveConfirm.play()
                 Task { await model.remove(api: session.api, member: member) }
             }
         } message: { _ in
@@ -276,6 +277,7 @@ struct SettingsView: View {
         }
         .confirmationDialog(Text("Leave “\(session.currentBubble?.name ?? "")”?", comment: "Confirmation title; the argument is the bubble name"), isPresented: $confirmLeave, titleVisibility: .visible) {
             Button("Leave bubble", role: .destructive) {
+                Interaction.destructiveConfirm.play()
                 Task {
                     do { try await session.leaveCurrentBubble() } catch { model.error = error.userMessage }
                 }

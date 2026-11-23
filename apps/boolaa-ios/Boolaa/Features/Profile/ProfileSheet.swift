@@ -105,7 +105,7 @@ struct ProfileSheet: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .navigationDestination(for: ProfileDestination.self) { destination in
                 switch destination {
-                case .blocked: BlockedUsersView()
+                case .blocked: BlockedUsersView().calmSurface()
                 case .security: SecurityView()
                 case .notifications: NotificationsView()
                 }
@@ -115,7 +115,7 @@ struct ProfileSheet: View {
                 ExportDataSheet().boolaaSheet()
             }
             .sheet(isPresented: $showDeleteAccount) {
-                DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() }).boolaaSheet()
+                DeleteAccountSheet(onDeleted: { showDeleteAccount = false; dismiss() }).calmSurface().boolaaSheet()
             }
             .onAppear {
                 name = session.profile?.name ?? ""

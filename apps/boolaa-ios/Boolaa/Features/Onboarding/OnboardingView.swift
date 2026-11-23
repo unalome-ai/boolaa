@@ -20,9 +20,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(session.pendingRequests.isEmpty ? LocalizedStringResource("Welcome") : LocalizedStringResource("Pending approval"))
-                            .font(.rounded(.largeTitle, weight: .heavy))
-                            .lineLimit(2).minimumScaleFactor(0.75)
+                        DisplayTitle(title: session.pendingRequests.isEmpty ? LocalizedStringResource("Welcome") : LocalizedStringResource("Pending approval"))
                             .accessibilityAddTraits(.isHeader)
                         Text(session.pendingRequests.isEmpty
                              ? LocalizedStringResource("Start a bubble or join one with an invite code.")

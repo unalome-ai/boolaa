@@ -18,7 +18,7 @@ struct SafetyMenuItems: View {
                         icon: { Image(systemName: "person.crop.circle.badge.checkmark") }
                 }
             } else {
-                Button(role: .destructive) { Task { await safety.block(target.authorID) } } label: {
+                Button(role: .destructive) { Interaction.destructiveConfirm.play(); Task { await safety.block(target.authorID) } } label: {
                     Label { Text("Block \(target.authorName)", comment: "Menu action; the argument is a person's name") }
                         icon: { Image(systemName: "hand.raised") }
                 }

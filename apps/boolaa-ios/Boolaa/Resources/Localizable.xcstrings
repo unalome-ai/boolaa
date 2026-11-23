@@ -2145,30 +2145,31 @@
         }
       }
     },
-    "Be the first to say something." : {
+    "Be the first: say hi, plan something or share a snack." : {
+      "comment" : "Home feed empty state hint",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Escribe el primer mensaje."
+            "value" : "Fii primul: salută, plănuiește ceva sau împarte o gustare."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Écris le premier message."
+            "value" : "Lance-toi : dis bonjour, organise quelque chose ou partage un snack."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sé el primero: saluda, planea algo o comparte algo de picar."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scrivi il primo messaggio."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scrie tu primul mesaj."
+            "value" : "Inizia tu: saluta, organizza qualcosa o condividi uno spuntino."
           }
         }
       }
@@ -3891,6 +3892,35 @@
         }
       }
     },
+    "Dinner, a hike, a film night: start something." : {
+      "comment" : "Events, empty “My events” hint",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O cină, o drumeție, o seară de film: pornește ceva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un dîner, une rando, une soirée film : lance quelque chose."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una cena, una excursión, una noche de cine: organiza algo."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una cena, un'escursione, una serata film: organizza qualcosa."
+          }
+        }
+      }
+    },
     "Don't send" : {
       "comment" : "Discards a chat message that wasn't sent",
       "localizations" : {
@@ -4172,6 +4202,64 @@
         }
       }
     },
+    "Empty stall" : {
+      "comment" : "Marketplace empty state title",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarabă goală"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stand vide"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puesto vacío"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bancarella vuota"
+          }
+        }
+      }
+    },
+    "Empty table" : {
+      "comment" : "Food Circle empty state title",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masa e goală"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table vide"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mesa vacía"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tavola vuota"
+          }
+        }
+      }
+    },
     "Ended" : {
       "comment" : "Shown instead of the RSVP button on an event that already ended",
       "localizations" : {
@@ -4426,34 +4514,6 @@
         }
       }
     },
-    "Events from other members show up here." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los eventos de otros miembros aparecen aquí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les événements des autres membres s'affichent ici."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gli eventi degli altri membri compaiono qui."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Evenimentele celorlalți membri apar aici."
-          }
-        }
-      }
-    },
     "Everyone in the bubble sees it. Square photos look best." : {
       "comment" : "Settings: hint under the bubble photo buttons",
       "localizations" : {
@@ -4536,6 +4596,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Găsește mesaje, evenimente, mâncare, obiecte și linkuri."
+          }
+        }
+      }
+    },
+    "First item listed!" : {
+      "comment" : "Cheer toast after your first marketplace item in this bubble",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primul anunț e publicat!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premier objet en ligne !"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Primer artículo publicado!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primo oggetto pubblicato!"
+          }
+        }
+      }
+    },
+    "First post shared!" : {
+      "comment" : "Cheer toast after your first food post in this bubble",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prima postare e gata!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premier post partagé !"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Primera publicación compartida!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primo post condiviso!"
           }
         }
       }
@@ -4793,34 +4911,6 @@
         }
       }
     },
-    "Give away or trade things with your bubble." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regala o intercambia cosas con tu burbuja."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Donne ou échange des objets avec ta bulle."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regala o scambia oggetti con la tua bolla."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dăruiește sau schimbă lucruri cu bula ta."
-          }
-        }
-      }
-    },
     "Going" : {
       "localizations" : {
         "es" : {
@@ -4845,6 +4935,93 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Particip"
+          }
+        }
+      }
+    },
+    "Got a plan?" : {
+      "comment" : "Events, empty “My events” title",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai un plan?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une idée ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Algún plan?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hai un piano?"
+          }
+        }
+      }
+    },
+    "Got leftovers?" : {
+      "comment" : "Food, empty “My posts” title",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai resturi?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Des restes ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Te ha sobrado algo?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hai avanzi?"
+          }
+        }
+      }
+    },
+    "Got something you don't need? Give it away or trade it." : {
+      "comment" : "Marketplace empty state hint",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai ceva de care nu mai ai nevoie? Dă-l sau schimbă-l."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un truc dont tu n'as plus besoin ? Donne-le ou échange-le."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Tienes algo que ya no necesitas? Regálalo o intercámbialo."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hai qualcosa che non ti serve? Regalalo o scambialo."
           }
         }
       }
@@ -5509,30 +5686,31 @@
         }
       }
     },
-    "Leftovers? Snap a photo and share them." : {
+    "Leftovers? Cooked too much? Snap it and share it." : {
+      "comment" : "Food Circle empty state hint (nothing at all)",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Te ha sobrado comida? Hazle una foto y compártela."
+            "value" : "Ți-au rămas resturi? Ai gătit prea mult? Fă o poză și împarte."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Des restes ? Prends-les en photo et partage-les."
+            "value" : "Des restes ? Tu as trop cuisiné ? Prends une photo et partage."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Te han sobrado cosas? ¿Cocinaste de más? Hazle una foto y compártelo."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avanzi? Scatta una foto e condividili."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ți-au rămas resturi? Fă o poză și împarte-le."
+            "value" : "Avanzi? Hai cucinato troppo? Scatta una foto e condividilo."
           }
         }
       }
@@ -6739,118 +6917,6 @@
         }
       }
     },
-    "No events from you" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No has creado eventos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tu n'as créé aucun événement"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non hai creato eventi"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nu ai creat niciun eveniment"
-          }
-        }
-      }
-    },
-    "No food posts" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No hay publicaciones"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune publication"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun post"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicio postare cu mâncare"
-          }
-        }
-      }
-    },
-    "No links yet" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aún no hay enlaces"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun lien pour l'instant"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancora nessun link"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niciun link încă"
-          }
-        }
-      }
-    },
-    "No messages yet" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aún no hay mensajes"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun message pour l'instant"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancora nessun messaggio"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niciun mesaj încă"
-          }
-        }
-      }
-    },
     "No one is waiting to join." : {
       "localizations" : {
         "es" : {
@@ -6914,6 +6980,64 @@
         }
       }
     },
+    "Nobody else has planned anything yet." : {
+      "comment" : "Events, empty “Bubble events” hint",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimeni altcineva n-a plănuit nimic încă."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personne d'autre n'a encore rien prévu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nadie más ha planeado nada todavía."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun altro ha ancora organizzato nulla."
+          }
+        }
+      }
+    },
+    "Nobody's talked yet. Break the ice." : {
+      "comment" : "Chat empty state hint",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimeni n-a scris încă. Sparge gheața."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personne n'a encore écrit. Brise la glace."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nadie ha escrito todavía. Rompe el hielo."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno ha ancora scritto. Rompi il ghiaccio."
+          }
+        }
+      }
+    },
     "Not now" : {
       "localizations" : {
         "es" : {
@@ -6971,117 +7095,92 @@
         }
       }
     },
-    "Nothing here yet" : {
+    "Nothing new yet" : {
+      "comment" : "Home feed empty state title",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aún no hay nada"
+            "value" : "Nimic nou încă"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rien pour l'instant"
+            "value" : "Rien de neuf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada nuevo aún"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ancora niente qui"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nimic aici deocamdată"
+            "value" : "Niente di nuovo"
           }
         }
       }
     },
-    "Nothing listed" : {
+    "Nothing saved yet" : {
+      "comment" : "Links empty state title",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No hay artículos"
+            "value" : "Nimic salvat încă"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucun article"
+            "value" : "Rien d'enregistré"
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nessun articolo"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niciun articol"
-          }
-        }
-      }
-    },
-    "Nothing planned" : {
-      "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nada planeado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rien de prévu"
+            "value" : "Nada guardado aún"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Niente in programma"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nimic planificat"
+            "value" : "Niente di salvato"
           }
         }
       }
     },
     "Nothing shared yet" : {
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aún no has compartido nada"
+            "value" : "Nimic împărțit încă"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu n'as encore rien partagé"
+            "value" : "Rien de partagé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada compartido aún"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non hai ancora condiviso nulla"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "N-ai împărțit nimic încă"
+            "value" : "Niente di condiviso"
           }
         }
-      }
+      },
+      "comment" : "Food, empty “From the bubble” title"
     },
     "Notifications" : {
       "localizations" : {
@@ -7676,58 +7775,31 @@
         }
       }
     },
-    "Plan something for the bubble." : {
+    "Plan the next thing and your bubble can join in." : {
+      "comment" : "Events empty state hint (no events at all)",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Planea algo para la burbuja."
+            "value" : "Plănuiește următorul lucru și bula ta ți se poate alătura."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prévois quelque chose pour la bulle."
+            "value" : "Organise la prochaine sortie et ta bulle pourra se joindre à toi."
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organizza qualcosa per la bolla."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plănuiește ceva pentru bulă."
-          }
-        }
-      }
-    },
-    "Posts from other members show up here." : {
-      "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las publicaciones de otros miembros aparecen aquí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les publications des autres membres s'affichent ici."
+            "value" : "Planea lo próximo y tu burbuja podrá apuntarse."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I post degli altri membri compaiono qui."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Postările celorlalți membri apar aici."
+            "value" : "Organizza la prossima uscita e la tua bolla potrà unirsi."
           }
         }
       }
@@ -7844,6 +7916,35 @@
         }
       }
     },
+    "Quiet week…" : {
+      "comment" : "Events empty state title",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Săptămână liniștită…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semaine calme…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semana tranquila…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settimana tranquilla…"
+          }
+        }
+      }
+    },
     "RSVP" : {
       "localizations" : {
         "es" : {
@@ -7931,6 +8032,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Motiv: %@"
+          }
+        }
+      }
+    },
+    "Recipes, playlists, that one article: keep them here." : {
+      "comment" : "Links empty state hint",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rețete, playlisturi, articolul ăla: păstrează-le aici."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recettes, playlists, cet article-là : garde-les ici."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recetas, listas de reproducción, ese artículo: guárdalos aquí."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricette, playlist, quell'articolo: tienili qui."
           }
         }
       }
@@ -8672,30 +8802,31 @@
         }
       }
     },
-    "Say hi in the chat, plan an event or share some food." : {
+    "Say hi!" : {
+      "comment" : "Chat empty state title",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saluda en el chat, planea un evento o comparte algo de comida."
+            "value" : "Spune salut!"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dis bonjour dans la discussion, prévois un événement ou partage à manger."
+            "value" : "Dis bonjour !"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Saluda!"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saluta in chat, organizza un evento o condividi del cibo."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salută în chat, plănuiește un eveniment sau împarte niște mâncare."
+            "value" : "Saluta!"
           }
         }
       }
@@ -9103,30 +9234,31 @@
         }
       }
     },
-    "Share recipes, playlists, anything useful." : {
+    "Share what you've got before it goes off." : {
+      "comment" : "Food, empty “My posts” hint",
       "localizations" : {
-        "es" : {
+        "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comparte recetas, listas de reproducción, cualquier cosa útil."
+            "value" : "Împarte ce ai înainte să se strice."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Partage des recettes, des playlists, tout ce qui est utile."
+            "value" : "Partage ce que tu as avant que ça se perde."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparte lo que tienes antes de que se eche a perder."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Condividi ricette, playlist, qualsiasi cosa utile."
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Distribuie rețete, playlisturi, orice e util."
+            "value" : "Condividi quello che hai prima che vada a male."
           }
         }
       }
@@ -11026,34 +11158,6 @@
         }
       }
     },
-    "Upcoming event" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próximo evento"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Événement à venir"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Evento in arrivo"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eveniment viitor"
-          }
-        }
-      }
-    },
     "Use another account" : {
       "localizations" : {
         "es" : {
@@ -11500,6 +11604,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Când e oprită, notificările spun doar „Mesaj nou în %@”, fără nume sau text."
+          }
+        }
+      }
+    },
+    "When someone shares food, it lands here." : {
+      "comment" : "Food, empty “From the bubble” hint",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Când cineva împarte mâncare, apare aici."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quand quelqu'un partage à manger, ça arrive ici."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando alguien comparta comida, aparecerá aquí."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando qualcuno condivide del cibo, lo trovi qui."
           }
         }
       }
@@ -11995,6 +12128,64 @@
         }
       }
     },
+    "You're going!" : {
+      "comment" : "Cheer toast when an RSVP is confirmed",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participi!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu participes !"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Vas a ir!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ci sei!"
+          }
+        }
+      }
+    },
+    "You're in. Say hi to %@!" : {
+      "comment" : "Cheer toast on Home after being admitted to a bubble; the argument is the bubble name",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai intrat. Salută-i pe cei din %@!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu es dedans. Dis bonjour à %@ !"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya estás dentro. ¡Saluda a %@!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sei dentro. Saluta %@!"
+          }
+        }
+      }
+    },
     "You're not a member of this bubble." : {
       "localizations" : {
         "es" : {
@@ -12305,6 +12496,35 @@
         }
       }
     },
+    "Your first event is up!" : {
+      "comment" : "Cheer toast after saving your first upcoming event in this bubble",
+      "localizations" : {
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primul tău eveniment e gata!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton premier événement est en ligne !"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Tu primer evento ya está!"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo primo evento è online!"
+          }
+        }
+      }
+    },
     "Your name" : {
       "localizations" : {
         "es" : {
@@ -12525,6 +12745,181 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "de %@"
+          }
+        }
+      }
+    },
+    "nav.dock.events" : {
+      "comment" : "Dock tab short name; must fit the active pill at 390 pt",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Events"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agendă"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agenda"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventos"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventi"
+          }
+        }
+      }
+    },
+    "nav.dock.food" : {
+      "comment" : "Dock tab short name; must fit the active pill at 390 pt",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mâncare"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comida"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cibo"
+          }
+        }
+      }
+    },
+    "nav.dock.home" : {
+      "comment" : "Dock tab short name; must fit the active pill at 390 pt",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acasă"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accueil"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "nav.dock.marketplace" : {
+      "comment" : "Dock tab short name; must fit the active pill at 390 pt",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Market"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piață"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marché"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mercado"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mercato"
+          }
+        }
+      }
+    },
+    "nav.dock.settings" : {
+      "comment" : "Dock tab short name; must fit the active pill at 390 pt",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setări"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réglages"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opzioni"
           }
         }
       }

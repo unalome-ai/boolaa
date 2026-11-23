@@ -106,8 +106,9 @@ struct HomeView: View {
 
                 LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
                 if model.loaded && model.items.isEmpty {
-                    EmptyStateView(icon: "sparkles", title: "Nothing here yet",
-                                   message: "Say hi in the chat, plan an event or share some food.")
+                    EmptyStateView(title: LocalizedStringResource("Nothing new yet", comment: "Home feed empty state title"),
+                                   message: LocalizedStringResource("Be the first: say hi, plan something or share a snack.", comment: "Home feed empty state hint"),
+                                   hue: MascotPlace.home.hue(bubble: Hue.forID(session.currentBubble?.id)))
                 }
                 if !model.items.isEmpty {
                     SectionHeader(title: "What's new")
@@ -130,6 +131,12 @@ struct HomeView: View {
         .task(id: connectivity.refreshGeneration) { await reload() }
         .autoRetry(failed: model.failed) { await reload() }
         .errorAlert($model.error)
+        // Admitted to a bubble: Home cheers once, in that bubble's colour (§8.4).
+        .task(id: session.currentBubble?.id) {
+            guard let bubble = session.currentBubble, session.takeWelcome(for: bubble.id) else { return }
+            try? await Task.sleep(for: .milliseconds(300))
+            CheerCenter.shared.show(CheerCenter.joined(bubble.name), hue: Hue.forID(bubble.id))
+        }
     }
 
     private func reload() async {
@@ -213,12 +220,12 @@ struct FeedCard: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 AdaptiveStack(spacing: 4) {
-                    Text(kind).font(.rounded(.caption)).foregroundStyle(feature.hue.text).textCase(.uppercase)
-                        .lineLimit(large ? 2 : 1)
+                    // §8.5 sticker: the kind on the feature gradient, tilted (upright at the accessibility sizes).
+                    StickerLabel(text: kind, kind: sticker)
                     if !large { Spacer() }
                     Text(item.date.relativeShort).font(.caption).foregroundStyle(Theme.inkSecondary).lineLimit(large ? 2 : 1)
                 }
-                Text(verbatim: title).font(.body.weight(.semibold)).lineLimit(large ? 5 : 2).foregroundStyle(.primary)
+                Text(verbatim: title).font(.rounded(.body, weight: .bold)).lineLimit(large ? 5 : 2).foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
                 if let subtitle { Text(verbatim: subtitle).font(.subheadline).foregroundStyle(Theme.inkSecondary).lineLimit(large ? 4 : 2) }
             }
@@ -245,12 +252,22 @@ struct FeedCard: View {
         }
     }
 
+    private var sticker: StickerKind {
+        switch item {
+        case .message: .chat
+        case .food: .food
+        case .market: .market
+        case .event: .event
+        case .link: .link
+        }
+    }
+
     private var kind: LocalizedStringResource {
         switch item {
         case .message: LocalizedStringResource("Chat", comment: "Home feed card kind")
         case .food: LocalizedStringResource("Food Circle", comment: "Home feed card kind")
         case .market: LocalizedStringResource("Marketplace", comment: "Home feed card kind")
-        case .event: LocalizedStringResource("Upcoming event", comment: "Home feed card kind")
+        case .event: LocalizedStringResource("Event", comment: "Home feed card kind (sticker label)")
         case .link: LocalizedStringResource("Link", comment: "Home feed card kind")
         }
     }

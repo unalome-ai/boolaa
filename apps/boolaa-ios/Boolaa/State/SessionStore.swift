@@ -19,6 +19,8 @@ final class SessionStore {
     /// The caller's own pending join requests.
     private(set) var pendingRequests: [JoinRequest] = []
     private(set) var currentBubbleID: UUID?
+    /// A bubble whose join request was just approved: its Home plays the "You're in" cheer once (§8.4).
+    private(set) var welcomeBubbleID: UUID?
     var lastError: String?
     /// An invite link opened in any state (even signed out). Kept through sign-in, the device gate and
     /// app restarts; the join preview shows once Onboarding or Main is reached.
@@ -386,7 +388,11 @@ final class SessionStore {
             let (profile, members, requests) = try await (p, m, r)
             guard self.userID == userID else { return }
             self.profile = profile
-            self.memberships = members.filter(\.approved)
+            let approved = members.filter(\.approved)
+            if let welcome = Self.admittedBubble(previousPending: self.pendingRequests, previousMembers: self.memberships, now: approved) {
+                welcomeBubbleID = welcome
+            }
+            self.memberships = approved
             self.pendingRequests = requests
             if let current = currentBubble { selectBubble(current.id) }
             Connectivity.shared.reportSuccess()
@@ -402,6 +408,28 @@ final class SessionStore {
             if memberships == nil, !applyCachedSnapshot() { memberships = [] }
             if !Connectivity.isNetworkError(error) { lastError = error.userMessage }
         }
+    }
+
+    /// A bubble that was a pending request and is now an approved membership (nil on the first load).
+    nonisolated static func admittedBubble(previousPending: [JoinRequest], previousMembers: [BubbleMember]?,
+                                           now: [BubbleMember]) -> UUID? {
+        guard let previousMembers else { return nil }
+        let had = Set(previousMembers.map(\.bubbleId))
+        let requested = Set(previousPending.map(\.bubbleId))
+        return now.map(\.bubbleId).first { requested.contains($0) && !had.contains($0) }
+    }
+
+    /// True once for the bubble that was just joined; the cheer then never repeats.
+    func takeWelcome(for bubbleID: UUID) -> Bool {
+        #if DEBUG
+        if DebugHooks.string("UITestCheer") == "joined", !DebugHooks.cheerConsumed {
+            DebugHooks.cheerConsumed = true
+            return true
+        }
+        #endif
+        guard welcomeBubbleID == bubbleID else { return false }
+        welcomeBubbleID = nil
+        return true
     }
 
     func selectBubble(_ id: UUID) {

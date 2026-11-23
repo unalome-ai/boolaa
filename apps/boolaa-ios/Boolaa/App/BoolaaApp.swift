@@ -16,6 +16,8 @@ struct BoolaaApp: App {
         _safety = State(initialValue: SafetyStore(session: session))
         _unread = State(initialValue: UnreadStore(session: session))
         PushCenter.shared.session = session
+        // Pull to refresh: the platform indicator tinted grape (design-system.md §8.3).
+        UIRefreshControl.appearance().tintColor = UIColor(Hue.grape.fill)
     }
 
     var body: some Scene {

@@ -380,7 +380,7 @@ Boolaa talks like a friendly flatmate: short, warm, a little playful, never cute
 
 ## 8. Brand redesign (2026-11)
 
-Five changes that together make Boolaa louder and more of a character: **bubble-hue chat** (8.2), a **labelled glass dock with one motion and haptics vocabulary** (8.3), **feature-coloured headers** (8.1), the **bubble mascot** for empty and waiting states (8.4) and **chunky display type with sticker labels** (8.5). Every value here is normative for all three clients. Status: web done (`apps/boolaa-web`, tokens in `src/lib/brand.ts` + `globals.css`); iOS and Android follow this section exactly. Existing guarantees stay: axe clean in light and dark, 44 pt / 48 dp / 24 px targets, every animation has its reduced-motion form, visible focus ring.
+Five changes that together make Boolaa louder and more of a character: **bubble-hue chat** (8.2), a **labelled glass dock with one motion and haptics vocabulary** (8.3), **feature-coloured headers** (8.1), the **bubble mascot** for empty and waiting states (8.4) and **chunky display type with sticker labels** (8.5). Every value here is normative for all three clients. Status: web done (`apps/boolaa-web`, tokens in `src/lib/brand.ts` + `globals.css`); iOS done (`apps/boolaa-ios`, tokens in `Theme.Brand`, rules in `Core/BrandRules.swift`, views in `Components/BrandViews.swift`; deviations in 8.7); Android follows this section exactly. Existing guarantees stay: axe clean in light and dark, 44 pt / 48 dp / 24 px targets, every animation has its reduced-motion form, visible focus ring.
 
 ### 8.1 Colour roles: feature colour on top, bubble colour on the bubble
 
@@ -552,3 +552,17 @@ Checked by `apps/boolaa-web/tests/brand.spec.ts` over the token table in `src/li
 | ink on the cheer toast and stickers' card | as §2.5 | as §2.5 |
 
 The 3 px sender edge and the band circles are decorative (no contrast requirement).
+
+### 8.7 iOS notes
+
+Where SwiftUI can't do exactly what the tables say, the iOS client does the closest faithful thing:
+
+- **Dock label width.** SF Pro Rounded heavy is a little wider than the web's face: at 390 pt "Réglages" (fr) measures 66 pt against a 62 pt budget, so on a 390 pt phone the French Settings tab falls back to the icon-only circle (the rule, not a bug: never truncated or shrunk). Every short name fits at 402 pt (current iPhone Pro). The label is measured with `UIFont` at the Dynamic Type size of `.subheadline` (14 pt at the default size).
+- **Shadows without spread.** SwiftUI shadows have no spread: the dock's large shadow uses radius 13 (≈ blur 26) at y 16 so it doesn't spill as far as an unspread blur 36 would; the sticker shadow is radius 4 (blur 8) at y 3.
+- **Band height.** The band also covers the status bar above the header (iOS draws edge to edge); its circles are placed from the top of the screen, and the fade runs over the whole band. The §2.4 header glow is gone from the shell, chat and links (the band replaces it).
+- **"Not sent".** iOS keeps the offline spec's wording "Not sent — tap to retry" with the warning triangle, the 2 pt dangerText outline and bold dangerText; Try again and Don't send are in the long-press menu and the VoiceOver actions rather than inline links, so each message stays one VoiceOver element.
+- **Chat header.** Chat and Links keep the bubble name tag under the title (on its own card capsule, since it sits on the band) instead of the chip row.
+- **High contrast.** "Increase Contrast" (`colorSchemeContrast == .increased`) replaces the Home title gradient with plain ink.
+- **Calm surfaces.** `.calmSurface()` sets the `calm` environment value on the report sheet, blocked users, delete account and the suspended screen; `Mascot` draws nothing there and the inline load error keeps its system symbol.
+- **Haptics** come from one table (`Interaction` → `Haptic` in `BrandRules.swift`), played with `sensoryFeedback` or, on confirm buttons, the matching `UIFeedbackGenerator`.
+- **Debug hooks** for screenshots: `-UITestCheer going|firstEvent|firstPost|firstItem|joined` and `-UITestOpen mascots` (DEBUG builds only).
