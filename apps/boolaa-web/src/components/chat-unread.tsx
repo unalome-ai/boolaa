@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useBoolaa } from "@/components/boolaa-provider";
 import { liveChannel } from "@/lib/realtime";
+import { useConnectivity } from "@/lib/connectivity";
 
 export type UnreadEntry = { unread: number; lastReadAt: string | null };
 
@@ -33,6 +34,8 @@ export function ChatUnreadProvider({ children }: { children: ReactNode }) {
   const [counts, setCounts] = useState<Record<string, UnreadEntry>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const bubbleKey = bubbles.map((b) => b.id).join(",");
+  // After a reconnect: reload the counts and resubscribe (offline / poor network).
+  const { generation } = useConnectivity();
 
   const load = useCallback(
     async (bubbleId?: string) => {
@@ -55,7 +58,7 @@ export function ChatUnreadProvider({ children }: { children: ReactNode }) {
     // Initial load and whenever the bubble list changes; setState happens after the await.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
-  }, [load, bubbleKey]);
+  }, [load, bubbleKey, generation]);
 
   useEffect(() => {
     const unsubscribe = liveChannel(
@@ -81,7 +84,7 @@ export function ChatUnreadProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
       unsubscribe();
     };
-  }, [supabase, userId, refresh]);
+  }, [supabase, userId, refresh, generation]);
 
   const markRead = useCallback(
     async (bubbleId: string, messageId: string) => {

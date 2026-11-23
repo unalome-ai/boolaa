@@ -17,6 +17,7 @@ import { CompactLocalePicker } from "@/i18n/locale-picker";
 import { liveChannel } from "@/lib/realtime";
 import { BUBBLE_COOKIE, hardNavigate, readCookie, writeCookie } from "@/lib/utils";
 import { PENDING_INVITE_COOKIE, invitePath, isPlausibleInviteCode } from "@/lib/invite";
+import { forgetOfflineData } from "@/lib/outbox";
 
 type Pending = {
   id: string;
@@ -138,6 +139,7 @@ export default function OnboardingPage() {
 
   async function signOut() {
     await unregisterPush(supabase);
+    forgetOfflineData(); // no cached view or queued message stays behind
     await supabase.auth.signOut();
     hardNavigate("/login");
   }

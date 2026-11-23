@@ -12,6 +12,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -29,6 +30,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -201,10 +206,25 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     private val authors = mutableMapOf<String, UserProfile>()
     private var markedId: String? = null
     val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.CHAT_MESSAGE, _messages) { it.id }
+    /** Messages of this bubble in the outbox ("Sending…" / "Not sent — tap to retry"), in the order written. */
+    val pending = container.outbox.items.map { com.boolaa.app.core.OutboxRules.forBubble(it, bubbleId) }
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
+    private val cacheKey = com.boolaa.app.core.CacheKeys.chat(bubbleId)
+    private val cacheSerializer = kotlinx.serialization.builtins.ListSerializer(ChatMessage.serializer())
 
     init {
+        // The newest page shows at once from the offline cache; live merges are saved again (debounced).
+        offlineAware(container, _messages, cacheKey, cacheSerializer) { load() }
         load()
-        viewModelScope.launch { keepLive() }
+        // (Re)subscribed on open, on every reconnect and on every return to the front.
+        viewModelScope.launch { container.connectivity.refresh.collectLatest { keepLive() } }
+        viewModelScope.launch {
+            container.outbox.delivered.collect { m -> if (m.bubbleId == bubbleId) merge(m) }
+        }
+        @OptIn(kotlinx.coroutines.FlowPreview::class)
+        viewModelScope.launch {
+            _messages.drop(1).debounce(1_000).collect { list -> if (list != null) saveNewestPage(list) }
+        }
         // Sign photo paths as they appear (one batched call per change; cached per path for the hour).
         viewModelScope.launch {
             _messages.map { ChatMerge.imagePaths(it) }.distinctUntilChanged().collect { container.chatImages.ensure(it) }
@@ -237,7 +257,10 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         _messages.update { current -> ChatMerge.mergePage(current.orEmpty(), page, authors) }
     }
 
-    private fun load() = launchCatching(trackBusy = false) {
+    private fun saveNewestPage(list: List<ChatMessage>) =
+        saveCache(container, cacheKey, cacheSerializer, list.takeLast(com.boolaa.app.core.CacheKeys.CHAT_LIMIT))
+
+    private fun load() = runLoad(container, hasData = { _messages.value != null }) {
         coroutineScope {
             val page = async { api.chatPage(bubbleId, null) }
             val members = async { runCatching { api.members(bubbleId) }.getOrDefault(emptyList()) }
@@ -251,21 +274,27 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
             _lastReadAt.value = marker.await()
             _hasMore.value = loaded.size >= BoolaaApi.CHAT_PAGE_SIZE
             _messages.update { current -> ChatMerge.mergePage(current.orEmpty(), loaded, authors) }
+            _messages.value?.let { saveNewestPage(it) }
             reactions.refresh(liveIds())
         }
-    }.also { it.invokeOnCompletion { if (_messages.value == null) _messages.value = emptyList() } }
+    }
 
     /** Loads the page before the oldest message held (scrolled near the top). */
     fun loadOlder() {
         val oldest = _messages.value?.firstOrNull() ?: return
         if (!_hasMore.value || _loadingOlder.value) return
         _loadingOlder.value = true
-        launchCatching(trackBusy = false) {
+        viewModelScope.launch {
             try {
                 val page = api.chatPage(bubbleId, oldest.id)
                 page.forEach { m -> m.sender?.let { authors[it.id] = it } }
                 _hasMore.value = page.size >= BoolaaApi.CHAT_PAGE_SIZE
                 _messages.update { current -> ChatMerge.mergePage(current.orEmpty(), page, authors) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                // Offline or a bad network: quiet; scrolling to the top again (or a reconnect) tries again.
+                Log.w("Boolaa", "older chat page failed", e)
             } finally {
                 _loadingOlder.value = false
             }
@@ -360,21 +389,27 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     fun send(senderId: String, text: String, photo: Uri?, resolver: ContentResolver, onFailure: (String, Uri?) -> Unit) {
         val content = text.trim().take(4000)
         if (content.isEmpty() && photo == null) return
+        // The message goes to the outbox (docs/boolaa-spec.md "Offline and poor network"): shown as "Sending…", sent
+        // now or when the connection is back, with a client id so a retry never doubles it. Only a photo that can't
+        // be processed gives the draft back.
         launchCatching(trackBusy = true) {
-            try {
-                val path = photo?.let { api.uploadChatImage(ImageCompression.jpegFromUri(resolver, it, ImageBucket.CHAT), senderId) }
-                val sent = try {
-                    api.sendMessage(bubbleId, senderId, content, path)
-                } catch (e: Throwable) {
-                    withContext(NonCancellable) { api.removeChatImage(path, senderId) }
-                    throw e
-                }
-                merge(sent)
+            val jpeg = try {
+                photo?.let { ImageCompression.jpegFromUri(resolver, it, ImageBucket.CHAT) }
             } catch (e: Throwable) {
                 onFailure(text, photo)
                 throw e
             }
+            container.outbox.send(com.boolaa.app.core.PendingMessage.create(bubbleId, senderId, content, jpeg))
         }
+    }
+
+    /** "Not sent — tap to retry". */
+    fun retry(clientId: String) = container.outbox.retry(clientId)
+
+    /** "Don't send": drops it, and its photo if an attempt uploaded one. */
+    fun discard(clientId: String, me: String) {
+        val removed = container.outbox.discard(clientId) ?: return
+        removed.photoPath?.let { path -> container.appScope.launch { api.removeChatImage(path, me) } }
     }
 
     /** Soft-deletes our own message, shows the placeholder, then removes its photo from storage (best effort). */
@@ -404,6 +439,7 @@ class JumpTarget(val id: String)
 /** What the chat list shows, newest first (the list is laid out bottom-up). */
 private sealed class ChatRow(val key: String) {
     class Message(val message: ChatMessage, val showAuthor: Boolean) : ChatRow(message.id)
+    class Pending(val message: com.boolaa.app.core.PendingMessage) : ChatRow("pending-" + message.clientId)
     data object Divider : ChatRow("new-messages")
     data object LoadingOlder : ChatRow("loading-older")
     data object Start : ChatRow("chat-start")
@@ -430,6 +466,8 @@ fun ChatScreen(
     val sending by vm.busy.collectAsStateWithLifecycle()
     val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
     val reactionsByMessage = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
+    val issue by vm.loadIssue.collectAsStateWithLifecycle()
+    val pendingAll by vm.pending.collectAsStateWithLifecycle()
     var draft by rememberSaveable { mutableStateOf("") }
     // A prefilled text ("Ask in chat"): put in the composer, never sent automatically; kept after what was typed.
     LaunchedEffect(pendingDraft) {
@@ -489,9 +527,13 @@ fun ChatScreen(
     var highlightedId by remember { mutableStateOf<String?>(null) }
 
     val dividerId = remember(list, lastReadAt) { list?.let { ChatMerge.dividerBefore(it, lastReadAt, me) } }
-    val rows = remember(list, dividerId, hasMore) {
+    // Outbox messages the server list doesn't hold yet, newest at the bottom (the list is reversed).
+    val pending = remember(pendingAll, list) { com.boolaa.app.core.OutboxRules.visible(pendingAll, list.orEmpty().mapTo(HashSet()) { it.id }) }
+    LaunchedEffect(pending.size) { if (pending.isNotEmpty()) listState.animateScrollToItem(0) }
+    val rows = remember(list, dividerId, hasMore, pending) {
         val l = list.orEmpty()
         buildList {
+            pending.asReversed().forEach { add(ChatRow.Pending(it)) }
             for (i in l.indices.reversed()) {
                 val m = l[i]
                 val previous = l.getOrNull(i - 1)
@@ -526,8 +568,8 @@ fun ChatScreen(
             bubbleId = bubble.id, bubbleLogo = bubble.logo)
         Box(Modifier.weight(1f)) {
             when {
-                list == null -> SkeletonList(Modifier.padding(16.dp))
-                list.isEmpty() -> EmptyState(BoolaaIcons.Chat, stringResource(R.string.chat_empty_title), stringResource(R.string.chat_empty_message),
+                list == null && pending.isEmpty() -> com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow, Modifier.padding(16.dp))
+                list.orEmpty().isEmpty() && pending.isEmpty() -> EmptyState(BoolaaIcons.Chat, stringResource(R.string.chat_empty_title), stringResource(R.string.chat_empty_message),
                     Modifier.padding(16.dp))
                 else -> LazyColumn(
                     state = listState,
@@ -555,6 +597,8 @@ fun ChatScreen(
                                     onReact = if (!message.isDeleted) ({ kind -> vm.react(message.id, kind) }) else null,
                                 )
                             }
+                            is ChatRow.Pending -> PendingMessageRow(row.message, onRetry = { vm.retry(row.message.clientId) },
+                                onDiscard = { vm.discard(row.message.clientId, me) })
                             ChatRow.Divider -> NewMessagesDivider()
                             ChatRow.LoadingOlder -> ListNote(stringResource(R.string.chat_loading_older), "chat-loading-older")
                             ChatRow.Start -> ListNote(stringResource(R.string.chat_start), "chat-start")
@@ -652,6 +696,51 @@ fun ChatScreen(
         )
     }
     ErrorDialogFor(vm)
+}
+
+/**
+ * A message in the outbox: our own bubble, dimmed, with "Sending…" or "Not sent — tap to retry" under it. Tapping a
+ * failed one retries; long press (and an accessibility action) offers "Don't send".
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun PendingMessageRow(message: com.boolaa.app.core.PendingMessage, onRetry: () -> Unit, onDiscard: () -> Unit) {
+    val c = BoolaaTheme.colors
+    val failed = message.state == com.boolaa.app.core.OutboxState.FAILED
+    val status = stringResource(if (failed) R.string.offline_not_sent_tap_to_retry else R.string.offline_sending)
+    val retryLabel = stringResource(R.string.offline_retry)
+    val discardLabel = stringResource(R.string.offline_discard)
+    var menu by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().testTag("pending-${message.clientId}"), horizontalArrangement = Arrangement.End) {
+        Column(Modifier.padding(horizontal = 8.dp).widthIn(max = 290.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(
+                Modifier.graphicsLayer { alpha = 0.6f }.clip(MineShape).background(Hue.grape.gradient)
+                    .combinedClickable(onClick = { if (failed) onRetry() }, onLongClick = { menu = true })
+                    .semantics {
+                        contentDescription = status
+                        customActions = listOfNotNull(
+                            if (failed) CustomAccessibilityAction(retryLabel) { onRetry(); true } else null,
+                            CustomAccessibilityAction(discardLabel) { onDiscard(); true },
+                        )
+                    },
+            ) {
+                if (message.hasPhoto) Text(stringResource(R.string.chat_photo), style = Type.body.copy(fontStyle = FontStyle.Italic),
+                    color = Hue.grape.onFill, modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
+                if (message.content.isNotEmpty()) Text(message.content, style = Type.body, color = Hue.grape.onFill,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
+                else if (message.hasPhoto) Spacer(Modifier.height(10.dp))
+                androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    if (failed) androidx.compose.material3.DropdownMenuItem(text = { Text(retryLabel, style = Type.body) },
+                        onClick = { menu = false; onRetry() })
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(discardLabel, style = Type.body, color = c.dangerText) },
+                        onClick = { menu = false; onDiscard() }, modifier = Modifier.testTag("pending-discard"))
+                }
+            }
+            Text(status, style = Type.caption2, color = if (failed) c.dangerText else c.textSecondary,
+                modifier = Modifier.then(if (failed) Modifier.clickableRipple(role = Role.Button, onClick = onRetry) else Modifier)
+                    .padding(horizontal = 6.dp, vertical = 2.dp).testTag(if (failed) "pending-failed" else "pending-sending"))
+        }
+    }
 }
 
 /** "New messages": a hairline with a label in the middle, above the first unread message. */

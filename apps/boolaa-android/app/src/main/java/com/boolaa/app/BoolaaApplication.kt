@@ -15,6 +15,7 @@ class BoolaaApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        container.connectivity.start(this)
         container.session.start()
         container.unread.start()
         container.push.createChannels(this)

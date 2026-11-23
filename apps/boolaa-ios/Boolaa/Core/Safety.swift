@@ -132,7 +132,10 @@ final class SafetyStore {
 
     func load() async {
         do { blocked = try await session.api.blockedUsers(); loaded = true }
-        catch { self.error = error.userMessage }
+        catch {
+            // Offline: no alert (the banner explains); it loads again on reconnect.
+            if Connectivity.isNetworkError(error) { Connectivity.shared.report(error) } else { self.error = error.userMessage }
+        }
     }
 
     func block(_ userID: UUID) async {

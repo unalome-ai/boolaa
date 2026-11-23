@@ -619,5 +619,16 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "hint": "System follows your device's light or dark setting."
+  },
+  "offline": {
+    "banner": "You're offline — showing what you saw last",
+    "unreachable": "Can't reach Boolaa — showing what you saw last",
+    "backOnline": "Back online",
+    "loadFailed": "Couldn't load this. Check your connection and try again.",
+    "staleNotice": "Couldn't refresh — showing what you saw last.",
+    "retry": "Try again",
+    "sending": "Sending…",
+    "notSent": "Not sent",
+    "discard": "Don't send"
   }
 }

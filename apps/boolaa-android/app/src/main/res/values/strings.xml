@@ -356,4 +356,15 @@
     <string name="market_ask_draft">\@%1$s, is “%2$s” still available?</string>
     <string name="events_add_to_calendar">Add to calendar</string>
     <string name="events_no_calendar_app">No calendar app found.</string>
+
+    <!-- Offline and poor network (docs/boolaa-spec.md) -->
+    <string name="offline_banner">You\'re offline — showing what you saw last</string>
+    <string name="offline_unreachable">Can\'t reach Boolaa — showing what you saw last</string>
+    <string name="offline_back_online">Back online</string>
+    <string name="offline_load_failed">Couldn\'t load this. Check your connection and try again.</string>
+    <string name="offline_stale_notice">Couldn\'t refresh — showing what you saw last.</string>
+    <string name="offline_retry">Try again</string>
+    <string name="offline_sending">Sending…</string>
+    <string name="offline_not_sent_tap_to_retry">Not sent — tap to retry</string>
+    <string name="offline_discard">Don\'t send</string>
 </resources>

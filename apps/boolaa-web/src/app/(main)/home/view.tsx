@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, type CSSProperties, type ReactNode } from "react";
 import { CalendarDays, Link2, MessagesSquare, Sparkles, Tag, UtensilsCrossed } from "lucide-react";
 import { FeatureBadge } from "@/components/orb";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
@@ -11,6 +11,7 @@ import { AUTHOR, type Author, type Row } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useFormat } from "@/i18n/format";
 import { PushCard } from "@/components/notification-settings";
+import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 
 type FeedItem = {
   key: string;
@@ -41,53 +42,51 @@ export default function HomePage() {
   const bubble = useBubble();
   const t = useTranslations();
   const fmt = useFormat();
-  const [data, setData] = useState<FeedData | null>(null);
+  // The last view shows at once (also offline); the load below refreshes it.
+  const [data, setData] = useCachedState<FeedData>(`home.${bubble.id}`);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const now = new Date().toISOString();
-      const [chat, food, market, events, links] = await Promise.all([
-        supabase
-          .from("chat_messages")
-          .select(`id, content, image_path, created_at, sender:users!sender_id(${AUTHOR})`)
-          .eq("bubble_id", bubble.id)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(LIMIT),
-        supabase
-          .from("food_posts")
-          .select(`id, image, description, created_at, user:users!user_id(${AUTHOR})`)
-          .eq("bubble_id", bubble.id)
-          .order("created_at", { ascending: false })
-          .limit(LIMIT),
-        supabase
-          .from("market_items")
-          .select(`id, image, title, status, created_at, owner:users!owner_id(${AUTHOR})`)
-          .eq("bubble_id", bubble.id)
-          .order("created_at", { ascending: false })
-          .limit(LIMIT),
-        supabase
-          .from("events")
-          .select(`id, title, datetime, location, rsvp_list, created_at, creator:users!creator_id(${AUTHOR})`)
-          .eq("bubble_id", bubble.id)
-          .gte("datetime", now)
-          .order("datetime", { ascending: true })
-          .limit(LIMIT),
-        supabase
-          .from("shared_links")
-          .select(`id, url, title, tags, created_at, user:users!user_id(${AUTHOR})`)
-          .eq("bubble_id", bubble.id)
-          .order("created_at", { ascending: false })
-          .limit(LIMIT),
-      ]);
-      if (!alive) return;
-      setData({ chat: chat.data ?? [], food: food.data ?? [], market: market.data ?? [], events: events.data ?? [], links: links.data ?? [] });
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [supabase, bubble.id]);
+  const load = useCallback(async () => {
+    const now = new Date().toISOString();
+    const [chat, food, market, events, links] = await Promise.all([
+      supabase
+        .from("chat_messages")
+        .select(`id, content, image_path, created_at, sender:users!sender_id(${AUTHOR})`)
+        .eq("bubble_id", bubble.id)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT),
+      supabase
+        .from("food_posts")
+        .select(`id, image, description, created_at, user:users!user_id(${AUTHOR})`)
+        .eq("bubble_id", bubble.id)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT),
+      supabase
+        .from("market_items")
+        .select(`id, image, title, status, created_at, owner:users!owner_id(${AUTHOR})`)
+        .eq("bubble_id", bubble.id)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT),
+      supabase
+        .from("events")
+        .select(`id, title, datetime, location, rsvp_list, created_at, creator:users!creator_id(${AUTHOR})`)
+        .eq("bubble_id", bubble.id)
+        .gte("datetime", now)
+        .order("datetime", { ascending: true })
+        .limit(LIMIT),
+      supabase
+        .from("shared_links")
+        .select(`id, url, title, tags, created_at, user:users!user_id(${AUTHOR})`)
+        .eq("bubble_id", bubble.id)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT),
+    ]);
+    // All or nothing: a half-loaded feed would look like missing content.
+    if (chat.error || food.error || market.error || events.error || links.error) return false;
+    setData({ chat: chat.data ?? [], food: food.data ?? [], market: market.data ?? [], events: events.data ?? [], links: links.data ?? [] });
+    return true;
+  }, [supabase, bubble.id, setData]);
+  const sync = useResilientLoad(load);
 
   const feed: FeedItem[] | null = data && [
     ...data.chat.map((m) => ({
@@ -193,8 +192,13 @@ export default function HomePage() {
         </div>
       </section>
       <h2 className="mb-3 text-[20px] font-extrabold">{t("home.whatsNew")}</h2>
+      <StaleNotice show={sync.failed} onRetry={sync.retry} />
       {feed === null ? (
-        <PageLoader />
+        sync.failed ? (
+          <LoadError onRetry={sync.retry} />
+        ) : (
+          <PageLoader />
+        )
       ) : feed.length === 0 ? (
         <EmptyState icon={<Sparkles size={30} strokeWidth={2.4} />} title={t("home.emptyTitle")} hint={t("home.emptyHint")} hue={hue} />
       ) : (

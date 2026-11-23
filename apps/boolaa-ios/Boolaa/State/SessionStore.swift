@@ -115,6 +115,8 @@ final class SessionStore {
     /// Listens to auth state for the lifetime of the app.
     func start() {
         guard authTask == nil else { return }
+        Connectivity.shared.start()
+        ChatOutbox.shared.configure(api: api)
         SecurityEvents.handler = { [weak self] kind in
             guard let self, self.userID != nil else { return }
             Task { await self.recheck(kind) }
@@ -134,6 +136,13 @@ final class SessionStore {
             if let session, session.isExpired {
                 // Wait for the SDK's automatic refresh (emits .tokenRefreshed) or fall back to signed out.
                 do { _ = try await client.auth.refreshSession() } catch {
+                    // Offline: keep the session (the SDK refreshes it once the network is back) and show the
+                    // cached view; the gate runs again on reconnect.
+                    if Connectivity.isNetworkError(error) {
+                        Connectivity.shared.report(error)
+                        await applySignedIn(session.user)
+                        return
+                    }
                     // A suspended or banned account can't refresh (400 user_banned).
                     if UserFacingError.classify(error) == .userBanned { suspension = Suspension(kind: .signInBlocked) }
                     await applySignedOut()
@@ -167,8 +176,43 @@ final class SessionStore {
         userID = user.id
         email = user.email
         currentUser = user
+        // Only this account's cached view and unsent messages may stay on the device.
+        OfflineCache.shared.keepOnly(user.id)
+        ChatOutbox.shared.activate(user: user.id)
         isRestoringSession = false
         await runGate()
+    }
+
+    /// The cached bubbles list (memberships with their bubble, own profile, own pending requests).
+    struct Snapshot: Codable, Sendable {
+        var profile: UserProfile?
+        var memberships: [BubbleMember]
+        var pendingRequests: [JoinRequest]
+    }
+
+    /// Started from the cached view because the device check couldn't reach the server: the gate runs again
+    /// as soon as the app is back online.
+    private(set) var startedOffline = false
+
+    /// Shows the last cached bubbles list. Only a user who passed the gate before has one (it is written
+    /// after a successful load behind the gate), and RLS still guards every request.
+    private func applyCachedSnapshot() -> Bool {
+        guard let snapshot = OfflineCache.shared.read(Snapshot.self, key: OfflineCache.Key.bubbles),
+              !snapshot.memberships.isEmpty else { return false }
+        profile = profile ?? snapshot.profile
+        memberships = snapshot.memberships
+        pendingRequests = snapshot.pendingRequests
+        return true
+    }
+
+    /// Back online or back in the foreground (Connectivity.refreshGeneration).
+    func reconnected() async {
+        guard userID != nil else { return }
+        if startedOffline || deviceGate == .failed {
+            await runGate(force: true)
+        } else if deviceGate == .verified {
+            await reload()
+        }
     }
 
     private func applySignedOut() async {
@@ -177,8 +221,11 @@ final class SessionStore {
         gateTask?.cancel(); gateTask = nil
         userID = nil; email = nil; profile = nil; memberships = nil; pendingRequests = []
         deviceGate = .checking; needsAgeConfirmation = false; recoveringPassword = false; deviceCodeSentAt = nil
-        gateError = nil; currentUser = nil
+        gateError = nil; currentUser = nil; startedOffline = false
         PhotoURLs.shared.reset()
+        // Privacy: nothing of this account stays on the device for the next one.
+        OfflineCache.shared.clearAll()
+        ChatOutbox.shared.clearAll()
         if suspension?.kind != .signInBlocked { suspension = nil }
         isRestoringSession = false
     }
@@ -224,7 +271,18 @@ final class SessionStore {
                 suspension = Suspension(kind: .signInBlocked)
                 await signOut()
             default:
-                // Offline or a server error: show the code screen's error state with "Try again".
+                // Offline: the last cached view, when this account has one (docs/boolaa-spec.md, "Offline and
+                // poor network"); the gate runs again on reconnect.
+                if Connectivity.isNetworkError(error) {
+                    Connectivity.shared.report(error)
+                    if deviceGate == .verified, memberships != nil { startedOffline = true; return }
+                    if applyCachedSnapshot() {
+                        startedOffline = true
+                        deviceGate = .verified
+                        return
+                    }
+                }
+                // A server error, or offline without a cached view: the code screen's error state with "Try again".
                 gateError = error.userMessage
                 deviceGate = .failed
             }
@@ -247,6 +305,7 @@ final class SessionStore {
             deviceGate = .verified
             needsAgeConfirmation = true
         case .ok:
+            startedOffline = false
             suspension = nil
             deviceGate = .verified
             needsAgeConfirmation = false
@@ -325,16 +384,23 @@ final class SessionStore {
             async let m = api.memberships(userID: userID)
             async let r = api.myJoinRequests(userID: userID)
             let (profile, members, requests) = try await (p, m, r)
+            guard self.userID == userID else { return }
             self.profile = profile
             self.memberships = members.filter(\.approved)
             self.pendingRequests = requests
             if let current = currentBubble { selectBubble(current.id) }
+            Connectivity.shared.reportSuccess()
+            OfflineCache.shared.save(Snapshot(profile: profile, memberships: members.filter(\.approved),
+                                              pendingRequests: requests), key: OfflineCache.Key.bubbles)
         } catch {
             // "session not verified" / "account suspended" re-run the gate (UserFacingError.classify raises the event).
             let mapped = UserFacingError.classify(error)
             if mapped == .sessionNotVerified || mapped == .accountSuspended { return }
-            if memberships == nil { memberships = [] }
-            lastError = error.localizedDescription
+            Connectivity.shared.report(error)
+            // Keep (or show the cached) list. Offline / unreachable needs no alert: the banner explains and
+            // the reconnect reloads.
+            if memberships == nil, !applyCachedSnapshot() { memberships = [] }
+            if !Connectivity.isNetworkError(error) { lastError = error.userMessage }
         }
     }
 

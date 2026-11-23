@@ -2088,6 +2088,35 @@
         }
       }
     },
+    "Back online": {
+      "comment": "Short notice when the connection comes back",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexión recuperada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion rétablie"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connessione ripristinata"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexiunea a revenit"
+          }
+        }
+      }
+    },
     "Back to sign in": {
       "localizations": {
         "es": {
@@ -2421,6 +2450,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Creând un cont, ești de acord cu [Termenii](boolaa-legal://terms) și [Politica de confidențialitate](boolaa-legal://privacy)."
+          }
+        }
+      }
+    },
+    "Can't reach Boolaa — showing what you saw last": {
+      "comment": "Banner while the server doesn't answer",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No podemos conectar con Boolaa — te mostramos lo último que viste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de joindre Boolaa — voici ce que tu as vu en dernier"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riusciamo a raggiungere Boolaa — ti mostriamo quello che hai visto l'ultima volta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu putem contacta Boolaa — îți arătăm ce ai văzut ultima dată"
           }
         }
       }
@@ -3099,6 +3157,64 @@
         }
       }
     },
+    "Couldn't load this. Check your connection and try again.": {
+      "comment": "Inline error when a screen could not load",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido cargar. Comprueba tu conexión e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger. Vérifie ta connexion et réessaie."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile caricare. Controlla la connessione e riprova."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am putut încărca. Verifică-ți conexiunea și încearcă din nou."
+          }
+        }
+      }
+    },
+    "Couldn't refresh — showing what you saw last.": {
+      "comment": "Notice over cached data after a failed refresh",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido actualizar — te mostramos lo último que viste."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'actualiser — voici ce que tu as vu en dernier."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile aggiornare — ti mostriamo quello che hai visto l'ultima volta."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu am putut actualiza — îți arătăm ce ai văzut ultima dată."
+          }
+        }
+      }
+    },
     "Couldn't send the email. Try again.": {
       "localizations": {
         "es": {
@@ -3713,6 +3829,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nu l-ai primit?"
+          }
+        }
+      }
+    },
+    "Don't send": {
+      "comment": "Discards a chat message that wasn't sent",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No enviar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne pas envoyer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non inviare"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu trimite"
           }
         }
       }
@@ -6681,6 +6826,35 @@
         }
       }
     },
+    "Not sent — tap to retry": {
+      "comment": "Under a chat message that failed to send",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No enviado — toca para reintentar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non envoyé — touche pour réessayer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non inviato — tocca per riprovare"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a trimis — atinge ca să încerci din nou"
+          }
+        }
+      }
+    },
     "Nothing here yet": {
       "localizations": {
         "es": {
@@ -8582,6 +8756,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trimite raportul"
+          }
+        }
+      }
+    },
+    "Sending…": {
+      "comment": "Under a chat message while it is being sent",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi en cours…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invio in corso…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se trimite…"
           }
         }
       }
@@ -11642,6 +11845,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nu ești membru al acestei bule."
+          }
+        }
+      }
+    },
+    "You're offline — showing what you saw last": {
+      "comment": "Banner while the device has no network",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estás sin conexión — te mostramos lo último que viste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu es hors ligne — voici ce que tu as vu en dernier"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sei offline — ti mostriamo quello che hai visto l'ultima volta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ești offline — îți arătăm ce ai văzut ultima dată"
           }
         }
       }

@@ -542,14 +542,18 @@ fun SkeletonCard(modifier: Modifier = Modifier) {
 @Composable
 fun SkeletonList(modifier: Modifier = Modifier, count: Int = 3) {
     val loading = stringResource(R.string.loading)
+    // Shown only after 300 ms, so fast loads don't flash (docs/boolaa-spec.md "Offline and poor network").
     Column(modifier.clearAndSetSemantics { contentDescription = loading }.testTag("loading"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        repeat(count) { SkeletonCard() }
+        DelayedAppearance { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { repeat(count) { SkeletonCard() } } }
     }
 }
 
 /** Skeleton of a Marketplace tile: photo block, title and owner lines. */
 @Composable
-fun SkeletonTile(modifier: Modifier = Modifier) {
+fun SkeletonTile(modifier: Modifier = Modifier) = DelayedAppearance { SkeletonTileNow(modifier) }
+
+@Composable
+private fun SkeletonTileNow(modifier: Modifier) {
     val field = BoolaaTheme.colors.field
     val loading = stringResource(R.string.loading)
     Column(modifier.boolaaCard(0.dp).shimmer().clearAndSetSemantics { contentDescription = loading }) {

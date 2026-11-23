@@ -6,6 +6,7 @@ import android.content.Intent
  * DEBUG-only launch extras for automation and screenshots (ignored in release builds), e.g.
  * `adb shell am start -n com.boolaa.app/.MainActivity --es autoLogin alice@boolaa.test --es bubble "Climbing Crew" --es tab settings`
  * tab: home|events|food|marketplace|settings, open: chat|links|profile|addBubble, signOut: true.
+ * simulateOffline: true pretends there is no network (every request fails at once; offline banner, cached screens).
  * deviceId: the device id for this process. autoLogin defaults it to the seeded `boolaa-test-device`, which the local
  * seed trusts for alice, bob and carol, so QA logins skip the emailed device code.
  */
@@ -17,6 +18,7 @@ data class DebugHooks(
     val open: String? = null,
     val signOut: Boolean = false,
     val deviceId: String? = null,
+    val simulateOffline: Boolean = false,
 ) {
     companion object {
         /** Pre-trusted for the seeded users by supabase/seed.sql (local only). */
@@ -33,6 +35,7 @@ data class DebugHooks(
                 tab = intent.getStringExtra("tab"),
                 open = intent.getStringExtra("open"),
                 signOut = intent.getStringExtra("signOut") == "true" || intent.getBooleanExtra("signOut", false),
+                simulateOffline = intent.getStringExtra("simulateOffline") == "true" || intent.getBooleanExtra("simulateOffline", false),
             )
         }
     }

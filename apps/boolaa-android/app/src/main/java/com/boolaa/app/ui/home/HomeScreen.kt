@@ -82,6 +82,8 @@ import com.boolaa.app.ui.theme.Type
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.asStateFlow
 import java.net.URI
 import java.time.Instant
@@ -113,23 +115,42 @@ class HomeViewModel(private val container: AppContainer, private val bubbleId: S
     private val _items = MutableStateFlow<List<FeedItem>?>(null)
     val items = _items.asStateFlow()
 
+    private val cacheKey = com.boolaa.app.core.CacheKeys.home(bubbleId)
+    /** What Home caches: the five lists it combines (docs/boolaa-spec.md "Offline and poor network"). */
+    private val cached = MutableStateFlow<HomeSnapshot?>(null)
+
     init {
+        offlineAware(container, cached, cacheKey, HomeSnapshot.serializer()) { load() }
+        viewModelScope.launch { cached.collect { snap -> if (snap != null && _items.value == null) _items.value = snap.combine() } }
         load()
         reloadOnBlockChange(container.session) { load() }
     }
 
-    fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
+    fun load(refresh: Boolean = false) = runLoad(container, hasData = { _items.value != null }, trackBusy = refresh) {
         val api = container.api
-        _items.value = coroutineScope {
+        val snapshot = coroutineScope {
             // Deleted messages are skipped (spec "Chat": Home).
             val m = async { api.latestChatMessages(bubbleId, 5) }
             val f = async { api.foodPosts(bubbleId, 5) }
             val i = async { api.marketItems(bubbleId, 5) }
             val e = async { api.upcomingEvents(bubbleId, 5) }
             val l = async { api.links(bubbleId, 5) }
-            FeedItem.combine(m.await(), f.await(), i.await(), e.await(), l.await())
+            HomeSnapshot(m.await(), f.await(), i.await(), e.await(), l.await())
         }
-    }.also { job -> job.invokeOnCompletion { if (_items.value == null) _items.value = emptyList() } }
+        _items.value = snapshot.combine()
+        saveCache(container, cacheKey, HomeSnapshot.serializer(), snapshot)
+    }
+}
+
+@kotlinx.serialization.Serializable
+data class HomeSnapshot(
+    val messages: List<com.boolaa.app.model.ChatMessage> = emptyList(),
+    val food: List<com.boolaa.app.model.FoodPost> = emptyList(),
+    val market: List<com.boolaa.app.model.MarketItem> = emptyList(),
+    val events: List<com.boolaa.app.model.BubbleEvent> = emptyList(),
+    val links: List<com.boolaa.app.model.SharedLink> = emptyList(),
+) {
+    fun combine() = FeedItem.combine(messages, food, market, events, links)
 }
 
 /** Combined recency-sorted feed for the current bubble (spec §5); cards deep-link to their section. */
@@ -141,6 +162,7 @@ fun HomeScreen(navigator: ShellNavigator) {
     val vm: HomeViewModel = viewModel(key = "home-${bubble.id}") { HomeViewModel(container, bubble.id) }
     val items by vm.items.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val issue by vm.loadIssue.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     // The view model outlives the screen (tab switches, chat, config changes) and the feed isn't live: reload
     // quietly whenever Home comes back, so messages sent meanwhile show up without a pull to refresh.
@@ -160,8 +182,9 @@ fun HomeScreen(navigator: ShellNavigator) {
             // Push: the permission is asked from this card's button, never at launch.
             item(key = "notifications-ask") { NotificationsAskCard() }
             val list = items
+            item(key = "stale") { com.boolaa.app.ui.components.StaleNotice(issue, vm::retryNow) }
             when {
-                list == null -> item(key = "loading") { SkeletonList(Modifier.padding(top = 8.dp)) }
+                list == null -> item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow, Modifier.padding(top = 8.dp)) }
                 list.isEmpty() -> item(key = "empty") {
                     EmptyState(BoolaaIcons.Sparkles, stringResource(R.string.home_empty_title), stringResource(R.string.home_empty_message))
                 }

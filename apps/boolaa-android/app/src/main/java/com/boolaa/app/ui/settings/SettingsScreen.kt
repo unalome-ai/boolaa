@@ -221,18 +221,28 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
         if (relevant) load()
     }
 
-    init { load() }
+    private val cacheKey = com.boolaa.app.core.CacheKeys.members(bubbleId)
+    private val cached = MutableStateFlow<MembersSnapshot?>(null)
+
+    init {
+        offlineAware(container, cached, cacheKey, MembersSnapshot.serializer()) { load() }
+        viewModelScope.launch {
+            cached.collect { snap -> if (snap != null && _requests.value == null) { _members.value = snap.members; _requests.value = snap.requests } }
+        }
+        load()
+    }
 
     override fun onCleared() {
         container.appScope.launch { live.close() }
     }
 
-    fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
+    fun load(refresh: Boolean = false) = runLoad(container, hasData = { _requests.value != null }, trackBusy = refresh) {
         coroutineScope {
             val m = async { container.api.members(bubbleId) }
             val r = async { container.api.joinRequests(bubbleId) }
             _members.value = m.await()
             _requests.value = r.await()
+            saveCache(container, cacheKey, MembersSnapshot.serializer(), MembersSnapshot(_members.value, _requests.value.orEmpty()))
         }
     }
 
@@ -307,6 +317,7 @@ fun SettingsScreen(navigator: ShellNavigator) {
     val members by vm.members.collectAsStateWithLifecycle()
     val requests by vm.requests.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val issue by vm.loadIssue.collectAsStateWithLifecycle()
     var confirmLeave by remember { mutableStateOf(false) }
     var removing by remember { mutableStateOf<BubbleMember?>(null) }
     var reporting by remember { mutableStateOf<ReportTarget?>(null) }
@@ -332,6 +343,7 @@ fun SettingsScreen(navigator: ShellNavigator) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
+            item(key = "stale") { com.boolaa.app.ui.components.StaleNotice(issue, vm::retryNow) }
             item(key = "info-${bubble.id}") { InfoCard(bubble, members.size, canManage, vm, Modifier.popIn(0)) }
             item(key = "invite-${bubble.id}") { InviteCard(bubble, canManage, vm, Modifier.popIn(1)) }
             item(key = "links") {
@@ -344,6 +356,9 @@ fun SettingsScreen(navigator: ShellNavigator) {
             }
             item(key = "mute-${bubble.id}") { MuteCard(bubble.id, Modifier.popIn(2)) }
             item(key = "members-header") { SectionHeader(stringResource(R.string.members), members.size, Modifier.popIn(3)) }
+            if (requests == null && issue == com.boolaa.app.ui.LoadIssue.FAILED) item(key = "members-failed") {
+                com.boolaa.app.ui.components.LoadFailed(vm::retryNow)
+            }
             item(key = "members") {
                 Column(Modifier.popIn(4).boolaaCard().testTag("members-list")) {
                     members.forEachIndexed { i, m ->
@@ -692,3 +707,7 @@ private fun RequestRow(request: JoinRequest, members: List<BubbleMember>, maxSiz
             modifier = Modifier.testTag("reject-request"))
     }
 }
+
+/** What Settings caches for the offline view: members and pending join requests. */
+@kotlinx.serialization.Serializable
+data class MembersSnapshot(val members: List<BubbleMember> = emptyList(), val requests: List<JoinRequest> = emptyList())

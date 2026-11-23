@@ -187,3 +187,20 @@ Web keys `events.pastEvents`, `events.ended`, `events.wentCount`, `errors.eventE
 | exportRateLimitedUntil | You can download your data once an hour. Try again after {time}. | Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}. | Tu peux télécharger tes données une fois par heure. Réessaie après {time}. | Puedes descargar tus datos una vez por hora. Inténtalo de nuevo a partir de las {time}. | Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}. |
 | previewHint (CHANGED: was the seeded "Flatmates") | When off, notifications only say "New message in {bubble}", without names or text. | Când e oprită, notificările spun doar „Mesaj nou în {bubble}”, fără nume sau text. | Désactivé, les notifications disent seulement « Nouveau message dans {bubble} », sans nom ni texte. | Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en {bubble}», sin nombres ni texto. | Se disattivata, le notifiche dicono solo «Nuovo messaggio in {bubble}», senza nomi né testo. |
 | goToBoolaa (invalid invite link, web) | Go to Boolaa | Mergi la Boolaa | Aller sur Boolaa | Ir a Boolaa | Vai su Boolaa |
+
+## Offline and poor network (docs/boolaa-spec.md, "Offline and poor network")
+
+Web keys under `offline.*`; Android `offline_*`; iOS the English text as key. Calm, not alarming: say what is shown, never blame the user. "Not sent — tap to retry" is the apps' label (the whole row is the button); the web shows "Not sent" with a "Try again" button.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| banner | You're offline — showing what you saw last | Ești offline — îți arătăm ce ai văzut ultima dată | Tu es hors ligne — voici ce que tu as vu en dernier | Estás sin conexión — te mostramos lo último que viste | Sei offline — ti mostriamo quello che hai visto l'ultima volta |
+| unreachable | Can't reach Boolaa — showing what you saw last | Nu putem contacta Boolaa — îți arătăm ce ai văzut ultima dată | Impossible de joindre Boolaa — voici ce que tu as vu en dernier | No podemos conectar con Boolaa — te mostramos lo último que viste | Non riusciamo a raggiungere Boolaa — ti mostriamo quello che hai visto l'ultima volta |
+| backOnline | Back online | Conexiunea a revenit | Connexion rétablie | Conexión recuperada | Connessione ripristinata |
+| loadFailed | Couldn't load this. Check your connection and try again. | Nu am putut încărca. Verifică-ți conexiunea și încearcă din nou. | Impossible de charger. Vérifie ta connexion et réessaie. | No se ha podido cargar. Comprueba tu conexión e inténtalo de nuevo. | Impossibile caricare. Controlla la connessione e riprova. |
+| staleNotice | Couldn't refresh — showing what you saw last. | Nu am putut actualiza — îți arătăm ce ai văzut ultima dată. | Impossible d'actualiser — voici ce que tu as vu en dernier. | No se ha podido actualizar — te mostramos lo último que viste. | Impossibile aggiornare — ti mostriamo quello che hai visto l'ultima volta. |
+| retry | Try again | Încearcă din nou | Réessayer | Reintentar | Riprova |
+| sending | Sending… | Se trimite… | Envoi en cours… | Enviando… | Invio in corso… |
+| notSentTapToRetry (apps) | Not sent — tap to retry | Nu s-a trimis — atinge ca să încerci din nou | Non envoyé — touche pour réessayer | No enviado — toca para reintentar | Non inviato — tocca per riprovare |
+| notSent (web) | Not sent | Nu s-a trimis | Non envoyé | No enviado | Non inviato |
+| discard | Don't send | Nu trimite | Ne pas envoyer | No enviar | Non inviare |

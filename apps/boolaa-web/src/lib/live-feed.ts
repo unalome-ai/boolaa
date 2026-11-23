@@ -2,6 +2,7 @@ import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { BoolaaClient } from "@/lib/supabase/client";
 import { liveChannel } from "@/lib/realtime";
+import { useConnectivity } from "@/lib/connectivity";
 
 /** Bubble feeds that stream over Realtime (supabase/migrations/20261123110000_realtime_feeds.sql). */
 export type FeedTable = "events" | "food_posts" | "market_items" | "shared_links";
@@ -64,6 +65,9 @@ export function useLiveFeed<T extends Identified>(opts: {
     ref.current = opts;
   });
   const { supabase, table, bubbleId } = opts;
+  // A reconnect (or the tab back after a while) bumps this: tear the channel down, subscribe again,
+  // and reload once live, so nothing missed while away stays missing.
+  const { generation } = useConnectivity();
 
   useEffect(() => {
     let alive = true;
@@ -98,7 +102,7 @@ export function useLiveFeed<T extends Identified>(opts: {
       alive = false;
       unsubscribe();
     };
-  }, [supabase, table, bubbleId]);
+  }, [supabase, table, bubbleId, generation]);
 }
 
 export const byCreatedDesc = (a: { created_at: string; id: string }, b: { created_at: string; id: string }) =>

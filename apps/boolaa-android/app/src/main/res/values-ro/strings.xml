@@ -357,4 +357,15 @@
     <string name="market_ask_draft">\@%1$s, mai e disponibil „%2$s”?</string>
     <string name="events_add_to_calendar">Adaugă în calendar</string>
     <string name="events_no_calendar_app">Nu am găsit nicio aplicație de calendar.</string>
+
+    <!-- Offline and poor network (docs/boolaa-spec.md) -->
+    <string name="offline_banner">Ești offline — îți arătăm ce ai văzut ultima dată</string>
+    <string name="offline_unreachable">Nu putem contacta Boolaa — îți arătăm ce ai văzut ultima dată</string>
+    <string name="offline_back_online">Conexiunea a revenit</string>
+    <string name="offline_load_failed">Nu am putut încărca. Verifică-ți conexiunea și încearcă din nou.</string>
+    <string name="offline_stale_notice">Nu am putut actualiza — îți arătăm ce ai văzut ultima dată.</string>
+    <string name="offline_retry">Încearcă din nou</string>
+    <string name="offline_sending">Se trimite…</string>
+    <string name="offline_not_sent_tap_to_retry">Nu s-a trimis — atinge ca să încerci din nou</string>
+    <string name="offline_discard">Nu trimite</string>
 </resources>

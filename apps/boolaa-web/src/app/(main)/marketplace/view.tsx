@@ -2,13 +2,14 @@
 
 import { useReactions } from "@/lib/reactions";
 import { ReactionBar } from "@/components/reactions";
-import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CircleSlash, EyeOff, Hourglass, MessageCircle, Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, StatusBadge } from "@/components/ui";
+import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 import { AUTHOR, type MarketItem } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -24,7 +25,8 @@ export default function MarketplacePage() {
   const t = useTranslations();
   const errorText = useErrorText();
   const bubble = useBubble();
-  const [items, setItems] = useState<MarketItem[] | null>(null);
+  // The last view shows at once (also offline); the load below refreshes it.
+  const [items, setItems] = useCachedState<MarketItem[]>(`market.${bubble.id}`);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [hideTaken, setHideTaken] = useState(false);
   const router = useRouter();
@@ -37,14 +39,12 @@ export default function MarketplacePage() {
       .select(`*, owner:users!owner_id(${AUTHOR})`)
       .eq("bubble_id", bubble.id)
       .order("created_at", { ascending: false });
-    if (error) setError(errorText(error));
+    if (error) return false; // keeps what is on screen; LoadError / StaleNotice offer Try again
     setItems(data ?? []);
-  }, [supabase, bubble.id, errorText]);
+    return true;
+  }, [supabase, bubble.id, setItems]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
-  }, [load]);
+  const sync = useResilientLoad(load);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
   const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "market_item", targetIds: items?.map((i) => i.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
@@ -89,6 +89,7 @@ export default function MarketplacePage() {
   return (
     <div>
       <ErrorText>{error}</ErrorText>
+      <StaleNotice show={sync.failed} onRetry={sync.retry} />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2" role="group" aria-label={t("market.filter")}>
           {FILTERS.map((f) => (
@@ -118,7 +119,11 @@ export default function MarketplacePage() {
         </button>
       </div>
       {items === null ? (
-        <PageLoader />
+        sync.failed ? (
+          <LoadError onRetry={sync.retry} />
+        ) : (
+          <PageLoader />
+        )
       ) : shown.length === 0 ? (
         <EmptyState icon={<Tags size={30} strokeWidth={2.4} />} title={t("market.emptyTitle")} hint={t("market.emptyHint")} hue="mint" />
       ) : (

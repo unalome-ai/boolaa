@@ -29,6 +29,7 @@ import { Avatar, Modal } from "@/components/ui";
 import { FEATURE_HUE, HUES, hueClass, hueFor, type Hue } from "@/lib/hue";
 import { cx } from "@/lib/utils";
 import { useSignedUrl } from "@/lib/storage-url";
+import { ConnectivityBanner } from "@/components/offline";
 
 type NavKey = "home" | "events" | "food" | "marketplace" | "settings" | "chat" | "links";
 type NavItem = { href: string; key: NavKey; icon: LucideIcon };
@@ -367,6 +368,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </p>
         )}
+        <ConnectivityBanner />
         <main key={`${bubble?.id}:${pathname}`} className={cx("anim-route flex-1", isChat ? "min-h-0 pb-4" : "pb-36 lg:pb-16")}>
           {children}
         </main>

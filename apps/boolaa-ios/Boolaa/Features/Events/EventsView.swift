@@ -2,16 +2,19 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class EventsModel {
+final class EventsModel: CacheFirstModel {
     var events: [BubbleEvent] = []
     var loaded = false
+    var failed = false
     var error: String?
     let reactions = ReactionStore(.event)
 
+    /// The cached view first (offline / slow network), then the server's list.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do { events = try await api.events(bubbleID: bubbleID) } catch { self.error = error.userMessage }
-        loaded = true
-        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: events.map(\.id))
+        let ok = await loadCacheFirst(key: OfflineCache.Key.events(bubbleID),
+                                      apply: { (rows: [BubbleEvent]) in events = rows },
+                                      fetch: { try await api.events(bubbleID: bubbleID) })
+        if ok { await reactions.load(api: api, bubbleID: bubbleID, targetIDs: events.map(\.id)) }
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -59,6 +62,7 @@ enum EventSchedule {
 /// section without RSVP (spec §7).
 struct EventsView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(Connectivity.self) private var connectivity
     @State private var model = EventsModel()
     @State private var editing: EventEditorTarget?
     @State private var exporting: BubbleEvent?
@@ -77,7 +81,8 @@ struct EventsView: View {
                 SectionHeaderWithAction(title: "My events", count: mine.count, hue: hue) {
                     AddButton(label: "New event", id: "new-event", hue: hue) { editing = .new }
                 }
-                if !model.loaded { SkeletonList(count: 2) }
+                LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
+                if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
                 if model.loaded && mine.isEmpty {
                     EmptyStateView(icon: "calendar.badge.plus", title: "No events from you", message: "Plan something for the bubble.", hue: hue)
                 }
@@ -118,10 +123,12 @@ struct EventsView: View {
         }
         .scrollsToPushHighlight(model.events.map(\.id))
         .refreshFeedback { await reload() }
-        .task {
+        // Back online or in the foreground: reload and resubscribe (Connectivity.refreshGeneration).
+        .task(id: connectivity.refreshGeneration) {
             await reload()
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
+        .autoRetry(failed: model.failed) { await reload() }
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(30))

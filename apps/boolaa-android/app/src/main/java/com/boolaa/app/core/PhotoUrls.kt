@@ -99,12 +99,25 @@ class PhotoUrls(
 
 /** Coil interceptor: loads our stored photo URLs through [PhotoUrls] (see there). */
 class PhotoUrlInterceptor(private val photos: PhotoUrls) : Interceptor {
+    /** Memory or disk cache only, keyed by `<bucket>/<path>` (never the network); an error when nothing is cached. */
+    private suspend fun cachedOnly(chain: Interceptor.Chain, ref: PhotoUrls.Ref): ImageResult {
+        val request = chain.request
+        val offline = request.newBuilder()
+            .data("https://offline.invalid/" + ref.cacheKey)
+            .memoryCacheKey(request.memoryCacheKey ?: ref.cacheKey)
+            .diskCacheKey(request.diskCacheKey ?: ref.cacheKey)
+            .networkCachePolicy(coil3.request.CachePolicy.DISABLED)
+            .build()
+        return runCatching { chain.withRequest(offline).proceed() }
+            .getOrElse { ErrorResult(null, request, IllegalStateException("photo not readable")) }
+    }
+
     override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
         val request = chain.request
         val ref = PhotoUrls.ref(request.data as? String) ?: return chain.proceed()
         suspend fun attempt(): ImageResult {
-            val signed = photos.signed(ref)
-                ?: return ErrorResult(null, request, IllegalStateException("photo not readable"))
+            // No signature (offline, or not readable): the pixels Coil already cached under the storage path, if any.
+            val signed = photos.signed(ref) ?: return cachedOnly(chain, ref)
             val next = request.newBuilder()
                 .data(signed)
                 .memoryCacheKey(request.memoryCacheKey ?: ref.cacheKey)

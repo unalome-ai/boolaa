@@ -16,6 +16,7 @@ import { RESEND_COOLDOWN_S, TERMS_VERSION, gateState, lastSent, markSent, sendDe
 import { getSupabase } from "@/lib/supabase/client";
 import { unregisterPush } from "@/lib/push";
 import { cx, hardNavigate } from "@/lib/utils";
+import { forgetOfflineData } from "@/lib/outbox";
 
 type Stage = "checking" | "code" | "age" | "error";
 
@@ -73,6 +74,7 @@ export default function VerifyPage() {
 
   async function useAnotherAccount() {
     await unregisterPush(supabase);
+    forgetOfflineData(); // no cached view or queued message stays behind
     await supabase.auth.signOut({ scope: "local" });
     hardNavigate("/login");
   }

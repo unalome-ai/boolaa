@@ -28,6 +28,10 @@ struct RootView: View {
             }
         }
         .animation(Motion.resolve(Motion.gentle, reduceMotion: reduceMotion), value: session.route)
+        #if DEBUG
+        // In the status-bar strip, clear of the screens' own buttons.
+        .overlay(alignment: .topLeading) { DebugNetworkToggle().padding(.leading, 120).ignoresSafeArea() }
+        #endif
         // An opened invite link: the join preview, once the user is past sign-in and the device gate.
         .sheet(item: Binding(
             get: { session.inviteToShow.map(PendingInvite.init) },

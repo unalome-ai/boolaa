@@ -1,13 +1,14 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- images come from Supabase storage / Unsplash; plain <img> on purpose */
-import { useEffect, useId, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeftRight, Gift, ImagePlus, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BubbleCluster } from "@/components/orb";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { useSignedUrl } from "@/lib/storage-url";
 import { cx, initials } from "@/lib/utils";
+import { LOADER_DELAY_MS } from "@/lib/offline";
 
 /** Photo, or initials on the person's hue (derived from their id, see lib/hue). */
 export function Avatar({
@@ -102,9 +103,18 @@ export function Spinner({ className }: { className?: string }) {
   return <Loader2 className={cx("animate-spin text-grape", className)} size={22} aria-label={t("loading")} />;
 }
 
-/** First-load skeleton: content-shaped `field` blocks with a shimmer (5.3); static under reduced motion. */
+/**
+ * First-load skeleton: content-shaped `field` blocks with a shimmer (5.3); static under reduced motion.
+ * It appears only after 300 ms, so fast loads (and the cached last view) don't flash a skeleton.
+ */
 export function PageLoader() {
   const t = useTranslations("common");
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setShown(true), LOADER_DELAY_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+  if (!shown) return <div role="status" aria-label={t("loading")} data-testid="page-loader-pending" className="min-h-24" />;
   return (
     <div role="status" aria-label={t("loading")} className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {[0, 1, 2].map((i) => (

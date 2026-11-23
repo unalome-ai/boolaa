@@ -7,6 +7,8 @@ import com.boolaa.app.model.ReportTargetType
 import com.boolaa.app.model.BubbleEvent
 import com.boolaa.app.model.BubbleMember
 import com.boolaa.app.model.ChatMessage
+import io.github.jan.supabase.storage.StorageRestException
+import io.ktor.client.plugins.timeout
 import com.boolaa.app.model.ChatUnread
 import com.boolaa.app.model.FoodPost
 import com.boolaa.app.model.JoinRequest
@@ -134,7 +136,10 @@ class BoolaaApi(val client: SupabaseClient) {
     suspend fun uploadBubbleLogo(jpeg: ByteArray, bubbleId: String): String {
         val path = bubbleLogoPath(bubbleId)
         val api = client.storage.from(ImageBucket.BUBBLE.id)
-        api.upload(path, jpeg) { contentType = ContentType.Image.JPEG; upsert = false }
+        api.upload(path, jpeg) {
+            contentType = ContentType.Image.JPEG; upsert = false
+            httpOverride { timeout { requestTimeoutMillis = Backend.UPLOAD_TIMEOUT_MS } }
+        }
         return api.publicUrl(path)
     }
 
@@ -258,8 +263,10 @@ class BoolaaApi(val client: SupabaseClient) {
         }.list()
 
     /** Inserts a message; [content] may be empty when [imagePath] (an uploaded `chat.images` object) is set. */
-    suspend fun sendMessage(bubbleId: String, senderId: String, content: String, imagePath: String? = null): ChatMessage =
+    suspend fun sendMessage(bubbleId: String, senderId: String, content: String, imagePath: String? = null, id: String? = null): ChatMessage =
         client.from("chat_messages").insert(buildJsonObject {
+            // The outbox's client id: a retry of a message that already arrived fails with 23505 instead of doubling it.
+            id?.let { put("id", it) }
             put("bubble_id", bubbleId)
             put("sender_id", senderId)
             put("content", content)
@@ -279,8 +286,33 @@ class BoolaaApi(val client: SupabaseClient) {
     /** Uploads a chat photo JPEG to `<uid>/<uuid>.jpg` in the private `chat.images` bucket and returns the object path. */
     suspend fun uploadChatImage(jpeg: ByteArray, userId: String): String {
         val path = imagePath(userId)
-        client.storage.from(ImageBucket.CHAT.id).upload(path, jpeg) { contentType = ContentType.Image.JPEG; upsert = false }
+        client.storage.from(ImageBucket.CHAT.id).upload(path, jpeg) {
+            contentType = ContentType.Image.JPEG; upsert = false
+            httpOverride { timeout { requestTimeoutMillis = Backend.UPLOAD_TIMEOUT_MS } }
+        }
         return path
+    }
+
+    /** One message with its sender, or null (RLS hides it or it is gone). */
+    suspend fun chatMessage(id: String): ChatMessage? =
+        client.from("chat_messages").select(Columns.raw("*, ${author("sender", "sender_id")}")) {
+            filter { eq("id", id) }
+            limit(1)
+        }.list<ChatMessage>().firstOrNull()
+
+    /**
+     * Uploads a chat photo to a fixed [path] (`<uid>/<client id>.jpg`, the outbox's retries reuse it). An object
+     * already there (an earlier attempt got through) counts as uploaded. Uploads get 60 s instead of 15.
+     */
+    suspend fun uploadChatImageAt(jpeg: ByteArray, path: String) {
+        try {
+            client.storage.from(ImageBucket.CHAT.id).upload(path, jpeg) {
+                contentType = ContentType.Image.JPEG; upsert = false
+                httpOverride { timeout { requestTimeoutMillis = Backend.UPLOAD_TIMEOUT_MS } }
+            }
+        } catch (e: StorageRestException) {
+            if (!OutboxRules.isDuplicateObject(e.statusCode, e.error, e.description)) throw e
+        }
     }
 
     /** Best-effort removal of one of the caller's own `chat.images` objects. */
@@ -494,7 +526,10 @@ class BoolaaApi(val client: SupabaseClient) {
     suspend fun uploadImage(jpeg: ByteArray, bucket: ImageBucket, userId: String): String {
         val path = imagePath(userId)
         val api = client.storage.from(bucket.id)
-        api.upload(path, jpeg) { contentType = ContentType.Image.JPEG; upsert = false }
+        api.upload(path, jpeg) {
+            contentType = ContentType.Image.JPEG; upsert = false
+            httpOverride { timeout { requestTimeoutMillis = Backend.UPLOAD_TIMEOUT_MS } }
+        }
         return api.publicUrl(path)
     }
 

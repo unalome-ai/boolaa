@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         val hooks = DebugHooks.from(intent)
         hooks.deviceId?.let { container.device.overrideForTesting(it) }
+        if (hooks.simulateOffline) container.connectivity.setSimulatedOffline(true)
         // Channel names follow the app language (this context has it, also below API 33).
         container.push.createChannels(this)
         // A recreated activity (rotation, language change) gets the same intent again: route a tapped push only once.
@@ -43,8 +44,13 @@ class MainActivity : AppCompatActivity() {
         handleDeeplink(intent)
     }
 
+    private var startedOnce = false
+
     override fun onStart() {
         super.onStart()
+        // Back in front: visible screens refetch, live screens resubscribe, the outbox flushes (not on the first start).
+        if (startedOnce) container.connectivity.foreground()
+        startedOnce = true
         // Every return to the app re-checks the device, so a device revoked elsewhere asks for its code again.
         container.session.recheckDevice()
         // Unread chat badges are refreshed on every return to the foreground.

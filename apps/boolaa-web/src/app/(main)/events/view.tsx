@@ -16,13 +16,15 @@ import { useFormat } from "@/i18n/format";
 import { cx, toLocalInput } from "@/lib/utils";
 import { downloadIcs } from "@/lib/ics";
 import { hasEnded, splitPast } from "@/lib/events";
+import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 
 export default function EventsPage() {
   const { supabase, userId, blocked } = useBoolaa();
   const t = useTranslations("events");
   const errorText = useErrorText();
   const bubble = useBubble();
-  const [events, setEvents] = useState<BoolaaEvent[] | null>(null);
+  // The last view shows at once (also offline); the load below refreshes it.
+  const [events, setEvents] = useCachedState<BoolaaEvent[]>(`events.${bubble.id}`);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<BoolaaEvent | "new" | null>(null);
   const [now, setNow] = useState(0);
@@ -33,15 +35,12 @@ export default function EventsPage() {
       .select(`*, creator:users!creator_id(${AUTHOR})`)
       .eq("bubble_id", bubble.id)
       .order("datetime", { ascending: true });
-    if (error) setError(errorText(error));
     setNow(Date.now());
+    if (error) return false; // keeps what is on screen; LoadError / StaleNotice offer Try again
     setEvents(data ?? []);
-  }, [supabase, bubble.id, errorText]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
-  }, [load]);
+    return true;
+  }, [supabase, bubble.id, setEvents]);
+  const sync = useResilientLoad(load);
 
   // Events move to "Past" while the page is open (an event ends 1 hour after it starts).
   useEffect(() => {
@@ -120,10 +119,11 @@ export default function EventsPage() {
   return (
     <div>
       <ErrorText>{error}</ErrorText>
+      <StaleNotice show={sync.failed} onRetry={sync.retry} />
       {events === null ? (
         <>
           <SectionTitle hue="coral" action={newButton}>{t("myEvents")}</SectionTitle>
-          <PageLoader />
+          {sync.failed ? <LoadError onRetry={sync.retry} /> : <PageLoader />}
         </>
       ) : events.length === 0 ? (
         <>

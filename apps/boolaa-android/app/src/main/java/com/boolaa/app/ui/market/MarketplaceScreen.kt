@@ -180,7 +180,11 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
     val items = _items.asStateFlow()
     val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.MARKET_ITEM, _items) { it.id }
 
+    private val cacheKey = com.boolaa.app.core.CacheKeys.market(bubbleId)
+    private val serializer = kotlinx.serialization.builtins.ListSerializer(MarketItem.serializer())
+
     init {
+        offlineAware(container, _items, cacheKey, serializer) { load() }
         load()
         reloadOnBlockChange(container.session) { load() }
     }
@@ -191,11 +195,12 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
     fun react(itemId: String, kind: com.boolaa.app.model.ReactionKind) =
         toggleReaction(reactions, itemId, kind, container.session.state.value.userId)
 
-    fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
+    fun load(refresh: Boolean = false) = runLoad(container, hasData = { _items.value != null }, trackBusy = refresh) {
         val loaded = container.api.marketItems(bubbleId).sortedWith(MarketRules.order)
         _items.value = loaded
+        saveCache(container, cacheKey, serializer, loaded)
         reactions.refresh(loaded.map { it.id })
-    }.also { it.invokeOnCompletion { if (_items.value == null) _items.value = emptyList() } }
+    }
 
     fun save(existing: MarketItem?, picked: Uri?, title: String, description: String, status: MarketStatus,
              availability: MarketAvailability, resolver: ContentResolver, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
@@ -239,8 +244,11 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: MarketViewModel = viewModel(key = "market-${bubble.id}") { MarketViewModel(container, bubble.id) }
-    LaunchedEffect(vm) { vm.keepLive() }
+    // Resubscribed (and reloaded once live) on every reconnect and return to the front.
+    val generation by container.connectivity.refresh.collectAsStateWithLifecycle()
+    LaunchedEffect(vm, generation) { vm.keepLive() }
     val items by vm.items.collectAsStateWithLifecycle()
+    val issue by vm.loadIssue.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     var filter by rememberSaveable { mutableStateOf(MarketFilter.ALL) }
     var hideTaken by remember { mutableStateOf(false) }
@@ -300,7 +308,11 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
                     }
                 }
             }
+            item(key = "stale", span = { GridItemSpan(maxLineSpan) }) { com.boolaa.app.ui.components.StaleNotice(issue, vm::retryNow) }
             when {
+                list == null && issue == com.boolaa.app.ui.LoadIssue.FAILED -> item(key = "load-failed", span = { GridItemSpan(maxLineSpan) }) {
+                    com.boolaa.app.ui.components.LoadFailed(vm::retryNow)
+                }
                 list == null -> items(4, key = { "skeleton-$it" }) { SkeletonTile() }
                 visible.isEmpty() -> item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
                     EmptyState(BoolaaIcons.Market, stringResource(R.string.market_empty_title), stringResource(R.string.market_empty_message), hue = hue)

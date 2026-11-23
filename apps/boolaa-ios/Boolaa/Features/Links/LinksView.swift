@@ -2,16 +2,19 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class LinksModel {
+final class LinksModel: CacheFirstModel {
     var links: [SharedLink] = []
     var loaded = false
+    var failed = false
     var error: String?
     let reactions = ReactionStore(.sharedLink)
 
+    /// The cached view first (offline / slow network), then the server's list.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do { links = try await api.links(bubbleID: bubbleID) } catch { self.error = error.userMessage }
-        loaded = true
-        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: links.map(\.id))
+        let ok = await loadCacheFirst(key: OfflineCache.Key.links(bubbleID),
+                                      apply: { (rows: [SharedLink]) in links = rows },
+                                      fetch: { try await api.links(bubbleID: bubbleID) })
+        if ok { await reactions.load(api: api, bubbleID: bubbleID, targetIDs: links.map(\.id)) }
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -35,6 +38,7 @@ final class LinksModel {
 struct LinksView: View {
     @Environment(SessionStore.self) private var session
     @Environment(SafetyStore.self) private var safety
+    @Environment(Connectivity.self) private var connectivity
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var model = LinksModel()
@@ -58,6 +62,7 @@ struct LinksView: View {
                 PushedHeader(title: "Links", backID: "links-back", onBack: { dismiss() }) {
                     BubbleNameTag(bubble: session.currentBubble)
                 }
+                ConnectivityBanner().padding(.horizontal, -16)
 
                 VStack(spacing: 10) {
                     TextField(text: $url, prompt: Text(verbatim: "https://…")) { Text("Link address") }
@@ -95,7 +100,8 @@ struct LinksView: View {
                 }
 
                 let visible = LinksModel.filter(model.links, tag: tag)
-                if !model.loaded { SkeletonList(count: 2) }
+                LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
+                if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
                 if model.loaded && visible.isEmpty {
                     EmptyStateView(icon: "link", title: "No links yet", message: "Share recipes, playlists, anything useful.", hue: hue)
                 }
@@ -124,10 +130,12 @@ struct LinksView: View {
         .refreshFeedback { await reload() }
         .onChange(of: safety.contentVersion) { Task { await reload() } }
         // Keyed by bubble: resubscribes when it changes (this screen sits outside the rebuilt tab content).
-        .task(id: session.currentBubble?.id) {
+        // Also after reconnecting or coming back to the foreground (Connectivity.refreshGeneration).
+        .task(id: "\(session.currentBubble?.id.uuidString ?? "")-\(connectivity.refreshGeneration)") {
             await reload()
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
+        .autoRetry(failed: model.failed) { await reload() }
         .errorAlert($model.error)
     }
 

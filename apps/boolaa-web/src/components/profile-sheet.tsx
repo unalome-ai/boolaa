@@ -13,6 +13,7 @@ import { unregisterPush } from "@/lib/push";
 import { AccountSecurity } from "@/components/account-security";
 import { DeleteAccountPanel } from "@/components/delete-account";
 import { DataExportPanel } from "@/components/data-export";
+import { forgetOfflineData } from "@/lib/outbox";
 
 export function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("profile");
@@ -61,6 +62,7 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
 
   async function signOut() {
     await unregisterPush(supabase); // docs/push-notifications.md §8: unregister, then sign out
+    forgetOfflineData(); // no cached view or queued message stays behind
     await supabase.auth.signOut();
     hardNavigate("/login");
   }

@@ -4,11 +4,18 @@ import UIKit
 
 @MainActor
 @Observable
-final class SettingsModel {
+final class SettingsModel: CacheFirstModel {
     var members: [BubbleMember] = []
     var requests: [JoinRequest] = []
     var loaded = false
+    var failed = false
     var error: String?
+
+    /// What the offline cache keeps for Settings (`members.<bubble id>`).
+    struct Snapshot: Codable, Sendable {
+        var members: [BubbleMember]
+        var requests: [JoinRequest]
+    }
     @ObservationIgnored private let reloads = ReloadCoalescer()
 
     var memberIDs: Set<UUID> { Set(members.map(\.userId)) }
@@ -61,19 +68,22 @@ final class SettingsModel {
         } catch { self.error = error.userMessage; return false }
     }
 
+    /// The cached members and requests first (offline / slow network), then the server's.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do {
-            async let m = api.members(bubbleID: bubbleID)
-            async let r = api.joinRequests(bubbleID: bubbleID)
-            (members, requests) = try await (m, r)
-        } catch { self.error = error.userMessage }
-        loaded = true
+        await loadCacheFirst(key: OfflineCache.Key.members(bubbleID),
+                             apply: { (snapshot: Snapshot) in members = snapshot.members; requests = snapshot.requests },
+                             fetch: {
+                                 async let m = api.members(bubbleID: bubbleID)
+                                 async let r = api.joinRequests(bubbleID: bubbleID)
+                                 return try await Snapshot(members: m, requests: r)
+                             })
     }
 }
 
 /// Settings for the current bubble (spec §11).
 struct SettingsView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(Connectivity.self) private var connectivity
     @Environment(SafetyStore.self) private var safety
     @Environment(ShellRouter.self) private var router
     @State private var model = SettingsModel()
@@ -147,6 +157,8 @@ struct SettingsView: View {
                     BubbleMuteCard(bubbleID: bubble.id)
 
                     SectionHeader(title: "Members", count: model.members.count)
+                    LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
+                    if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
                     VStack(spacing: 0) {
                         ForEach(model.members) { member in
                             HStack(spacing: 12) {
@@ -223,10 +235,12 @@ struct SettingsView: View {
         }
         .refreshFeedback { await reload() }
         .sensoryFeedback(.success, trigger: copied) { _, now in now }
-        .task {
+        // Back online or in the foreground: reload and resubscribe (Connectivity.refreshGeneration).
+        .task(id: connectivity.refreshGeneration) {
             await reload()
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
+        .autoRetry(failed: model.failed) { await reload() }
         .confirmationDialog(
             Text("Remove “\(memberToRemove?.user?.displayName ?? "")” from the bubble?", comment: "Confirmation title; the argument is a member's name"),
             isPresented: Binding(get: { memberToRemove != nil }, set: { if !$0 { memberToRemove = nil } }),

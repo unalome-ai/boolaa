@@ -51,28 +51,44 @@ enum FeedItem: Identifiable, Hashable, Sendable {
 
 @MainActor
 @Observable
-final class HomeModel {
+final class HomeModel: CacheFirstModel {
     var items: [FeedItem] = []
     var loaded = false
+    var failed = false
     var error: String?
 
+    /// What the offline cache keeps for Home (`home.<bubble id>`).
+    struct Snapshot: Codable, Sendable {
+        var messages: [ChatMessage]
+        var food: [FoodPost]
+        var market: [MarketItem]
+        var events: [BubbleEvent]
+        var links: [SharedLink]
+    }
+
+    /// The cached feed first (offline / slow network), then the server's.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do {
-            async let m = api.chatMessages(bubbleID: bubbleID, limit: 5, includeDeleted: false)
-            async let f = api.foodPosts(bubbleID: bubbleID, limit: 5)
-            async let i = api.marketItems(bubbleID: bubbleID, limit: 5)
-            async let e = api.upcomingEvents(bubbleID: bubbleID, limit: 5)
-            async let l = api.links(bubbleID: bubbleID, limit: 5)
-            items = try await FeedItem.combine(messages: m, food: f, market: i, events: e, links: l)
-        } catch {
-            self.error = error.userMessage
-        }
-        loaded = true
+        await loadCacheFirst(
+            key: OfflineCache.Key.home(bubbleID),
+            apply: { (s: Snapshot) in
+                // Cached upcoming events may have started meanwhile; the feed only lists upcoming ones.
+                items = FeedItem.combine(messages: s.messages, food: s.food, market: s.market,
+                                         events: s.events.filter { $0.datetime >= .now }, links: s.links)
+            },
+            fetch: {
+                async let m = api.chatMessages(bubbleID: bubbleID, limit: 5, includeDeleted: false)
+                async let f = api.foodPosts(bubbleID: bubbleID, limit: 5)
+                async let i = api.marketItems(bubbleID: bubbleID, limit: 5)
+                async let e = api.upcomingEvents(bubbleID: bubbleID, limit: 5)
+                async let l = api.links(bubbleID: bubbleID, limit: 5)
+                return try await Snapshot(messages: m, food: f, market: i, events: e, links: l)
+            })
     }
 }
 
 struct HomeView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(Connectivity.self) private var connectivity
     @Environment(ShellRouter.self) private var router
     @State private var model = HomeModel()
 
@@ -88,6 +104,7 @@ struct HomeView: View {
                 // After the first bubble: explain, then (on tap) the iOS prompt. Never at launch.
                 PushPermissionCard(showsDismiss: true).transition(.opacity)
 
+                LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
                 if model.loaded && model.items.isEmpty {
                     EmptyStateView(icon: "sparkles", title: "Nothing here yet",
                                    message: "Say hi in the chat, plan an event or share some food.")
@@ -102,14 +119,16 @@ struct HomeView: View {
                         .scrollFade()
                         .popIn(index + 1)
                 }
-                if !model.loaded { SkeletonList().padding(.top, 8) }
+                if !model.loaded && !model.failed { Delayed { SkeletonList().padding(.top, 8) } }
             }
             .padding(.horizontal, 16)
             .padding(.top, 4)
             .padding(.bottom, Theme.tabBarClearance)
         }
         .refreshFeedback { await reload() }
-        .task { await reload() }
+        // Also after reconnecting or coming back to the foreground (Connectivity.refreshGeneration).
+        .task(id: connectivity.refreshGeneration) { await reload() }
+        .autoRetry(failed: model.failed) { await reload() }
         .errorAlert($model.error)
     }
 
