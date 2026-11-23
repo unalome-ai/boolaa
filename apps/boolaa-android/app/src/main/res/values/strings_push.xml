@@ -11,7 +11,7 @@
     <string name="notifications_food">Food Circle</string>
     <string name="notifications_market">Marketplace</string>
     <string name="notifications_preview">Show message previews</string>
-    <string name="notifications_preview_hint">When off, notifications only say \"New message in Flatmates\", without names or text.</string>
+    <string name="notifications_preview_hint">When off, notifications only say \"New message in %1$s\", without names or text.</string>
     <string name="notifications_blocked">Notifications are turned off for Boolaa in your settings.</string>
     <string name="notifications_ask">Turn on notifications</string>
     <string name="notifications_ask_hint">Get a ping when your bubbles talk to you.</string>

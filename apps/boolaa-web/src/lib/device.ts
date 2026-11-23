@@ -103,6 +103,8 @@ export class DeviceCodeError extends Error {
     public readonly code: string,
     public readonly status: number,
     public readonly attemptsLeft?: number,
+    /** `export_rate_limited`: seconds until the next data export is allowed. */
+    public readonly retryAfter?: number,
   ) {
     super(code);
     this.name = "DeviceCodeError";
@@ -120,13 +122,13 @@ async function invokeDeviceCode(supabase: BoolaaClient, body: DeviceCodeBody) {
   if (!error) return data;
   if (error instanceof FunctionsHttpError) {
     const res = error.context as Response;
-    let payload: { error?: string; attempts_left?: number } = {};
+    let payload: { error?: string; attempts_left?: number; retry_after?: number } = {};
     try {
       payload = await res.json();
     } catch {
       /* not JSON */
     }
-    throw new DeviceCodeError(payload.error ?? "server_error", res.status, payload.attempts_left);
+    throw new DeviceCodeError(payload.error ?? "server_error", res.status, payload.attempts_left, payload.retry_after);
   }
   throw error;
 }

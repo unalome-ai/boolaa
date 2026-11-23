@@ -3,6 +3,7 @@ package com.boolaa.app.core
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.functions.functions
+import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.HttpHeaders
 import kotlinx.serialization.json.buildJsonObject
@@ -55,6 +56,16 @@ object DataExport {
         return if (name.isNullOrEmpty() || name == "." || name == "..") fallbackFilename(now) else name
     }
 
+    /** The "try again after" time carried by a rate-limit error (the `device-code` send step or `data-export`), else null. */
+    fun limitedUntil(error: Throwable, now: Instant = Instant.now()): Instant? {
+        val seconds = when (error) {
+            is DataExportException -> error.retryAfter.takeIf { error.code == "export_rate_limited" }
+            is DeviceCodeException -> error.retryAfter.takeIf { error.code == "export_rate_limited" }
+            else -> null
+        }
+        return seconds?.takeIf { it > 0 }?.let { now.plusSeconds(it.toLong()) }
+    }
+
     /** The function's `error` codes as user-facing errors. */
     fun userError(code: String): UserFacingError = when (code) {
         "unauthorized" -> UserFacingError.NOT_AUTHENTICATED
@@ -63,6 +74,17 @@ object DataExport {
         "export_rate_limited" -> UserFacingError.EXPORT_RATE_LIMITED
         else -> UserFacingError.GENERIC
     }
+}
+
+/**
+ * When the next data export is allowed (one an hour), or null when it is allowed now. Asked BEFORE the `export_data`
+ * code is emailed (`data_export_available_at`, 20261123220000_past_events_export_check.sql).
+ */
+suspend fun BoolaaApi.dataExportAvailableAt(now: Instant = Instant.now()): Instant? {
+    val raw = client.postgrest.rpc("data_export_available_at").data
+    val text = runCatching { BoolaaJson.json.parseToJsonElement(raw).jsonPrimitive.contentOrNull }.getOrNull() ?: return null
+    val at = runCatching { java.time.OffsetDateTime.parse(text).toInstant() }.getOrNull() ?: return null
+    return at.takeIf { it.isAfter(now) }
 }
 
 /**

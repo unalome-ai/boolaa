@@ -218,7 +218,10 @@
     "dateTime": "Date et heure",
     "location": "Lieu",
     "create": "Créer l'événement",
-    "addToCalendar": "Ajouter au calendrier"
+    "addToCalendar": "Ajouter au calendrier",
+    "pastEvents": "Événements passés",
+    "ended": "Terminé",
+    "wentCount": "{count, plural, =0 {Personne n'y est allé} one {# personne y est allée} other {# personnes y sont allées}}"
   },
   "food": {
     "share": "Partager à manger",
@@ -388,7 +391,9 @@
     "onlyOwnerCanRotate": "Seul le propriétaire ou un admin peut changer le code d'invitation.",
     "chatMessageGone": "Ce message n'existe plus.",
     "ownerOnlyAction": "Seul le propriétaire peut faire ça.",
-    "exportRateLimited": "Tu peux télécharger tes données une fois par heure. Réessaie plus tard."
+    "exportRateLimited": "Tu peux télécharger tes données une fois par heure. Réessaie plus tard.",
+    "eventEnded": "Cet événement est déjà terminé.",
+    "exportRateLimitedUntil": "Tu peux télécharger tes données une fois par heure. Réessaie après {time}."
   },
   "safety": {
     "moreActions": "Plus d'actions",
@@ -542,7 +547,8 @@
     "invalidTitle": "Cette invitation n'est pas valide",
     "invalidBody": "Le lien est peut-être ancien ou le code a changé. Demandes-en un nouveau à un membre.",
     "requestSent": "Demande envoyée",
-    "getApp": "Télécharge l'app"
+    "getApp": "Télécharge l'app",
+    "goToBoolaa": "Aller sur Boolaa"
   },
   "notifications": {
     "title": "Notifications",
@@ -555,7 +561,7 @@
     "food": "Cercle gourmand",
     "market": "Marché",
     "preview": "Afficher l'aperçu des messages",
-    "previewHint": "Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte.",
+    "previewHint": "Désactivé, les notifications disent seulement « Nouveau message dans {bubble} », sans nom ni texte.",
     "blocked": "Les notifications de Boolaa sont désactivées dans tes réglages.",
     "blockedHint": "Pour les réactiver, clique sur l'icône à gauche de la barre d'adresse, autorise les notifications pour ce site, puis recharge la page.",
     "ask": "Activer les notifications",

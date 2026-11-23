@@ -26,6 +26,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     NOT_MEMBER(R.string.error_not_member),
     REQUEST_NOT_FOUND(R.string.error_request_not_found),
     EVENT_NOT_FOUND(R.string.error_event_not_found),
+    // toggle_rsvp on an event that already ended (20261123220000_past_events_export_check.sql).
+    EVENT_ENDED(R.string.error_event_ended),
     ONLY_OWNER_CAN_REMOVE(R.string.error_only_owner_can_remove),
     // Bubble roles (20261123190000_bubble_roles.sql): what admins can't do (remove admins, transfer, change roles).
     OWNER_ONLY_ACTION(R.string.error_owner_only_action),
@@ -129,6 +131,7 @@ enum class UserFacingError(@param:StringRes val message: Int) {
             "too_many_attempts" -> TOO_MANY_ATTEMPTS
             "rate_limited" -> TOO_MANY_CODES
             "email_failed" -> EMAIL_SEND_FAILED
+            "export_rate_limited" -> EXPORT_RATE_LIMITED
             else -> GENERIC
         }
 
@@ -144,6 +147,7 @@ enum class UserFacingError(@param:StringRes val message: Int) {
                 "not a member of this bubble" to NOT_MEMBER,
                 "request not found" to REQUEST_NOT_FOUND,
                 "event not found" to EVENT_NOT_FOUND,
+                "event has ended" to EVENT_ENDED,
                 "only the owner can remove members" to ONLY_OWNER_CAN_REMOVE,
                 "only the owner can remove admins" to OWNER_ONLY_ACTION,
                 "only the owner can transfer ownership" to OWNER_ONLY_ACTION,

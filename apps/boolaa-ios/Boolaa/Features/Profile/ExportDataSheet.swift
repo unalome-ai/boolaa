@@ -14,6 +14,8 @@ struct ExportDataSheet: View {
     /// The export, kept until the sheet closes: one export an hour, so a cancelled "Save" can be retried.
     @State private var file: DataExportFile?
     @State private var showExporter = false
+    /// One export an hour: when the next one is allowed, checked when the sheet opens and before a code is sent.
+    @State private var limitedUntil: Date?
 
     private enum Step { case intro, code, preparing, ready }
 
@@ -44,6 +46,13 @@ struct ExportDataSheet: View {
                 }
             }
             .interactiveDismissDisabled(busy)
+            .task { limitedUntil = try? await session.api.dataExportAvailableAt() }
+            // Lift the message once the hour is over.
+            .task(id: limitedUntil) {
+                guard let until = limitedUntil else { return }
+                try? await Task.sleep(for: .seconds(max(0, until.timeIntervalSinceNow) + 0.5))
+                if !Task.isCancelled, limitedUntil == until { limitedUntil = nil }
+            }
             .sensoryFeedback(.error, trigger: shakes)
             .fileExporter(isPresented: $showExporter, document: file.map { DataExportDocument(data: $0.data) },
                           contentType: .json, defaultFilename: file?.filename) { result in
@@ -57,6 +66,10 @@ struct ExportDataSheet: View {
             Text("You get one JSON file with everything Boolaa stores about you: your profile, bubbles, messages, posts, reactions, reports, blocks and settings. Your photos are listed as links that work for 7 days. Keep the file private.")
             Text("To keep it safe, we'll email you a code first. You can download your data once an hour.")
                 .font(.subheadline).foregroundStyle(.secondary)
+            if let limitedUntil {
+                FormMessage(text: DataExport.limitMessage(until: limitedUntil))
+                    .accessibilityIdentifier("export-data-limited")
+            }
             if let error { FormMessage(text: error) }
             Button {
                 Task { await sendCode() }
@@ -64,7 +77,7 @@ struct ExportDataSheet: View {
                 if busy { ProgressView() } else { Text("Send code") }
             }
             .buttonStyle(PrimaryButtonStyle())
-            .disabled(busy)
+            .disabled(busy || limitedUntil != nil)
             .accessibilityIdentifier("export-data-send")
         }
     }
@@ -115,9 +128,17 @@ struct ExportDataSheet: View {
         busy = true; defer { busy = false }
         error = nil
         do {
+            // Don't email a code that can't be used (the send step checks again).
+            if let until = try? await session.api.dataExportAvailableAt() {
+                limitedUntil = until; step = .intro
+                return
+            }
             try await session.sendSensitiveActionCode(.exportData)
             sentAt = .now; code = ""; step = .code
-        } catch { shakes += 1; self.error = error.userMessage }
+        } catch {
+            shakes += 1
+            if let until = DataExport.limitedUntil(error) { limitedUntil = until; step = .intro } else { self.error = error.userMessage }
+        }
     }
 
     private func verifyAndExport(_ value: String) async {
@@ -138,7 +159,7 @@ struct ExportDataSheet: View {
         } catch {
             // Any failure (reauthentication_required, rate limit, expired session…) goes back to "Send code".
             // "session not verified" also re-runs the device gate (UserFacingError.classify posts the event).
-            self.error = error.userMessage
+            if let until = DataExport.limitedUntil(error) { limitedUntil = until } else { self.error = error.userMessage }
             shakes += 1; code = ""; sentAt = nil; step = .intro
         }
     }

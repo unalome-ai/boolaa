@@ -92,3 +92,18 @@ final class ChatImageURLs {
 
     func reset() { entries = [:]; inFlight = [] }
 }
+
+/// Scroll rules for the chat list (docs/boolaa-spec.md, "Chat"). Unit-tested.
+enum ChatScroll {
+    /// One load of the chat. The view keys its load task AND its scroll view by this, so a bubble switch
+    /// while the chat is open (a tapped push for another bubble) starts again at the newest message.
+    static func loadKey(bubbleID: UUID?, contentVersion: Int) -> String {
+        "\(bubbleID?.uuidString ?? "-")-\(contentVersion)"
+    }
+
+    /// Older messages page in only when the user scrolls near the top of the CURRENT load, after its
+    /// first page landed at the bottom: never during a switch, and never for a previous bubble's offset.
+    static func mayLoadOlder(nearTop: Bool, initialLoaded: Bool, armedFor: String?, current: String) -> Bool {
+        nearTop && initialLoaded && armedFor == current
+    }
+}

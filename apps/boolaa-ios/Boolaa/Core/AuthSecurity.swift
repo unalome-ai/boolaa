@@ -87,12 +87,14 @@ struct DeviceCodeError: Error, Equatable, Sendable {
     var status: Int
     var code: String
     var attemptsLeft: Int?
+    /// `export_rate_limited` (send step of an `export_data` code): seconds until the next export is allowed.
+    var retryAfter: Int? = nil
 
     static func from(status: Int, body: Data) -> DeviceCodeError {
-        struct Payload: Decodable { var error: String?; var attempts_left: Int? }
+        struct Payload: Decodable { var error: String?; var attempts_left: Int?; var retry_after: Int? }
         let payload = try? JSONDecoder().decode(Payload.self, from: body)
         let code = payload?.error ?? (status == 401 ? "unauthorized" : "server_error")
-        return DeviceCodeError(status: status, code: code, attemptsLeft: payload?.attempts_left)
+        return DeviceCodeError(status: status, code: code, attemptsLeft: payload?.attempts_left, retryAfter: payload?.retry_after)
     }
 }
 

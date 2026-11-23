@@ -80,7 +80,35 @@ struct DataExportDocument: FileDocument {
     }
 }
 
+extension DataExport {
+    /// The "try again after" time carried by a rate-limit error (the `device-code` send step or `data-export`), else nil.
+    static func limitedUntil(_ error: Error, now: Date = .now) -> Date? {
+        if let e = error as? DataExportError, e.code == "export_rate_limited", let s = e.retryAfter, s > 0 {
+            return now.addingTimeInterval(TimeInterval(s))
+        }
+        if let e = error as? DeviceCodeError, e.code == "export_rate_limited", let s = e.retryAfter, s > 0 {
+            return now.addingTimeInterval(TimeInterval(s))
+        }
+        return nil
+    }
+
+    /// "You can download your data once an hour. Try again after 14:05." (time in the user's locale).
+    static func limitMessage(until: Date) -> String {
+        let time = until.formatted(date: .omitted, time: .shortened)
+        return String(localized: "You can download your data once an hour. Try again after \(time).",
+                      comment: "Data export rate limit; the argument is a time of day")
+    }
+}
+
 extension BoolaaAPI {
+    /// When the next data export is allowed (one an hour), or nil when it is allowed now. Asked BEFORE the
+    /// `export_data` code is emailed (`data_export_available_at`, 20261123220000_past_events_export_check.sql).
+    func dataExportAvailableAt(now: Date = .now) async throws -> Date? {
+        let raw: String? = try await client.rpc("data_export_available_at").execute().value
+        guard let raw, let date = BoolaaJSON.parseTimestamp(raw), date > now else { return nil }
+        return date
+    }
+
     /// Calls `data-export` with the user's JWT and returns the raw bytes. A 401 refreshes the session and retries once;
     /// a second 401 is thrown (shown as "session expired").
     func exportMyData() async throws -> DataExportFile {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Past events (docs/boolaa-spec.md "Events", 20261123220000_past_events_export_check.sql). -->
+<resources>
+    <string name="events_past">Evenimente trecute</string>
+    <string name="events_ended">S-a încheiat</string>
+    <string name="error_event_ended">Evenimentul s-a încheiat deja.</string>
+    <plurals name="went_count">
+        <item quantity="one">A participat %d persoană</item>
+        <item quantity="few">Au participat %d persoane</item>
+        <item quantity="other">Au participat %d de persoane</item>
+    </plurals>
+</resources>

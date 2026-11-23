@@ -44,7 +44,9 @@ function renderAlert(a: any) {
     ["Reporter", person(a.reporter_name, a.reporter_id)],
     ["Reported user", person(a.reported_user_name, a.reported_user_id)],
     ["Content", a.snippet ?? (a.target_type === "user" ? "(profile report)" : "(content no longer exists)")],
-    ["Image", a.image_url],
+    // Photos are in private buckets (20261123210000_private_photos.sql): a stored URL or path no
+    // longer opens from an email, so only say there is one; the admin view signs it.
+    ["Image", a.image_url ? "Has a photo: view it in the admin view (link below)" : null],
     ["Link", a.link_url],
     ["Details", a.details ?? "(none)"],
     ["Open reports against this user (30 days)", String(a.open_reports_against_user_30d)],

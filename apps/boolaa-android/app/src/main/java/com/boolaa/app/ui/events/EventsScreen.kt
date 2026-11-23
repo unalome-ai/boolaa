@@ -5,6 +5,7 @@ import com.boolaa.app.ui.shell.PushHighlightScroll
 import android.content.ActivityNotFoundException
 import android.widget.Toast
 import com.boolaa.app.core.CalendarExport
+import com.boolaa.app.core.EventSchedule
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -106,6 +107,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInRoot
@@ -240,6 +242,12 @@ fun EventsScreen() {
     val listState = rememberLazyListState()
     PushHighlightScroll(listState, loaded = events != null)
     val confetti = remember { ConfettiState() }
+    // Ticks every 30 s so events move to "Past" while the screen is open (an event ends 1 hour after it starts).
+    var now by remember { mutableStateOf(java.time.Instant.now()) }
+    LaunchedEffect(Unit) {
+        while (true) { kotlinx.coroutines.delay(30_000); now = java.time.Instant.now() }
+    }
+    var showPast by rememberSaveable { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
         BoolaaRefreshBox(isRefreshing = busy && events != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
@@ -251,8 +259,10 @@ fun EventsScreen() {
                 modifier = Modifier.fillMaxSize(),
             ) {
                 val list = events
-                val mine = list.orEmpty().filter { it.creatorId == me }
-                val others = list.orEmpty().filter { it.creatorId != me }
+                // Upcoming first (mine, then the bubble's); past events last, collapsed, without RSVP.
+                val (upcoming, past) = EventSchedule.split(list.orEmpty(), now)
+                val mine = upcoming.filter { it.creatorId == me }
+                val others = upcoming.filter { it.creatorId != me }
                 item(key = "my-header") {
                     SectionHeader(stringResource(R.string.my_events), if (list == null) null else mine.size, hue = hue,
                         action = { AddButton(stringResource(R.string.new_event), onClick = { creating = true }, hue = hue) })
@@ -283,6 +293,19 @@ fun EventsScreen() {
                         onReport = {
                             reporting = ReportTarget(ReportTargetType.EVENT, e.id, e.creatorId, e.creator?.name?.takeIf { it.isNotBlank() } ?: someone)
                         })
+                }
+                if (past.isNotEmpty()) {
+                    item(key = "past-header") { PastHeader(past.size, showPast) { showPast = !showPast } }
+                    if (showPast) itemsIndexed(past, key = { _, e -> e.id }) { _, e ->
+                        val own = e.creatorId == me
+                        EventCard(e, me, onRsvp = {}, ended = true,
+                            onEdit = if (own) ({ editing = e }) else null, onDelete = if (own) ({ deleting = e }) else null,
+                            reactions = reactionsByEvent[e.id].orEmpty(), onReact = { vm.react(e.id, it) },
+                            modifier = Modifier.pushHighlight(e.id).alpha(0.75f),
+                            onReport = if (own) null else ({
+                                reporting = ReportTarget(ReportTargetType.EVENT, e.id, e.creatorId, e.creator?.name?.takeIf { it.isNotBlank() } ?: someone)
+                            }))
+                    }
                 }
             }
         }
@@ -334,6 +357,8 @@ fun EventCard(
     event: BubbleEvent, me: String, onRsvp: () -> Unit, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?,
     modifier: Modifier = Modifier, confetti: ConfettiState? = null, onReport: (() -> Unit)? = null,
     reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
+    /** A past event: "Ended" instead of RSVP (toggle_rsvp refuses it) and "N went". */
+    ended: Boolean = false,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val c = BoolaaTheme.colors
@@ -364,12 +389,14 @@ fun EventCard(
                 Text(displayName(event.creator), style = Type.subheadline, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 6.dp).weight(1f))
                 RollingCount(event.rsvpList.size) {
-                    Text(pluralStringResource(R.plurals.going_count, it, it), style = Type.caption, color = c.textSecondary, maxLines = 1)
+                    Text(pluralStringResource(if (ended) R.plurals.went_count else R.plurals.going_count, it, it),
+                        style = Type.caption, color = c.textSecondary, maxLines = 1)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 AddToCalendarButton(event)
-                RsvpPill(going, onRsvp, confetti, Modifier.testTag("rsvp-${event.id}"))
+                if (ended) EndedChip(going, Modifier.testTag("rsvp-ended-${event.id}"))
+                else RsvpPill(going, onRsvp, confetti, Modifier.testTag("rsvp-${event.id}"))
             }
         }
         if (onReact != null) {
@@ -429,6 +456,42 @@ private fun RsvpPill(going: Boolean, onClick: () -> Unit, confetti: ConfettiStat
     ) {
         MorphIcon(if (going) BoolaaIcons.Going else BoolaaIcons.Rsvp, tint = content, modifier = Modifier.size(20.dp))
         Text(stringResource(if (going) R.string.going else R.string.rsvp), color = content, style = Type.chip, maxLines = 1)
+    }
+}
+
+/** Shown instead of the RSVP pill on a past event: not clickable. */
+@Composable
+private fun EndedChip(going: Boolean, modifier: Modifier = Modifier) {
+    val c = BoolaaTheme.colors
+    Row(
+        modifier.heightIn(min = 44.dp).padding(vertical = 3.dp).clip(CircleShape).background(c.field)
+            .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(if (going) BoolaaIcons.Going else BoolaaIcons.Time, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(20.dp))
+        Text(stringResource(R.string.events_ended), color = c.textSecondary, style = Type.chip, maxLines = 1)
+    }
+}
+
+/** "Past events (N)": tap to show or hide the past events (collapsed by default). */
+@Composable
+private fun PastHeader(count: Int, expanded: Boolean, onToggle: () -> Unit) {
+    val c = BoolaaTheme.colors
+    Row(
+        Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(14.dp))
+            .clickableRipple(role = Role.Button) { onToggle() }
+            .semantics { heading(); selected = expanded }
+            .testTag("past-events")
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(BoolaaIcons.Events, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(20.dp))
+        Text(stringResource(R.string.events_past), style = Type.headline, color = c.textSecondary)
+        Text(count.toString(), style = Type.caption, color = c.textSecondary,
+            modifier = Modifier.clip(CircleShape).background(c.field).padding(horizontal = 8.dp, vertical = 2.dp).testTag("past-count"))
+        Spacer(Modifier.weight(1f))
+        Icon(BoolaaIcons.ChevronDown, contentDescription = null, tint = c.textSecondary,
+            modifier = Modifier.size(20.dp).graphicsLayer { rotationZ = if (expanded) 180f else 0f })
     }
 }
 

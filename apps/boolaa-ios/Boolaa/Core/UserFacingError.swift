@@ -5,7 +5,7 @@ import Supabase
 /// Raw Postgres / GoTrue English is never shown to the user.
 enum UserFacingError: Equatable, Sendable, CaseIterable {
     static let allCases: [UserFacingError] = [
-        .invalidInviteCode, .alreadyMember, .bubbleFull, .notMember, .requestNotFound, .eventNotFound, .ownerOnlyRemove,
+        .invalidInviteCode, .alreadyMember, .bubbleFull, .notMember, .requestNotFound, .eventNotFound, .eventEnded, .ownerOnlyRemove,
         .removeSelf, .memberNotFound, .cannotReportSelf, .reportTargetNotFound, .notAuthenticated, .permissionDenied,
         .invalidCredentials, .emailTaken, .weakPassword, .network, .generic,
         .sessionNotVerified, .ageConfirmationRequired, .reauthenticationRequired, .invalidDeviceId, .invalidTermsVersion,
@@ -21,6 +21,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     case notMember
     case requestNotFound
     case eventNotFound
+    /// toggle_rsvp on an event that already ended (20261123220000_past_events_export_check.sql).
+    case eventEnded
     case ownerOnlyRemove
     case removeSelf
     case memberNotFound
@@ -121,6 +123,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             ("not a member of this bubble", .notMember),
             ("request not found", .requestNotFound),
             ("event not found", .eventNotFound),
+            ("event has ended", .eventEnded),
             ("only the owner can remove members", .ownerOnlyRemove),
             ("only the owner can remove admins", .ownerOnlyAction),
             ("only the owner can transfer ownership", .ownerOnlyAction),
@@ -185,6 +188,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case "too_many_attempts": .tooManyCodeAttempts
         case "rate_limited": .tooManyCodes
         case "email_failed": .emailSendFailed
+        case "export_rate_limited": .exportRateLimited
         default: .generic
         }
     }
@@ -197,6 +201,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .notMember: "You're not a member of this bubble."
         case .requestNotFound: "This join request no longer exists."
         case .eventNotFound: "This event no longer exists."
+        case .eventEnded: "This event has already ended."
         case .ownerOnlyRemove: "Only the owner or an admin can remove members."
         case .removeSelf: "To remove yourself, leave the bubble instead."
         case .memberNotFound: "This person is no longer a member of the bubble."

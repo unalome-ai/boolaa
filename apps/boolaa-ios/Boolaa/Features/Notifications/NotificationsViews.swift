@@ -35,8 +35,10 @@ struct NotificationsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         toggle(LocalizedStringResource("Show message previews", comment: "Notification setting"),
                                \.previewContent, id: "preview", prefs: prefs)
-                        Text("When off, notifications only say \"New message in Flatmates\", without names or text.",
-                             comment: "Hint under the message-preview notification setting")
+                        // The current bubble's name (user content), like the push itself; "Boolaa" without one.
+                        Text("When off, notifications only say \"New message in \(session.currentBubble?.name ?? "Boolaa")\", without names or text.",
+                             comment: "Hint under the message-preview notification setting; the argument is the current bubble's name")
+                            .accessibilityIdentifier("notifications-preview-hint")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     .card(padding: 14)

@@ -17,6 +17,8 @@ import Foundation
 ///     -UITestOpen security                 opens Profile → Sign-in & security
 ///     -UITestOpen notifications            opens Profile → Notifications
 ///     -UITestOpen exportData               opens Profile → Download my data
+///     -UITestShowPast YES                  Events starts with "Past events" expanded
+///     -UITestPushToBubble "Climbing Crew"  4 s after start, acts as a tapped chat push for this bubble
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {
@@ -62,6 +64,14 @@ enum DebugHooks {
         UserDefaults.standard.string(forKey: "UITestTab").flatMap(MainTab.init(rawValue:))
         #else
         nil
+        #endif
+    }
+
+    static var expandPastEvents: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "UITestShowPast")
+        #else
+        false
         #endif
     }
 

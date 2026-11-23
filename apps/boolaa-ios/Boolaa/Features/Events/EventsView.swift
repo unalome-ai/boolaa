@@ -38,15 +38,38 @@ final class EventsModel {
     }
 }
 
-/// "My events" and "Bubble events", sorted by date, with RSVP (spec §7).
+/// Past events (docs/boolaa-spec.md "Events"): events store only their start and last 1 hour (like "Add to
+/// calendar"), so an event has ended once start + 1 h has passed. The server (`toggle_rsvp`), web and Android
+/// use the same rule. Unit-tested.
+enum EventSchedule {
+    static let duration: TimeInterval = CalendarEventFields.defaultDuration
+
+    static func hasEnded(_ event: BubbleEvent, now: Date) -> Bool {
+        event.datetime.addingTimeInterval(duration) <= now
+    }
+
+    /// Upcoming events (soonest first) and past ones (most recent first).
+    static func split(_ events: [BubbleEvent], now: Date) -> (upcoming: [BubbleEvent], past: [BubbleEvent]) {
+        let sorted = events.sorted { $0.datetime < $1.datetime }
+        return (sorted.filter { !hasEnded($0, now: now) }, sorted.filter { hasEnded($0, now: now) }.reversed())
+    }
+}
+
+/// "My events" and "Bubble events" (upcoming, sorted by date, with RSVP), then a collapsed "Past events"
+/// section without RSVP (spec §7).
 struct EventsView: View {
     @Environment(SessionStore.self) private var session
     @State private var model = EventsModel()
     @State private var editing: EventEditorTarget?
     @State private var exporting: BubbleEvent?
+    @State private var showPast = DebugHooks.expandPastEvents
+    /// Ticks every 30 s so events move to "Past" while the screen is open.
+    @State private var now = Date.now
 
-    private var mine: [BubbleEvent] { model.events.filter { $0.creatorId == session.userID }.sorted { $0.datetime < $1.datetime } }
-    private var others: [BubbleEvent] { model.events.filter { $0.creatorId != session.userID }.sorted { $0.datetime < $1.datetime } }
+    private var sections: (upcoming: [BubbleEvent], past: [BubbleEvent]) { EventSchedule.split(model.events, now: now) }
+    private var mine: [BubbleEvent] { sections.upcoming.filter { $0.creatorId == session.userID } }
+    private var others: [BubbleEvent] { sections.upcoming.filter { $0.creatorId != session.userID } }
+    private var past: [BubbleEvent] { sections.past }
 
     var body: some View {
         ScrollView {
@@ -85,6 +108,8 @@ struct EventsView: View {
                         .popIn(index + mine.count)
                         .pushHighlightTarget(event.id)
                 }
+
+                if !past.isEmpty { pastSection }
             }
             .padding(.horizontal, 16)
             .padding(.top, 4)
@@ -97,6 +122,12 @@ struct EventsView: View {
             await reload()
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(30))
+                now = .now
+            }
+        }
         .sheet(item: $editing) { target in
             EventEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }
@@ -107,6 +138,47 @@ struct EventsView: View {
     }
 
     private var hue: Hue { Feature.events.hue }
+
+    /// Past events: a header that expands the list (collapsed by default), cards without RSVP.
+    @ViewBuilder private var pastSection: some View {
+        Button {
+            withAnimation(Motion.gentle) { showPast.toggle() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "calendar.badge.checkmark")
+                Text("Past events", comment: "Section with events that already ended")
+                    .font(.rounded(.headline))
+                Text(verbatim: "\(past.count)")
+                    .font(.rounded(.caption, weight: .bold)).monospacedDigit()
+                    .padding(.horizontal, 8).padding(.vertical, 2)
+                    .background(Theme.field, in: Capsule())
+                Spacer()
+                Image(systemName: "chevron.down")
+                    .rotationEffect(.degrees(showPast ? 180 : 0))
+            }
+            .foregroundStyle(.secondary)
+            .padding(.top, 18).padding(.bottom, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityValue(showPast ? Text("Expanded") : Text("Collapsed"))
+        .accessibilityIdentifier("past-events")
+        if showPast {
+            ForEach(past) { event in
+                EventCard(event: event, myID: session.userID, ended: true,
+                          onRSVP: {},
+                          reactions: model.reactions.summary(for: event.id, me: session.userID),
+                          onReact: { react(event, $0) },
+                          onEdit: event.creatorId == session.userID ? { editing = .edit(event) } : nil,
+                          onDelete: event.creatorId == session.userID ? { Task { await model.delete(api: session.api, event: event) } } : nil)
+                    .opacity(0.75)
+                    .safetyContextMenu(.event(event), react: { react(event, $0) })
+                    .pushHighlightTarget(event.id)
+                    .transition(.opacity)
+            }
+        }
+    }
 
     private func react(_ event: BubbleEvent, _ kind: ReactionKind) {
         Task {
@@ -138,6 +210,8 @@ enum EventEditorTarget: Identifiable {
 struct EventCard: View {
     var event: BubbleEvent
     var myID: UUID?
+    /// A past event: no RSVP (toggle_rsvp refuses it), "Ended" instead and "N went".
+    var ended = false
     var onRSVP: () -> Void
     var onAddToCalendar: (() -> Void)? = nil
     var reactions: [ReactionSummary] = []
@@ -160,14 +234,42 @@ struct EventCard: View {
         }
     }
 
-    private var goingCount: some View {
+    @ViewBuilder private var goingCount: some View {
+        if ended {
+            Text("\(event.rsvpList.count) went", comment: "Number of people who went to an event that ended")
+                .font(.rounded(.caption, weight: .semibold)).monospacedDigit()
+                .foregroundStyle(.secondary).lineLimit(1)
+        } else {
+            liveGoingCount
+        }
+    }
+
+    private var liveGoingCount: some View {
         Text("\(event.rsvpList.count) going", comment: "Number of people who RSVPed to an event")
             .font(.rounded(.caption, weight: .semibold)).monospacedDigit()
             .foregroundStyle(.secondary).lineLimit(1)
             .contentTransition(.numericText(value: Double(event.rsvpList.count)))
     }
 
-    private var rsvpButton: some View {
+    @ViewBuilder private var rsvpButton: some View {
+        if ended { endedChip } else { liveRSVPButton }
+    }
+
+    private var endedChip: some View {
+        HStack(spacing: 6) {
+            Image(systemName: going ? "checkmark.circle.fill" : "clock.fill")
+            Text("Ended", comment: "Shown instead of the RSVP button on an event that already ended").lineLimit(1)
+        }
+        .font(.rounded(.subheadline))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 14).frame(minHeight: 38)
+        .background(Capsule().fill(Theme.field))
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("rsvp-ended-\(event.title)")
+    }
+
+    private var liveRSVPButton: some View {
         let hue = Feature.events.hue
         return Button {
             taps += 1

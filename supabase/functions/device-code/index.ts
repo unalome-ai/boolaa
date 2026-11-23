@@ -122,6 +122,16 @@ Deno.serve(async (req) => {
     const { data: ok, error } = await userClient.rpc("is_device_verified");
     if (error) return sqlError(error.message);
     if (!ok) return json(403, { error: "session_not_verified" });
+    // "Download my data" is limited to once an hour: don't email a code that can't be used
+    // (export_my_data still checks the limit itself).
+    if (action === "send" && body.sensitive_action === "export_data") {
+      const { data: availableAt, error: limitErr } = await userClient.rpc("data_export_available_at");
+      if (limitErr) return sqlError(limitErr.message);
+      if (typeof availableAt === "string") {
+        const retryAfter = Math.max(1, Math.ceil((Date.parse(availableAt) - Date.now()) / 1000));
+        return json(429, { error: "export_rate_limited", retry_after: retryAfter, available_at: availableAt });
+      }
+    }
   }
   const label = typeof body.label === "string" ? body.label.slice(0, 120) : null;
 

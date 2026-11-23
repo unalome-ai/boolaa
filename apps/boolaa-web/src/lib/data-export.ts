@@ -16,6 +16,26 @@ export class DataExportError extends Error {
   }
 }
 
+/**
+ * When the next export is allowed (the limit is 1 per hour), or null when it is allowed now. Asked
+ * BEFORE the code is emailed, so nobody gets a code they can't use.
+ */
+export async function exportAvailableAt(supabase: BoolaaClient): Promise<Date | null> {
+  const { data, error } = await supabase.rpc("data_export_available_at");
+  if (error) throw error;
+  if (!data) return null;
+  const at = new Date(data);
+  return at.getTime() > Date.now() ? at : null;
+}
+
+/** The "try again after" time carried by a rate-limit error (send step or export), else null. */
+export function rateLimitedUntil(e: unknown, now = Date.now()): Date | null {
+  if (!e || typeof e !== "object") return null;
+  const err = e as { name?: string; code?: string; retryAfter?: number };
+  if ((err.name !== "DataExportError" && err.name !== "DeviceCodeError") || err.code !== "export_rate_limited") return null;
+  return typeof err.retryAfter === "number" && err.retryAfter > 0 ? new Date(now + err.retryAfter * 1000) : null;
+}
+
 /** File name from `Content-Disposition`, else `boolaa-data-<UTC date>.json`. */
 export function exportFileName(disposition: string | null, now = new Date()): string {
   const m = disposition?.match(/filename="?([^";]+)"?/i);

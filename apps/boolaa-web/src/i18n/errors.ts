@@ -11,6 +11,7 @@ type ErrorKey =
   | "notMember"
   | "requestNotFound"
   | "eventNotFound"
+  | "eventEnded"
   | "chatMessageGone"
   | "onlyOwnerCanRemove"
   | "ownerOnlyAction"
@@ -68,6 +69,8 @@ const DEVICE_CODE_ERRORS: Record<string, ErrorKey> = {
   too_many_attempts: "tooManyCodeAttempts",
   rate_limited: "tooManyCodes",
   email_failed: "emailSendFailed",
+  // Send step of an `export_data` code while the 1-per-hour export limit is used up.
+  export_rate_limited: "exportRateLimited",
   server_error: "generic",
 };
 
@@ -131,6 +134,8 @@ export function errorKey(e: unknown): ErrorKey {
   if (msg.includes("not a member of this bubble")) return "notMember";
   if (msg.includes("request not found")) return "requestNotFound";
   if (msg.includes("event not found")) return "eventNotFound";
+  // Past events (20261123220000_past_events_export_check.sql).
+  if (msg.includes("event has ended")) return "eventEnded";
   if (msg.includes("message not found")) return "chatMessageGone";
   if (msg.includes("only the owner can remove members")) return "onlyOwnerCanRemove";
   // Bubble roles (20261123190000_bubble_roles.sql).

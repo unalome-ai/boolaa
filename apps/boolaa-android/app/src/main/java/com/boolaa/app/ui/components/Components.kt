@@ -424,13 +424,21 @@ fun BoolaaSheet(onDismiss: () -> Unit, title: String, tag: String? = null, spaci
 
 /** Pushed-screen header (Chat, Links): round back button, title and the bubble name with its orb. */
 @Composable
-fun PushedHeader(title: String, bubbleName: String, bubbleHue: Hue, onBack: () -> Unit, backTag: String, modifier: Modifier = Modifier) {
+fun PushedHeader(
+    title: String, bubbleName: String, bubbleHue: Hue, onBack: () -> Unit, backTag: String, modifier: Modifier = Modifier,
+    /** The bubble's cover photo (private, signed by PhotoUrls' Coil interceptor), shown like the switcher chip; else the dot. */
+    bubbleId: String? = null, bubbleLogo: String? = null,
+) {
     Row(modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         CircleIconButton(BoolaaIcons.Back, stringResource(R.string.back), onBack, Modifier.testTag(backTag), surface = true, size = 44.dp)
         Column(Modifier.padding(start = 12.dp)) {
             FitText(title, Type.title, color = BoolaaTheme.colors.textPrimary, modifier = Modifier.testTag("screen-title").semantics { heading() })
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                MiniOrb(bubbleHue, 12.dp)
+                if (bubbleId != null && !bubbleLogo.isNullOrBlank()) {
+                    BubbleLogo(bubbleId, bubbleName, bubbleLogo, size = 20.dp, modifier = Modifier.testTag("header-bubble-logo"))
+                } else {
+                    MiniOrb(bubbleHue, 12.dp)
+                }
                 Text(bubbleName, style = Type.chip.copy(fontSize = 14.sp), color = bubbleHue.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.widthIn(max = 260.dp))
             }

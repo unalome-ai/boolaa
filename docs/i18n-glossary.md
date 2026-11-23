@@ -32,7 +32,7 @@ Language names in the picker are shown in their own language: English, Română,
 ## Rules
 - **Plurals** use real plural rules, never "item(s)". Romanian has the forms one, few and other ("1 membru", "2 membri", "20 de membri"). French uses the singular for 0 and 1.
 - **Dates, times and numbers** are formatted with the active locale (`Intl` on the web, `FormatStyle` / `Date.FormatStyle` on iOS), never with hard-coded formats. For relative times use `Intl.RelativeTimeFormat` or `RelativeDateTimeFormatter`.
-- **Backend errors**: map the RPC exception texts `invalid invite code`, `already a member`, `bubble is full`, `not a member of this bubble`, `request not found` and `event not found`, and the RLS/network failures, to translated messages. Fall back to a generic translated error and never show raw English from Postgres.
+- **Backend errors**: map the RPC exception texts `invalid invite code`, `already a member`, `bubble is full`, `not a member of this bubble`, `request not found`, `event not found` and `event has ended`, and the RLS/network failures, to translated messages. Fall back to a generic translated error and never show raw English from Postgres.
 
 - **User content** (chat, posts, bubble names, links) is never translated.
 - **Diacritics** must be correct: Romanian uses ș and ț with a comma below, not the cedilla forms ş and ţ.
@@ -173,3 +173,17 @@ Web keys `profile.export*`, `errors.exportRateLimited`, `appearance.*` (web only
 | appearance.hint | System follows your device's light or dark setting. | Sistem urmează setarea luminos sau întunecat a dispozitivului tău. | Système suit le réglage clair ou sombre de ton appareil. | Sistema sigue el ajuste claro u oscuro de tu dispositivo. | Sistema segue l'impostazione chiara o scura del tuo dispositivo. |
 
 The function's `reauthentication_required` and `session_not_verified` reuse `reauthenticationRequired` / `sessionNotVerified`.
+
+## QA follow-ups: past events, export limit, preview hint, invite page (docs/boolaa-spec.md "Events", "Data export", "Chat")
+
+Web keys `events.pastEvents`, `events.ended`, `events.wentCount`, `errors.eventEnded`, `errors.exportRateLimitedUntil`, `notifications.previewHint`, `invite.goToBoolaa` (web only); Android `events_past`, `events_ended`, plurals `went_count`, `error_event_ended` (`strings_past_events.xml`), `error_export_rate_limited_until`, `notifications_preview_hint`; iOS the English text as key. `{time}` is a locale-formatted time of day, `{bubble}` the current bubble's name (user content; "Boolaa" without a bubble).
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| pastEvents | Past events | Evenimente trecute | Événements passés | Eventos pasados | Eventi passati |
+| ended (instead of RSVP) | Ended | S-a încheiat | Terminé | Terminado | Concluso |
+| wentCount | # person went / # people went (web: =0 Nobody went) | A participat # persoană / Au participat # persoane / Au participat # de persoane | # personne y est allée / # personnes y sont allées | Fue # persona / Fueron # personas | C'è andata # persona / Ci sono andate # persone |
+| error `event has ended` → eventEnded | This event has already ended. | Evenimentul s-a încheiat deja. | Cet événement est déjà terminé. | Este evento ya ha terminado. | Questo evento è già finito. |
+| exportRateLimitedUntil | You can download your data once an hour. Try again after {time}. | Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}. | Tu peux télécharger tes données une fois par heure. Réessaie après {time}. | Puedes descargar tus datos una vez por hora. Inténtalo de nuevo a partir de las {time}. | Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}. |
+| previewHint (CHANGED: was the seeded "Flatmates") | When off, notifications only say "New message in {bubble}", without names or text. | Când e oprită, notificările spun doar „Mesaj nou în {bubble}”, fără nume sau text. | Désactivé, les notifications disent seulement « Nouveau message dans {bubble} », sans nom ni texte. | Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en {bubble}», sin nombres ni texto. | Se disattivata, le notifiche dicono solo «Nuovo messaggio in {bubble}», senza nomi né testo. |
+| goToBoolaa (invalid invite link, web) | Go to Boolaa | Mergi la Boolaa | Aller sur Boolaa | Ir a Boolaa | Vai su Boolaa |

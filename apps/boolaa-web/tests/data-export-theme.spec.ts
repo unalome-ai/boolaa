@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page, type Route } from "@playwright/test";
-import { SUPABASE_KEY, SUPABASE_URL, apiUser, deleteUsers, emailCode, login, serviceRoleKey, throwaway, typeCode } from "./helpers";
+import { SUPABASE_KEY, SUPABASE_URL, apiUser, deleteUsers, emailCode, login, serviceRoleKey, throwaway, typeCode, waitForEmail } from "./helpers";
 
 /**
  * "Download my data" (docs/boolaa-spec.md "Data export") and the light/dark theme setting.
@@ -69,13 +69,17 @@ test("download my data: emailed code, JSON file download, then the hourly limit"
   expect(doc.chat_messages.map((m: { content: string }) => m.content)).toContain(secret);
   await expect(panel.getByTestId("export-done")).toBeVisible();
 
-  // A second export within the hour: a fresh code still works, the limit answers.
+  // A second export within the hour: the limit is shown up front, with the time, and no code is emailed.
   await panel.getByRole("button", { name: "Close" }).click();
-  await page.getByTestId("export-data").click();
   since = Date.now();
-  await page.getByTestId("export-panel").getByTestId("export-send").click();
-  await typeCode(page, await emailCode(who.email, since));
-  await expect(page.getByTestId("export-panel")).toContainText("You can download your data once an hour.");
+  await page.getByTestId("export-data").click();
+  const again = page.getByTestId("export-panel");
+  await expect(again.getByTestId("export-limited")).toContainText(/You can download your data once an hour\. Try again after \d{1,2}:\d{2}/);
+  await expect(again.getByTestId("export-send")).toBeDisabled();
+  if (process.env.SHOT_DIR) await again.screenshot({ path: `${process.env.SHOT_DIR}/web-export-limited.png` });
+  // (The device-code send step refuses an export_data code too: supabase/tests/data_export.test.ts.)
+  await page.waitForTimeout(1000);
+  await expect(waitForEmail(who.email, since, 1500)).rejects.toThrow();
 });
 
 test("theme: the server render carries the chosen theme on every kind of page (no flash)", async ({ browser, baseURL }) => {

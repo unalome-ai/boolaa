@@ -3,7 +3,6 @@
  * (docs/boolaa-spec.md, "Chat"; migration 20261123120000_chat_improvements.sql).
  */
 import { prepareImage } from "@/lib/image";
-import { signPaths } from "@/lib/storage-url";
 import type { BoolaaClient } from "@/lib/supabase/client";
 
 export const CHAT_PAGE = 50;
@@ -73,9 +72,4 @@ export async function uploadChatImage(supabase: BoolaaClient, userId: string, fi
 export async function removeChatImage(supabase: BoolaaClient, path: string | null | undefined) {
   if (!path) return;
   await supabase.storage.from(CHAT_BUCKET).remove([path]);
-}
-
-/** Signed URLs for chat photo paths (one request per batch), cached per path (lib/storage-url). */
-export function signChatImages(_supabase: BoolaaClient, paths: string[]) {
-  return signPaths(CHAT_BUCKET, paths);
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Past events (docs/boolaa-spec.md "Events", 20261123220000_past_events_export_check.sql). -->
+<resources>
+    <string name="events_past">Past events</string>
+    <string name="events_ended">Ended</string>
+    <string name="error_event_ended">This event has already ended.</string>
+    <plurals name="went_count">
+        <item quantity="one">%d person went</item>
+        <item quantity="other">%d people went</item>
+    </plurals>
+</resources>

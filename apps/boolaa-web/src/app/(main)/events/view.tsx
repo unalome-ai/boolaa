@@ -3,7 +3,7 @@
 import { useReactions, type Reactions } from "@/lib/reactions";
 import { ReactionBar } from "@/components/reactions";
 import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { CalendarPlus, CircleCheck, CirclePlus, Clock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarCheck, CalendarPlus, ChevronDown, CircleCheck, CirclePlus, Clock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { Confetti } from "@/components/confetti";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
@@ -15,6 +15,7 @@ import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { cx, toLocalInput } from "@/lib/utils";
 import { downloadIcs } from "@/lib/ics";
+import { hasEnded, splitPast } from "@/lib/events";
 
 export default function EventsPage() {
   const { supabase, userId, blocked } = useBoolaa();
@@ -42,6 +43,12 @@ export default function EventsPage() {
     void load();
   }, [load]);
 
+  // Events move to "Past" while the page is open (an event ends 1 hour after it starts).
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
   const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "event", targetIds: events?.map((e) => e.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
   useLiveFeed<BoolaaEvent>({
@@ -61,6 +68,8 @@ export default function EventsPage() {
     const { data, error } = await supabase.rpc("toggle_rsvp", { p_event_id: ev.id });
     if (error) {
       setError(errorText(error));
+      // "event has ended": the clock moved on since the last tick; move it to Past now.
+      setNow(() => Date.now());
       return null;
     }
     setEvents((prev) => prev?.map((e) => (e.id === ev.id ? { ...e, rsvp_list: data ?? [] } : e)) ?? null);
@@ -74,8 +83,11 @@ export default function EventsPage() {
     void load();
   }
 
-  const mine = events?.filter((e) => e.creator_id === userId) ?? [];
-  const others = events?.filter((e) => e.creator_id !== userId && !blocked.has(e.creator_id)) ?? [];
+  // Upcoming first (mine, then the bubble's); past events last, collapsed, without RSVP.
+  const visible = events?.filter((e) => e.creator_id === userId || !blocked.has(e.creator_id)) ?? [];
+  const { upcoming, past } = splitPast(visible, now);
+  const mine = upcoming.filter((e) => e.creator_id === userId);
+  const others = upcoming.filter((e) => e.creator_id !== userId);
 
   const list = (items: BoolaaEvent[], empty: string) =>
     items.length === 0 ? (
@@ -124,6 +136,19 @@ export default function EventsPage() {
           {list(mine, t("emptyMine"))}
           <SectionTitle hue="coral" count={others.length}>{t("bubbleEvents")}</SectionTitle>
           {list(others, t("emptyOthers"))}
+          {past.length > 0 && (
+            <details className="group mt-6" data-testid="past-events">
+              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-field py-2 text-muted hover:text-fg [&::-webkit-details-marker]:hidden">
+                <CalendarCheck size={18} strokeWidth={2.4} className="shrink-0" />
+                <span className="font-display text-[17px] font-extrabold">{t("pastEvents")}</span>
+                <span className="rounded-full bg-field px-2 text-sm tabular-nums" data-testid="past-count">
+                  {past.length}
+                </span>
+                <ChevronDown size={18} className="ml-auto transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="mt-2">{list(past, "")}</div>
+            </details>
+          )}
         </>
       )}
       <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? t("newEvent") : t("editEvent")}>
@@ -165,10 +190,16 @@ function EventCard({
   const t = useTranslations("events");
   const tc = useTranslations("common");
   const fmt = useFormat();
-  const past = new Date(ev.datetime).getTime() < now;
+  const past = hasEnded(ev.datetime, now);
   const [burst, setBurst] = useState(0);
   return (
-    <li className={cx("card anim-rise flex flex-col gap-3 p-4", past && "opacity-60")} style={{ "--i": index } as CSSProperties} data-testid="event-card" data-item-id={ev.id}>
+    <li
+      className={cx("card anim-rise flex flex-col gap-3 p-4", past && "opacity-70")}
+      style={{ "--i": index } as CSSProperties}
+      data-testid="event-card"
+      data-item-id={ev.id}
+      data-past={past}
+    >
       <div className="flex gap-3.5">
         {/* Date tile, tilted (6.3) */}
         <div className="hue-coral flex h-16 w-14 shrink-0 -rotate-4 flex-col overflow-hidden rounded-field bg-hue-wash shadow-soft">
@@ -216,26 +247,34 @@ function EventCard({
             <CalendarPlus size={17} strokeWidth={2.4} className="mx-auto" />
           </button>
           <span key={ev.rsvp_list.length} className="anim-fade text-sm tabular-nums text-muted" data-testid="rsvp-count" data-count={ev.rsvp_list.length}>
-            {t("goingCount", { count: ev.rsvp_list.length })}
+            {past ? t("wentCount", { count: ev.rsvp_list.length }) : t("goingCount", { count: ev.rsvp_list.length })}
           </span>
-          <button
-            type="button"
-            onClick={async () => {
-              if ((await onRsvp()) === true) setBurst((n) => n + 1);
-            }}
-            aria-pressed={going}
-            data-testid="rsvp-button"
-            className={cx(
-              "chip relative transition-[background,color,box-shadow,transform] duration-300",
-              going ? "hue-mint fill-hue" : "hue-coral bg-hue-wash text-hue-ink hover:brightness-105",
-            )}
-          >
-            {burst > 0 && <Confetti key={burst} />}
-            <span key={going ? "on" : "off"} className="anim-pop inline-flex">
-              {going ? <CircleCheck size={18} strokeWidth={2.6} /> : <CirclePlus size={18} strokeWidth={2.6} />}
+          {past ? (
+            // Past events can't be RSVPed (toggle_rsvp refuses them too).
+            <span className="chip cursor-default bg-field text-muted" aria-disabled="true" data-testid="rsvp-ended">
+              {going ? <CircleCheck size={18} strokeWidth={2.6} /> : <Clock size={18} strokeWidth={2.6} />}
+              {t("ended")}
             </span>
-            {going ? t("going") : t("rsvp")}
-          </button>
+          ) : (
+            <button
+              type="button"
+              onClick={async () => {
+                if ((await onRsvp()) === true) setBurst((n) => n + 1);
+              }}
+              aria-pressed={going}
+              data-testid="rsvp-button"
+              className={cx(
+                "chip relative transition-[background,color,box-shadow,transform] duration-300",
+                going ? "hue-mint fill-hue" : "hue-coral bg-hue-wash text-hue-ink hover:brightness-105",
+              )}
+            >
+              {burst > 0 && <Confetti key={burst} />}
+              <span key={going ? "on" : "off"} className="anim-pop inline-flex">
+                {going ? <CircleCheck size={18} strokeWidth={2.6} /> : <CirclePlus size={18} strokeWidth={2.6} />}
+              </span>
+              {going ? t("going") : t("rsvp")}
+            </button>
+          )}
         </span>
       </div>
       <ReactionBar state={reactions} targetId={ev.id} className="hue-coral" />

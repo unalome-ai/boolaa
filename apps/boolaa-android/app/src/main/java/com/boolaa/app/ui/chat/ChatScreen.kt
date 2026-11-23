@@ -100,6 +100,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -521,7 +522,8 @@ fun ChatScreen(
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().testTag("chat-screen")) {
-        PushedHeader(stringResource(R.string.chat), bubble.name, Hue.forId(bubble.id), onBack, backTag = "chat-back")
+        PushedHeader(stringResource(R.string.chat), bubble.name, Hue.forId(bubble.id), onBack, backTag = "chat-back",
+            bubbleId = bubble.id, bubbleLogo = bubble.logo)
         Box(Modifier.weight(1f)) {
             when {
                 list == null -> SkeletonList(Modifier.padding(16.dp))
@@ -772,8 +774,11 @@ fun MessageRow(
                         )
                     }
                     if (message.content.isNotEmpty()) {
+                        // Links are tappable and open in the browser (no previews in chat).
+                        val linkColor = if (isMine) Hue.grape.onFill else Hue.grape.text
+                        val text = remember(message.content, linkColor) { linkified(message.content, linkColor) }
                         Text(
-                            message.content,
+                            text,
                             style = Type.body,
                             color = if (isMine) Hue.grape.onFill else c.textPrimary,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -788,3 +793,17 @@ fun MessageRow(
         }
     }
 }
+
+/** Message text with every http(s) / www. link as a [LinkAnnotation.Url] (opened by the system browser), underlined. */
+internal fun linkified(content: String, linkColor: Color): androidx.compose.ui.text.AnnotatedString =
+    androidx.compose.ui.text.buildAnnotatedString {
+        val style = androidx.compose.ui.text.TextLinkStyles(
+            androidx.compose.ui.text.SpanStyle(color = linkColor, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline),
+        )
+        for (part in com.boolaa.app.core.Linkify.split(content)) {
+            val url = part.url
+            if (url == null) append(part.text)
+            else withLink(androidx.compose.ui.text.LinkAnnotation.Url(url, style)) { append(part.text) }
+        }
+    }

@@ -170,7 +170,7 @@ export function PushPermission({ compact = false, onDone }: { compact?: boolean;
 
 /** Settings → Notifications (account level, docs/push-notifications.md §9): `notification_prefs`. */
 export function NotificationSettings() {
-  const { supabase, userId } = useBoolaa();
+  const { supabase, userId, bubble } = useBoolaa();
   const t = useTranslations("notifications");
   const errorText = useErrorText();
   const [prefs, setPrefs] = useState<Prefs | null>(null);
@@ -217,7 +217,7 @@ export function NotificationSettings() {
             <Toggle
               id="preview_content"
               label={t("preview")}
-              hint={t("previewHint")}
+              hint={t("previewHint", { bubble: bubble?.name ?? "Boolaa" })}
               checked={prefs.preview_content}
               disabled={!prefs.enabled}
               onChange={(v) => set({ preview_content: v })}

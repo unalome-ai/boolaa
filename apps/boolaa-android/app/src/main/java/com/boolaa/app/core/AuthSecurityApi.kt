@@ -121,14 +121,19 @@ enum class SensitiveAction(val wire: String) {
  * A `device-code` Edge Function failure: HTTP [status] and its `error` code (docs/auth-security.md §3),
  * plus `attempts_left` for `invalid_code`.
  */
-class DeviceCodeException(val status: Int, val code: String, val attemptsLeft: Int? = null) :
+class DeviceCodeException(
+    val status: Int, val code: String, val attemptsLeft: Int? = null,
+    /** `export_rate_limited` (send step of an `export_data` code): seconds until the next export is allowed. */
+    val retryAfter: Int? = null,
+) :
     RuntimeException("device-code $status $code") {
     companion object {
         /** Parses the function's JSON body; anything unreadable becomes `server_error`. */
         fun from(status: Int, body: String?): DeviceCodeException {
             val obj = runCatching { BoolaaJson.json.parseToJsonElement(body.orEmpty()).jsonObject }.getOrNull()
             val code = obj?.get("error")?.jsonPrimitive?.contentOrNull ?: if (status == 401) "unauthorized" else "server_error"
-            return DeviceCodeException(status, code, obj?.get("attempts_left")?.jsonPrimitive?.intOrNull)
+            return DeviceCodeException(status, code, obj?.get("attempts_left")?.jsonPrimitive?.intOrNull,
+                obj?.get("retry_after")?.jsonPrimitive?.intOrNull)
         }
     }
 }

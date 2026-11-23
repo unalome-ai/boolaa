@@ -11,7 +11,7 @@
     <string name="notifications_food">Cercle gourmand</string>
     <string name="notifications_market">Marché</string>
     <string name="notifications_preview">Afficher l\'aperçu des messages</string>
-    <string name="notifications_preview_hint">Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte.</string>
+    <string name="notifications_preview_hint">Désactivé, les notifications disent seulement « Nouveau message dans %1$s », sans nom ni texte.</string>
     <string name="notifications_blocked">Les notifications de Boolaa sont désactivées dans tes réglages.</string>
     <string name="notifications_ask">Activer les notifications</string>
     <string name="notifications_ask_hint">Reçois un signal quand tes bulles te parlent.</string>

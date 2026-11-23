@@ -11,7 +11,7 @@
     <string name="notifications_food">Cerchio del cibo</string>
     <string name="notifications_market">Mercatino</string>
     <string name="notifications_preview">Mostra l\'anteprima dei messaggi</string>
-    <string name="notifications_preview_hint">Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo.</string>
+    <string name="notifications_preview_hint">Se disattivata, le notifiche dicono solo «Nuovo messaggio in %1$s», senza nomi né testo.</string>
     <string name="notifications_blocked">Le notifiche di Boolaa sono disattivate nelle impostazioni.</string>
     <string name="notifications_ask">Attiva le notifiche</string>
     <string name="notifications_ask_hint">Ricevi un avviso quando le tue bolle ti parlano.</string>

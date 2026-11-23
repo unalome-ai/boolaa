@@ -8,4 +8,5 @@
     <string name="profile_export_preparing">Îți pregătim datele…</string>
     <string name="profile_export_done">Datele tale sunt gata.</string>
     <string name="error_export_rate_limited">Poți descărca datele o dată pe oră. Încearcă din nou mai târziu.</string>
+    <string name="error_export_rate_limited_until">Poți descărca datele o dată pe oră. Încearcă din nou după ora %1$s.</string>
 </resources>

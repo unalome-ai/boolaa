@@ -31,6 +31,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
 import com.boolaa.app.R
 import com.boolaa.app.core.DataExport
+import com.boolaa.app.core.DeviceCodeException
+import com.boolaa.app.core.dataExportAvailableAt
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import com.boolaa.app.core.DataExportFile
 import com.boolaa.app.core.SensitiveAction
 import com.boolaa.app.core.UserFacingError
@@ -66,9 +70,38 @@ class ExportDataViewModel(private val container: AppContainer) : CodeStepViewMod
     /** Why the last export failed, shown on the first step. */
     val exportError = _exportError.asStateFlow()
 
+    private val _limitedUntil = MutableStateFlow<java.time.Instant?>(null)
+    /** One export an hour: when the next one is allowed (checked when the sheet opens and before a code is sent). */
+    val limitedUntil = _limitedUntil.asStateFlow()
+
+    init {
+        viewModelScope.launch { refreshLimit() }
+    }
+
+    private suspend fun refreshLimit(): java.time.Instant? {
+        val until = runCatching { container.api.dataExportAvailableAt() }.getOrNull()
+        _limitedUntil.value = until
+        return until
+    }
+
+    /** The hour is over: "Send code" works again. */
+    fun clearLimit() { _limitedUntil.value = null }
+
+    /** "Send code": checks the limit first so no code is emailed that can't be used. */
+    fun start() {
+        if (sending.value) return
+        viewModelScope.launch { if (refreshLimit() == null) send() }
+    }
+
     override suspend fun sendCode() {
         _exportError.value = null
-        container.session.sendSensitiveActionCode(SensitiveAction.EXPORT_DATA)
+        try {
+            container.session.sendSensitiveActionCode(SensitiveAction.EXPORT_DATA)
+        } catch (e: DeviceCodeException) {
+            // The send step refused (limit used up elsewhere since the sheet opened): show the time.
+            DataExport.limitedUntil(e)?.let { _limitedUntil.value = it }
+            throw e
+        }
     }
 
     override suspend fun verifyCode(code: String) {
@@ -85,6 +118,7 @@ class ExportDataViewModel(private val container: AppContainer) : CodeStepViewMod
             throw e
         } catch (e: Throwable) {
             Log.w("Boolaa", "data export failed", e)
+            DataExport.limitedUntil(e)?.let { _limitedUntil.value = it }
             val kind = UserFacingError.classify(e)
             // "session not verified": back to the device gate, like every other surface.
             SecurityEvents.emitFor(kind)
@@ -125,6 +159,13 @@ fun ExportDataFlow(onDismiss: () -> Unit) {
     val preparing by vm.preparing.collectAsStateWithLifecycle()
     val file by vm.file.collectAsStateWithLifecycle()
     val exportError by vm.exportError.collectAsStateWithLifecycle()
+    val limitedUntil by vm.limitedUntil.collectAsStateWithLifecycle()
+    LaunchedEffect(limitedUntil) {
+        val until = limitedUntil ?: return@LaunchedEffect
+        kotlinx.coroutines.delay(java.time.Duration.between(java.time.Instant.now(), until).toMillis().coerceAtLeast(0) + 500)
+        vm.clearLimit()
+    }
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     val resolver = LocalContext.current.contentResolver
     val accountEmail = accountEmail()
     val c = BoolaaTheme.colors
@@ -158,9 +199,16 @@ fun ExportDataFlow(onDismiss: () -> Unit) {
             sentAt == null -> {
                 Text(stringResource(R.string.profile_export_body), style = Type.body, color = c.textPrimary)
                 Text(stringResource(R.string.profile_export_code_note), style = Type.subheadline, color = c.textSecondary)
-                CodeErrorText(error ?: exportError?.let { CodeError(it) })
-                PrimaryButton(stringResource(R.string.send_code), onClick = vm::send, loading = sending, calm = true,
-                    modifier = Modifier.testTag("export-data-send"))
+                val until = limitedUntil
+                if (until != null) {
+                    // "…once an hour. Try again after 14:05." instead of emailing a code that can't be used.
+                    Text(stringResource(R.string.error_export_rate_limited_until, com.boolaa.app.core.Formats.time(until, locale)),
+                        style = Type.subheadline, color = c.dangerText, modifier = Modifier.testTag("export-data-limited"))
+                } else {
+                    CodeErrorText(error ?: exportError?.let { CodeError(it) })
+                }
+                PrimaryButton(stringResource(R.string.send_code), onClick = vm::start, loading = sending, calm = true,
+                    enabled = until == null, modifier = Modifier.testTag("export-data-send"))
             }
             else -> {
                 Text(stringResource(R.string.code_sent_to, accountEmail), style = Type.body, color = c.textSecondary)

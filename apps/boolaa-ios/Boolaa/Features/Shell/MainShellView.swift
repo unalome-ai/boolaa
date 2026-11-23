@@ -112,6 +112,16 @@ struct MainShellView: View {
         case "addBubble": router.showAddBubble = true
         default: break
         }
+        #if DEBUG
+        // A tapped chat push for another bubble while the chat is open (QA: the chat must land at the newest message).
+        if let name = UserDefaults.standard.string(forKey: "UITestPushToBubble"), !name.isEmpty {
+            Task {
+                try? await Task.sleep(for: .seconds(4))
+                guard let bubble = session.bubbles.first(where: { $0.name == name }) else { return }
+                push.pendingRoute = PushRoute(payload: PushPayload(kind: .chat, bubbleID: bubble.id))
+            }
+        }
+        #endif
     }
 
     /// Debug hook: report the newest chat message from someone else in the current bubble.

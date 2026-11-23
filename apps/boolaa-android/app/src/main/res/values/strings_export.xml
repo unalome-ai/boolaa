@@ -8,4 +8,5 @@
     <string name="profile_export_preparing">Preparing your data…</string>
     <string name="profile_export_done">Your data is ready.</string>
     <string name="error_export_rate_limited">You can download your data once an hour. Try again later.</string>
+    <string name="error_export_rate_limited_until">You can download your data once an hour. Try again after %1$s.</string>
 </resources>

@@ -218,7 +218,10 @@
     "dateTime": "Data și ora",
     "location": "Locație",
     "create": "Creează evenimentul",
-    "addToCalendar": "Adaugă în calendar"
+    "addToCalendar": "Adaugă în calendar",
+    "pastEvents": "Evenimente trecute",
+    "ended": "S-a încheiat",
+    "wentCount": "{count, plural, =0 {N-a participat nimeni} one {A participat # persoană} few {Au participat # persoane} other {Au participat # de persoane}}"
   },
   "food": {
     "share": "Împarte mâncare",
@@ -388,7 +391,9 @@
     "onlyOwnerCanRotate": "Doar proprietarul sau un admin poate schimba codul de invitație.",
     "chatMessageGone": "Mesajul nu mai există.",
     "ownerOnlyAction": "Doar proprietarul poate face asta.",
-    "exportRateLimited": "Poți descărca datele o dată pe oră. Încearcă din nou mai târziu."
+    "exportRateLimited": "Poți descărca datele o dată pe oră. Încearcă din nou mai târziu.",
+    "eventEnded": "Evenimentul s-a încheiat deja.",
+    "exportRateLimitedUntil": "Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}."
   },
   "safety": {
     "moreActions": "Mai multe acțiuni",
@@ -542,7 +547,8 @@
     "invalidTitle": "Invitația nu e validă",
     "invalidBody": "Linkul poate fi vechi sau codul a fost schimbat. Cere unui membru unul nou.",
     "requestSent": "Cerere trimisă",
-    "getApp": "Descarcă aplicația"
+    "getApp": "Descarcă aplicația",
+    "goToBoolaa": "Mergi la Boolaa"
   },
   "notifications": {
     "title": "Notificări",
@@ -555,7 +561,7 @@
     "food": "Cercul culinar",
     "market": "Piață",
     "preview": "Arată previzualizarea mesajelor",
-    "previewHint": "Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text.",
+    "previewHint": "Când e oprită, notificările spun doar „Mesaj nou în {bubble}”, fără nume sau text.",
     "blocked": "Notificările pentru Boolaa sunt oprite din setări.",
     "blockedHint": "Ca să le reactivezi, apasă pe pictograma din stânga barei de adrese, permite notificările pentru acest site, apoi reîncarcă pagina.",
     "ask": "Activează notificările",

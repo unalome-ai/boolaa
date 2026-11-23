@@ -1220,6 +1220,125 @@
         }
       }
     },
+    "%lld went": {
+      "comment": "Number of people who went to an event that ended",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld person went"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld people went"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Fueron %lld de personas"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Fue %lld persona"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Fueron %lld personas"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de personnes y sont allées"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld personne y est allée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld personnes y sont allées"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ci sono andate %lld di persone"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "C'è andata %lld persona"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ci sono andate %lld persone"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Au participat %lld persoane"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "A participat %lld persoană"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Au participat %lld de persoane"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "(you)": {
       "localizations": {
         "es": {
@@ -3846,6 +3965,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Email"
+          }
+        }
+      }
+    },
+    "Ended": {
+      "comment": "Shown instead of the RSVP button on an event that already ended",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluso"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S-a încheiat"
           }
         }
       }
@@ -7037,6 +7185,35 @@
         }
       }
     },
+    "Past events": {
+      "comment": "Section with events that already ended",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eventos pasados"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Événements passés"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eventi passati"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evenimente trecute"
+          }
+        }
+      }
+    },
     "Pending approval": {
       "localizations": {
         "es": {
@@ -9656,6 +9833,34 @@
         }
       }
     },
+    "This event has already ended.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este evento ya ha terminado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet événement est déjà terminé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo evento è già finito."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evenimentul s-a încheiat deja."
+          }
+        }
+      }
+    },
     "This event no longer exists.": {
       "localizations": {
         "es": {
@@ -10893,30 +11098,31 @@
         }
       }
     },
-    "When off, notifications only say \"New message in Flatmates\", without names or text.": {
+    "When off, notifications only say \"New message in %@\", without names or text.": {
+      "comment": "Hint under the message-preview notification setting; the argument is the current bubble's name",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en Flatmates», sin nombres ni texto."
+            "value": "Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en %@», sin nombres ni texto."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte."
+            "value": "Désactivé, les notifications disent seulement « Nouveau message dans %@ », sans nom ni texte."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo."
+            "value": "Se disattivata, le notifiche dicono solo «Nuovo messaggio in %@», senza nomi né testo."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text."
+            "value": "Când e oprită, notificările spun doar „Mesaj nou în %@”, fără nume sau text."
           }
         }
       }
@@ -11036,6 +11242,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu"
+          }
+        }
+      }
+    },
+    "You can download your data once an hour. Try again after %@.": {
+      "comment": "Data export rate limit; the argument is a time of day",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes descargar tus datos una vez por hora. Inténtalo de nuevo a partir de las %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu peux télécharger tes données une fois par heure. Réessaie après %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le %@."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poți descărca datele o dată pe oră. Încearcă din nou după ora %@."
           }
         }
       }

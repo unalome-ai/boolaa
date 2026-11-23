@@ -9,7 +9,9 @@ import { useChatUnread } from "@/components/chat-unread";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader, Spinner } from "@/components/ui";
 import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type Author, type ChatMessage, type Row } from "@/lib/types";
-import { CHAT_PAGE, dividerIndex, mergeMessages, removeChatImage, signChatImages, uploadChatImage } from "@/lib/chat";
+import { CHAT_BUCKET, CHAT_PAGE, dividerIndex, mergeMessages, removeChatImage, uploadChatImage } from "@/lib/chat";
+import { splitLinks } from "@/lib/linkify";
+import { storageUrlOf, useSignedUrl } from "@/lib/storage-url";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
@@ -45,7 +47,6 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [live, setLive] = useState(false);
-  const [urls, setUrls] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState<ChatMessage | null>(null);
   const [deleting, setDeleting] = useState(false);
   // Last-read marker from before this visit: where the "New messages" divider goes (undefined = loading).
@@ -242,20 +243,6 @@ export default function ChatPage() {
     return () => document.removeEventListener("visibilitychange", mark);
   }, [marker, newestId, bubble.id, unreadMarkRead]);
 
-  // Signed URLs for the photos on screen (private bucket), one batch per change.
-  const missing = useMemo(
-    () => (messages ?? []).flatMap((m) => (m.image_path && !urls[m.image_path] ? [m.image_path] : [])),
-    [messages, urls],
-  );
-  useEffect(() => {
-    if (missing.length === 0) return;
-    let alive = true;
-    signChatImages(supabase, missing).then((got) => alive && setUrls((u) => ({ ...u, ...got })));
-    return () => {
-      alive = false;
-    };
-  }, [supabase, missing]);
-
   // Fill in sender info for realtime rows (payload has no joins).
   const rendered = useMemo(
     () =>
@@ -368,7 +355,6 @@ export default function ChatPage() {
                 const grouped = prev && prev.sender_id === m.sender_id && i !== divider;
                 const fresh = initialIds !== null && !initialIds.has(m.id);
                 const deleted = !!m.deleted_at;
-                const url = m.image_path ? urls[m.image_path] : undefined;
                 return (
                   <li key={m.id} className="space-y-3">
                     {i === divider && (
@@ -414,29 +400,21 @@ export default function ChatPage() {
                             style={fresh ? { transformOrigin: mine ? "bottom right" : "bottom left" } : undefined}
                           >
                             {m.image_path && (
-                              <a href={url} target="_blank" rel="noreferrer" className="block" aria-label={t("photo")}>
-                                {url ? (
-                                  /* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL */
-                                  <img
-                                    src={url}
-                                    alt={t("photo")}
-                                    loading="lazy"
-                                    data-testid="chat-photo"
-                                    // A photo is taller than its placeholder: stay at the bottom if we were there.
-                                    onLoad={() => {
-                                      const el = listRef.current;
-                                      if (el && pinned.current) el.scrollTop = el.scrollHeight;
-                                    }}
-                                    className="max-h-80 w-full min-w-48 object-cover"
-                                  />
-                                ) : (
-                                  <span className="flex h-48 w-60 items-center justify-center bg-field">
-                                    <Spinner className="h-5 w-5" />
-                                  </span>
-                                )}
-                              </a>
+                              <ChatPhoto
+                                path={m.image_path}
+                                label={t("photo")}
+                                // A photo is taller than its placeholder: stay at the bottom if we were there.
+                                onLoad={() => {
+                                  const el = listRef.current;
+                                  if (el && pinned.current) el.scrollTop = el.scrollHeight;
+                                }}
+                              />
                             )}
-                            {m.content && <div className={cx(m.image_path && "px-4 py-2.5")}>{m.content}</div>}
+                            {m.content && (
+                              <div className={cx(m.image_path && "px-4 py-2.5")}>
+                                <LinkifiedText text={m.content} mine={mine} />
+                              </div>
+                            )}
                           </div>
                         )}
                         {!deleted && <ReactionChips state={reactions} targetId={m.id} className={cx("hue-grape mt-1", mine && "justify-end")} />}
@@ -549,5 +527,51 @@ export default function ChatPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+/**
+ * A chat photo (private bucket): signed through useSignedUrl, so the URL is re-signed before it
+ * expires and once more after a failed load, like every other photo.
+ */
+function ChatPhoto({ path, label, onLoad }: { path: string; label: string; onLoad: () => void }) {
+  const { url, onError } = useSignedUrl(storageUrlOf(CHAT_BUCKET, path));
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="block" aria-label={label}>
+      {url ? (
+        /* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL */
+        <img src={url} alt={label} loading="lazy" data-testid="chat-photo" onLoad={onLoad} onError={onError} className="max-h-80 w-full min-w-48 object-cover" />
+      ) : (
+        <span className="flex h-48 w-60 items-center justify-center bg-field">
+          <Spinner className="h-5 w-5" />
+        </span>
+      )}
+    </a>
+  );
+}
+
+/** Message text with http(s) and www. links made clickable (opened in a new tab, no preview). */
+function LinkifiedText({ text, mine }: { text: string; mine: boolean }) {
+  const parts = useMemo(() => splitLinks(text), [text]);
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.href ? (
+          <a
+            key={i}
+            href={p.href}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            data-testid="chat-link"
+            className={cx("font-semibold underline underline-offset-2", mine ? "text-white decoration-white/70" : "text-hue-ink decoration-hue/60")}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {p.text}
+          </a>
+        ) : (
+          <span key={i}>{p.text}</span>
+        ),
+      )}
+    </>
   );
 }

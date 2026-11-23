@@ -11,7 +11,7 @@
 // app_settings flags.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import {
-  admin, ANON_KEY, API, assert, assertEq, client, cleanupUsers, codeOf, createUser, deviceCode, sha256Hex, signIn,
+  admin, ANON_KEY, API, assert, assertEq, client, cleanupUsers, codeOf, countMail, createUser, deviceCode, sha256Hex, signIn, sleep,
   sql, TEST_DEVICE, token, waitMail,
 } from "./helpers.ts";
 import { createHandler, type Deps, fileName, mapRpcError, orderKeys } from "../functions/data-export/handler.ts";
@@ -58,8 +58,8 @@ async function member(name: string) {
 type Member = Awaited<ReturnType<typeof member>>;
 
 /** Emails an `export_data` code to the user and verifies it in this client's session. */
-async function confirm(m: { email: string; c: SupabaseClient }) {
-  const sent = await deviceCode(m.c, { action: "send", purpose: "sensitive_action", sensitive_action: "export_data" });
+async function confirm(m: { email: string; c: SupabaseClient }, sensitiveAction = "export_data") {
+  const sent = await deviceCode(m.c, { action: "send", purpose: "sensitive_action", sensitive_action: sensitiveAction });
   assertEq(sent.status, 200, `send code: ${JSON.stringify(sent.body)}`);
   const mail = await waitMail(m.email, { subject: /confirmation code/i });
   const ok = await deviceCode(m.c, { action: "verify", purpose: "sensitive_action", code: codeOf(mail) });
@@ -233,8 +233,26 @@ Deno.test({ name: "export contains the user's own rows and photo links, nobody e
 }});
 
 Deno.test({ name: "rate limit: one export per hour", ...opts, fn: async () => {
-  // A fresh code doesn't lift the limit.
-  await confirm(U);
+  // The limit is checked BEFORE a code is emailed (20261123220000_past_events_export_check.sql).
+  const avail = await U.c.rpc("data_export_available_at");
+  assert(!avail.error, `data_export_available_at: ${avail.error?.message}`);
+  const waitS = (Date.parse(avail.data) - Date.now()) / 1000;
+  assert(waitS > 3500 && waitS <= 3600, `available in about an hour (${avail.data})`);
+  const mailsBefore = await countMail(U.email, /confirmation code/i);
+  const refused = await deviceCode(U.c, { action: "send", purpose: "sensitive_action", sensitive_action: "export_data" });
+  assertEq(refused.status, 429, `export_data code refused: ${JSON.stringify(refused.body)}`);
+  assertEq(refused.body.error, "export_rate_limited", "send step error code");
+  assert(refused.body.retry_after > 3500 && refused.body.retry_after <= 3600, "send step retry_after");
+  assertEq(Date.parse(refused.body.available_at), Date.parse(avail.data), "send step available_at");
+  await sleep(500);
+  assertEq(await countMail(U.email, /confirmation code/i), mailsBefore, "no code emailed while limited");
+  const vAvail = await V.c.rpc("data_export_available_at");
+  assertEq(vAvail.data, null, "V (no export yet) can export now");
+  const anon = await client().rpc("data_export_available_at");
+  assert(anon.error, "anon can't ask");
+
+  // Backstop: a fresh code (sent for another action) doesn't lift the limit.
+  await confirm(U, "generic");
   const r = await U.c.rpc("export_my_data");
   assert(r.error?.message.includes("export rate limited"), `second export: ${r.error?.message}`);
   const secs = Number(r.error?.details);

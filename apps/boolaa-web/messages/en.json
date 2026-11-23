@@ -218,7 +218,10 @@
     "dateTime": "Date & time",
     "location": "Location",
     "create": "Create event",
-    "addToCalendar": "Add to calendar"
+    "addToCalendar": "Add to calendar",
+    "pastEvents": "Past events",
+    "ended": "Ended",
+    "wentCount": "{count, plural, =0 {Nobody went} one {# person went} other {# people went}}"
   },
   "food": {
     "share": "Share food",
@@ -388,7 +391,9 @@
     "onlyOwnerCanRotate": "Only the owner or an admin can change the invite code.",
     "chatMessageGone": "That message no longer exists.",
     "ownerOnlyAction": "Only the owner can do that.",
-    "exportRateLimited": "You can download your data once an hour. Try again later."
+    "exportRateLimited": "You can download your data once an hour. Try again later.",
+    "eventEnded": "This event has already ended.",
+    "exportRateLimitedUntil": "You can download your data once an hour. Try again after {time}."
   },
   "safety": {
     "moreActions": "More actions",
@@ -542,7 +547,8 @@
     "invalidTitle": "This invite isn't valid",
     "invalidBody": "The link may be old or the code was changed. Ask a member for a new one.",
     "requestSent": "Request sent",
-    "getApp": "Get the app"
+    "getApp": "Get the app",
+    "goToBoolaa": "Go to Boolaa"
   },
   "notifications": {
     "title": "Notifications",
@@ -555,7 +561,7 @@
     "food": "Food Circle",
     "market": "Marketplace",
     "preview": "Show message previews",
-    "previewHint": "When off, notifications only say \"New message in Flatmates\", without names or text.",
+    "previewHint": "When off, notifications only say \"New message in {bubble}\", without names or text.",
     "blocked": "Notifications are turned off for Boolaa in your settings.",
     "blockedHint": "To turn them back on, click the icon left of the address bar, allow notifications for this site, then reload the page.",
     "ask": "Turn on notifications",

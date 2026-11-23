@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.ArrowOutward
 import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Check
@@ -77,6 +78,7 @@ object BoolaaIcons {
     val Add = Icons.Rounded.Add
     val Back = Icons.AutoMirrored.Rounded.ArrowBack
     val Disclosure = Icons.AutoMirrored.Rounded.KeyboardArrowRight
+    val ChevronDown = Icons.Rounded.KeyboardArrowDown
     val More = Icons.Rounded.MoreHoriz
     val Edit = Icons.Rounded.Edit
     val Delete = Icons.Rounded.Delete

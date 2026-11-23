@@ -217,8 +217,11 @@ fun NotificationsScreen(onBack: () -> Unit) {
                 Column(Modifier.boolaaCard(padding = 8.dp)) {
                     PrefSwitch(stringResource(R.string.notifications_preview), p.previewContent, enabled = prefs != null && p.enabled,
                         tag = "pref-preview_content") { vm.set(PrefKey.PREVIEW, it) }
-                    Text(stringResource(R.string.notifications_preview_hint), style = Type.caption, color = c.textSecondary,
-                        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp))
+                    // The current bubble's name (user content), like the push itself; "Boolaa" without one.
+                    val sessionState by LocalAppContainer.current.session.state.collectAsStateWithLifecycle()
+                    Text(stringResource(R.string.notifications_preview_hint, sessionState.currentBubble?.name ?: "Boolaa"),
+                        style = Type.caption, color = c.textSecondary,
+                        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp).testTag("notifications-preview-hint"))
                 }
             }
         }

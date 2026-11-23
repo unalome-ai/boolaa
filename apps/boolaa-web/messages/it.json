@@ -218,7 +218,10 @@
     "dateTime": "Data e ora",
     "location": "Luogo",
     "create": "Crea evento",
-    "addToCalendar": "Aggiungi al calendario"
+    "addToCalendar": "Aggiungi al calendario",
+    "pastEvents": "Eventi passati",
+    "ended": "Concluso",
+    "wentCount": "{count, plural, =0 {Non c'è andato nessuno} one {C'è andata # persona} other {Ci sono andate # persone}}"
   },
   "food": {
     "share": "Condividi cibo",
@@ -388,7 +391,9 @@
     "onlyOwnerCanRotate": "Solo il proprietario o un admin può cambiare il codice di invito.",
     "chatMessageGone": "Questo messaggio non esiste più.",
     "ownerOnlyAction": "Solo il proprietario può farlo.",
-    "exportRateLimited": "Puoi scaricare i tuoi dati una volta all'ora. Riprova più tardi."
+    "exportRateLimited": "Puoi scaricare i tuoi dati una volta all'ora. Riprova più tardi.",
+    "eventEnded": "Questo evento è già finito.",
+    "exportRateLimitedUntil": "Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}."
   },
   "safety": {
     "moreActions": "Altre azioni",
@@ -542,7 +547,8 @@
     "invalidTitle": "Questo invito non è valido",
     "invalidBody": "Il link potrebbe essere vecchio o il codice è cambiato. Chiedine uno nuovo a un membro.",
     "requestSent": "Richiesta inviata",
-    "getApp": "Scarica l'app"
+    "getApp": "Scarica l'app",
+    "goToBoolaa": "Vai su Boolaa"
   },
   "notifications": {
     "title": "Notifiche",
@@ -555,7 +561,7 @@
     "food": "Cerchio del cibo",
     "market": "Mercatino",
     "preview": "Mostra l'anteprima dei messaggi",
-    "previewHint": "Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo.",
+    "previewHint": "Se disattivata, le notifiche dicono solo «Nuovo messaggio in {bubble}», senza nomi né testo.",
     "blocked": "Le notifiche di Boolaa sono disattivate nelle impostazioni.",
     "blockedHint": "Per riattivarle, fai clic sull'icona a sinistra della barra degli indirizzi, consenti le notifiche per questo sito e ricarica la pagina.",
     "ask": "Attiva le notifiche",

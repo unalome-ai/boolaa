@@ -237,7 +237,8 @@ fun LinksScreen(onBack: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().testTag("links-screen")) {
-        PushedHeader(stringResource(R.string.links), bubble.name, Hue.forId(bubble.id), onBack, backTag = "links-back")
+        PushedHeader(stringResource(R.string.links), bubble.name, Hue.forId(bubble.id), onBack, backTag = "links-back",
+            bubbleId = bubble.id, bubbleLogo = bubble.logo)
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 40.dp),

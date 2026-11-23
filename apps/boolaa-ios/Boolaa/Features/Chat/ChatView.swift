@@ -225,8 +225,14 @@ struct ChatView: View {
     @State private var showPicker = false
     @State private var preparingPhoto = false
     @FocusState private var composerFocused: Bool
+    /// The load (bubble + block state) whose first page has landed at the bottom: only then may
+    /// scrolling near the top page in older messages.
+    @State private var pagingArmedFor: String?
 
     private static let bottomID = "chat-bottom"
+
+    /// One load of the chat: the current bubble plus the block/unblock version (RLS changes what is visible).
+    private var loadKey: String { ChatScroll.loadKey(bubbleID: session.currentBubble?.id, contentVersion: safety.contentVersion) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -284,11 +290,16 @@ struct ChatView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .defaultScrollAnchor(.bottom)
+                // A new scroll view per load: after a bubble switch (e.g. a tapped push for another bubble
+                // while the chat is open) it starts at the newest message like a fresh open, instead of
+                // keeping the old offset, landing at the top and paging in older messages.
+                .id(loadKey)
                 // Near the top: load the previous page and keep the previously-first message in place.
                 .onScrollGeometryChange(for: Bool.self) { geo in
                     geo.contentSize.height > geo.containerSize.height && geo.contentOffset.y + geo.contentInsets.top < 240
                 } action: { _, nearTop in
-                    guard nearTop, initialIDs != nil else { return }
+                    guard ChatScroll.mayLoadOlder(nearTop: nearTop, initialLoaded: initialIDs != nil,
+                                                  armedFor: pagingArmedFor, current: loadKey) else { return }
                     Task {
                         await model.loadOlder { anchor in proxy.scrollTo(anchor, anchor: .top) }
                     }
@@ -318,8 +329,10 @@ struct ChatView: View {
         .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
         .toolbar(.hidden, for: .navigationBar)
         // Reload (and resubscribe) after a block/unblock: RLS hides or shows the other person's messages.
-        .task(id: "\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)") {
+        .task(id: loadKey) {
             guard let id = session.currentBubble?.id else { return }
+            let key = loadKey
+            pagingArmedFor = nil
             initialIDs = nil
             lastMarked = nil
             model = ChatModel()
@@ -333,6 +346,11 @@ struct ChatView: View {
             if let target = router.takeChatJump() {
                 await model.jump(to: target)
                 initialIDs = Set(model.messages.map(\.id)) // the window doesn't pop in
+            }
+            // Let the first page settle at the bottom before scrolling up may page in older messages.
+            Task {
+                try? await Task.sleep(for: .milliseconds(400))
+                if loadKey == key { pagingArmedFor = key }
             }
             await markRead()
             await model.listen(client: session.api.client, bubbleID: id)
@@ -669,7 +687,9 @@ struct MessageRow: View {
                 } else {
                     if message.imagePath != nil { photo }
                     if !message.content.isEmpty {
-                        Text(verbatim: message.content)
+                        // Links are tappable and open in the browser (no previews in chat).
+                        Text(Linkify.attributed(message.content))
+                            .tint(isMine ? Color.white : Hue.grape.text)
                             .padding(.horizontal, 15)
                             .padding(.vertical, 10)
                             .foregroundStyle(isMine ? Color.white : Color.primary)

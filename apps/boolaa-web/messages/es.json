@@ -218,7 +218,10 @@
     "dateTime": "Fecha y hora",
     "location": "Lugar",
     "create": "Crear evento",
-    "addToCalendar": "Añadir al calendario"
+    "addToCalendar": "Añadir al calendario",
+    "pastEvents": "Eventos pasados",
+    "ended": "Terminado",
+    "wentCount": "{count, plural, =0 {No fue nadie} one {Fue # persona} other {Fueron # personas}}"
   },
   "food": {
     "share": "Compartir comida",
@@ -388,7 +391,9 @@
     "onlyOwnerCanRotate": "Solo el propietario o un admin puede cambiar el código de invitación.",
     "chatMessageGone": "Ese mensaje ya no existe.",
     "ownerOnlyAction": "Solo el propietario puede hacer eso.",
-    "exportRateLimited": "Puedes descargar tus datos una vez por hora. Inténtalo más tarde."
+    "exportRateLimited": "Puedes descargar tus datos una vez por hora. Inténtalo más tarde.",
+    "eventEnded": "Este evento ya ha terminado.",
+    "exportRateLimitedUntil": "Puedes descargar tus datos una vez por hora. Inténtalo de nuevo a partir de las {time}."
   },
   "safety": {
     "moreActions": "Más acciones",
@@ -542,7 +547,8 @@
     "invalidTitle": "Esta invitación no es válida",
     "invalidBody": "Puede que el enlace sea antiguo o que el código haya cambiado. Pide uno nuevo a un miembro.",
     "requestSent": "Solicitud enviada",
-    "getApp": "Descarga la app"
+    "getApp": "Descarga la app",
+    "goToBoolaa": "Ir a Boolaa"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -555,7 +561,7 @@
     "food": "Círculo de comida",
     "market": "Mercadillo",
     "preview": "Mostrar vista previa de los mensajes",
-    "previewHint": "Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en Flatmates», sin nombres ni texto.",
+    "previewHint": "Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en {bubble}», sin nombres ni texto.",
     "blocked": "Las notificaciones de Boolaa están desactivadas en tus ajustes.",
     "blockedHint": "Para volver a activarlas, haz clic en el icono a la izquierda de la barra de direcciones, permite las notificaciones para este sitio y recarga la página.",
     "ask": "Activar notificaciones",

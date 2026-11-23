@@ -114,8 +114,8 @@ export default function JoinPage({ code: rawCode }: { code: string }) {
     return (
       <AuthCard title={t("invalidTitle")} subtitle={t("invalidBody")}>
         <div data-testid="join-invalid">
-          <Link href="/" className="btn-ghost w-full">
-            Boolaa
+          <Link href="/" className="btn-ghost w-full" data-testid="join-invalid-home">
+            {t("goToBoolaa")}
           </Link>
         </div>
       </AuthCard>

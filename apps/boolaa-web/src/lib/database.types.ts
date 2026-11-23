@@ -1390,10 +1390,12 @@ export type Database = {
         }
       }
       current_session_id: { Args: never; Returns: string }
+      data_export_available_at: { Args: never; Returns: string }
       delete_chat_message: { Args: { p_message_id: string }; Returns: Json }
       delete_my_account: { Args: never; Returns: undefined }
       device_hash_of: { Args: { p_device_id: string }; Returns: string }
       enqueue_event_reminders: { Args: never; Returns: number }
+      event_has_ended: { Args: { p_datetime: string }; Returns: boolean }
       export_my_data: { Args: never; Returns: Json }
       generate_invite_code: { Args: never; Returns: string }
       get_invite_preview: {

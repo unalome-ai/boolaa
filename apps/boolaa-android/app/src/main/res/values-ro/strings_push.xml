@@ -11,7 +11,7 @@
     <string name="notifications_food">Cercul culinar</string>
     <string name="notifications_market">Piață</string>
     <string name="notifications_preview">Arată previzualizarea mesajelor</string>
-    <string name="notifications_preview_hint">Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text.</string>
+    <string name="notifications_preview_hint">Când e oprită, notificările spun doar „Mesaj nou în %1$s”, fără nume sau text.</string>
     <string name="notifications_blocked">Notificările pentru Boolaa sunt oprite din setări.</string>
     <string name="notifications_ask">Activează notificările</string>
     <string name="notifications_ask_hint">Primește un semn când bulele tale vorbesc cu tine.</string>
