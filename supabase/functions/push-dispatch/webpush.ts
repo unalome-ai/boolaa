@@ -149,7 +149,7 @@ export async function webPushRequest(
     "content-encoding": "aes128gcm",
     "content-type": "application/octet-stream",
     ttl: String(Math.max(0, m.expiresAt - Math.floor(now / 1000))),
-    urgency: m.type === "chat" || m.type === "event_reminder" ? "high" : "normal",
+    urgency: m.type === "chat" || m.type === "chat_mention" || m.type === "event_reminder" ? "high" : "normal",
   };
   if (m.collapseKey) headers.topic = await topicFor(m.collapseKey);
   return { url: sub.endpoint, init: { method: "POST", headers, body } };

@@ -7,6 +7,10 @@
     "private": { "one": "Nuovo messaggio in {bubble}", "other": "# nuovi messaggi in {bubble}" },
     "photo": "📷 Foto"
   },
+  "chat_mention": {
+    "title": "{name} ti ha menzionato in {bubble}",
+    "private": "Qualcuno ti ha menzionato in {bubble}"
+  },
   "join_request": {
     "body": "{name} vuole unirsi",
     "private": "Nuova richiesta di adesione in {bubble}"

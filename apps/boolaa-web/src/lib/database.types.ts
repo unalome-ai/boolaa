@@ -271,6 +271,7 @@ export type Database = {
           deleted_at: string | null
           id: string
           image_path: string | null
+          mentions: Json
           sender_id: string
         }
         Insert: {
@@ -280,6 +281,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           image_path?: string | null
+          mentions?: Json
           sender_id: string
         }
         Update: {
@@ -289,6 +291,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           image_path?: string | null
+          mentions?: Json
           sender_id?: string
         }
         Relationships: [
@@ -869,6 +872,7 @@ export type Database = {
           item_requests: boolean
           join_requests: boolean
           market: boolean
+          mentions: boolean
           new_events: boolean
           preview_content: boolean
           request_updates: boolean
@@ -884,6 +888,7 @@ export type Database = {
           item_requests?: boolean
           join_requests?: boolean
           market?: boolean
+          mentions?: boolean
           new_events?: boolean
           preview_content?: boolean
           request_updates?: boolean
@@ -899,6 +904,7 @@ export type Database = {
           item_requests?: boolean
           join_requests?: boolean
           market?: boolean
+          mentions?: boolean
           new_events?: boolean
           preview_content?: boolean
           request_updates?: boolean
@@ -1405,6 +1411,7 @@ export type Database = {
         Returns: boolean
       }
       chat_image_uploaded: { Args: { p_path: string }; Returns: boolean }
+      chat_mention_user_ids: { Args: { p_mentions: Json }; Returns: string[] }
       chat_messages_around: {
         Args: {
           p_before?: number
@@ -1419,6 +1426,7 @@ export type Database = {
           deleted_at: string | null
           id: string
           image_path: string | null
+          mentions: Json
           sender_id: string
         }[]
         SetofOptions: {
@@ -1437,6 +1445,7 @@ export type Database = {
           deleted_at: string | null
           id: string
           image_path: string | null
+          mentions: Json
           sender_id: string
         }[]
         SetofOptions: {
@@ -1604,6 +1613,14 @@ export type Database = {
       mark_session_verified: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: undefined
+      }
+      mention_candidates: {
+        Args: { p_bubble_id: string }
+        Returns: {
+          avatar: string
+          name: string
+          user_id: string
+        }[]
       }
       normalize_invite_code: { Args: { p_code: string }; Returns: string }
       pick_item_request: {
@@ -1794,6 +1811,7 @@ export type Database = {
         }
         Returns: string
       }
+      search_query_words: { Args: { p_query: string }; Returns: string[] }
       search_snippet: {
         Args: { p_texts: string[]; p_width?: number; p_words: string[] }
         Returns: string

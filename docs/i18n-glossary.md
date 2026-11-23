@@ -27,6 +27,7 @@ Languages: **en** (source and fallback), **ro**, **fr**, **es**, **it**. Both cl
 | Profile | Profile | Profil | Profil | Perfil | Profilo |
 | Language | Language | Limbă | Langue | Idioma | Lingua |
 | report (noun, safety) | report | raportare | signalement | denuncia | segnalazione |
+| mention (chat, noun / verb) | mention / mention | mențiune / a menționa | mention / mentionner | mención / mencionar | menzione / menzionare |
 | marketplace item | item | anunț / obiect | objet | artículo | oggetto |
 | Add buttons (Events / Food / Market / Links) | New event / Share food / New item / Add link | Eveniment nou / Împarte mâncare / Anunț nou / Adaugă link | Nouvel événement / Partager / Nouvel objet / Ajouter le lien | Nuevo evento / Compartir comida / Nuevo artículo / Añadir enlace | Nuovo evento / Condividi cibo / Nuovo oggetto / Aggiungi link |
 
@@ -112,6 +113,26 @@ Web keys under `chat.*` (`errors.chatMessageGone`); iOS and Android use the same
 | `chatMessageGone` (error `message not found`) | That message no longer exists. | Mesajul nu mai există. | Ce message n'existe plus. | Ese mensaje ya no existe. | Questo messaggio non esiste più. |
 
 The badge shows the number up to 99 and "99+" above (the server caps the count at 100).
+
+## Mentions (docs/boolaa-spec.md, "Mentions")
+
+Web keys under `chat.mention*`, `errors.tooManyMentions` and `notifications.mentions*`; Android `chat_mention_*`, `error_too_many_mentions`, `notifications_mentions*` (plurals as `<plurals>`); iOS the English text as key (plural in `Localizable.xcstrings` variations). `{name}` is a member's name (user content, never translated), `{count}` a number. Gender-neutral wording only: in fr the present tense ("te mentionne") avoids the agreement of "mentionné(e)"; ro "te-a menționat", es "te ha mencionado" and it "ti ha menzionato" don't agree with the person mentioned.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| `chat.mentionListLabel` (a11y name of the list) | Members to mention | Membri pe care îi poți menționa | Membres à mentionner | Miembros a los que mencionar | Membri da menzionare |
+| `chat.mentionA11y` (row label) | Mention {name} | Menționează: {name} | Mentionner {name} | Mencionar a {name} | Menziona {name} |
+| `chat.mentionNoMatch` | No members match | Niciun membru nu se potrivește | Aucun membre ne correspond | Ningún miembro coincide | Nessun membro corrisponde |
+| `chat.mentionCount` (polite announcement) | {count, plural, one {# member} other {# members}} | {count, plural, one {# membru} few {# membri} other {# de membri}} | {count, plural, one {# membre} other {# membres}} | {count, plural, one {# miembro} other {# miembros}} | {count, plural, one {# membro} other {# membri}} |
+| `chat.mentionLimit` (list row) and `errors.tooManyMentions` | You can mention up to 10 people in one message. | Poți menționa cel mult 10 persoane într-un mesaj. | Tu peux mentionner jusqu'à 10 personnes par message. | Puedes mencionar hasta 10 personas en un mensaje. | Puoi menzionare fino a 10 persone in un messaggio. |
+| `chat.mentionedYou` (a11y, start of a message's label) | {name} mentioned you | {name} te-a menționat | {name} te mentionne | {name} te ha mencionado | {name} ti ha menzionato |
+| `notifications.mentions` (switch) | Mentions | Mențiuni | Mentions | Menciones | Menzioni |
+| `notifications.mentionsHint` | When someone @mentions you, even if chat messages are off. | Când cineva te @menționează, chiar dacă mesajele din chat sunt oprite. | Quand quelqu'un te @mentionne, même si les messages de discussion sont désactivés. | Cuando alguien te @menciona, aunque tengas desactivados los mensajes del chat. | Quando qualcuno ti @menziona, anche se i messaggi in chat sono disattivati. |
+
+- **Push texts** (`supabase/functions/push-dispatch/locales/*.json`, key `chat_mention`; listed in `docs/push-notifications.md` §4): title "{name} mentioned you in {bubble}" / "{name} te-a menționat în {bubble}" / "{name} te mentionne dans {bubble}" / "{name} te ha mencionado en {bubble}" / "{name} ti ha menzionato in {bubble}"; body = the message text, or the existing `chat.photo` ("📷 Photo"); previews off: "Someone mentioned you in {bubble}" / "Cineva te-a menționat în {bubble}" / "Quelqu'un te mentionne dans {bubble}" / "Alguien te ha mencionado en {bubble}" / "Qualcuno ti ha menzionato in {bubble}".
+- **Error mapping**: `too many mentions` → `tooManyMentions`; `invalid mentions` → generic. Neither contains an older mapped text.
+- The mention itself is user content: `@` + the member's name, never translated.
+- Drafted by AI like the rest; in the native-speaker review.
 
 ## Marketplace availability and calendar (docs/boolaa-spec.md, "Marketplace availability", "Add to calendar")
 

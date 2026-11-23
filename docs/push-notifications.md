@@ -57,7 +57,7 @@ sequenceDiagram
 | Table | What | Client access |
 |---|---|---|
 | `push_tokens` | `id, user_id, platform (ios/android/web), token, endpoint, p256dh, auth, apns_env (ios: sandbox/production), device_hash, session_id, locale, app_version, created_at, last_seen_at`, `unique (platform, token)` | select/delete own rows; writes only through the RPCs below |
-| `notification_prefs` | one row per user: `enabled` (master), `chat`, `join_requests`, `approvals`, `new_events`, `event_reminders`, `food`, `market`, `item_requests`, `request_updates` (both default on; migration `20261124100000_requests_food_expiry.sql`), `preview_content`, `updated_at` | select/insert/update own row (a row is created for every user) |
+| `notification_prefs` | one row per user: `enabled` (master), `chat`, `join_requests`, `approvals`, `new_events`, `event_reminders`, `food`, `market`, `item_requests`, `request_updates` (both default on; migration `20261124100000_requests_food_expiry.sql`), `mentions` (default on; `20261124200000_chat_mentions.sql`), `preview_content`, `updated_at` | select/insert/update own row (a row is created for every user) |
 | `bubble_mutes` | `(user_id, bubble_id, until)`, `until` null = until unmuted | select/insert/update/delete own rows; insert only for bubbles you're in |
 | `notification_outbox` | `id, recipient_id, type, bubble_id, actor_id, target_id, payload, collapse_key, dedupe_key, status (pending/sent/failed/skipped), created_at, next_attempt_at, claimed_at, claimed_until, sent_at, attempts, last_error, token_ids` | none (service role) |
 | `push_debug_log` | what `PUSH_DRY_RUN=1` would have sent | none (service role) |
@@ -94,7 +94,8 @@ unregister_push_token(p_token) -> boolean
 
 | `type` | Trigger | Recipients | Pref | Android channel | iOS category | `collapse_key` | `target_id` |
 |---|---|---|---|---|---|---|---|
-| `chat` | insert `chat_messages` | approved members except the sender | `chat` | `chat` | `CHAT_MESSAGE` | `chat:<bubble_id>` | message id |
+| `chat` | insert `chat_messages` | approved members except the sender and except the people who get a `chat_mention` for that message | `chat` | `chat` | `CHAT_MESSAGE` | `chat:<bubble_id>` | message id |
+| `chat_mention` | insert `chat_messages` with `mentions`; once per message and person (`dedupe_key mention:<message_id>`) | each distinct mentioned user (already validated: other current members, no block with the sender) | `mentions` (not `chat`) | `chat` | `CHAT_MENTION` | `mention:<message_id>` | message id |
 | `join_request` | insert `join_requests` (not a repeated request) | approved members | `join_requests` | `bubble` | `JOIN_REQUEST` | `join:<bubble_id>` | request id |
 | `approval` | requester admitted (`bubble_members` inserted/updated to approved, role member) | the requester | `approvals` | `bubble` | `BUBBLE_JOINED` | `approval:<bubble_id>` | bubble id |
 | `new_event` | insert `events` | approved members except the creator | `new_events` | `events` | `NEW_EVENT` | `event:<event_id>` | event id |
@@ -121,6 +122,12 @@ The four request types carry `payload.kind` (`food` / `market`) and `payload.ite
 - At most **one push per bubble per recipient every 30 s**. The first message of a burst goes out at once. Messages arriving while a row is still waiting are merged into it: the newest message replaces the text and `payload.count` adds up. A message arriving within 30 s of the last push waits in a row with `next_attempt_at = last push + 30 s` (pg_cron wakes the dispatcher).
 - Every chat push of a bubble carries the same collapse key (`chat:<bubble_id>`: APNs `apns-collapse-id`, FCM `collapse_key` + `notification.tag`, Web Push `Topic` header + `tag`), so a newer push **replaces** the older one on the device instead of stacking.
 
+### Mentions
+- A message's `mentions` (docs/boolaa-spec.md, "Mentions") queue one `chat_mention` per distinct mentioned user, never coalesced or throttled (each mention is its own notification, collapse key `mention:<message_id>`, so a later chat summary doesn't replace it).
+- **One notification per message**: a mentioned user for whom the `chat_mention` passes the recipient rules (mentions on, not muted, active, member, no block) is left out of the regular `chat` push for that message. If it doesn't pass because `mentions` is off, they get the regular chat push like everyone else (if `chat` is on). Earlier, unrelated messages still coalesce into the chat row as before.
+- **Prefs**: only `enabled` + `mentions` decide; `chat` doesn't. So chat off + mentions on = "only mentions". A bubble **mute silences mentions too** (product decision: a mute means quiet).
+- At send time the dispatcher drops the row if the message was deleted (or no longer mentions the recipient).
+
 ### Reminders
 pg_cron runs `enqueue_event_reminders()` every 5 minutes. It queues a reminder for each event starting within the next hour, once per `(user, event, start time)` (unique `dedupe_key`). Moving the event re-arms it. The dispatcher drops the reminder if the event already started, was deleted or the user un-RSVPed in the meantime.
 
@@ -134,6 +141,7 @@ pg_cron runs `enqueue_event_reminders()` every 5 minutes. It queues a reminder f
 | type | Title (preview on, en) | Body (preview on, en) |
 |---|---|---|
 | chat | Ana in Flatmates | Pizza tonight? (`+2 more messages` when coalesced) |
+| chat_mention | Ana mentioned you in Flatmates | @Dan Pop can you buy milk? (a photo without caption: 📷 Photo; never coalesced) |
 | join_request | Flatmates | Ana wants to join |
 | approval | You're in Flatmates! | Your join request was approved. Say hi! |
 | new_event | New event in Flatmates | Ana added Flat dinner |
@@ -145,7 +153,7 @@ pg_cron runs `enqueue_event_reminders()` every 5 minutes. It queues a reminder f
 | item_picked | It's yours: “Old sofa” | Dan picked your request. Sort out the pick-up in the chat. |
 | item_missed | Someone else got “Old sofa” | Thanks for asking. Maybe next time! |
 
-With previews off the request types say "You have a new request in Flatmates", "A request was withdrawn in Flatmates", "Good news about your request in Flatmates" and "An update on your request in Flatmates".
+With previews off a mention says "Someone mentioned you in Flatmates" (ro "Cineva te-a menționat în Flatmates", fr "Quelqu'un te mentionne dans Flatmates", es "Alguien te ha mencionado en Flatmates", it "Qualcuno ti ha menzionato in Flatmates"). With previews off the request types say "You have a new request in Flatmates", "A request was withdrawn in Flatmates", "Good news about your request in Flatmates" and "An update on your request in Flatmates".
 
 No absolute times are shown, because the server doesn't know the user's time zone.
 
@@ -156,6 +164,7 @@ Deep-link data, on every platform: **`{ type, bubble_id, target_id }`** (strings
 | `type` | Open | Web URL (`url` field) |
 |---|---|---|
 | `chat` | switch to `bubble_id`, open Chat | `/chat?bubble=<id>` |
+| `chat_mention` | switch to `bubble_id`, open Chat and jump to `target_id` (`chat_messages_around`, centre + ring 4 s, like a search hit); no banner while that chat is open, like `chat` | `/chat?bubble=<id>&message=<id>` |
 | `join_request` | switch to `bubble_id`, open Settings → Pending requests | `/settings?bubble=<id>` |
 | `approval` | switch to `bubble_id` (it's now in the joined list), open Home; refresh the bubbles first | `/home?bubble=<id>` |
 | `new_event`, `event_reminder` | switch to `bubble_id`, open Events, scroll to/highlight `target_id` | `/events?bubble=<id>&event=<id>` |
@@ -299,7 +308,7 @@ No migration was needed: the clients use only the RPCs and tables above. All thr
 
 Settings → **Notifications** (account level):
 - Master switch (`enabled`). When off, grey out the rest.
-- Per type: Chat messages (`chat`), Join requests (`join_requests`), Request approved (`approvals`), New events (`new_events`), Event reminders (`event_reminders`), Food Circle (`food`), Marketplace (`market`), Requests for my posts (`item_requests`), Updates on my requests (`request_updates`).
+- Per type: Chat messages (`chat`), Join requests (`join_requests`), Request approved (`approvals`), New events (`new_events`), Event reminders (`event_reminders`), Food Circle (`food`), Marketplace (`market`), Requests for my posts (`item_requests`), Updates on my requests (`request_updates`), and Mentions (`mentions`, placed right after Chat messages, with a hint).
 - **Show message previews** (`preview_content`), with the hint "Off: only 'New message in Flatmates', no names or text."
 - The OS permission state: if notifications are blocked at the OS/browser level, show a banner with a button to the system settings.
 
@@ -314,6 +323,8 @@ Strings (add to each client's catalog; glossary terms, informal tone):
 | `notifications.title` | Notifications | Notificări | Notifications | Notificaciones | Notifiche |
 | `notifications.enabled` | Allow notifications | Permite notificările | Autoriser les notifications | Permitir notificaciones | Consenti le notifiche |
 | `notifications.chat` | Chat messages | Mesaje din chat | Messages de discussion | Mensajes del chat | Messaggi in chat |
+| `notifications.mentions` | Mentions | Mențiuni | Mentions | Menciones | Menzioni |
+| `notifications.mentionsHint` | When someone @mentions you, even if chat messages are off. | Când cineva te @menționează, chiar dacă mesajele din chat sunt oprite. | Quand quelqu'un te @mentionne, même si les messages de discussion sont désactivés. | Cuando alguien te @menciona, aunque tengas desactivados los mensajes del chat. | Quando qualcuno ti @menziona, anche se i messaggi in chat sono disattivati. |
 | `notifications.joinRequests` | Join requests | Cereri de alăturare | Demandes d'adhésion | Solicitudes para unirse | Richieste di adesione |
 | `notifications.approvals` | My request was approved | Cererea mea a fost aprobată | Ma demande a été acceptée | Mi solicitud fue aprobada | La mia richiesta è stata approvata |
 | `notifications.newEvents` | New events | Evenimente noi | Nouveaux événements | Eventos nuevos | Nuovi eventi |

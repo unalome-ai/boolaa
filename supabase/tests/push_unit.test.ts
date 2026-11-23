@@ -339,6 +339,29 @@ Deno.test("render: request types (20261124100000_requests_food_expiry.sql) in ev
   assertEq(buildMessage(item(), tok(null)).itemKind, null, "other types carry no item kind");
 });
 
+Deno.test("render: chat_mention (20261124200000_chat_mentions.sql) in every language, deep link to the message", () => {
+  const m = (over: Partial<ClaimedItem> = {}, l: "en" | "ro" | "fr" | "es" | "it" = "en") =>
+    render(item({ type: "chat_mention", target_id: "msg-1", data: { text: "@Dan Pop can you buy milk?" }, ...over }), l);
+  assertEq(m(), { title: "Ana mentioned you in Flatmates", body: "@Dan Pop can you buy milk?" }, "en");
+  assertEq(m({}, "ro").title, "Ana te-a menționat în Flatmates", "ro");
+  assertEq(m({}, "fr").title, "Ana te mentionne dans Flatmates", "fr");
+  assertEq(m({}, "es").title, "Ana te ha mencionado en Flatmates", "es");
+  assertEq(m({}, "it").title, "Ana ti ha menzionato in Flatmates", "it");
+  assertEq(m({ data: { text: "", photo: true } }).body, "📷 Photo", "photo without caption");
+  assertEq(m({ count: 5 }).body, "@Dan Pop can you buy milk?", "never coalesced: no '+n more'");
+  assertEq(m({ preview_content: false }), { title: "Boolaa", body: "Someone mentioned you in Flatmates" }, "private");
+  assertEq(m({ preview_content: false }, "ro").body, "Cineva te-a menționat în Flatmates", "private ro");
+  for (const l of ["en", "ro", "fr", "es", "it"] as const) {
+    for (const preview_content of [true, false]) {
+      const x = m({ preview_content }, l);
+      assert(x.title && x.body && !/[{}#]/.test(x.title + x.body), `${l} ${preview_content}: ${JSON.stringify(x)}`);
+      if (!preview_content) assert(!/Ana|Dan|milk/.test(x.title + x.body), `${l} private leaks content`);
+    }
+  }
+  const msg = buildMessage(item({ type: "chat_mention", target_id: "msg-1" }), tok("ro"));
+  assertEq([msg.url, msg.channelId, msg.category, msg.itemKind, msg.locale], ["/chat?bubble=b-1&message=msg-1", "chat", "CHAT_MENTION", null, "ro"], "deep link");
+});
+
 Deno.test("render: truncation to ~100 graphemes, names never carry an email", () => {
   const long = "ă".repeat(80) + " " + "🍕".repeat(60);
   const t = truncate(long);

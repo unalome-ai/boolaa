@@ -14,7 +14,7 @@ export type Locale = (typeof LOCALES)[number];
 const STRINGS: Record<Locale, any> = { en, ro, fr, es, it };
 
 export const NOTIFICATION_TYPES = [
-  "chat", "join_request", "approval", "new_event", "event_reminder", "food", "market",
+  "chat", "chat_mention", "join_request", "approval", "new_event", "event_reminder", "food", "market",
   "item_request", "item_request_withdrawn", "item_picked", "item_missed",
 ] as const;
 /** Requests on food posts and market items (20261124100000_requests_food_expiry.sql). */
@@ -113,6 +113,11 @@ export function render(item: ClaimedItem, locale: Locale): { title: string; body
       if (item.count > 1) body = truncate(`${body} ${plural(locale, s.chat.more, item.count - 1, vars)}`, MAX_TEXT + 30);
       return { title: fill(s.chat.title, vars), body };
     }
+    case "chat_mention": {
+      // One push per mentioning message (never coalesced); a photo may have no caption.
+      const body = truncate(d.text ?? "") || (d.photo ? s.chat.photo : "");
+      return { title: fill(s.chat_mention.title, vars), body };
+    }
     case "join_request":
       return { title: bubble, body: fill(s.join_request.body, vars) };
     case "approval":
@@ -155,6 +160,7 @@ export function render(item: ClaimedItem, locale: Locale): { title: string; body
 
 const CATEGORY: Record<NotificationType, string> = {
   chat: "CHAT_MESSAGE",
+  chat_mention: "CHAT_MENTION",
   join_request: "JOIN_REQUEST",
   approval: "BUBBLE_JOINED",
   new_event: "NEW_EVENT",
@@ -169,6 +175,7 @@ const CATEGORY: Record<NotificationType, string> = {
 
 const CHANNEL: Record<NotificationType, string> = {
   chat: "chat",
+  chat_mention: "chat",
   join_request: "bubble",
   approval: "bubble",
   new_event: "events",
@@ -187,6 +194,7 @@ export function webUrl(type: NotificationType, bubbleId: string | null, targetId
   const t = encodeURIComponent(targetId ?? "");
   switch (type) {
     case "chat": return `/chat?bubble=${b}`;
+    case "chat_mention": return `/chat?bubble=${b}&message=${t}`;
     case "join_request": return `/settings?bubble=${b}`;
     case "approval": return `/home?bubble=${b}`;
     case "new_event":

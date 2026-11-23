@@ -514,4 +514,53 @@ end $$;
 reset role;
 rollback;
 
+\echo '13. chat mentions (20261124200000_chat_mentions.sql)'
+begin;
+update public.app_settings set device_verification_enforced = false, age_confirmation_required = false;
+-- carol is a pending requester of Flatmates; dave is in Book Club only.
+set local role authenticated;
+select set_config('request.jwt.claims', :'alice', true);
+do $$
+declare v jsonb;
+begin
+  -- Bob kept, alice herself, pending carol and outsider dave dropped; text kept as written.
+  insert into chat_messages (bubble_id, sender_id, content, mentions)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
+          '@Bob @Alice @Carol @Dave hi',
+          '[{"user_id":"22222222-2222-2222-2222-222222222222","start":0,"length":4},
+            {"user_id":"11111111-1111-1111-1111-111111111111","start":5,"length":6},
+            {"user_id":"33333333-3333-3333-3333-333333333333","start":12,"length":6},
+            {"user_id":"55555555-5555-5555-5555-555555555555","start":19,"length":5}]')
+  returning mentions into v;
+  assert v = '[{"user_id":"22222222-2222-2222-2222-222222222222","start":0,"length":4}]'::jsonb, v::text;
+  begin
+    insert into chat_messages (bubble_id, sender_id, content, mentions)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Bob hi',
+            '[{"user_id":"22222222-2222-2222-2222-222222222222","start":0,"length":3}]');
+    assert false, 'span without @ refused';
+  exception when invalid_parameter_value then
+    assert sqlerrm = 'invalid mentions', sqlerrm;
+  end;
+  assert (select array_agg(name) from public.mention_candidates('aaaaaaaa-0000-0000-0000-000000000001')) = array['Bob'],
+    'alice can mention bob only';
+  assert not exists (select 1 from public.mention_candidates('aaaaaaaa-0000-0000-0000-000000000003')), 'not in Book Club';
+  begin
+    perform public.chat_mention_user_ids('[]'::jsonb);
+    assert false, 'internal helper closed';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+-- Bob reads the mention; once alice blocks bob, bob is no longer a candidate for her.
+select set_config('request.jwt.claims', :'bob', true);
+do $$ begin
+  assert exists (select 1 from chat_messages where mentions @> '[{"user_id":"22222222-2222-2222-2222-222222222222"}]'), 'bob reads it';
+end $$;
+select set_config('request.jwt.claims', :'alice', true);
+insert into blocks (blocker_id, blocked_id) values ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
+do $$ begin
+  assert not exists (select 1 from public.mention_candidates('aaaaaaaa-0000-0000-0000-000000000001')), 'blocked bob not a candidate';
+end $$;
+reset role;
+rollback;
+
 \echo 'ALL RLS CHECKS PASSED'
