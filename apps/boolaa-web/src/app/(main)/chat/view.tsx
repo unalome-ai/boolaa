@@ -9,7 +9,22 @@ import { useChatUnread } from "@/components/chat-unread";
 import { Avatar, EmptyState, ErrorText, Modal, PageLoader, Spinner } from "@/components/ui";
 import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type Author, type ChatMessage, type Row } from "@/lib/types";
-import { CHAT_BUCKET, CHAT_PAGE, dividerIndex, mergeMessages, removeChatImage, uploadChatImage } from "@/lib/chat";
+import { CHAT_BUCKET, CHAT_PAGE, dividerIndex, mergeMessages, removeChatImage } from "@/lib/chat";
+import { prepareImage } from "@/lib/image";
+import { getConnectivity, useConnectivity } from "@/lib/connectivity";
+import { CHAT_CACHE_LIMIT, isNetworkError, readCache, writeCache } from "@/lib/offline";
+import {
+  discardMessage,
+  markDelivered,
+  onOutboxSent,
+  outboxPreview,
+  pendingFor,
+  retryMessage,
+  sendMessage,
+  useOutbox,
+  type OutboxItem,
+} from "@/lib/outbox";
+import { LoadError, StaleNotice, useResilientLoad } from "@/components/offline";
 import { splitLinks } from "@/lib/linkify";
 import { storageUrlOf, useSignedUrl } from "@/lib/storage-url";
 import { useTranslations } from "next-intl";
@@ -28,6 +43,9 @@ const BOTTOM_THRESHOLD = 120;
 /** How long a message opened from search stays highlighted. */
 const HIGHLIGHT_MS = 4000;
 
+/** Cached last view of a bubble's chat: the newest page and the members' names and avatars. */
+type ChatCache = { messages: ChatMessage[]; authors: Record<string, Author> };
+
 export default function ChatPage() {
   const { supabase, userId, profile, blocked } = useBoolaa();
   const bubble = useBubble();
@@ -37,13 +55,22 @@ export default function ChatPage() {
   const tc = useTranslations("common");
   const errorText = useErrorText();
   const fmt = useFormat();
-  const [messages, setMessages] = useState<ChatMessage[] | null>(null);
-  const [authors, setAuthors] = useState<Record<string, Author>>({});
-  const [hasMore, setHasMore] = useState(false);
+  // The last view (newest page) shows at once, also offline; the history load refreshes it.
+  const cacheKey = `chat.${bubble.id}`;
+  const [cached] = useState(() => readCache<ChatCache>(cacheKey));
+  // Ids of the cached page, until the first load replaces it.
+  const staleIds = useRef<Set<string> | null>(cached ? new Set(cached.messages.map((m) => m.id)) : null);
+  const [messages, setMessages] = useState<ChatMessage[] | null>(cached?.messages ?? null);
+  const [authors, setAuthors] = useState<Record<string, Author>>(cached?.authors ?? {});
+  const [hasMore, setHasMore] = useState((cached?.messages.length ?? 0) >= CHAT_PAGE);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [text, setText] = useState("");
   const [photo, setPhoto] = useState<{ file: File; preview: string } | null>(null);
+  // Preparing a photo (resize, re-encode) before it joins the outbox.
   const [sending, setSending] = useState(false);
+  const outbox = useOutbox();
+  const { generation } = useConnectivity();
+  const olderFailed = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [live, setLive] = useState(false);
@@ -52,7 +79,7 @@ export default function ChatPage() {
   // Last-read marker from before this visit: where the "New messages" divider goes (undefined = loading).
   const [marker, setMarker] = useState<string | null | undefined>(undefined);
   // Messages present at first load don't animate; later ones pop in from their tail corner.
-  const [initialIds, setInitialIds] = useState<Set<string> | null>(null);
+  const [initialIds, setInitialIds] = useState<Set<string> | null>(() => (cached ? new Set(cached.messages.map((m) => m.id)) : null));
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const anchor = useRef<{ height: number; top: number } | null>(null);
@@ -62,6 +89,8 @@ export default function ChatPage() {
   // Message whose reaction picker is open (button, or right-click on the bubble).
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const liveIds = useMemo(() => (messages ?? []).filter((m) => !m.deleted_at).map((m) => m.id), [messages]);
+  // Queued messages of this bubble ("Sending…" / "Not sent") not yet in the list, oldest first.
+  const pending = useMemo(() => pendingFor(outbox, bubble.id, messages ?? []), [outbox, bubble.id, messages]);
   const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "chat_message", targetIds: liveIds, userId, onError: (e) => setError(errorText(e)) });
   const { bind: bindReactions, reload: reloadReactions, dropTarget } = reactions;
   // A message opened from search (docs/boolaa-spec.md, "Search"): scrolled to and highlighted once rendered.
@@ -89,28 +118,67 @@ export default function ChatPage() {
     [supabase, bubble.id],
   );
 
-  // Marker first (before this visit marks anything read), then history + members, then live.
-  useEffect(() => {
-    let alive = true;
-    const merge = (rows: ChatMessage[]) => setMessages((prev) => mergeMessages(prev ?? [], rows));
-
-    unread.load(bubble.id).then((entry) => alive && setMarker(entry?.lastReadAt ?? null));
-
-    (async () => {
-      const [hist, members] = await Promise.all([
-        page(null),
-        supabase.from("bubble_members").select(`user:users!user_id(${AUTHOR})`).eq("bubble_id", bubble.id),
-      ]);
-      if (!alive) return;
-      if (hist.error) setLoadError(hist.error);
-      const rows = hist.data ?? [];
-      setHasMore(rows.length === CHAT_PAGE);
-      setMessages((prev) => mergeMessages(prev ?? [], rows));
-      setInitialIds(new Set(rows.map((m) => m.id)));
+  // History (newest page) + members. Retried with backoff and after a reconnect; a failure keeps
+  // the cached last view on screen (useResilientLoad, LoadError / StaleNotice).
+  const loadHistory = useCallback(async () => {
+    const [hist, members] = await Promise.all([
+      page(null),
+      supabase.from("bubble_members").select(`user:users!user_id(${AUTHOR})`).eq("bubble_id", bubble.id),
+    ]);
+    if (hist.error) return false;
+    const rows = hist.data ?? [];
+    setHasMore(rows.length === CHAT_PAGE);
+    // The cached page gives way to the server's (messages removed since then disappear, and no gap
+    // is left between them); live messages and a search jump merged meanwhile stay. After that,
+    // merges by id keep live messages and older pages.
+    const stale = staleIds.current;
+    staleIds.current = null;
+    const fresh = new Set(rows.map((m) => m.id));
+    setMessages((prev) =>
+      mergeMessages(stale ? (prev ?? []).filter((m) => !stale.has(m.id) || fresh.has(m.id)) : (prev ?? []), rows),
+    );
+    setInitialIds((prev) => prev ?? new Set(rows.map((m) => m.id)));
+    if (!members.error) {
       const dir: Record<string, Author> = {};
       members.data?.forEach((m) => m.user && (dir[m.user.id] = m.user));
       setAuthors(dir);
-    })();
+    }
+    return true;
+  }, [supabase, bubble.id, page]);
+  const sync = useResilientLoad(loadHistory);
+
+  // Keep the newest page (and who wrote it) as the last view for next time and for offline.
+  useEffect(() => {
+    if (!messages) return;
+    const id = window.setTimeout(() => writeCache<ChatCache>(cacheKey, { messages: messages.slice(-CHAT_CACHE_LIMIT), authors }), 400);
+    return () => window.clearTimeout(id);
+  }, [messages, authors, cacheKey]);
+
+  // A queued message went out: show the server's row (merged by id, so the live echo adds nothing).
+  useEffect(
+    () =>
+      onOutboxSent((row) => {
+        if (row.bubble_id === bubble.id) setMessages((prev) => mergeMessages(prev ?? [], [row]));
+      }),
+    [bubble.id],
+  );
+
+  // Marker first (before this visit marks anything read).
+  useEffect(() => {
+    let alive = true;
+    unread.load(bubble.id).then((entry) => alive && setMarker(entry?.lastReadAt ?? null));
+    return () => {
+      alive = false;
+    };
+    // `unread` changes identity with every count; only its stable `load` is used here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bubble.id]);
+
+  // Live. Resubscribes after a reconnect (`generation`), then catches up once streaming.
+  useEffect(() => {
+    let alive = true;
+    const merge = (rows: ChatMessage[]) => setMessages((prev) => mergeMessages(prev ?? [], rows));
+    olderFailed.current = false;
 
     // INSERT adds, UPDATE replaces in place (a deletion arrives as an UPDATE with deleted_at set).
     const filter = `bubble_id=eq.${bubble.id}`;
@@ -141,18 +209,22 @@ export default function ChatPage() {
       alive = false;
       unsubscribe();
     };
-    // `unread` changes identity with every count; only its stable `load` is used here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase, bubble.id, page, bindReactions, reloadReactions, dropTarget]);
+  }, [supabase, bubble.id, page, bindReactions, reloadReactions, dropTarget, generation]);
 
   const loadOlder = useCallback(async () => {
     const el = listRef.current;
     const oldest = messages?.[0];
     if (!el || !oldest || !hasMore || loadingOlder) return;
+    // Offline, or the last try failed: wait for a reconnect instead of retrying in a loop.
+    if (olderFailed.current || getConnectivity().status !== "online") return;
     setLoadingOlder(true);
     const { data, error } = await page(oldest.id);
     setLoadingOlder(false);
-    if (error) return setLoadError(error);
+    if (error) {
+      olderFailed.current = true;
+      if (!isNetworkError(error)) setLoadError(error); // network: the offline pill says it
+      return;
+    }
     const rows = data ?? [];
     setHasMore(rows.length === CHAT_PAGE);
     // Keep the message that was on top where it is: restore the offset from the bottom of the content.
@@ -219,9 +291,9 @@ export default function ChatPage() {
     }
     const mine = messages?.[messages.length - 1]?.sender_id === userId;
     if (pinned.current || mine) el.scrollTop = el.scrollHeight;
-    // Only a new newest message moves the view; edits in place (deletions) don't.
+    // Only a new newest message (or a newly queued one of mine) moves the view; edits in place don't.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newestId, messages?.length]);
+  }, [newestId, messages?.length, pending.length]);
 
   // A short first page can't scroll: load older pages until it can (or the chat starts).
   useEffect(() => {
@@ -296,28 +368,35 @@ export default function ChatPage() {
     e.preventDefault();
     const content = text.trim();
     if (!content && !photo) return;
-    setSending(true);
     setError(null);
-    let path: string | null = null;
-    try {
-      if (photo) path = await uploadChatImage(supabase, userId, photo.file);
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .insert({ bubble_id: bubble.id, sender_id: userId, content, ...(path ? { image_path: path } : {}) })
-        .select(`*, sender:users!sender_id(${AUTHOR})`)
-        .single();
-      if (error) throw error;
-      setText("");
-      clearPhoto();
-      pinned.current = true;
-      setMessages((prev) => mergeMessages(prev ?? [], [data]));
-    } catch (err) {
-      if (path) void removeChatImage(supabase, path); // the message never referenced it
-      setError(errorText(err));
-    } finally {
-      setSending(false);
+    let jpeg: Blob | undefined;
+    if (photo) {
+      // The pipeline runs first, so a photo it refuses stays in the composer with the error.
+      setSending(true);
+      try {
+        jpeg = await prepareImage(photo.file, CHAT_BUCKET);
+      } catch (err) {
+        setError(errorText(err));
+        return;
+      } finally {
+        setSending(false);
+      }
     }
+    // The outbox shows it at once ("Sending…"), sends it now or after a reconnect, and keeps it as
+    // "Not sent" with Try again if that fails, so clearing the composer loses nothing.
+    sendMessage(supabase, { bubbleId: bubble.id, userId, content, jpeg });
+    setText("");
+    clearPhoto();
+    pinned.current = true;
   }
+
+  // Queued messages already in the list were delivered (e.g. restored after a reload): forget them.
+  useEffect(() => {
+    if (!messages) return;
+    const ids = new Set(messages.map((m) => m.id));
+    const delivered = outbox.filter((i) => i.bubble_id === bubble.id && ids.has(i.id) && i.state === "failed").map((i) => i.id);
+    if (delivered.length) markDelivered(delivered);
+  }, [outbox, messages, bubble.id]);
 
   async function deleteMessage() {
     const m = confirmDelete;
@@ -352,9 +431,14 @@ export default function ChatPage() {
         aria-label={bubble.name}
         tabIndex={0}
       >
+        <StaleNotice show={sync.failed && messages !== null} onRetry={sync.retry} />
         {messages === null ? (
-          <PageLoader />
-        ) : rendered.length === 0 ? (
+          sync.failed ? (
+            <LoadError onRetry={sync.retry} />
+          ) : (
+            <PageLoader />
+          )
+        ) : rendered.length === 0 && pending.length === 0 ? (
           <EmptyState icon={<MessagesSquare size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="grape" />
         ) : (
           <>
@@ -480,6 +564,19 @@ export default function ChatPage() {
             </ul>
           </>
         )}
+        {pending.length > 0 && (
+          <ul className="mt-3 space-y-3" data-testid="chat-outbox">
+            {pending.map((item) => (
+              <PendingMessage
+                key={item.id}
+                item={item}
+                photoLabel={t("photo")}
+                onRetry={() => retryMessage(supabase, item.id)}
+                onDiscard={() => discardMessage(supabase, item.id)}
+              />
+            ))}
+          </ul>
+        )}
       </div>
       <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="chat-announcer">
         {announcement}
@@ -557,6 +654,64 @@ export default function ChatPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+/**
+ * A message in the outbox, aligned as mine: "Sending…" (dimmed) or "Not sent" with Try again and
+ * Don't send. A refused message (not a network problem) also says why.
+ */
+function PendingMessage({
+  item,
+  photoLabel,
+  onRetry,
+  onDiscard,
+}: {
+  item: OutboxItem;
+  photoLabel: string;
+  onRetry: () => void;
+  onDiscard: () => void;
+}) {
+  const t = useTranslations("offline");
+  const errorText = useErrorText();
+  const preview = outboxPreview(item.id);
+  const failed = item.state === "failed";
+  const reason = failed && item.error && !isNetworkError(item.error) ? errorText(item.error) : null;
+  return (
+    <li className="flex flex-col items-end" data-testid="chat-pending" data-id={item.id} data-state={item.state}>
+      <div
+        className={cx(
+          "hue-grape max-w-[78%] overflow-hidden whitespace-pre-wrap wrap-anywhere rounded-[21px] rounded-br-[6px] bg-hue-grad text-[16px] leading-snug text-white",
+          !preview && "px-4 py-2.5",
+          failed ? "opacity-80" : "opacity-60",
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
+        {preview && <img src={preview} alt={photoLabel} className="max-h-80 w-full min-w-48 object-cover" />}
+        {item.content && <div className={cx(preview && "px-4 py-2.5")}>{item.content}</div>}
+      </div>
+      {/* Polite live region: "Sending…" turning into "Not sent" is announced (spec "Accessibility"). */}
+      <span role="status" className="mt-0.5 flex flex-wrap items-center justify-end gap-x-2 px-1 text-[12px]">
+        {failed ? (
+          <>
+            <span className="font-bold text-danger-ink" data-testid="chat-not-sent">
+              {t("notSent")}
+              {reason ? ` · ${reason}` : ""}
+            </span>
+            <button type="button" onClick={onRetry} data-testid="chat-retry" className="min-h-6 font-bold text-grape-ink underline underline-offset-2">
+              {t("retry")}
+            </button>
+            <button type="button" onClick={onDiscard} data-testid="chat-discard" className="min-h-6 text-muted underline underline-offset-2">
+              {t("discard")}
+            </button>
+          </>
+        ) : (
+          <span className="text-muted" data-testid="chat-sending">
+            {t("sending")}
+          </span>
+        )}
+      </span>
+    </li>
   );
 }
 

@@ -359,4 +359,15 @@
     <!-- Accessibility (docs/i18n-glossary.md "Accessibility labels"); read by TalkBack only. -->
     <string name="a11y_photo_from">Photo from %1$s</string>
     <string name="a11y_new_message_from">New message from %1$s</string>
+
+    <!-- Offline and poor network (docs/boolaa-spec.md) -->
+    <string name="offline_banner">You\'re offline — showing what you saw last</string>
+    <string name="offline_unreachable">Can\'t reach Boolaa — showing what you saw last</string>
+    <string name="offline_back_online">Back online</string>
+    <string name="offline_load_failed">Couldn\'t load this. Check your connection and try again.</string>
+    <string name="offline_stale_notice">Couldn\'t refresh — showing what you saw last.</string>
+    <string name="offline_retry">Try again</string>
+    <string name="offline_sending">Sending…</string>
+    <string name="offline_not_sent_tap_to_retry">Not sent — tap to retry</string>
+    <string name="offline_discard">Don\'t send</string>
 </resources>

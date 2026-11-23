@@ -236,9 +236,15 @@ final class AuthSecurityUITests: XCTestCase {
         try await LocalStack.ban(user, hours: 24)
         signIn(app, user.email, user.password)
         XCTAssertTrue(app.buttons["suspended-back"].waitForExistence(timeout: 15))
+        // iOS may offer to save the password after the submitted sign-in; its sheet blocks the tap below.
+        dismissSavePasswordPrompt(app)
         XCTAssertTrue(app.staticTexts["This account can't sign in right now: it's suspended or banned."].exists)
         attach(app, "sign-in-blocked")
-        app.buttons["suspended-back"].tap()
+        // The dismissed password sheet may still be sliding away: wait until the button can take the tap.
+        let back = app.buttons["suspended-back"]
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: back)
+        _ = await XCTWaiter().fulfillment(of: [hittable], timeout: 5)
+        back.tap()
         XCTAssertTrue(app.textFields["auth-email"].waitForExistence(timeout: 5))
     }
 }

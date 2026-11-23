@@ -28,6 +28,11 @@ struct RootView: View {
             }
         }
         .animation(Motion.resolve(Motion.gentle, reduceMotion: reduceMotion), value: session.route)
+        #if DEBUG
+        // On the trailing edge, mid-height: clear of the headers' and dock's buttons. (In the status-bar strip
+        // XCUITest found no hit point and the tap never reached the app.)
+        .overlay(alignment: .trailing) { DebugNetworkToggle() }
+        #endif
         // An opened invite link: the join preview, once the user is past sign-in and the device gate.
         .sheet(item: Binding(
             get: { session.inviteToShow.map(PendingInvite.init) },

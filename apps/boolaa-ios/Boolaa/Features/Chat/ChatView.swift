@@ -46,12 +46,14 @@ final class ChatModel {
     func merge(_ message: ChatMessage) {
         messages = ChatTimeline.upsert(messages, withAuthor(message))
         signPhotos(of: [message])
+        scheduleCacheSave()
     }
 
     /// UPDATE (a deletion): replace in place.
     func update(_ message: ChatMessage) {
         messages = ChatTimeline.applyUpdate(messages, withAuthor(message))
         if message.isDeleted { reactions.dropTarget(message.id) }
+        scheduleCacheSave()
     }
 
     private func loadReactions(of rows: [ChatMessage]) async {
@@ -70,11 +72,22 @@ final class ChatModel {
         Task { await images.sign(paths, api: api) }
     }
 
+    /// The last load failed (inline error, or the stale notice over the cached page).
+    private(set) var failed = false
+    private var cacheSave: Task<Void, Never>?
+    var currentBubbleID: UUID? { bubbleID }
+
     /// The newest page; `lastReadAt` is the marker from before the chat was marked read (divider).
+    /// The cached newest page shows first (offline / slow network).
     func load(api: BoolaaAPI, bubbleID: UUID, me: UUID?, lastReadAt: @MainActor () async -> Date?) async {
         self.api = api
         self.bubbleID = bubbleID
         self.me = me
+        if !loaded, let cached = OfflineCache.shared.read([ChatMessage].self, key: OfflineCache.Key.chat(bubbleID)) {
+            messages = cached.map(withAuthor)
+            reachedStart = ChatTimeline.reachedStart(pageCount: cached.count)
+            loaded = true
+        }
         do {
             async let page = api.chatPage(bubbleID: bubbleID, beforeID: nil)
             async let members = api.members(bubbleID: bubbleID)
@@ -84,12 +97,60 @@ final class ChatModel {
             messages = rows
             reachedStart = ChatTimeline.reachedStart(pageCount: rows.count)
             dividerID = ChatTimeline.dividerID(rows, lastReadAt: marker, me: me)
+            loaded = true
+            failed = false
+            Connectivity.shared.reportSuccess()
+            OfflineCache.shared.save(rows, key: OfflineCache.Key.chat(bubbleID))
             signPhotos(of: rows)
             await loadReactions(of: rows)
         } catch {
-            self.error = error.userMessage
+            noteFailure(error)
         }
-        loaded = true
+    }
+
+    /// Back online / in the foreground / Try again: fetch the newest page and merge it, keeping the scroll
+    /// position. If more than a page was missed (no overlap), the newest page replaces the list.
+    func refresh() async {
+        guard let api, let bubbleID else { return }
+        guard loaded else {
+            await load(api: api, bubbleID: bubbleID, me: me) { nil }
+            return
+        }
+        do {
+            let rows = try await api.chatPage(bubbleID: bubbleID, beforeID: nil).map(withAuthor)
+            let held = Set(messages.map(\.id))
+            if rows.count >= BoolaaAPI.chatPageSize, !rows.contains(where: { held.contains($0.id) }) {
+                messages = rows
+                reachedStart = false
+            } else {
+                for row in rows { messages = ChatTimeline.upsert(messages, row) }
+            }
+            failed = false
+            Connectivity.shared.reportSuccess()
+            scheduleCacheSave()
+            signPhotos(of: rows)
+            await loadReactions(of: rows)
+        } catch {
+            noteFailure(error)
+        }
+    }
+
+    private func noteFailure(_ error: any Error) {
+        guard !Task.isCancelled else { return }
+        failed = true
+        Connectivity.shared.report(error)
+        _ = UserFacingError.classify(error) // "session not verified" / "account suspended" re-run the gate
+    }
+
+    /// Keeps the cached newest page current as messages arrive (debounced).
+    private func scheduleCacheSave() {
+        guard let bubbleID else { return }
+        cacheSave?.cancel()
+        cacheSave = Task {
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            OfflineCache.shared.save(Array(messages.suffix(BoolaaAPI.chatPageSize)), key: OfflineCache.Key.chat(bubbleID))
+        }
     }
 
     /// Loads the page before the oldest message. `onPrepended` runs in the same update as the
@@ -106,7 +167,8 @@ final class ChatModel {
             signPhotos(of: page)
             await loadReactions(of: page)
         } catch {
-            self.error = error.userMessage
+            // Offline: no alert per scroll; the banner explains and scrolling up again retries.
+            if Connectivity.isNetworkError(error) { Connectivity.shared.report(error) } else { self.error = error.userMessage }
         }
     }
 
@@ -143,8 +205,9 @@ final class ChatModel {
             try await channel.subscribeWithError()
             await catchUp()
         } catch {
-            // A cancelled subscription (the view went away or reloaded) is not an error.
-            if !Task.isCancelled {
+            // A cancelled subscription (the view went away or reloaded) is not an error, and offline the
+            // banner already explains it (the chat resubscribes on reconnect).
+            if !Task.isCancelled, Connectivity.shared.status == .online {
                 self.error = String(localized: "Live updates are unavailable right now. Reopen the chat to see new messages.")
             }
         }
@@ -175,26 +238,6 @@ final class ChatModel {
         await loadReactions(of: rows)
     }
 
-    /// Sends text, a photo (`jpeg` from ImageCompression for `.chat`) or both. The photo is uploaded first;
-    /// if the insert then fails, the uploaded object is removed again.
-    func send(api: BoolaaAPI, bubbleID: UUID, senderID: UUID, text: String, photo: Data?) async -> Bool {
-        do {
-            var path: String?
-            if let photo { path = try await api.uploadChatImage(photo, userID: senderID) }
-            do {
-                let message = try await api.sendMessage(bubbleID: bubbleID, senderID: senderID, content: text, imagePath: path)
-                merge(message)
-                return true
-            } catch {
-                await api.removeChatImage(path: path, userID: senderID)
-                throw error
-            }
-        } catch {
-            self.error = error.userMessage
-            return false
-        }
-    }
-
     /// Soft-deletes one of our own messages, shows the placeholder at once, then removes its photo (best effort).
     func delete(_ message: ChatMessage, api: BoolaaAPI, userID: UUID) async {
         do {
@@ -220,10 +263,19 @@ struct ChatView: View {
     @Environment(SafetyStore.self) private var safety
     @Environment(UnreadStore.self) private var unread
     @Environment(ShellRouter.self) private var router
+    @Environment(Connectivity.self) private var connectivity
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model = ChatModel()
+    /// The load (bubble + block state) the model holds; a reconnect with the same key only refreshes.
+    @State private var activeLoadKey: String?
+    private var outbox: ChatOutbox { ChatOutbox.shared }
+    /// Messages written here that the server hasn't confirmed ("Sending…" / "Not sent — tap to retry").
+    private var pending: [PendingMessage] {
+        guard let id = session.currentBubble?.id else { return [] }
+        return outbox.pending(in: id, excluding: Set(model.messages.map(\.id)))
+    }
     @State private var draft = ""
     @State private var sending = false
     @State private var sentCount = 0
@@ -251,11 +303,17 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            ConnectivityBanner()
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         pagingHeader
-                        if model.loaded && model.messages.isEmpty {
+                        LoadIssueView(failed: model.failed, hasContent: model.loaded) { await model.refresh() }
+                            .padding(.vertical, 8)
+                        if !model.loaded && !model.failed {
+                            Delayed { ProgressView().padding(.top, 40).accessibilityLabel(Text("Loading")) }
+                        }
+                        if model.loaded && model.messages.isEmpty && pending.isEmpty {
                             EmptyStateView(icon: "bubble.left.and.bubble.right.fill", title: "No messages yet",
                                            message: "Be the first to say something.")
                                 .padding(.top, 40)
@@ -307,6 +365,14 @@ struct ChatView: View {
                                 }
                             }
                         }
+                        // Own identity space: a sent message keeps its client id, and the same id in both
+                        // ForEach blocks of one LazyVStack left the stale "Sending…" row on screen.
+                        ForEach(pending, id: \.pendingRowID) { message in
+                            PendingMessageRow(message: message,
+                                              onRetry: { Task { await outbox.retry(message.id) } },
+                                              onDiscard: { discard(message) })
+                                .transition(.opacity)
+                        }
                         Color.clear.frame(height: 1).id(Self.bottomID)
                     }
                     .padding(.horizontal, 12)
@@ -332,6 +398,10 @@ struct ChatView: View {
                     withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
                     Task { await markRead() }
                 }
+                .onChange(of: pending.map(\.id)) { old, new in
+                    guard new.count > old.count else { return }
+                    withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
+                }
                 // A message opened from search: centre it, ring it for 4 s.
                 .onChange(of: model.jumpTarget) { _, target in
                     guard let target else { return }
@@ -353,13 +423,26 @@ struct ChatView: View {
         .background { ShellBackground(hue: Hue.forID(session.currentBubble?.id)) }
         .toolbar(.hidden, for: .navigationBar)
         // Reload (and resubscribe) after a block/unblock: RLS hides or shows the other person's messages.
-        .task(id: loadKey) {
+        // Back online or in the foreground (Connectivity.refreshGeneration): the same load only fetches what
+        // was missed and resubscribes, keeping the scroll position.
+        .task(id: "\(loadKey)#\(connectivity.refreshGeneration)") {
             guard let id = session.currentBubble?.id else { return }
             let key = loadKey
+            if activeLoadKey == key {
+                await model.refresh()
+                await markRead()
+                await model.listen(client: session.api.client, bubbleID: id)
+                return
+            }
+            activeLoadKey = key
             pagingArmedFor = nil
             initialIDs = nil
             lastMarked = nil
             model = ChatModel()
+            let model = model
+            outbox.onSent = { [weak model] row in
+                if row.bubbleId == model?.currentBubbleID { model?.merge(row) }
+            }
             let me = session.userID
             // The divider uses the marker from before this visit marks the chat read.
             await model.load(api: session.api, bubbleID: id, me: me) {
@@ -379,6 +462,7 @@ struct ChatView: View {
             await markRead()
             await model.listen(client: session.api.client, bubbleID: id)
         }
+        .autoRetry(failed: model.failed) { await model.refresh() }
         .onAppear {
             visible = true
             if let pending = router.takeChatDraft() {
@@ -546,14 +630,22 @@ struct ChatView: View {
         guard let bubbleID = session.currentBubble?.id, let me = session.userID, !text.isEmpty || picked != nil else { return }
         sending = true
         defer { sending = false }
+        // The outbox now holds the message ("Sending…", then sent or "Not sent — tap to retry"), so the
+        // composer clears without losing anything. Offline it waits and is sent when the app is back online.
         draft = ""
         photo = nil
+        photoItem = nil
         sentCount += 1
-        if await model.send(api: session.api, bubbleID: bubbleID, senderID: me, text: String(text.prefix(4000)), photo: picked) {
-            photoItem = nil
-        } else {
-            draft = text
-            photo = picked
+        await outbox.enqueue(bubbleID: bubbleID, senderID: me, text: String(text.prefix(4000)), photo: picked,
+                             online: connectivity.status == .online)
+    }
+
+    /// "Don't send": drops a pending message and its photo, if it was uploaded already.
+    private func discard(_ message: PendingMessage) {
+        guard let removed = outbox.discard(message.id), let me = session.userID else { return }
+        if let path = removed.photoPath {
+            let api = session.api
+            Task { await api.removeChatImage(path: path, userID: me) }
         }
     }
 
@@ -673,6 +765,81 @@ struct MessagePop: ViewModifier {
                 guard !shown else { return }
                 withAnimation(Motion.resolve(Motion.bouncy, reduceMotion: reduceMotion)) { shown = true }
             }
+    }
+}
+
+/// A message the server hasn't confirmed: dimmed own bubble with "Sending…", or "Not sent — tap to retry"
+/// (tap retries; long press offers Try again / Don't send).
+struct PendingMessageRow: View {
+    var message: PendingMessage
+    var onRetry: () -> Void
+    var onDiscard: () -> Void
+
+    private var failed: Bool { message.state == .failed }
+    private var bubbleShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(topLeadingRadius: 21, bottomLeadingRadius: 21, bottomTrailingRadius: 6,
+                               topTrailingRadius: 21, style: .continuous)
+    }
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            Spacer(minLength: 56)
+            VStack(alignment: .trailing, spacing: 3) {
+                if let photo = message.photo, let image = UIImage(data: photo) {
+                    Image(uiImage: image).resizable().scaledToFill()
+                        .frame(width: 220, height: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .accessibilityLabel(Text("Photo"))
+                        .opacity(failed ? 1 : 0.6)
+                }
+                if !message.content.isEmpty {
+                    Text(verbatim: message.content)
+                        .padding(.horizontal, 15).padding(.vertical, 10)
+                        .foregroundStyle(Color.white)
+                        .background(bubbleShape.fill(Hue.grape.gradient))
+                        .opacity(failed ? 1 : 0.6)
+                }
+                // Full opacity so the status keeps its contrast (spec "Accessibility").
+                status
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { if failed { onRetry() } }
+        .contextMenu {
+            if failed {
+                Button(action: onRetry) { Label { Text("Try again") } icon: { Image(systemName: "arrow.clockwise") } }
+            }
+            Button(role: .destructive, action: onDiscard) {
+                Label { Text("Don't send", comment: "Discards a chat message that wasn't sent") } icon: { Image(systemName: "trash") }
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(failed ? .isButton : [])
+        // VoiceOver: double tap retries a failed message; "Try again" / "Don't send" are in the actions rotor.
+        .accessibilityAction { if failed { onRetry() } }
+        .accessibilityActions {
+            if failed { Button(action: onRetry) { Text("Try again") } }
+            Button(action: onDiscard) { Text("Don't send", comment: "Discards a chat message that wasn't sent") }
+        }
+        .accessibilityIdentifier(failed ? "chat-not-sent" : "chat-sending")
+        .onChange(of: failed) { _, now in
+            if now { A11y.announce(String(localized: "Not sent — tap to retry", comment: "Under a chat message that failed to send")) }
+        }
+    }
+
+    @ViewBuilder private var status: some View {
+        if failed {
+            Label { Text("Not sent — tap to retry", comment: "Under a chat message that failed to send") }
+                icon: { Image(systemName: "exclamationmark.circle.fill") }
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(Theme.dangerText)
+                .padding(.horizontal, 6)
+        } else {
+            Label { Text("Sending…", comment: "Under a chat message while it is being sent") }
+                icon: { Image(systemName: "clock") }
+                .font(.caption2).foregroundStyle(Theme.inkSecondary)
+                .padding(.horizontal, 6)
+        }
     }
 }
 

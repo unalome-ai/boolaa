@@ -77,9 +77,17 @@ test.describe("moderation", () => {
     await expect(dave).toHaveURL(/\/login$/);
 
     // Signing in again is refused by GoTrue (banned_until): the suspended screen explains it.
-    await dave.locator("#email").fill("dave@boolaa.test");
-    await dave.locator("#password").fill(PASSWORD);
-    await dave.locator('form button[type="submit"]').click();
+    // The form can still be hydrating after the client-side redirect: a value typed too early shows in
+    // the field but not in React's state, so the request goes out without an email ("Something went
+    // wrong"). Fill and submit again until the refused sign-in lands on /suspended.
+    await expect(async () => {
+      if (!/\/suspended$/.test(dave.url())) {
+        await dave.locator("#email").fill("dave@boolaa.test");
+        await dave.locator("#password").fill(PASSWORD);
+        await dave.locator('form button[type="submit"]').click();
+      }
+      await expect(dave).toHaveURL(/\/suspended$/, { timeout: 3_000 });
+    }).toPass({ timeout: 20_000 });
     await expect(dave).toHaveURL(/\/suspended$/);
     await expect(dave.getByTestId("suspended")).toHaveAttribute("data-state", "signedOut");
     await expect(dave.locator('a[href="mailto:privacy@boolaa.ro"]')).toBeVisible();

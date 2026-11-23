@@ -16,6 +16,7 @@ struct MainShellView: View {
         NavigationStack(path: $router.path) {
             VStack(spacing: 0) {
                 ShellHeader(title: router.tab.title)
+                ConnectivityBanner()
                 ZStack {
                     ZStack {
                         switch router.tab {
@@ -68,6 +69,12 @@ struct MainShellView: View {
         }
         .onChange(of: session.bubbles.map(\.id)) { _, _ in
             Task { await unread.refresh() }
+        }
+        .onChange(of: Connectivity.shared.refreshGeneration) { _, _ in
+            Task {
+                await unread.refresh()
+                if !safety.loaded { await safety.load() }
+            }
         }
         .onAppear(perform: applyDebugHooks)
         // A tapped notification (docs/push-notifications.md §5), also one that launched the app.

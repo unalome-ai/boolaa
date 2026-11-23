@@ -625,5 +625,16 @@
     "newMessageFrom": "Mesaj nou de la {name}",
     "opensInNewTab": "se deschide într-o filă nouă",
     "dismiss": "Închide"
+  },
+  "offline": {
+    "banner": "Ești offline — îți arătăm ce ai văzut ultima dată",
+    "unreachable": "Nu putem contacta Boolaa — îți arătăm ce ai văzut ultima dată",
+    "backOnline": "Conexiunea a revenit",
+    "loadFailed": "Nu am putut încărca. Verifică-ți conexiunea și încearcă din nou.",
+    "staleNotice": "Nu am putut actualiza — îți arătăm ce ai văzut ultima dată.",
+    "retry": "Încearcă din nou",
+    "sending": "Se trimite…",
+    "notSent": "Nu s-a trimis",
+    "discard": "Nu trimite"
   }
 }

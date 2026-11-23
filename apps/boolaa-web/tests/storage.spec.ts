@@ -91,7 +91,10 @@ test("old files are removed on delete and on photo replacement", async ({ browse
   await dialog.locator("#item-title").fill(`E2E item ${RUN}`);
   await dialog.locator('button[type="submit"]').click();
   const item = page.getByTestId("market-item").filter({ hasText: `E2E item ${RUN}` });
-  const market = (await item.getByRole("img", { name: `E2E item ${RUN}` }).getAttribute("src"))!;
+  // A placeholder (role img, no src) shows while the URL is signed: wait for the signed <img>.
+  const marketPhoto = item.getByRole("img", { name: `E2E item ${RUN}` });
+  await expect(marketPhoto).toHaveAttribute("src", /\/market\.images\//);
+  const market = (await marketPhoto.getAttribute("src"))!;
   expect(await objectExists(page.request, market)).toBe(true);
   await expectCleanJpeg(page, market, 32, 32); // a PNG pick is re-encoded as JPEG, never upscaled
   await item.getByTestId("delete-item").click();

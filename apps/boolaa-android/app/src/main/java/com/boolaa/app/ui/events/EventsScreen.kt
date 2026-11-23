@@ -190,7 +190,11 @@ class EventsViewModel(private val container: AppContainer, private val bubbleId:
     val events = _events.asStateFlow()
     val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.EVENT, _events) { it.id }
 
+    private val cacheKey = com.boolaa.app.core.CacheKeys.events(bubbleId)
+    private val serializer = kotlinx.serialization.builtins.ListSerializer(BubbleEvent.serializer())
+
     init {
+        offlineAware(container, _events, cacheKey, serializer) { load() }
         load()
         reloadOnBlockChange(container.session) { load() }
     }
@@ -201,11 +205,12 @@ class EventsViewModel(private val container: AppContainer, private val bubbleId:
     fun react(eventId: String, kind: com.boolaa.app.model.ReactionKind) =
         toggleReaction(reactions, eventId, kind, container.session.state.value.userId)
 
-    fun load(refresh: Boolean = false) = launchCatching(trackBusy = refresh) {
+    fun load(refresh: Boolean = false) = runLoad(container, hasData = { _events.value != null }, trackBusy = refresh) {
         val loaded = container.api.events(bubbleId).sortedBy { it.datetime }
         _events.value = loaded
+        saveCache(container, cacheKey, serializer, loaded)
         reactions.refresh(loaded.map { it.id })
-    }.also { it.invokeOnCompletion { if (_events.value == null) _events.value = emptyList() } }
+    }
 
     fun save(existing: BubbleEvent?, input: EventInput, userId: String, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
         if (existing == null) container.api.createEvent(bubbleId, userId, input) else container.api.updateEvent(existing.id, input)
@@ -231,8 +236,11 @@ fun EventsScreen() {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: EventsViewModel = viewModel(key = "events-${bubble.id}") { EventsViewModel(container, bubble.id) }
-    LaunchedEffect(vm) { vm.keepLive() }
+    // Resubscribed (and reloaded once live) on every reconnect and return to the front.
+    val generation by container.connectivity.refresh.collectAsStateWithLifecycle()
+    LaunchedEffect(vm, generation) { vm.keepLive() }
     val events by vm.events.collectAsStateWithLifecycle()
+    val issue by vm.loadIssue.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
     val reactionsByEvent = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
@@ -270,7 +278,8 @@ fun EventsScreen() {
                     SectionHeader(stringResource(R.string.my_events), if (list == null) null else mine.size, hue = hue,
                         action = { AddButton(stringResource(R.string.new_event), onClick = { creating = true }, hue = hue) })
                 }
-                if (list == null) { item(key = "loading") { SkeletonList() }; return@LazyColumn }
+                item(key = "stale") { com.boolaa.app.ui.components.StaleNotice(issue, vm::retryNow) }
+                if (list == null) { item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow) }; return@LazyColumn }
                 if (list.isEmpty()) {
                     item(key = "empty") {
                         EmptyState(BoolaaIcons.NewEvent, stringResource(R.string.events_empty_title), stringResource(R.string.events_empty_message), hue = hue)

@@ -18,6 +18,11 @@ import { inviteUrl } from "@/lib/invite";
 import { canManage, canRemove, roleOf } from "@/lib/roles";
 import { BubbleMute, NotificationSettings } from "@/components/notification-settings";
 import { ThemePicker } from "@/components/theme-picker";
+import { LoadError, StaleNotice, useResilientLoad } from "@/components/offline";
+import { useConnectivity } from "@/lib/connectivity";
+import { readCache, writeCache } from "@/lib/offline";
+
+type MembersCache = { members: Member[]; requests: JoinRequest[] };
 
 export default function SettingsPage() {
   const { supabase, userId, refreshBubbles } = useBoolaa();
@@ -28,8 +33,11 @@ export default function SettingsPage() {
   const ta = useTranslations("appearance");
   const errorText = useErrorText();
   const fmt = useFormat();
-  const [members, setMembers] = useState<Member[] | null>(null);
-  const [requests, setRequests] = useState<JoinRequest[]>([]);
+  // The last view of members and requests shows at once (also offline); the load refreshes it.
+  const cacheKey = `members.${bubble.id}`;
+  const [members, setMembers] = useState<Member[] | null>(() => readCache<MembersCache>(cacheKey)?.members ?? null);
+  const [requests, setRequests] = useState<JoinRequest[]>(() => readCache<MembersCache>(cacheKey)?.requests ?? []);
+  const { generation } = useConnectivity();
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -41,7 +49,7 @@ export default function SettingsPage() {
   const [transferring, setTransferring] = useState<Member | null>(null);
   const [roleBusy, setRoleBusy] = useState(false);
   const [live, setLive] = useState(false);
-  const requestIds = useRef<Set<string>>(new Set());
+  const requestIds = useRef<Set<string>>(new Set(requests.map((x) => x.id)));
   const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
@@ -59,16 +67,17 @@ export default function SettingsPage() {
         .eq("bubble_id", bubble.id)
         .order("created_at", { ascending: true }),
     ]);
-    if (seq !== loadSeq.current) return; // a newer load started meanwhile: don't overwrite it with older data
-    if (m.error || r.error) setError(errorText(m.error ?? r.error));
+    if (seq !== loadSeq.current) return true; // a newer load started meanwhile: don't overwrite it with older data
+    if (m.error || r.error) return false; // keeps what is on screen; LoadError / StaleNotice offer Try again
     setMembers(m.data ?? []);
     setRequests(r.data ?? []);
     requestIds.current = new Set((r.data ?? []).map((x) => x.id));
-  }, [supabase, bubble.id, errorText]);
+    writeCache<MembersCache>(cacheKey, { members: m.data ?? [], requests: r.data ?? [] });
+    return true;
+  }, [supabase, bubble.id, cacheKey]);
+  const sync = useResilientLoad(load);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
     // Live lists: requests arriving/votes/admissions and members joining/leaving/changing role.
     // DELETE events can't be filtered server-side (the old row only has the primary key).
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -103,7 +112,8 @@ export default function SettingsPage() {
       window.removeEventListener("focus", reload);
       unsubscribe();
     };
-  }, [load, supabase, bubble.id]);
+    // `generation`: resubscribe after a reconnect (then reload once live).
+  }, [load, supabase, bubble.id, generation]);
 
   const memberCount = members?.length ?? 0;
   const memberIds = new Set((members ?? []).map((m) => m.user_id));
@@ -232,6 +242,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-2" data-testid="settings" data-live={live}>
       <ErrorText>{error}</ErrorText>
+      <StaleNotice show={sync.failed} onRetry={sync.retry} />
       {notice && (
         <p role="status" data-testid="notice" className="hue-mint anim-pop-soft rounded-field bg-hue-wash px-4 py-2.5 text-sm font-semibold text-hue-ink">
           {notice}
@@ -335,7 +346,11 @@ export default function SettingsPage() {
         </span>
       </SectionTitle>
       {members === null ? (
-        <PageLoader />
+        sync.failed ? (
+          <LoadError onRetry={sync.retry} />
+        ) : (
+          <PageLoader />
+        )
       ) : (
         <ul className="card divide-y divide-line">
           {members.map((m) => (

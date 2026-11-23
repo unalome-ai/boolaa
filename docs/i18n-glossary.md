@@ -204,3 +204,20 @@ Read by VoiceOver, TalkBack and screen readers on the web; never shown as visibl
 | `currentBubble` (chip state) | Current bubble | Bula curentă | Bulle actuelle | Burbuja actual | Bolla attuale |
 | `dismiss` (toast / banner) | Dismiss | Închide | Fermer | Cerrar | Chiudi |
 | `openPhoto` (iOS VoiceOver action / Android custom action on a chat photo) | Open photo | Deschide fotografia | Ouvrir la photo | Abrir la foto | Apri la foto |
+
+## Offline and poor network (docs/boolaa-spec.md, "Offline and poor network")
+
+Web keys under `offline.*`; Android `offline_*`; iOS the English text as key. Calm, not alarming: say what is shown, never blame the user. "Not sent — tap to retry" is the apps' label (the whole row is the button); the web shows "Not sent" with a "Try again" button.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| banner | You're offline — showing what you saw last | Ești offline — îți arătăm ce ai văzut ultima dată | Tu es hors ligne — voici ce que tu as vu en dernier | Estás sin conexión — te mostramos lo último que viste | Sei offline — ti mostriamo quello che hai visto l'ultima volta |
+| unreachable | Can't reach Boolaa — showing what you saw last | Nu putem contacta Boolaa — îți arătăm ce ai văzut ultima dată | Impossible de joindre Boolaa — voici ce que tu as vu en dernier | No podemos conectar con Boolaa — te mostramos lo último que viste | Non riusciamo a raggiungere Boolaa — ti mostriamo quello che hai visto l'ultima volta |
+| backOnline | Back online | Conexiunea a revenit | Connexion rétablie | Conexión recuperada | Connessione ripristinata |
+| loadFailed | Couldn't load this. Check your connection and try again. | Nu am putut încărca. Verifică-ți conexiunea și încearcă din nou. | Impossible de charger. Vérifie ta connexion et réessaie. | No se ha podido cargar. Comprueba tu conexión e inténtalo de nuevo. | Impossibile caricare. Controlla la connessione e riprova. |
+| staleNotice | Couldn't refresh — showing what you saw last. | Nu am putut actualiza — îți arătăm ce ai văzut ultima dată. | Impossible d'actualiser — voici ce que tu as vu en dernier. | No se ha podido actualizar — te mostramos lo último que viste. | Impossibile aggiornare — ti mostriamo quello che hai visto l'ultima volta. |
+| retry | Try again | Încearcă din nou | Réessayer | Reintentar | Riprova |
+| sending | Sending… | Se trimite… | Envoi en cours… | Enviando… | Invio in corso… |
+| notSentTapToRetry (apps) | Not sent — tap to retry | Nu s-a trimis — atinge ca să încerci din nou | Non envoyé — touche pour réessayer | No enviado — toca para reintentar | Non inviato — tocca per riprovare |
+| notSent (web) | Not sent | Nu s-a trimis | Non envoyé | No enviado | Non inviato |
+| discard | Don't send | Nu trimite | Ne pas envoyer | No enviar | Non inviare |

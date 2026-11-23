@@ -625,5 +625,16 @@
     "newMessageFrom": "Nuevo mensaje de {name}",
     "opensInNewTab": "se abre en una pestaña nueva",
     "dismiss": "Cerrar"
+  },
+  "offline": {
+    "banner": "Estás sin conexión — te mostramos lo último que viste",
+    "unreachable": "No podemos conectar con Boolaa — te mostramos lo último que viste",
+    "backOnline": "Conexión recuperada",
+    "loadFailed": "No se ha podido cargar. Comprueba tu conexión e inténtalo de nuevo.",
+    "staleNotice": "No se ha podido actualizar — te mostramos lo último que viste.",
+    "retry": "Reintentar",
+    "sending": "Enviando…",
+    "notSent": "No enviado",
+    "discard": "No enviar"
   }
 }

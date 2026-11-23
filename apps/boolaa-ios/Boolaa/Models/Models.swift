@@ -351,12 +351,14 @@ struct SharedLink: Codable, Identifiable, Hashable, Sendable {
 // MARK: - Write payloads
 
 struct NewChatMessage: Encodable, Sendable {
+    /// Client-generated id (the chat outbox): a retried insert fails with 23505 instead of duplicating.
+    var id: UUID? = nil
     let bubbleId: UUID
     let senderId: UUID
     let content: String
     var imagePath: String? = nil
     enum CodingKeys: String, CodingKey {
-        case content
+        case id, content
         case bubbleId = "bubble_id"
         case senderId = "sender_id"
         case imagePath = "image_path"

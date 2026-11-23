@@ -19,6 +19,9 @@ import Foundation
 ///     -UITestOpen exportData               opens Profile → Download my data
 ///     -UITestShowPast YES                  Events starts with "Past events" expanded
 ///     -UITestPushToBubble "Climbing Crew"  4 s after start, acts as a tapped chat push for this bubble
+///     -UITestSimulateOffline YES           start with the network "off": Supabase requests fail fast and the
+///                                          offline banner shows; the hidden `debug-network-toggle` button
+///                                          in the banner area turns it on and off
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {
@@ -64,6 +67,15 @@ enum DebugHooks {
         UserDefaults.standard.string(forKey: "UITestTab").flatMap(MainTab.init(rawValue:))
         #else
         nil
+        #endif
+    }
+
+    /// Simulated offline mode for the offline UI tests (docs/boolaa-spec.md, "Offline and poor network").
+    static var simulateOffline: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "UITestSimulateOffline")
+        #else
+        false
         #endif
     }
 

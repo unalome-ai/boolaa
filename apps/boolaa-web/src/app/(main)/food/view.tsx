@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useState, type CSSProperties, type FormEvent } from "react";
 import { Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
+import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 import { AUTHOR, type FoodPost } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -20,7 +21,8 @@ export default function FoodPage() {
   const errorText = useErrorText();
   const fmt = useFormat();
   const bubble = useBubble();
-  const [posts, setPosts] = useState<FoodPost[] | null>(null);
+  // The last view shows at once (also offline); the load below refreshes it.
+  const [posts, setPosts] = useCachedState<FoodPost[]>(`food.${bubble.id}`);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<FoodPost | "new" | null>(null);
 
@@ -30,14 +32,12 @@ export default function FoodPage() {
       .select(`*, user:users!user_id(${AUTHOR})`)
       .eq("bubble_id", bubble.id)
       .order("created_at", { ascending: false });
-    if (error) setError(errorText(error));
+    if (error) return false; // keeps what is on screen; LoadError / StaleNotice offer Try again
     setPosts(data ?? []);
-  }, [supabase, bubble.id, errorText]);
+    return true;
+  }, [supabase, bubble.id, setPosts]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
-  }, [load]);
+  const sync = useResilientLoad(load);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
   const reactions = useReactions({ supabase, bubbleId: bubble.id, type: "food_post", targetIds: posts?.map((p) => p.id) ?? [], userId, onError: (e) => setError(errorText(e)) });
@@ -103,13 +103,18 @@ export default function FoodPage() {
   return (
     <div>
       <ErrorText>{error}</ErrorText>
+      <StaleNotice show={sync.failed} onRetry={sync.retry} />
       <div className="mb-4 flex justify-end">
         <button type="button" className="btn-primary hue-tangerine min-h-10 px-4" data-testid="share-food" onClick={() => setEditing("new")}>
           <Plus size={18} strokeWidth={3} /> {t("food.share")}
         </button>
       </div>
       {posts === null ? (
-        <PageLoader />
+        sync.failed ? (
+          <LoadError onRetry={sync.retry} />
+        ) : (
+          <PageLoader />
+        )
       ) : posts.length === 0 ? (
         <EmptyState icon={<UtensilsCrossed size={30} strokeWidth={2.4} />} title={t("food.emptyTitle")} hint={t("food.emptyHint")} hue="tangerine" />
       ) : (

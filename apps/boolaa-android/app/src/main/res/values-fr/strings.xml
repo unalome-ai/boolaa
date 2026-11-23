@@ -360,4 +360,15 @@
     <!-- Accessibility (docs/i18n-glossary.md "Accessibility labels"); read by TalkBack only. -->
     <string name="a11y_photo_from">Photo de %1$s</string>
     <string name="a11y_new_message_from">Nouveau message de %1$s</string>
+
+    <!-- Offline and poor network (docs/boolaa-spec.md) -->
+    <string name="offline_banner">Tu es hors ligne — voici ce que tu as vu en dernier</string>
+    <string name="offline_unreachable">Impossible de joindre Boolaa — voici ce que tu as vu en dernier</string>
+    <string name="offline_back_online">Connexion rétablie</string>
+    <string name="offline_load_failed">Impossible de charger. Vérifie ta connexion et réessaie.</string>
+    <string name="offline_stale_notice">Impossible d\'actualiser — voici ce que tu as vu en dernier.</string>
+    <string name="offline_retry">Réessayer</string>
+    <string name="offline_sending">Envoi en cours…</string>
+    <string name="offline_not_sent_tap_to_retry">Non envoyé — touche pour réessayer</string>
+    <string name="offline_discard">Ne pas envoyer</string>
 </resources>

@@ -2,16 +2,19 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class MarketModel {
+final class MarketModel: CacheFirstModel {
     var items: [MarketItem] = []
     var loaded = false
+    var failed = false
     var error: String?
     let reactions = ReactionStore(.marketItem)
 
+    /// The cached view first (offline / slow network), then the server's list.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do { items = try await api.marketItems(bubbleID: bubbleID).sorted(by: MarketItem.precedes) } catch { self.error = error.userMessage }
-        loaded = true
-        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: items.map(\.id))
+        let ok = await loadCacheFirst(key: OfflineCache.Key.market(bubbleID),
+                                      apply: { (rows: [MarketItem]) in items = rows },
+                                      fetch: { try await api.marketItems(bubbleID: bubbleID).sorted(by: MarketItem.precedes) })
+        if ok { await reactions.load(api: api, bubbleID: bubbleID, targetIDs: items.map(\.id)) }
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -52,6 +55,7 @@ final class MarketModel {
 /// Grid of items with Free/Trade badges and filter chips (spec §9).
 struct MarketplaceView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(Connectivity.self) private var connectivity
     @State private var model = MarketModel()
     @State private var filter: MarketStatus?
     @State private var hideTaken = false
@@ -94,14 +98,17 @@ struct MarketplaceView: View {
                         .font(.rounded(.subheadline, weight: .semibold)).monospacedDigit().foregroundStyle(Theme.inkSecondary)
                         .contentTransition(.numericText(value: Double(visible.count)))
                 }
-                if !model.loaded {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(0..<4, id: \.self) { _ in
-                            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).fill(Theme.field)
-                                .frame(height: 200).modifier(Shimmer())
+                LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
+                if !model.loaded && !model.failed {
+                    Delayed {
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(0..<4, id: \.self) { _ in
+                                RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).fill(Theme.field)
+                                    .frame(height: 200).modifier(Shimmer())
+                            }
                         }
+                        .accessibilityHidden(true)
                     }
-                    .accessibilityHidden(true)
                 }
                 if model.loaded && visible.isEmpty {
                     EmptyStateView(icon: "tag.fill", title: "Nothing listed", message: "Give away or trade things with your bubble.", hue: hue)
@@ -132,10 +139,12 @@ struct MarketplaceView: View {
         }
         .scrollsToPushHighlight(model.items.map(\.id))
         .refreshFeedback { await reload() }
-        .task {
+        // Back online or in the foreground: reload and resubscribe (Connectivity.refreshGeneration).
+        .task(id: connectivity.refreshGeneration) {
             await reload()
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
+        .autoRetry(failed: model.failed) { await reload() }
         .sensoryFeedback(.selection, trigger: filter)
         .sheet(item: $editing) { target in
             MarketEditor(target: target) { Task { await reload() } }.boolaaSheet()

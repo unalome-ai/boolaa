@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useCallback, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { ExternalLink, Link2, Plus, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
 import { Avatar, EmptyState, ErrorText, Modal, NewTabHint, PageLoader } from "@/components/ui";
+import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 import { AUTHOR, type SharedLink } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -29,7 +30,8 @@ export default function LinksPage() {
   const errorText = useErrorText();
   const fmt = useFormat();
   const bubble = useBubble();
-  const [links, setLinks] = useState<SharedLink[] | null>(null);
+  // The last view shows at once (also offline); the load below refreshes it.
+  const [links, setLinks] = useCachedState<SharedLink[]>(`links.${bubble.id}`);
   const [tag, setTag] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,14 +42,12 @@ export default function LinksPage() {
       .select(`*, user:users!user_id(${AUTHOR})`)
       .eq("bubble_id", bubble.id)
       .order("created_at", { ascending: false });
-    if (error) setError(errorText(error));
+    if (error) return false; // keeps what is on screen; LoadError / StaleNotice offer Try again
     setLinks(data ?? []);
-  }, [supabase, bubble.id, errorText]);
+    return true;
+  }, [supabase, bubble.id, setLinks]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load();
-  }, [load]);
+  const sync = useResilientLoad(load);
 
   // Other members' changes stream in (Realtime, filtered by bubble, RLS-checked).
   // The server fills in the preview later; it arrives as an UPDATE of the row (merged with all its columns).
@@ -77,6 +77,7 @@ export default function LinksPage() {
   return (
     <div>
       <ErrorText>{error}</ErrorText>
+      <StaleNotice show={sync.failed} onRetry={sync.retry} />
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="scrollbar-none flex gap-2 overflow-x-auto" role="group" aria-label={t("filter")} data-testid="tag-filter">
           <button
@@ -105,7 +106,11 @@ export default function LinksPage() {
         </button>
       </div>
       {links === null ? (
-        <PageLoader />
+        sync.failed ? (
+          <LoadError onRetry={sync.retry} />
+        ) : (
+          <PageLoader />
+        )
       ) : shown.length === 0 ? (
         <EmptyState icon={<Link2 size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="sky" />
       ) : (

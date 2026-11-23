@@ -8,6 +8,13 @@ import { BUBBLE_COOKIE, hardNavigate, readCookie, signOutTarget, writeCookie } f
 import { gateState } from "@/lib/device";
 import { syncPush } from "@/lib/push";
 import { useLocale } from "next-intl";
+import { startConnectivity, useConnectivity } from "@/lib/connectivity";
+import { readCache, setOfflineUser, writeCache } from "@/lib/offline";
+import { flushOutbox, forgetOfflineData, setOutboxUser } from "@/lib/outbox";
+import { LoadError, useResilientLoad } from "@/components/offline";
+
+/** Cached last view of the shell (docs/boolaa-spec.md, "Offline and poor network"). */
+type ShellCache = { bubbles: MyBubble[]; bubbleId: string | null; profile: UserProfile | null };
 
 export type MyBubble = Bubble & { role: string };
 
@@ -138,9 +145,13 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
 
   const refreshProfile = useCallback(async () => {
     if (!auth) return;
-    const { data } = await supabase.from("users").select("*").eq("id", auth.id).maybeSingle();
-    setProfile(data);
+    const { data, error } = await supabase.from("users").select("*").eq("id", auth.id).maybeSingle();
+    if (!error) setProfile(data); // a failed refresh keeps the cached profile
   }, [auth, supabase]);
+
+  useEffect(() => {
+    startConnectivity();
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -150,8 +161,19 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       if (!alive) return;
       const user = data.session?.user;
       if (!user) {
+        forgetOfflineData();
         hardNavigate("/login");
         return;
+      }
+      // Only this user's cached views and queued messages stay; then show the last view at once.
+      setOfflineUser(user.id);
+      setOutboxUser(user.id);
+      const cached = readCache<ShellCache>("shell");
+      if (cached && cached.bubbles.length > 0) {
+        const wanted = readCookie(BUBBLE_COOKIE) ?? cached.bubbleId;
+        setBubbles(cached.bubbles);
+        setBubbleIdState(cached.bubbles.find((b) => b.id === wanted)?.id ?? cached.bubbles[0]!.id);
+        setProfile(cached.profile);
       }
       setAuth({ id: user.id, email: user.email ?? "" });
       // Session restore: start_device_check on every load (docs/auth-security.md §8). The proxy
@@ -166,7 +188,10 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
         .catch(() => undefined);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") hardNavigate(signOutTarget.path);
+      if (event === "SIGNED_OUT") {
+        forgetOfflineData();
+        hardNavigate(signOutTarget.path);
+      }
     });
     return () => {
       alive = false;
@@ -174,20 +199,32 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
     };
   }, [supabase]);
 
-  useEffect(() => {
-    if (!auth) return;
-    // Initial load once the auth user is known; setState happens after the awaits.
-    /* eslint-disable react-hooks/set-state-in-effect */
-    void refreshBubbles();
-    void refreshProfile();
-    /* eslint-enable react-hooks/set-state-in-effect */
+  // Initial load once the auth user is known, again after a reconnect, and with backoff while it
+  // fails (the cached bubbles stay on screen meanwhile).
+  const loadShell = useCallback(async () => {
+    if (!auth) return true;
+    await Promise.all([refreshBubbles(), refreshProfile()]); // refreshBubbles throws on failure
+    return true;
   }, [auth, refreshBubbles, refreshProfile]);
+  const shell = useResilientLoad(loadShell);
+
+  // Keep the last view of the shell for the next load (and offline).
+  useEffect(() => {
+    if (auth && bubbles && bubbles.length > 0) writeCache<ShellCache>("shell", { bubbles, bubbleId, profile });
+  }, [auth, bubbles, bubbleId, profile]);
+
+  // Messages written while offline go out once the connection is back (in order, one at a time).
+  const { generation } = useConnectivity();
+  useEffect(() => {
+    if (auth) void flushOutbox(supabase);
+  }, [auth, supabase, generation]);
 
   // Live membership: admitted elsewhere, ownership handed over, or removed by the owner. DELETE events
   // can't be filtered server-side (the old row only carries the primary key), so they're checked here.
+  // Resubscribes after a reconnect (`generation`), then reloads once live.
   useEffect(() => {
     if (!auth) return;
-    const refresh = () => void refreshBubbles();
+    const refresh = () => void refreshBubbles().catch(() => undefined);
     const mine = `user_id=eq.${auth.id}`;
     const unsubscribe = liveChannel(
       supabase,
@@ -204,7 +241,7 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
             setBubbles((list) => (list ? mergeBubbleUpdate(list, p.new as Partial<Bubble>) : list));
           }),
       (ready) => {
-        if (ready) void refreshBubbles().then(() => setLive(true));
+        if (ready) void refreshBubbles().then(() => setLive(true), () => undefined);
         else setLive(false);
       },
     );
@@ -214,7 +251,7 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       window.removeEventListener("focus", refresh);
       unsubscribe();
     };
-  }, [auth, supabase, refreshBubbles]);
+  }, [auth, supabase, refreshBubbles, generation]);
 
   // Push: once the session is verified, register this browser's subscription again on every start
   // and whenever the language changes (never prompts; docs/push-notifications.md §8).
@@ -231,8 +268,10 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       .from("blocks")
       .select("blocked_id")
       .eq("blocker_id", auth.id)
-      .then(({ data }) => setBlocked(new Set((data ?? []).map((b) => b.blocked_id))));
-  }, [auth, supabase]);
+      .then(({ data, error }) => {
+        if (!error) setBlocked(new Set((data ?? []).map((b) => b.blocked_id)));
+      });
+  }, [auth, supabase, generation]);
 
   const block = useCallback(
     async (id: string) => {
@@ -260,7 +299,18 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
 
   const bubble = useMemo(() => bubbles?.find((b) => b.id === bubbleId) ?? null, [bubbles, bubbleId]);
 
-  if (!auth || !bubbles || !bubble) return <>{fallback}</>;
+  if (!auth || !bubbles || !bubble) {
+    // First visit with no cached view and the load failed: say so instead of loading forever.
+    if (auth && !bubbles && shell.failed)
+      return (
+        <div className="flex min-h-dvh items-center justify-center p-6">
+          <div className="w-full max-w-md">
+            <LoadError onRetry={shell.retry} />
+          </div>
+        </div>
+      );
+    return <>{fallback}</>;
+  }
 
   return (
     <BoolaaContext.Provider

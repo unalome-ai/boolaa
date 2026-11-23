@@ -1,5 +1,9 @@
 package com.boolaa.app.state
 
+import com.boolaa.app.core.CacheKeys
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 import android.content.SharedPreferences
 import android.util.Log
 import com.boolaa.app.core.Backend
@@ -107,6 +111,8 @@ class SessionStore(
     val device: DeviceIdentity,
     private val deviceLabel: () -> String = { DeviceIdentity.label() },
     private val appLanguage: () -> String = { LocaleManager.effective() },
+    /** The last loaded profile and bubbles, shown at once on launch and offline (docs/boolaa-spec.md "Offline and poor network"). */
+    private val offlineCache: com.boolaa.app.core.OfflineCache? = null,
 ) {
     private val _state = MutableStateFlow(SessionState(storedBubbleId = prefs.getString(KEY_BUBBLE, null)))
     val state: StateFlow<SessionState> = _state.asStateFlow()
@@ -127,6 +133,10 @@ class SessionStore(
     var beforeSignOut: (suspend () -> Unit)? = null
     /** After the app language changed (push: register the token again with the new locale). */
     var onLocaleChanged: (() -> Unit)? = null
+    /** A user is signed in (the outbox restores their unsent messages). */
+    var onSignedIn: ((String) -> Unit)? = null
+    /** Signed out, by the user, an expired session or account deletion: every offline cache is cleared. */
+    var onSignedOut: (() -> Unit)? = null
 
     /** Listens to auth state for the lifetime of the app. */
     fun start() {
@@ -164,6 +174,8 @@ class SessionStore(
             }
         }
         _state.update { it.copy(userId = user.id, email = user.email, isRestoringSession = false) }
+        onSignedIn?.invoke(user.id)
+        offlineCache?.let { cache -> withContext(Dispatchers.IO) { cache.keepOnly(user.id) } }
         syncLocale(user)
         gate()
     }
@@ -180,6 +192,7 @@ class SessionStore(
         val current = _state.value
         if (!force && current.deviceGate == DeviceGate.VERIFIED && current.memberships != null && !current.needsAgeConfirmation &&
             current.suspension == null) return
+        var offline = false
         val check = try {
             api.startDeviceCheck(device.id, deviceLabel())
         } catch (e: CancellationException) {
@@ -187,6 +200,9 @@ class SessionStore(
         } catch (e: Throwable) {
             Log.w("Boolaa", "start_device_check failed", e)
             if (endSessionOn(e)) return
+            // No connection: show the cached bubbles at once instead of waiting for more timeouts.
+            offline = UserFacingError.classify(e) == UserFacingError.NETWORK
+            if (offline) restoreCachedBubbles(userId)
             // Offline with a stored session: carry on as before. The server still enforces RLS, and its
             // "session not verified" answer brings this gate back.
             null
@@ -206,7 +222,7 @@ class SessionStore(
             }
         } else null
         val effective = check ?: DeviceCheck("verified")
-        val account = if (DeviceGateDecision.gateOpen(effective, deviceVerified)) readAccount(userId) else null
+        val account = if (!offline && DeviceGateDecision.gateOpen(effective, deviceVerified)) readAccount(userId) else null
         if (_state.value.userId != userId) return
         apply(DeviceGateDecision.decide(effective, deviceVerified, account, isOAuthUser()), userId)
     }
@@ -371,6 +387,7 @@ class SessionStore(
 
     private fun applySignedOut() {
         stopLive()
+        onSignedOut?.invoke()
         _state.update {
             it.copy(userId = null, email = null, profile = null, memberships = null,
                 pendingRequests = emptyList(), blocks = emptyList(), isRestoringSession = false,
@@ -397,14 +414,34 @@ class SessionStore(
                     it.copy(profile = profile, memberships = members.filter { m -> m.approved }, pendingRequests = requests, blocks = blocks)
                 }
                 _state.value.currentBubble?.let { persistBubble(it.id) }
+                saveCachedBubbles(userId)
                 null
             },
             onFailure = { e ->
                 SecurityEvents.emitFor(UserFacingError.classify(e))
+                if (_state.value.memberships == null) restoreCachedBubbles(userId)
                 _state.update { if (it.memberships == null) it.copy(memberships = emptyList()) else it }
                 e
             },
         )
+    }
+
+    private suspend fun saveCachedBubbles(userId: String) {
+        val cache = offlineCache ?: return
+        val s = _state.value
+        if (s.userId != userId) return
+        val snapshot = CachedSession(s.profile, s.memberships.orEmpty(), s.pendingRequests, s.blocks)
+        withContext(Dispatchers.IO) { cache.save(userId, CacheKeys.BUBBLES, CachedSession.serializer(), snapshot) }
+    }
+
+    /** Offline launch: the bubbles, profile and requests last loaded (only while nothing is loaded). */
+    private suspend fun restoreCachedBubbles(userId: String) {
+        val cache = offlineCache ?: return
+        val cached = withContext(Dispatchers.IO) { cache.load(userId, CacheKeys.BUBBLES, CachedSession.serializer()) } ?: return
+        _state.update {
+            if (it.userId != userId || it.memberships != null) it
+            else it.copy(profile = cached.profile, memberships = cached.memberships, pendingRequests = cached.pendingRequests, blocks = cached.blocks)
+        }
     }
 
     fun selectBubble(id: String) {
@@ -683,6 +720,15 @@ class SessionStore(
         _state.update { it.copy(storedBubbleId = null) }
         signOut()
     }
+
+    /** What the `bubbles` cache key holds. */
+    @kotlinx.serialization.Serializable
+    data class CachedSession(
+        val profile: UserProfile? = null,
+        val memberships: List<BubbleMember> = emptyList(),
+        val pendingRequests: List<JoinRequest> = emptyList(),
+        val blocks: List<Block> = emptyList(),
+    )
 
     private data class Loaded(val profile: UserProfile, val members: List<BubbleMember>, val requests: List<JoinRequest>, val blocks: List<Block>)
 

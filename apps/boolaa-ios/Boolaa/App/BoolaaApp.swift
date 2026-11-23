@@ -25,6 +25,7 @@ struct BoolaaApp: App {
                 .environment(safety)
                 .environment(unread)
                 .environment(PushCenter.shared)
+                .environment(Connectivity.shared)
                 .tint(Theme.brandText)
                 .task {
                     session.start()
@@ -37,6 +38,17 @@ struct BoolaaApp: App {
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { Task { await PushCenter.shared.sessionBecameReady() } }
+                    // Back from the background: visible screens refetch and resubscribe (Connectivity).
+                    if phase == .background { Connectivity.shared.appDidEnterBackground() }
+                    if phase == .active { Connectivity.shared.appBecameActive() }
+                }
+                // Back online (or foreground): re-run the device check if the app started from its cached view,
+                // reload the bubbles list and send the chat messages written offline.
+                .onChange(of: Connectivity.shared.refreshGeneration) { _, _ in
+                    Task {
+                        await session.reconnected()
+                        if Connectivity.shared.status == .online { await ChatOutbox.shared.flush() }
+                    }
                 }
                 .onOpenURL { url in
                     // Google Sign-In's redirect, an invite link (boolaa://join/…, ro.boolaa.app://join/…, or a

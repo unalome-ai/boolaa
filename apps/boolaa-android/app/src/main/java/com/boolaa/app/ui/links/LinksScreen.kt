@@ -172,7 +172,11 @@ class LinksViewModel(private val container: AppContainer, private val bubbleId: 
     val links = _links.asStateFlow()
     val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.SHARED_LINK, _links) { it.id }
 
+    private val cacheKey = com.boolaa.app.core.CacheKeys.links(bubbleId)
+    private val serializer = kotlinx.serialization.builtins.ListSerializer(SharedLink.serializer())
+
     init {
+        offlineAware(container, _links, cacheKey, serializer) { load() }
         load()
         reloadOnBlockChange(container.session) { load() }
     }
@@ -185,11 +189,12 @@ class LinksViewModel(private val container: AppContainer, private val bubbleId: 
 
     fun previewImageUrl(path: String?): String? = container.api.linkPreviewImageUrl(path)
 
-    fun load() = launchCatching(trackBusy = false) {
+    fun load() = runLoad(container, hasData = { _links.value != null }) {
         val loaded = container.api.links(bubbleId)
         _links.value = loaded
+        saveCache(container, cacheKey, serializer, loaded)
         reactions.refresh(loaded.map { it.id })
-    }.also { it.invokeOnCompletion { if (_links.value == null) _links.value = emptyList() } }
+    }
 
     fun add(url: String, title: String, tags: String, onDone: () -> Unit) = launchCatching(onSuccess = onDone) {
         val userId = container.session.state.value.userId ?: return@launchCatching
@@ -211,8 +216,11 @@ fun LinksScreen(onBack: () -> Unit) {
     val bubble = state.currentBubble ?: return
     val me = state.userId ?: return
     val vm: LinksViewModel = viewModel(key = "links-${bubble.id}") { LinksViewModel(container, bubble.id) }
-    LaunchedEffect(vm) { vm.keepLive() }
+    // Resubscribed (and reloaded once live) on every reconnect and return to the front.
+    val generation by container.connectivity.refresh.collectAsStateWithLifecycle()
+    LaunchedEffect(vm, generation) { vm.keepLive() }
     val links by vm.links.collectAsStateWithLifecycle()
+    val issue by vm.loadIssue.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val reactionRows by vm.reactions.rows.collectAsStateWithLifecycle()
     val reactionsByLink = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
@@ -268,8 +276,9 @@ fun LinksScreen(onBack: () -> Unit) {
                 }
             }
             val list = links
+            item(key = "stale") { com.boolaa.app.ui.components.StaleNotice(issue, vm::retryNow) }
             when {
-                list == null -> item(key = "loading") { SkeletonList() }
+                list == null -> item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow) }
                 list.isEmpty() -> item(key = "empty") {
                     EmptyState(BoolaaIcons.Link, stringResource(R.string.links_empty_title), stringResource(R.string.links_empty_message), hue = hue)
                 }

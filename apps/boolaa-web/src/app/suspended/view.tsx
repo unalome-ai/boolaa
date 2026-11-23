@@ -8,6 +8,7 @@ import { PageLoader } from "@/components/ui";
 import { getSupabase } from "@/lib/supabase/client";
 import { unregisterPush } from "@/lib/push";
 import { hardNavigate, signOutTarget } from "@/lib/utils";
+import { forgetOfflineData } from "@/lib/outbox";
 
 type State =
   | { kind: "loading" }
@@ -45,6 +46,7 @@ export default function SuspendedPage() {
     signOutTarget.leaving = true;
     signOutTarget.path = "/login";
     await unregisterPush(getSupabase()); // works for suspended accounts too
+    forgetOfflineData(); // no cached view or queued message stays behind
     await getSupabase().auth.signOut({ scope: "local" });
     hardNavigate("/login");
   };

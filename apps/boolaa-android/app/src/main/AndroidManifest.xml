@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Offline banner and reconnect (ConnectivityManager default network callback). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Push (docs/push-notifications.md §8): asked only after a user action (Settings → Notifications, Home card). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 

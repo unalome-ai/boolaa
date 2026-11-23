@@ -68,7 +68,7 @@ Status: ✅ done · 🔄 in progress · ⬜ not started. Rows are grouped by pha
 - 🔄 **Modern visual redesign**: playful animations, haptics, a happy brand (Fable design pass).
 - ⬜ **Native-speaker review** of the ro, fr, es and it translations.
 - ✅ **Accessibility pass**: Dynamic Type and font scaling, VoiceOver and TalkBack labels, contrast, reduced motion. Done on web, iOS and Android (2026-11-23): one-element chat messages with actions and polite announcements, selected/toggle states, headings, focus trap and skip link on the web, stacking layouts at AX3 / font scale 2.0 / 200% zoom, darker danger and grape text shades, reduced motion everywhere, 44 pt / 48 dp targets; axe, XCUITest audit and Accessibility Test Framework checks (spec "Accessibility").
-- ⬜ **Offline and poor-network handling**: cached last view, retry states.
+- ✅ **Offline and poor-network handling**: per-user cached last view (home, chat newest page, events, food, market, links, members, bubble list; cleared on sign-out/account deletion, no signed URLs), offline/unreachable pill + "Back online", inline Try again + auto-retry with backoff, refetch/resubscribe on reconnect and foreground, 15 s timeouts, 300 ms delayed skeletons, chat outbox with client ids (23505 = sent; "Sending…" / "Not sent — tap to retry"), 5 languages on web, iOS and Android; no migration (spec "Offline and poor network").
 - ✅ **Image handling** (web, iOS, Android): photos are made upright, downsized (1600 px, avatars 512 px) and re-encoded as metadata-free JPEG before upload; buckets limited to 2/5 MB and JPEG/WebP (`20261123100000_image_limits.sql`); no thumbnails, lists reuse the image (spec "Images").
 
 ## P2: Nice to have

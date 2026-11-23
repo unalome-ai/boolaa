@@ -99,8 +99,10 @@ test("alice: chat, realtime, bubble switch, events, marketplace, links", async (
   const item = page.getByTestId("market-item").filter({ hasText: itemTitle });
   await expect(item).toBeVisible();
   await expect(item.getByTestId("status-badge")).toHaveAttribute("data-status", "trade");
-  const src = await item.getByRole("img", { name: itemTitle }).getAttribute("src");
-  expect(src).toContain("/storage/v1/object/sign/market.images/");
+  // While the URL is being signed the photo is a placeholder (role img, no src): wait for the signed <img>.
+  const photo = item.getByRole("img", { name: itemTitle });
+  await expect(photo).toHaveAttribute("src", /\/storage\/v1\/object\/sign\/market\.images\//);
+  const src = await photo.getAttribute("src");
   const img = await page.request.get(src!);
   expect(img.ok()).toBeTruthy();
   // Private bucket: the old public URL of the same photo serves nothing.

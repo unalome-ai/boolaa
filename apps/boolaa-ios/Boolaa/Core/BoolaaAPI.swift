@@ -167,11 +167,20 @@ struct BoolaaAPI: Sendable {
     }
 
     /// Text, photo (`imagePath` already uploaded to `chat.images`) or both: `content` may be empty with a photo.
-    func sendMessage(bubbleID: UUID, senderID: UUID, content: String, imagePath: String? = nil) async throws -> ChatMessage {
+    /// `id` is the outbox's client id (docs/boolaa-spec.md, "Offline and poor network"): inserting the same
+    /// id twice fails with 23505 instead of creating a second message.
+    func sendMessage(id: UUID? = nil, bubbleID: UUID, senderID: UUID, content: String, imagePath: String? = nil) async throws -> ChatMessage {
         try await client.from("chat_messages")
-            .insert(NewChatMessage(bubbleId: bubbleID, senderId: senderID, content: content, imagePath: imagePath))
+            .insert(NewChatMessage(id: id, bubbleId: bubbleID, senderId: senderID, content: content, imagePath: imagePath))
             .select(Self.chatColumns)
             .single().execute().value
+    }
+
+    /// One message with its sender, or nil when it is gone or hidden.
+    func chatMessage(id: UUID) async throws -> ChatMessage? {
+        let rows: [ChatMessage] = try await client.from("chat_messages")
+            .select(Self.chatColumns).eq("id", value: id).limit(1).execute().value
+        return rows.first
     }
 
     /// Soft-deletes one of the caller's own messages. Returns the photo path the caller must now
@@ -208,9 +217,14 @@ struct BoolaaAPI: Sendable {
     /// Uploads a prepared JPEG (ImageCompression for `.chat`) and returns its object path.
     func uploadChatImage(_ jpeg: Data, userID: UUID) async throws -> String {
         let path = Self.chatImagePath(userID: userID)
+        try await uploadChatImage(jpeg, path: path)
+        return path
+    }
+
+    /// Uploads to a given `<uid>/<uuid>.jpg` path (the outbox uses its client id, so retries hit one object).
+    func uploadChatImage(_ jpeg: Data, path: String) async throws {
         try await client.storage.from(ImageBucket.chat.rawValue)
             .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
-        return path
     }
 
     /// Best-effort removal of one of the caller's chat photos (only their own `<uid>/` folder).

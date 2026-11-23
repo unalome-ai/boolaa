@@ -360,4 +360,15 @@
     <!-- Accessibility (docs/i18n-glossary.md "Accessibility labels"); read by TalkBack only. -->
     <string name="a11y_photo_from">Fotografie de la %1$s</string>
     <string name="a11y_new_message_from">Mesaj nou de la %1$s</string>
+
+    <!-- Offline and poor network (docs/boolaa-spec.md) -->
+    <string name="offline_banner">Ești offline — îți arătăm ce ai văzut ultima dată</string>
+    <string name="offline_unreachable">Nu putem contacta Boolaa — îți arătăm ce ai văzut ultima dată</string>
+    <string name="offline_back_online">Conexiunea a revenit</string>
+    <string name="offline_load_failed">Nu am putut încărca. Verifică-ți conexiunea și încearcă din nou.</string>
+    <string name="offline_stale_notice">Nu am putut actualiza — îți arătăm ce ai văzut ultima dată.</string>
+    <string name="offline_retry">Încearcă din nou</string>
+    <string name="offline_sending">Se trimite…</string>
+    <string name="offline_not_sent_tap_to_retry">Nu s-a trimis — atinge ca să încerci din nou</string>
+    <string name="offline_discard">Nu trimite</string>
 </resources>

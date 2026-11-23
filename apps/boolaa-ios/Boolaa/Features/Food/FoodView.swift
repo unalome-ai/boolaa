@@ -2,16 +2,19 @@ import SwiftUI
 
 @MainActor
 @Observable
-final class FoodModel {
+final class FoodModel: CacheFirstModel {
     var posts: [FoodPost] = []
     var loaded = false
+    var failed = false
     var error: String?
     let reactions = ReactionStore(.foodPost)
 
+    /// The cached view first (offline / slow network), then the server's list.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
-        do { posts = try await api.foodPosts(bubbleID: bubbleID) } catch { self.error = error.userMessage }
-        loaded = true
-        await reactions.load(api: api, bubbleID: bubbleID, targetIDs: posts.map(\.id))
+        let ok = await loadCacheFirst(key: OfflineCache.Key.food(bubbleID),
+                                      apply: { (rows: [FoodPost]) in posts = rows },
+                                      fetch: { try await api.foodPosts(bubbleID: bubbleID) })
+        if ok { await reactions.load(api: api, bubbleID: bubbleID, targetIDs: posts.map(\.id)) }
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -35,6 +38,7 @@ final class FoodModel {
 /// "My posts" and "From the bubble" (spec §8).
 struct FoodView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(Connectivity.self) private var connectivity
     @State private var model = FoodModel()
     @State private var editing: FoodEditorTarget?
 
@@ -47,7 +51,8 @@ struct FoodView: View {
                 SectionHeaderWithAction(title: "My posts", count: mine.count, hue: hue) {
                     AddButton(label: "Share food", id: "share-food", hue: hue) { editing = .new }
                 }
-                if !model.loaded { SkeletonList(count: 2) }
+                LoadIssueView(failed: model.failed, hasContent: model.loaded) { await reload() }
+                if !model.loaded && !model.failed { Delayed { SkeletonList(count: 2) } }
                 if model.loaded && mine.isEmpty {
                     EmptyStateView(icon: "fork.knife", title: "Nothing shared yet", message: "Leftovers? Snap a photo and share them.", hue: hue)
                 }
@@ -83,10 +88,12 @@ struct FoodView: View {
         }
         .scrollsToPushHighlight(model.posts.map(\.id))
         .refreshFeedback { await reload() }
-        .task {
+        // Back online or in the foreground: reload and resubscribe (Connectivity.refreshGeneration).
+        .task(id: connectivity.refreshGeneration) {
             await reload()
             if let id = session.currentBubble?.id { await model.listen(api: session.api, bubbleID: id) }
         }
+        .autoRetry(failed: model.failed) { await reload() }
         .sheet(item: $editing) { target in
             FoodEditor(target: target) { Task { await reload() } }.boolaaSheet()
         }

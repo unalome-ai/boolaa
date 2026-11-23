@@ -1,5 +1,7 @@
 package com.boolaa.app.ui.shell
 
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.consumeWindowInsets
 import com.boolaa.app.ui.settings.NotificationsScreen
 import com.boolaa.app.core.SearchHit
 import com.boolaa.app.core.SearchKind
@@ -209,11 +211,20 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                 ShellHeader(title = stringResource(lastTab.title), onProfile = { showProfile = true }, onAddBubble = { showAddBubble = true },
                     onSearch = { navigator.openSearch() })
             }
+            // Offline / unreachable / "Back online" (docs/boolaa-spec.md "Offline and poor network"). On pushed screens
+            // (no shell header) it sits under the status bar and the screen below gives up its own status-bar padding.
+            val netStatus by container.connectivity.status.collectAsStateWithLifecycle()
+            val backOnline by container.connectivity.backOnline.collectAsStateWithLifecycle()
+            val bannerOnTop = tab == null && (netStatus != com.boolaa.app.core.NetStatus.ONLINE || backOnline)
+            com.boolaa.app.ui.components.ConnectivityBanner(if (bannerOnTop) Modifier.statusBarsPadding() else Modifier)
             val rise = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.roundToPx() }
             // Reduced motion: every screen change is the 200 ms fade, nothing rises, scales or slides.
             val reduce = BoolaaTheme.reduceMotion
             NavHost(
-                nav, startDestination = MainTab.HOME.route, modifier = Modifier.weight(1f),
+                nav, startDestination = MainTab.HOME.route,
+                modifier = Modifier.weight(1f).then(
+                    if (bannerOnTop) Modifier.consumeWindowInsets(androidx.compose.foundation.layout.WindowInsets.statusBars) else Modifier,
+                ),
                 // Tab switch: new content rises 14dp with scale 0.98→1 and fades in; old content fades out.
                 enterTransition = {
                     if (reduce) fadeIn(Motion.fade())
