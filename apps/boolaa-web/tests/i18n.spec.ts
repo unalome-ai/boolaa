@@ -71,7 +71,7 @@ test("switching to Romanian in the profile sheet translates the shell, survives 
     await expect(sidebar.getByTestId("nav-settings")).toHaveText("Setări");
     await expect(sidebar.getByTestId("nav-links")).toHaveText("Linkuri");
     await expect(page.getByTestId("page-title")).toHaveText("Acasă");
-    await expect(page.getByTestId("tab-food")).toHaveAttribute("aria-label", "Cercul culinar");
+    await expect(page.getByTestId("tab-food")).toHaveAttribute("aria-label", "Mâncare");
     await expect(page).toHaveTitle("Acasă · Boolaa");
   };
   await expectRomanianShell();

@@ -14,7 +14,7 @@
     <string name="notifications_preview_hint">Se disattivata, le notifiche dicono solo «Nuovo messaggio in %1$s», senza nomi né testo.</string>
     <string name="notifications_blocked">Le notifiche di Boolaa sono disattivate nelle impostazioni.</string>
     <string name="notifications_ask">Attiva le notifiche</string>
-    <string name="notifications_ask_hint">Ricevi un avviso quando le tue bolle ti parlano.</string>
+    <string name="notifications_ask_hint">Ricevi un avviso quando ci sono novità nelle tue bolle.</string>
     <string name="notifications_open_settings">Apri le impostazioni</string>
     <string name="notifications_not_now">Non ora</string>
     <string name="notifications_unavailable">Le notifiche non sono disponibili su questo dispositivo.</string>
@@ -22,9 +22,9 @@
     <string name="mute_1h">1 ora</string>
     <string name="mute_8h">8 ore</string>
     <string name="mute_1w">1 settimana</string>
-    <string name="mute_forever">Finché non la riattivo</string>
+    <string name="mute_forever">Finché non riattivo le notifiche</string>
     <string name="mute_until">Silenziata fino al %1$s</string>
-    <string name="mute_muted_forever">Silenziata finché non la riattivi</string>
+    <string name="mute_muted_forever">Silenziata finché non riattivi le notifiche</string>
     <string name="mute_unmute">Riattiva</string>
     <string name="push_channel_chat">Chat</string>
     <string name="push_channel_bubble">Attività delle bolle</string>

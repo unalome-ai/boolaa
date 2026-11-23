@@ -22,7 +22,7 @@ Languages: **en** (source and fallback), **ro**, **fr**, **es**, **it**. Both cl
 | leave bubble | Leave bubble | Părăsește bula | Quitter la bulle | Salir de la burbuja | Lascia la bolla |
 | RSVP / Going | RSVP / Going | Particip | Je participe | Voy | Ci sono |
 | Free / Trade (item status) | Free / Trade | Gratuit / Schimb | Gratuit / Échange | Gratis / Intercambio | Gratis / Scambio |
-| Sign in / Sign out | Sign in / Sign out | Autentificare / Deconectare | Se connecter / Se déconnecter | Iniciar sesión / Cerrar sesión | Accedi / Esci |
+| Sign in / Sign out | Sign in / Sign out | Autentifică-te / Deconectează-te | Se connecter / Se déconnecter | Iniciar sesión / Cerrar sesión | Accedi / Esci |
 | Create account | Create account | Creează cont | Créer un compte | Crear cuenta | Crea account |
 | Profile | Profile | Profil | Profil | Perfil | Profilo |
 | Language | Language | Limbă | Langue | Idioma | Lingua |
@@ -53,8 +53,8 @@ Message keys live under `errors.*` in the web's `messages/*.json`. Function `una
 | function `invalid_code` (+ `attempts_left` → `{count}`) | `codeWrong` | That code isn't right. {count, plural, one {# try left.} other {# tries left.}} | Codul nu e corect. {count, plural, one {Mai ai # încercare.} few {Mai ai # încercări.} other {Mai ai # de încercări.}} | Ce code n'est pas bon. {count, plural, one {Il te reste # essai.} other {Il te reste # essais.}} | Ese código no es correcto. {count, plural, one {Te queda # intento.} other {Te quedan # intentos.}} | Il codice non è corretto. {count, plural, one {Ti resta # tentativo.} other {Ti restano # tentativi.}} |
 | Auth `otp_expired`, `reauthentication_not_valid` | `codeWrongOrExpired` | That code is wrong or expired. | Codul e greșit sau a expirat. | Ce code est erroné ou a expiré. | Ese código es incorrecto o ha caducado. | Il codice è sbagliato o scaduto. |
 | function `invalid_request` (not 6 digits) | `codeFormat` | Enter the 6-digit code. | Introdu codul din 6 cifre. | Saisis le code à 6 chiffres. | Introduce el código de 6 dígitos. | Inserisci il codice di 6 cifre. |
-| function `code_expired` (410) | `codeExpired` | That code has expired. Send a new one. | Codul a expirat. Cere unul nou. | Ce code a expiré. Demandes-en un nouveau. | Ese código ha caducado. Pide uno nuevo. | Il codice è scaduto. Chiedine uno nuovo. |
-| function `no_active_code` (404) | `noActiveCode` | There's no active code. Send a new one. | Nu ai niciun cod activ. Cere unul nou. | Aucun code actif. Demandes-en un nouveau. | No hay ningún código activo. Pide uno nuevo. | Non c'è nessun codice attivo. Chiedine uno nuovo. |
+| function `code_expired` (410) | `codeExpired` | That code has expired. Send a new one. | Codul a expirat. Cere unul nou. | Ce code a expiré. Demande un nouveau code. | Ese código ha caducado. Pide uno nuevo. | Il codice è scaduto. Chiedine uno nuovo. |
+| function `no_active_code` (404) | `noActiveCode` | There's no active code. Send a new one. | Nu ai niciun cod activ. Cere unul nou. | Aucun code actif. Demande un nouveau code. | No hay ningún código activo. Pide uno nuevo. | Non c'è nessun codice attivo. Chiedine uno nuovo. |
 | function `too_many_attempts` (423) | `tooManyCodeAttempts` | Too many wrong tries. Send a new code. | Prea multe încercări greșite. Cere un cod nou. | Trop d'essais ratés. Demande un nouveau code. | Demasiados intentos fallidos. Pide un código nuevo. | Troppi tentativi sbagliati. Chiedi un nuovo codice. |
 | function `rate_limited` (429) | `tooManyCodes` | Too many codes. Try again later. | Prea multe coduri. Încearcă din nou mai târziu. | Trop de codes. Réessaie plus tard. | Demasiados códigos. Inténtalo más tarde. | Troppi codici. Riprova più tardi. |
 | function `email_failed` (502) | `emailSendFailed` | Couldn't send the email. Try again. | Nu am putut trimite emailul. Încearcă din nou. | Impossible d'envoyer l'e-mail. Réessaie. | No hemos podido enviar el correo. Inténtalo de nuevo. | Non siamo riusciti a inviare l'email. Riprova. |
@@ -102,8 +102,8 @@ Web keys under `market.*` / `events.addToCalendar`; iOS uses the English text as
 | `availability` (form label) | Availability | Disponibilitate | Disponibilité | Disponibilidad | Disponibilità |
 | `available` | Available | Disponibil | Disponible | Disponible | Disponibile |
 | `reserved` (badge) | Reserved | Rezervat | Réservé | Reservado | Prenotato |
-| `taken` (badge) | Taken | Luat | Parti | Entregado | Preso |
-| `hideTaken` (filter chip) | Hide taken | Ascunde ce e luat | Masquer ce qui est parti | Ocultar entregados | Nascondi presi |
+| `taken` (badge) | Taken | Luat | Parti | Entregado | Ritirato |
+| `hideTaken` (filter chip) | Hide taken | Ascunde ce e luat | Masquer ce qui est parti | Ocultar entregados | Nascondi oggetti ritirati |
 | `markAs` (owner menu) | Mark as | Marchează ca | Marquer comme | Marcar como | Segna come |
 | `askInChat` (button) | Ask in chat | Întreabă în chat | Demander dans la discussion | Preguntar en el chat | Chiedi in chat |
 | `askDraft` (prefilled, unsent) | @{name}, is “{title}” still available? | @{name}, mai e disponibil „{title}”? | @{name}, « {title} » est toujours disponible ? | @{name}, ¿sigue disponible «{title}»? | @{name}, «{title}» è ancora disponibile? |
@@ -148,7 +148,7 @@ Web keys under `settings.*` and `errors.*`; iOS uses the English text as the key
 | transferred (notice) | {name} is now the owner. | {name} e acum proprietarul. | {name} est maintenant propriétaire. | {name} ahora es el propietario. | {name} ora è il proprietario. |
 | madeAdmin (notice) | {name} is now an admin. | {name} e acum admin. | {name} est maintenant admin. | {name} ahora es admin. | {name} ora è admin. |
 | removedAdmin (notice) | {name} is no longer an admin. | {name} nu mai e admin. | {name} n'est plus admin. | {name} ya no es admin. | {name} non è più admin. |
-| memberActions (a11y label of the per-member menu) | Manage {name} | Gestionează {name} | Gérer {name} | Gestionar a {name} | Gestisci {name} |
+| memberActions (a11y label of the per-member menu) | Manage {name} | Gestionează opțiunile pentru {name} | Gérer {name} | Gestionar a {name} | Gestisci {name} |
 | ownerOnly (CHANGED existing text, shown to plain members under the bubble details) | Only the owner and admins can edit these details. | Doar proprietarul și adminii pot modifica aceste detalii. | Seuls le propriétaire et les admins peuvent modifier ces informations. | Solo el propietario y los admins pueden editar estos datos. | Solo il proprietario e gli admin possono modificare questi dettagli. |
 | error onlyOwnerCanRotate (CHANGED text; backend text unchanged: "only the owner can change the invite code") | Only the owner or an admin can change the invite code. | Doar proprietarul sau un admin poate schimba codul de invitație. | Seul le propriétaire ou un admin peut changer le code d'invitation. | Solo el propietario o un admin puede cambiar el código de invitación. | Solo il proprietario o un admin può cambiare il codice di invito. |
 | error onlyOwnerCanRemove (CHANGED text; backend text unchanged: "only the owner can remove members") | Only the owner or an admin can remove members. | Doar proprietarul sau un admin poate elimina membri. | Seul le propriétaire ou un admin peut retirer des membres. | Solo el propietario o un admin puede quitar miembros. | Solo il proprietario o un admin può rimuovere membri. |
@@ -171,7 +171,7 @@ Web keys `profile.export*`, `errors.exportRateLimited`, `appearance.*` (web only
 | email action `export_data` | download a copy of your data | descărcarea unei copii a datelor tale | le téléchargement d'une copie de tes données | descargar una copia de tus datos | il download di una copia dei tuoi dati |
 | appearance.title (web) | Appearance | Aspect | Apparence | Apariencia | Aspetto |
 | themeSystem / themeLight / themeDark | System / Light / Dark | Sistem / Luminos / Întunecat | Système / Clair / Sombre | Sistema / Claro / Oscuro | Sistema / Chiaro / Scuro |
-| appearance.hint | System follows your device's light or dark setting. | Sistem urmează setarea luminos sau întunecat a dispozitivului tău. | Système suit le réglage clair ou sombre de ton appareil. | Sistema sigue el ajuste claro u oscuro de tu dispositivo. | Sistema segue l'impostazione chiara o scura del tuo dispositivo. |
+| appearance.hint | System follows your device's light or dark setting. | Opțiunea „Sistem” urmează setarea dispozitivului tău pentru modul luminos sau întunecat. | L’option « Système » suit le mode clair ou sombre de ton appareil. | La opción «Sistema» sigue el modo claro u oscuro de tu dispositivo. | L’opzione «Sistema» segue la modalità chiara o scura del tuo dispositivo. |
 
 The function's `reauthentication_required` and `session_not_verified` reuse `reauthenticationRequired` / `sessionNotVerified`.
 
@@ -186,7 +186,7 @@ Web keys `events.pastEvents`, `events.ended`, `events.wentCount`, `errors.eventE
 | wentCount | # person went / # people went (web: =0 Nobody went) | A participat # persoană / Au participat # persoane / Au participat # de persoane | # personne y est allée / # personnes y sont allées | Fue # persona / Fueron # personas | C'è andata # persona / Ci sono andate # persone |
 | error `event has ended` → eventEnded | This event has already ended. | Evenimentul s-a încheiat deja. | Cet événement est déjà terminé. | Este evento ya ha terminado. | Questo evento è già finito. |
 | exportRateLimitedUntil | You can download your data once an hour. Try again after {time}. | Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}. | Tu peux télécharger tes données une fois par heure. Réessaie après {time}. | Puedes descargar tus datos una vez por hora. Inténtalo de nuevo a partir de las {time}. | Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}. |
-| previewHint (CHANGED: was the seeded "Flatmates") | When off, notifications only say "New message in {bubble}", without names or text. | Când e oprită, notificările spun doar „Mesaj nou în {bubble}”, fără nume sau text. | Désactivé, les notifications disent seulement « Nouveau message dans {bubble} », sans nom ni texte. | Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en {bubble}», sin nombres ni texto. | Se disattivata, le notifiche dicono solo «Nuovo messaggio in {bubble}», senza nomi né testo. |
+| previewHint (CHANGED: was the seeded "Flatmates") | When off, notifications only say "New message in {bubble}", without names or text. | Când dezactivezi această opțiune, notificările spun doar „Mesaj nou în {bubble}”, fără nume sau text. | Si tu désactives cette option, les notifications disent seulement « Nouveau message dans {bubble} », sans nom ni texte. | Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en {bubble}», sin nombres ni texto. | Se disattivata, le notifiche dicono solo «Nuovo messaggio in {bubble}», senza nomi né testo. |
 | goToBoolaa (invalid invite link, web) | Go to Boolaa | Mergi la Boolaa | Aller sur Boolaa | Ir a Boolaa | Vai su Boolaa |
 
 ## Accessibility labels (docs/boolaa-spec.md, "Accessibility")
@@ -234,15 +234,15 @@ Web keys under `offline.*`; Android `offline_*`; iOS the English text as key. Ca
 | Chat, no messages | `chat.emptyTitle` | Say hi! | Spune salut! | Dis bonjour ! | ¡Saluda! | Saluta! |
 | Chat, no messages | `chat.emptyHint` | Nobody's talked yet. Break the ice. | Nimeni n-a scris încă. Sparge gheața. | Personne n'a encore écrit. Brise la glace. | Nadie ha escrito todavía. Rompe el hielo. | Nessuno ha ancora scritto. Rompi il ghiaccio. |
 | Events, none at all | `events.emptyTitle` | Quiet week… | Săptămână liniștită… | Semaine calme… | Semana tranquila… | Settimana tranquilla… |
-| Events, none at all | `events.emptyHint` | Plan the next thing and your bubble can join in. | Plănuiește următorul lucru și bula ta ți se poate alătura. | Organise la prochaine sortie et ta bulle pourra se joindre à toi. | Planea lo próximo y tu burbuja podrá apuntarse. | Organizza la prossima uscita e la tua bolla potrà unirsi. |
+| Events, none at all | `events.emptyHint` | Plan the next thing and your bubble can join in. | Organizează ceva și invită-i și pe cei din bula ta. | Organise quelque chose et les membres de ta bulle pourront se joindre à toi. | Planea lo próximo y tu burbuja podrá apuntarse. | Organizza qualcosa e i membri della tua bolla potranno partecipare. |
 | Events, “My events” empty | `events.emptyMineTitle` | Got a plan? | Ai un plan? | Une idée ? | ¿Algún plan? | Hai un piano? |
-| Events, “My events” empty | `events.emptyMine` | Dinner, a hike, a film night: start something. | O cină, o drumeție, o seară de film: pornește ceva. | Un dîner, une rando, une soirée film : lance quelque chose. | Una cena, una excursión, una noche de cine: organiza algo. | Una cena, un'escursione, una serata film: organizza qualcosa. |
+| Events, “My events” empty | `events.emptyMine` | Dinner, a hike, a film night: start something. | O cină, o drumeție, o seară de film: organizează ceva. | Un dîner, une rando, une soirée ciné : organise quelque chose. | Una cena, una excursión, una noche de cine: organiza algo. | Una cena, un’escursione, una serata cinema: organizza qualcosa. |
 | Events, “Bubble events” empty | `events.emptyOthersTitle` | Quiet week… | Săptămână liniștită… | Semaine calme… | Semana tranquila… | Settimana tranquilla… |
 | Events, “Bubble events” empty | `events.emptyOthers` | Nobody else has planned anything yet. | Nimeni altcineva n-a plănuit nimic încă. | Personne d'autre n'a encore rien prévu. | Nadie más ha planeado nada todavía. | Nessun altro ha ancora organizzato nulla. |
 | Food Circle, nothing at all | `food.emptyTitle` | Empty table | Masa e goală | Table vide | Mesa vacía | Tavola vuota |
-| Food Circle, nothing at all | `food.emptyHint` | Leftovers? Cooked too much? Snap it and share it. | Ți-au rămas resturi? Ai gătit prea mult? Fă o poză și împarte. | Des restes ? Tu as trop cuisiné ? Prends une photo et partage. | ¿Te han sobrado cosas? ¿Cocinaste de más? Hazle una foto y compártelo. | Avanzi? Hai cucinato troppo? Scatta una foto e condividilo. |
-| Food, “My posts” empty | `food.emptyMineTitle` | Got leftovers? | Ai resturi? | Des restes ? | ¿Te ha sobrado algo? | Hai avanzi? |
-| Food, “My posts” empty | `food.emptyMine` | Share what you've got before it goes off. | Împarte ce ai înainte să se strice. | Partage ce que tu as avant que ça se perde. | Comparte lo que tienes antes de que se eche a perder. | Condividi quello che hai prima che vada a male. |
+| Food Circle, nothing at all | `food.emptyHint` | Leftovers? Cooked too much? Snap it and share it. | Ți-a rămas mâncare? Ai gătit prea mult? Fă o poză și împarte-o. | Des restes ? Tu as trop cuisiné ? Prends une photo et partage. | ¿Te ha sobrado comida? ¿Has cocinado de más? Hazle una foto y compártela. | Hai degli avanzi? Hai cucinato troppo? Scatta una foto e condividi quello che è rimasto. |
+| Food, “My posts” empty | `food.emptyMineTitle` | Got leftovers? | Ți-a rămas mâncare? | Des restes ? | ¿Te ha sobrado algo? | Hai avanzi? |
+| Food, “My posts” empty | `food.emptyMine` | Share what you've got before it goes off. | Împarte ce ai înainte să se strice. | Partage ce que tu as avant que ça ne s’abîme. | Comparte lo que tienes antes de que se eche a perder. | Condividi quello che hai prima che vada a male. |
 | Food, “From the bubble” empty | `food.emptyOthersTitle` | Nothing shared yet | Nimic împărțit încă | Rien de partagé | Nada compartido aún | Niente di condiviso |
 | Food, “From the bubble” empty | `food.emptyOthers` | When someone shares food, it lands here. | Când cineva împarte mâncare, apare aici. | Quand quelqu'un partage à manger, ça arrive ici. | Cuando alguien comparta comida, aparecerá aquí. | Quando qualcuno condivide del cibo, lo trovi qui. |
 | Marketplace empty | `market.emptyTitle` | Empty stall | Tarabă goală | Stand vide | Puesto vacío | Bancarella vuota |
@@ -251,7 +251,7 @@ Web keys under `offline.*`; Android `offline_*`; iOS the English text as key. Ca
 | Links empty | `links.emptyHint` | Recipes, playlists, that one article: keep them here. | Rețete, playlisturi, articolul ăla: păstrează-le aici. | Recettes, playlists, cet article-là : garde-les ici. | Recetas, listas de reproducción, ese artículo: guárdalos aquí. | Ricette, playlist, quell'articolo: tienili qui. |
 | RSVP confirmed | `cheer.going` | You're going! | Participi! | Tu participes ! | ¡Vas a ir! | Ci sei! |
 | first event saved | `cheer.firstEvent` | Your first event is up! | Primul tău eveniment e gata! | Ton premier événement est en ligne ! | ¡Tu primer evento ya está! | Il tuo primo evento è online! |
-| first food post saved | `cheer.firstPost` | First post shared! | Prima postare e gata! | Premier post partagé ! | ¡Primera publicación compartida! | Primo post condiviso! |
+| first food post saved | `cheer.firstPost` | First post shared! | Prima postare e gata! | Première publication partagée ! | ¡Primera publicación compartida! | Primo post condiviso! |
 | first market item saved | `cheer.firstItem` | First item listed! | Primul anunț e publicat! | Premier objet en ligne ! | ¡Primer artículo publicado! | Primo oggetto pubblicato! |
 | admitted to a bubble (Home, once) | `cheer.joined` | You're in. Say hi to {bubble}! | Ai intrat. Salută-i pe cei din {bubble}! | Tu es dedans. Dis bonjour à {bubble} ! | Ya estás dentro. ¡Saluda a {bubble}! | Sei dentro. Saluta {bubble}! |
 

@@ -10,7 +10,7 @@
     <string name="ownership_transferred">%1$s e acum proprietarul.</string>
     <string name="made_admin">%1$s e acum admin.</string>
     <string name="removed_admin">%1$s nu mai e admin.</string>
-    <string name="member_actions">Gestionează %1$s</string>
+    <string name="member_actions">Gestionează opțiunile pentru %1$s</string>
     <string name="bubble_details_managers_only">Doar proprietarul și adminii pot modifica aceste detalii.</string>
     <string name="error_owner_only_action">Doar proprietarul poate face asta.</string>
 </resources>

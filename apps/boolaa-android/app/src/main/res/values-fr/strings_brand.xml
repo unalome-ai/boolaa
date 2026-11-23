@@ -11,7 +11,7 @@
     <string name="food_empty_others_title">Rien de partagé</string>
     <string name="cheer_going">Tu participes !</string>
     <string name="cheer_first_event">Ton premier événement est en ligne !</string>
-    <string name="cheer_first_post">Premier post partagé !</string>
+    <string name="cheer_first_post">Première publication partagée !</string>
     <string name="cheer_first_item">Premier objet en ligne !</string>
     <string name="cheer_joined">Tu es dedans. Dis bonjour à %1$s !</string>
 </resources>

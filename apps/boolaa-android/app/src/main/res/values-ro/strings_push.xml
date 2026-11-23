@@ -11,10 +11,10 @@
     <string name="notifications_food">Cercul culinar</string>
     <string name="notifications_market">Piață</string>
     <string name="notifications_preview">Arată previzualizarea mesajelor</string>
-    <string name="notifications_preview_hint">Când e oprită, notificările spun doar „Mesaj nou în %1$s”, fără nume sau text.</string>
+    <string name="notifications_preview_hint">Când dezactivezi această opțiune, notificările spun doar „Mesaj nou în %1$s”, fără nume sau text.</string>
     <string name="notifications_blocked">Notificările pentru Boolaa sunt oprite din setări.</string>
     <string name="notifications_ask">Activează notificările</string>
-    <string name="notifications_ask_hint">Primește un semn când bulele tale vorbesc cu tine.</string>
+    <string name="notifications_ask_hint">Primește un semn când apare ceva nou în bulele tale.</string>
     <string name="notifications_open_settings">Deschide setările</string>
     <string name="notifications_not_now">Nu acum</string>
     <string name="notifications_unavailable">Notificările nu sunt disponibile pe acest dispozitiv.</string>
@@ -22,9 +22,9 @@
     <string name="mute_1h">O oră</string>
     <string name="mute_8h">8 ore</string>
     <string name="mute_1w">O săptămână</string>
-    <string name="mute_forever">Până o reactivez</string>
-    <string name="mute_until">Pe silențios până %1$s</string>
-    <string name="mute_muted_forever">Pe silențios până o reactivezi</string>
+    <string name="mute_forever">Până reactivez notificările</string>
+    <string name="mute_until">Pe silențios până la %1$s</string>
+    <string name="mute_muted_forever">Pe silențios până reactivezi notificările</string>
     <string name="mute_unmute">Reactivează notificările</string>
     <string name="push_channel_chat">Chat</string>
     <string name="push_channel_bubble">Activitate în bule</string>

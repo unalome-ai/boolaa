@@ -138,10 +138,10 @@ struct NotificationSettingsTests {
     }
 
     @Test(arguments: [
-        ("ro", "Pune bula pe silențios", "Permite notificările", "Până o reactivez"),
-        ("fr", "Mettre la bulle en sourdine", "Autoriser les notifications", "Jusqu'à ce que je la réactive"),
-        ("es", "Silenciar la burbuja", "Permitir notificaciones", "Hasta que la reactive"),
-        ("it", "Silenzia la bolla", "Consenti le notifiche", "Finché non la riattivo"),
+        ("ro", "Pune bula pe silențios", "Permite notificările", "Până reactivez notificările"),
+        ("fr", "Mettre la bulle en sourdine", "Autoriser les notifications", "Jusqu’à ce que je réactive les notifications"),
+        ("es", "Silenciar la burbuja", "Permitir notificaciones", "Hasta que vuelva a activar las notificaciones"),
+        ("it", "Silenzia la bolla", "Consenti le notifiche", "Finché non riattivo le notifiche"),
         ("en", "Mute this bubble", "Allow notifications", "Until I turn it back on"),
     ])
     func stringsFollowTheGlossary(lang: String, mute: String, allow: String, forever: String) throws {

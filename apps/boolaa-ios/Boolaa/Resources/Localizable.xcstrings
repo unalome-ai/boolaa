@@ -1800,7 +1800,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blochezi și %@?"
+            "value" : "Îl blochezi și pe %@?"
           }
         }
       }
@@ -1969,7 +1969,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ideal, cel puțin 8 caractere."
+            "value" : "Cel mai bine e să aibă cel puțin 8 caractere."
           }
         }
       }
@@ -2197,7 +2197,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blochează %@"
+            "value" : "Blochează-l pe %@"
           }
         }
       }
@@ -2309,7 +2309,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Browserele și telefoanele de pe care te-ai conectat. Elimină-l pe cel pe care nu-l recunoști."
+            "value" : "Browserele și telefoanele de pe care te-ai conectat. Elimină orice dispozitiv pe care nu-l recunoști."
           }
         }
       }
@@ -2749,7 +2749,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Messages de discussion"
+            "value" : "Messages du chat"
           }
         },
         "it" : {
@@ -3898,13 +3898,13 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O cină, o drumeție, o seară de film: pornește ceva."
+            "value" : "O cină, o drumeție, o seară de film: organizează ceva."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un dîner, une rando, une soirée film : lance quelque chose."
+            "value" : "Un dîner, une rando, une soirée ciné : organise quelque chose."
           }
         },
         "es" : {
@@ -3916,7 +3916,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Una cena, un'escursione, una serata film: organizza qualcosa."
+            "value" : "Una cena, un’escursione, una serata cinema: organizza qualcosa."
           }
         }
       }
@@ -4641,7 +4641,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Premier post partagé !"
+            "value" : "Première publication partagée !"
           }
         },
         "es" : {
@@ -4888,25 +4888,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recibe un aviso cuando tus burbujas te hablen."
+            "value" : "Recibe un aviso cuando haya novedades en tus burbujas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reçois un signal quand tes bulles te parlent."
+            "value" : "Reçois un petit signal quand il y a du nouveau dans tes bulles."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ricevi un avviso quando le tue bolle ti parlano."
+            "value" : "Ricevi un avviso quando ci sono novità nelle tue bolle."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Primește un semn când bulele tale vorbesc cu tine."
+            "value" : "Primește un semn când apare ceva nou în bulele tale."
           }
         }
       }
@@ -4974,7 +4974,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ai resturi?"
+            "value" : "Ți-a rămas mâncare?"
           }
         },
         "fr" : {
@@ -5163,7 +5163,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nascondi presi"
+            "value" : "Nascondi oggetti ritirati"
           }
         },
         "ro" : {
@@ -5291,25 +5291,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si existe una cuenta para %@, le hemos enviado un código de 6 dígitos. Es válido durante 10 minutos."
+            "value" : "Si existe una cuenta con la dirección %@, hemos enviado allí un código de 6 dígitos. Es válido durante 10 minutos."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si un compte existe pour %@, on lui a envoyé un code à 6 chiffres. Il est valable 10 minutes."
+            "value" : "Si un compte existe avec l’adresse %@, on y a envoyé un code à 6 chiffres. Il est valable 10 minutes."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se esiste un account per %@, gli abbiamo inviato un codice di 6 cifre. È valido per 10 minuti."
+            "value" : "Se esiste un account con l’indirizzo %@, abbiamo inviato lì un codice di 6 cifre. È valido per 10 minuti."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dacă există un cont pentru %@, i-am trimis un cod din 6 cifre. E valabil 10 minute."
+            "value" : "Dacă există un cont cu adresa %@, am trimis acolo un cod din 6 cifre. E valabil 10 minute."
           }
         }
       }
@@ -5692,7 +5692,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ți-au rămas resturi? Ai gătit prea mult? Fă o poză și împarte."
+            "value" : "Ți-a rămas mâncare? Ai gătit prea mult? Fă o poză și împarte-o."
           }
         },
         "fr" : {
@@ -5704,13 +5704,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Te han sobrado cosas? ¿Cocinaste de más? Hazle una foto y compártelo."
+            "value" : "¿Te ha sobrado comida? ¿Has cocinado de más? Hazle una foto y compártela."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avanzi? Hai cucinato troppo? Scatta una foto e condividilo."
+            "value" : "Hai degli avanzi? Hai cucinato troppo? Scatta una foto e condividi quello che è rimasto."
           }
         }
       }
@@ -6232,7 +6232,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membri massimi"
+            "value" : "Numero massimo di membri"
           }
         },
         "ro" : {
@@ -6406,7 +6406,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pe silențios până %@"
+            "value" : "Pe silențios până la %@"
           }
         }
       }
@@ -7781,13 +7781,13 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plănuiește următorul lucru și bula ta ți se poate alătura."
+            "value" : "Organizează ceva și invită-i și pe cei din bula ta."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Organise la prochaine sortie et ta bulle pourra se joindre à toi."
+            "value" : "Organise quelque chose et les membres de ta bulle pourront se joindre à toi."
           }
         },
         "es" : {
@@ -7799,7 +7799,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Organizza la prossima uscita e la tua bolla potrà unirsi."
+            "value" : "Organizza qualcosa e i membri della tua bolla potranno partecipare."
           }
         }
       }
@@ -8565,7 +8565,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cere să te alături"
+            "value" : "Cere să intri"
           }
         }
       }
@@ -9060,7 +9060,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trimite raportul"
+            "value" : "Trimite raportarea"
           }
         }
       }
@@ -9246,7 +9246,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Partage ce que tu as avant que ça se perde."
+            "value" : "Partage ce que tu as avant que ça ne s’abîme."
           }
         },
         "es" : {
@@ -9342,7 +9342,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autentificare"
+            "value" : "Autentifică-te"
           }
         }
       }
@@ -9370,7 +9370,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deconectare"
+            "value" : "Deconectează-te"
           }
         }
       }
@@ -9617,7 +9617,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preso"
+            "value" : "Ritirato"
           }
         },
         "ro" : {
@@ -9758,7 +9758,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ce code a expiré. Demandes-en un nouveau."
+            "value" : "Ce code a expiré. Demande un nouveau code."
           }
         },
         "it" : {
@@ -10039,25 +10039,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Puede que el enlace sea antiguo o que el código haya cambiado. Pide uno nuevo a un miembro."
+            "value" : "Puede que el enlace sea antiguo o que el código haya cambiado. Pide un enlace nuevo a un miembro."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le lien est peut-être ancien ou le code a changé. Demandes-en un nouveau à un membre."
+            "value" : "Le lien est peut-être ancien ou le code a changé. Demande un nouveau lien à un membre."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il link potrebbe essere vecchio o il codice è cambiato. Chiedine uno nuovo a un membro."
+            "value" : "Il link potrebbe essere vecchio oppure il codice potrebbe essere cambiato. Chiedi un nuovo link a un membro."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Linkul poate fi vechi sau codul a fost schimbat. Cere unui membru unul nou."
+            "value" : "Linkul poate fi vechi sau codul poate fi schimbat. Cere unui membru un link nou."
           }
         }
       }
@@ -10113,7 +10113,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Membrii votează cererea ta. Intri când majoritatea spun da."
+            "value" : "Membrii votează cererea ta. Intri când majoritatea spune da."
           }
         }
       }
@@ -10129,7 +10129,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L'ancien code, le lien et le code QR ne marchent plus tout de suite. Les demandes déjà envoyées restent."
+            "value" : "L’ancien code d’invitation, le lien et le code QR cesseront immédiatement de fonctionner. Les demandes déjà envoyées restent."
           }
         },
         "it" : {
@@ -10141,7 +10141,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Codul, linkul și codul QR vechi nu mai funcționează imediat. Cererile deja trimise rămân."
+            "value" : "Vechiul cod de invitație, linkul și codul QR nu vor mai funcționa din acel moment. Cererile deja trimise rămân."
           }
         }
       }
@@ -10157,7 +10157,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucun code actif. Demandes-en un nouveau."
+            "value" : "Aucun code actif. Demande un nouveau code."
           }
         },
         "it" : {
@@ -10668,13 +10668,13 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per essere sicuri che sei tu, prima ti mandiamo un codice di 6 cifre via email."
+            "value" : "Per verificare che sia davvero tu, prima ti mandiamo un codice di 6 cifre via email."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ca să fim siguri că ești tu, îți trimitem mai întâi un cod din 6 cifre pe email."
+            "value" : "Ca să verificăm că ești tu, îți trimitem mai întâi un cod din 6 cifre pe email."
           }
         }
       }
@@ -11041,7 +11041,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deblochează %@"
+            "value" : "Deblochează-l pe %@"
           }
         }
       }
@@ -11107,25 +11107,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hasta que la reactive"
+            "value" : "Hasta que vuelva a activar las notificaciones"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jusqu'à ce que je la réactive"
+            "value" : "Jusqu’à ce que je réactive les notifications"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finché non la riattivo"
+            "value" : "Finché non riattivo le notifiche"
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Până o reactivez"
+            "value" : "Până reactivez notificările"
           }
         }
       }
@@ -11462,7 +11462,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vom analiza raportul și vom lua măsuri dacă încalcă regulile."
+            "value" : "Vom analiza raportarea și vom lua măsuri dacă încalcă regulile."
           }
         }
       }
@@ -11591,7 +11591,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Désactivé, les notifications disent seulement « Nouveau message dans %@ », sans nom ni texte."
+            "value" : "Si tu désactives cette option, les notifications disent seulement « Nouveau message dans %@ », sans nom ni texte."
           }
         },
         "it" : {
@@ -11603,7 +11603,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Când e oprită, notificările spun doar „Mesaj nou în %@”, fără nume sau text."
+            "value" : "Când dezactivezi această opțiune, notificările spun doar „Mesaj nou în %@”, fără nume sau text."
           }
         }
       }
@@ -11717,13 +11717,13 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Email o password errata."
+            "value" : "L’indirizzo email o la password non è corretto."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Email sau parolă greșită."
+            "value" : "Adresa de email sau parola este greșită."
           }
         }
       }
@@ -12688,7 +12688,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Raportul tău e privat. %@ nu va ști cine l-a trimis."
+            "value" : "Raportarea ta e privată. %@ nu va ști cine a trimis-o."
           }
         }
       }

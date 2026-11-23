@@ -76,7 +76,7 @@
     <string name="feed_kind_link">Enlace</string>
     <string name="feed_new_food_post">Nueva publicación de comida</string>
     <string name="filter_all">Todos</string>
-    <string name="food_empty_message">¿Te han sobrado cosas? ¿Cocinaste de más? Hazle una foto y compártelo.</string>
+    <string name="food_empty_message">¿Te ha sobrado comida? ¿Has cocinado de más? Hazle una foto y compártela.</string>
     <string name="food_empty_title">Mesa vacía</string>
     <string name="from_the_bubble">De la burbuja</string>
     <string name="from_the_bubble_empty">Cuando alguien comparta comida, aparecerá aquí.</string>
@@ -128,7 +128,7 @@
     <string name="owner">Propietario</string>
     <string name="password">Contraseña</string>
     <string name="pending_approval">Pendiente de aprobación</string>
-    <string name="pending_approval_hint">Entrarás cuando te apruebe la mayoría de los miembros. Desliza hacia abajo para actualizar.</string>
+    <string name="pending_approval_hint">Entrarás cuando la mayoría de los miembros apruebe tu solicitud. Desliza hacia abajo para actualizar.</string>
     <string name="pending_join_requests">Solicitudes para unirse pendientes</string>
     <string name="photo">Foto</string>
     <string name="privacy_policy">Política de privacidad</string>
@@ -199,7 +199,7 @@
     <string name="forgot_password">¿Olvidaste tu contraseña?</string>
     <string name="forgot_title">Restablece tu contraseña</string>
     <string name="forgot_message">Introduce el correo de tu cuenta y te enviaremos un código de 6 dígitos.</string>
-    <string name="forgot_sent">Si existe una cuenta para %1$s, te hemos enviado un código de 6 dígitos. Vale durante 10 minutos.</string>
+    <string name="forgot_sent">Si existe una cuenta con la dirección %1$s, hemos enviado allí un código de 6 dígitos. Es válido durante 10 minutos.</string>
     <string name="send_code">Enviar código</string>
     <string name="check_your_email">Revisa tu correo</string>
     <string name="code_verify">Verificar</string>
@@ -305,7 +305,7 @@
     <string name="invite_member">Ya estás en esta burbuja.</string>
     <string name="invite_open_bubble">Abrir la burbuja</string>
     <string name="invite_invalid_title">Esta invitación no es válida</string>
-    <string name="invite_invalid_body">Puede que el enlace sea antiguo o que el código haya cambiado. Pide uno nuevo a un miembro.</string>
+    <string name="invite_invalid_body">Puede que el enlace sea antiguo o que el código haya cambiado. Pide un enlace nuevo a un miembro.</string>
     <string name="invite_request_sent">Solicitud enviada</string>
     <string name="invite_link">Enlace de invitación</string>
     <string name="copy_invite_link">Copiar enlace</string>

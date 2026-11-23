@@ -14,7 +14,7 @@
     <string name="notifications_preview_hint">Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en %1$s», sin nombres ni texto.</string>
     <string name="notifications_blocked">Las notificaciones de Boolaa están desactivadas en tus ajustes.</string>
     <string name="notifications_ask">Activar notificaciones</string>
-    <string name="notifications_ask_hint">Recibe un aviso cuando tus burbujas te hablen.</string>
+    <string name="notifications_ask_hint">Recibe un aviso cuando haya novedades en tus burbujas.</string>
     <string name="notifications_open_settings">Abrir ajustes</string>
     <string name="notifications_not_now">Ahora no</string>
     <string name="notifications_unavailable">Las notificaciones no están disponibles en este dispositivo.</string>
@@ -22,9 +22,9 @@
     <string name="mute_1h">1 hora</string>
     <string name="mute_8h">8 horas</string>
     <string name="mute_1w">1 semana</string>
-    <string name="mute_forever">Hasta que la reactive</string>
+    <string name="mute_forever">Hasta que vuelva a activar las notificaciones</string>
     <string name="mute_until">Silenciada hasta el %1$s</string>
-    <string name="mute_muted_forever">Silenciada hasta que la reactives</string>
+    <string name="mute_muted_forever">Silenciada hasta que vuelvas a activar las notificaciones</string>
     <string name="mute_unmute">Reactivar</string>
     <string name="push_channel_chat">Chat</string>
     <string name="push_channel_bubble">Actividad de las burbujas</string>

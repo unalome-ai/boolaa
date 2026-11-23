@@ -87,7 +87,7 @@ struct MarketAvailabilityTests {
 
     @Test func availabilityLabelsTranslated() throws {
         let it = try lproj("it")
-        #expect(it.localizedString(forKey: "Taken", value: nil, table: nil) == "Preso")
+        #expect(it.localizedString(forKey: "Taken", value: nil, table: nil) == "Ritirato")
         #expect(it.localizedString(forKey: "Reserved", value: nil, table: nil) == "Prenotato")
         #expect(try lproj("ro").localizedString(forKey: "Hide taken", value: nil, table: nil) == "Ascunde ce e luat")
     }
