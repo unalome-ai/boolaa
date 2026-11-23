@@ -656,5 +656,30 @@
     "firstPost": "Première publication partagée !",
     "firstItem": "Premier objet en ligne !",
     "joined": "Tu es dedans. Dis bonjour à {bubble} !"
+  },
+  "android": {
+    "metaTitle": "Télécharger Boolaa pour Android",
+    "metaDescription": "Récupère l'appli Boolaa pour Android directement sur boolaa.ro : gratuite, sans pub, et elle se met à jour toute seule. Nécessite Android 8.0 ou plus récent.",
+    "sticker": "Téléchargement direct",
+    "title": "Boolaa pour Android",
+    "lead": "Tes bulles dans ta poche : discussion, événements, repas et échanges, avec notifications. Gratuit, sans pub.",
+    "download": "Télécharger pour Android",
+    "versionLine": "Version {version} · publiée le {date}",
+    "size": "Taille : {size} Mo",
+    "requires": "Nécessite Android 8.0 ou plus récent",
+    "installTitle": "Comment l'installer",
+    "step1": "Appuie sur « Télécharger pour Android » et ouvre le fichier une fois téléchargé (depuis la notification ou ton dossier Téléchargements).",
+    "step2": "Quand Android te le demande, autorise les installations depuis ton navigateur : <path>Paramètres → Applications → ton navigateur → Installer des applis inconnues</path>. Puis reviens et appuie sur Installer.",
+    "step3": "C'est tout ! Désormais, Boolaa se met à jour toute seule : l'appli te prévient quand une nouvelle version sort.",
+    "noStoreTitle": "Pourquoi pas Google Play ?",
+    "noStoreBody": "On distribue Boolaa directement depuis boolaa.ro, sans store entre nous.",
+    "verifyTitle": "Vérifie le fichier",
+    "verifyBody": "Tu veux être sûr que l'appli vient bien de nous ? Ces empreintes doivent correspondre à ce qu'affichent tes outils.",
+    "apkHash": "SHA-256 du fichier APK",
+    "certHash": "SHA-256 du certificat de signature",
+    "copy": "Copier",
+    "copied": "Copié",
+    "iphoneTitle": "Sur iPhone ?",
+    "iphoneBody": "Boolaa arrive bientôt sur l'App Store. En attendant, utilise-la dans ton navigateur."
   }
 }

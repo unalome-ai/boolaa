@@ -60,7 +60,7 @@ test.describe("/join/CODE", () => {
     await expect(page.getByTestId("join-sign-in")).toHaveAttribute("href", "/login?next=%2Fjoin%2FFLAT2026");
     await expect(page.getByTestId("join-register")).toHaveAttribute("href", "/register?next=%2Fjoin%2FFLAT2026");
     await expect(page.getByTestId("join-download-ios")).toBeVisible();
-    await expect(page.getByTestId("join-download-android")).toBeVisible();
+    await expect(page.getByTestId("join-download-android")).toHaveAttribute("href", "/android");
   });
 
   test("new user: register from the link, back on the preview, request, then pending", async ({ browser }) => {

@@ -9,9 +9,11 @@ const PUBLIC_PATHS = ["/login", "/register"];
  * Open to everyone, signed in or not (no redirects). `/auth/callback` exchanges OAuth / email-link
  * codes; `/forgot-password` keeps its fresh recovery session on the page until the new password is set.
  * `/join/CODE` (invite links) works signed out (sign-in prompt) and signed in with or without bubbles.
- * `/.well-known` is also skipped by the matcher in src/proxy.ts; listed here in case that changes.
+ * `/android` is the APK download page; `/android/latest.json` (the app's update manifest) is also
+ * skipped by the matcher in src/proxy.ts. `/.well-known` is also skipped by the matcher; both are
+ * listed here in case that changes.
  */
-const OPEN_PATHS = ["/privacy", "/terms", "/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/manifest.webmanifest", "/auth", "/forgot-password", "/join", "/.well-known"];
+const OPEN_PATHS = ["/privacy", "/terms", "/robots.txt", "/sitemap.xml", "/opengraph-image", "/icon", "/apple-icon", "/manifest.webmanifest", "/auth", "/forgot-password", "/join", "/android", "/.well-known"];
 /** Device / age gate (docs/auth-security.md §8): signed-in only, never bounced elsewhere. */
 const GATE_PATH = "/verify";
 /**

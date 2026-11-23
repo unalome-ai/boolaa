@@ -656,5 +656,30 @@
     "firstPost": "Prima postare e gata!",
     "firstItem": "Primul anunț e publicat!",
     "joined": "Ai intrat. Salută-i pe cei din {bubble}!"
+  },
+  "android": {
+    "metaTitle": "Descarcă Boolaa pentru Android",
+    "metaDescription": "Ia aplicația Boolaa pentru Android direct de pe boolaa.ro: gratuită, fără reclame, și se actualizează singură. Necesită Android 8.0 sau mai nou.",
+    "sticker": "Descărcare directă",
+    "title": "Boolaa pentru Android",
+    "lead": "Bulele tale în buzunar: chat, evenimente, mâncare și schimburi, cu notificări. Gratuit, fără reclame.",
+    "download": "Descarcă pentru Android",
+    "versionLine": "Versiunea {version} · lansată pe {date}",
+    "size": "Dimensiune: {size} MB",
+    "requires": "Necesită Android 8.0 sau mai nou",
+    "installTitle": "Cum o instalezi",
+    "step1": "Apasă „Descarcă pentru Android” și deschide fișierul după ce s-a descărcat (din notificare sau din folderul Descărcări).",
+    "step2": "Când Android te întreabă, permite instalările din browser: <path>Setări → Aplicații → browserul tău → Instalează aplicații necunoscute</path>. Apoi revino și apasă Instalează.",
+    "step3": "Gata! De acum Boolaa se actualizează singură: aplicația îți spune când apare o versiune nouă.",
+    "noStoreTitle": "De ce nu pe Google Play?",
+    "noStoreBody": "Publicăm Boolaa direct de pe boolaa.ro, fără niciun magazin la mijloc.",
+    "verifyTitle": "Verifică fișierul",
+    "verifyBody": "Vrei să fii sigur că aplicația vine chiar de la noi? Amprentele astea trebuie să se potrivească cu ce îți arată uneltele tale.",
+    "apkHash": "SHA-256 al fișierului APK",
+    "certHash": "SHA-256 al certificatului de semnare",
+    "copy": "Copiază",
+    "copied": "Copiat",
+    "iphoneTitle": "Ai iPhone?",
+    "iphoneBody": "Boolaa ajunge curând în App Store. Până atunci, folosește-o în browser."
   }
 }

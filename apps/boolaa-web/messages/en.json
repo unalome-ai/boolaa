@@ -656,5 +656,30 @@
     "firstPost": "First post shared!",
     "firstItem": "First item listed!",
     "joined": "You're in. Say hi to {bubble}!"
+  },
+  "android": {
+    "metaTitle": "Download Boolaa for Android",
+    "metaDescription": "Get the Boolaa app for Android straight from boolaa.ro: free, no ads, and it updates itself. Requires Android 8.0 or newer.",
+    "sticker": "Direct download",
+    "title": "Boolaa for Android",
+    "lead": "Your bubbles in your pocket: chat, events, food and swaps, with notifications. Free, no ads.",
+    "download": "Download for Android",
+    "versionLine": "Version {version} · released {date}",
+    "size": "Size: {size} MB",
+    "requires": "Requires Android 8.0 or newer",
+    "installTitle": "How to install",
+    "step1": "Tap “Download for Android” and open the file once it's downloaded (from the notification or your Downloads folder).",
+    "step2": "When Android asks, allow installs from your browser: <path>Settings → Apps → your browser → Install unknown apps</path>. Then go back and tap Install.",
+    "step3": "Done! From now on Boolaa updates itself: the app tells you when a new version is out.",
+    "noStoreTitle": "Why not Google Play?",
+    "noStoreBody": "We ship Boolaa directly from boolaa.ro, with no store in between.",
+    "verifyTitle": "Check the file",
+    "verifyBody": "Want to be sure the app really comes from us? These fingerprints must match what your tools show.",
+    "apkHash": "SHA-256 of the APK file",
+    "certHash": "SHA-256 of the signing certificate",
+    "copy": "Copy",
+    "copied": "Copied",
+    "iphoneTitle": "On iPhone?",
+    "iphoneBody": "Boolaa is coming soon to the App Store. Until then, use it in your browser."
   }
 }

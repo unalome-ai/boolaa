@@ -656,5 +656,30 @@
     "firstPost": "Primo post condiviso!",
     "firstItem": "Primo oggetto pubblicato!",
     "joined": "Sei dentro. Saluta {bubble}!"
+  },
+  "android": {
+    "metaTitle": "Scarica Boolaa per Android",
+    "metaDescription": "Prendi l'app Boolaa per Android direttamente da boolaa.ro: gratis, senza pubblicità, e si aggiorna da sola. Richiede Android 8.0 o versioni successive.",
+    "sticker": "Download diretto",
+    "title": "Boolaa per Android",
+    "lead": "Le tue bolle in tasca: chat, eventi, cibo e scambi, con le notifiche. Gratis, senza pubblicità.",
+    "download": "Scarica per Android",
+    "versionLine": "Versione {version} · pubblicata il {date}",
+    "size": "Dimensione: {size} MB",
+    "requires": "Richiede Android 8.0 o versioni successive",
+    "installTitle": "Come installarla",
+    "step1": "Tocca «Scarica per Android» e apri il file quando ha finito di scaricarsi (dalla notifica o dalla cartella Download).",
+    "step2": "Quando Android te lo chiede, consenti le installazioni dal tuo browser: <path>Impostazioni → App → il tuo browser → Installa app sconosciute</path>. Poi torna indietro e tocca Installa.",
+    "step3": "Fatto! Da ora in poi Boolaa si aggiorna da sola: l'app ti avvisa quando esce una nuova versione.",
+    "noStoreTitle": "Perché non Google Play?",
+    "noStoreBody": "Distribuiamo Boolaa direttamente da boolaa.ro, senza nessuno store in mezzo.",
+    "verifyTitle": "Controlla il file",
+    "verifyBody": "Vuoi essere sicuro che l'app venga proprio da noi? Queste impronte devono corrispondere a quelle che mostrano i tuoi strumenti.",
+    "apkHash": "SHA-256 del file APK",
+    "certHash": "SHA-256 del certificato di firma",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "iphoneTitle": "Hai un iPhone?",
+    "iphoneBody": "Boolaa arriva presto sull'App Store. Nel frattempo, usala nel browser."
   }
 }

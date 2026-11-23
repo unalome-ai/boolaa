@@ -148,10 +148,10 @@ test("the landing shows real app screenshots in the visitor's language and colou
     await expect(page.locator('#features .phone img:not([alt=""])')).toHaveCount(5);
     await expect(page.locator('.phone img[loading="lazy"]')).toHaveCount((await page.locator(".phone img").count()) - 1);
   }
-  // "Open in browser" works today; the store buttons are plain text until the apps are live.
+  // "Open in browser" and the Android page (APK) work today; iOS is plain text until the app is live.
   await expect(page.getByTestId("download-web")).toHaveAttribute("href", "/register");
-  for (const id of ["download-ios", "download-android"]) {
-    await expect(page.getByTestId(id)).toContainText("Coming soon");
-    await expect(page.getByTestId(id)).not.toHaveAttribute("href", /.*/);
-  }
+  await expect(page.getByTestId("download-android")).toHaveAttribute("href", "/android");
+  await expect(page.getByTestId("download-android")).not.toContainText("Coming soon");
+  await expect(page.getByTestId("download-ios")).toContainText("Coming soon");
+  await expect(page.getByTestId("download-ios")).not.toHaveAttribute("href", /.*/);
 });
