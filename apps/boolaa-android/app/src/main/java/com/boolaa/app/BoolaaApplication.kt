@@ -6,7 +6,10 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
+import com.boolaa.app.core.CameraCapture
 import com.boolaa.app.core.PhotoUrlInterceptor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BoolaaApplication : Application(), SingletonImageLoader.Factory {
     lateinit var container: AppContainer
@@ -20,6 +23,8 @@ class BoolaaApplication : Application(), SingletonImageLoader.Factory {
         container.unread.start()
         container.push.createChannels(this)
         container.push.start(container.session.state)
+        // "Take photo" temp files nobody saved (core/CameraCapture.kt).
+        container.appScope.launch(Dispatchers.IO) { CameraCapture.purgeStale(CameraCapture.directory(this@BoolaaApplication)) }
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

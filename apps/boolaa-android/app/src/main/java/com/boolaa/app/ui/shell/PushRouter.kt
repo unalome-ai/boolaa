@@ -38,6 +38,7 @@ fun PushRouter(navigator: ShellNavigator) {
         container.push.consumeOpen(payload)
         dest.bubbleId?.let { session.selectBubble(it) }
         container.push.setHighlight(dest.highlightId ?: PushManager.HIGHLIGHT_PENDING.takeIf { dest.screen == PushScreen.SETTINGS })
+        container.push.setOpenRequests(dest.highlightId.takeIf { dest.openRequests })
         when (dest.screen) {
             PushScreen.HOME -> navigator.openTab(MainTab.HOME)
             PushScreen.CHAT -> { navigator.openTab(MainTab.HOME); navigator.openChat() }

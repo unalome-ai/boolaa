@@ -43,9 +43,15 @@ object ImageCompression {
         return max(1, (width * scale).roundToInt()) to max(1, (height * scale).roundToInt())
     }
 
-    /** Reads the picked photo (at most [MAX_INPUT_BYTES]) and returns the JPEG to upload to [bucket]. */
+    /**
+     * Reads the picked photo (at most [MAX_INPUT_BYTES]) and returns the JPEG to upload to [bucket]. A camera capture
+     * (CameraCapture) takes the same path; its temp file is deleted once processed, and the JPEG is kept briefly so a
+     * Save retried after a failed upload still works.
+     */
     suspend fun jpegFromUri(resolver: ContentResolver, uri: Uri, bucket: ImageBucket): ByteArray =
         withContext(Dispatchers.IO) {
+            val capture = CameraCapture.isCapture(uri)
+            if (capture) CameraCapture.processedJpeg(uri, bucket)?.let { return@withContext it }
             val bytes = resolver.openInputStream(uri)?.use { input ->
                 val out = ByteArrayOutputStream()
                 val buffer = ByteArray(64 * 1024)
@@ -57,7 +63,12 @@ object ImageCompression {
                 }
                 out.toByteArray()
             } ?: throw ImageException(tooLarge = false)
-            jpeg(bytes, bucket)
+            val out = jpeg(bytes, bucket)
+            if (capture) {
+                CameraCapture.rememberProcessed(uri, bucket, out)
+                CameraCapture.delete(resolver, uri)
+            }
+            out
         }
 
     /** The JPEG to upload to [bucket]: upright, long edge <= maxSide, no metadata, within the bucket limit. */

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "I want it" requests, owner picks and food expiry (docs/boolaa-spec.md "Requests and picking", "Food expiry";
+     texts: docs/i18n-glossary.md "Requests and food expiry"). -->
+<resources>
+    <string name="requests_i_want_it">¡Me lo pido!</string>
+    <string name="requests_i_want_it_a11y">Me lo pido: %1$s</string>
+    <string name="requests_action_a11y">%1$s: %2$s</string>
+    <string name="requests_note_placeholder">Añade una nota (opcional)</string>
+    <string name="requests_send">Enviar solicitud</string>
+    <string name="requests_sent_toast">Solicitud enviada. %1$s la verá.</string>
+    <string name="requests_requested">Solicitado</string>
+    <string name="requests_on_list">Reservado · estás en la lista</string>
+    <string name="requests_withdraw">Retirar solicitud</string>
+    <string name="requests_withdraw_confirm_title">¿Retirar tu solicitud?</string>
+    <string name="requests_withdraw_confirm_body">Avisaremos a %1$s de que has cambiado de idea.</string>
+    <string name="requests_reserved_for_you">Reservado para ti</string>
+    <string name="requests_reserved_for">Reservado para %1$s</string>
+    <string name="requests_you_got_it">Es tuyo</string>
+    <string name="requests_someone_else">Se lo ha llevado otra persona</string>
+    <string name="requests_button">Solicitudes · %1$d</string>
+    <string name="requests_title">Solicitudes</string>
+    <string name="requests_none_yet">Todavía no hay solicitudes.</string>
+    <string name="requests_none_yet_hint">Los miembros pueden tocar «¡Me lo pido!» en tu publicación.</string>
+    <string name="requests_pick">Elegir</string>
+    <string name="requests_pick_instead">Elegir en su lugar</string>
+    <string name="requests_your_pick">Tu elección</string>
+    <string name="requests_undo_pick">Deshacer elección</string>
+    <string name="requests_picked_toast">Reservado para %1$s. Quedad para la entrega en el chat.</string>
+    <string name="requests_hand_over">Marcar como entregado</string>
+    <string name="requests_hand_over_title">¿Marcar como entregado?</string>
+    <string name="requests_hand_over_body_market">«%2$s» es para %1$s. Avisaremos al resto de quienes lo pidieron de que se lo ha llevado otra persona.</string>
+    <string name="requests_hand_over_body_food">Tu comida es para %1$s. La publicación desaparece del Círculo de comida y avisaremos al resto de quienes la pidieron.</string>
+    <string name="requests_clear_pick_confirm">Esto deshace tu elección (%1$s). Su solicitud sigue en la lista.</string>
+    <string name="food_good_until">Bueno hasta</string>
+    <string name="food_expiry_today">Hoy</string>
+    <string name="food_expiry_tomorrow">Mañana</string>
+    <string name="food_expiry_in_3_days">En 3 días</string>
+    <string name="food_expiry_custom">Otra fecha</string>
+    <string name="food_expiry_hint">Tu publicación desaparece después.</string>
+    <string name="food_good_until_today">Bueno hasta hoy a las %1$s</string>
+    <string name="food_good_until_tomorrow">Bueno hasta mañana a las %1$s</string>
+    <string name="food_good_until_day">Bueno hasta el %1$s a las %2$s</string>
+    <string name="food_good_until_date">Bueno hasta el %1$s, a las %2$s</string>
+    <string name="error_item_gone">Esta publicación ya no existe.</string>
+    <string name="error_item_not_available">Ya no está disponible.</string>
+    <string name="error_already_requested">Ya lo has pedido.</string>
+    <string name="error_cannot_request_own">Es tu propia publicación.</string>
+    <string name="error_request_note_too_long">La nota no puede superar los 200 caracteres.</string>
+    <string name="error_request_gone">Esa solicitud se ha retirado.</string>
+    <string name="error_request_decided">Esta solicitud ya se ha resuelto.</string>
+    <string name="error_nothing_picked">Elige a alguien primero.</string>
+    <string name="error_invalid_expiry">Elige un momento de los próximos 14 días.</string>
+    <string name="notifications_item_requests">Solicitudes de mis publicaciones</string>
+    <string name="notifications_request_updates">Novedades de mis solicitudes</string>
+    <plurals name="requests_count">
+        <item quantity="one">%d solicitud</item>
+        <item quantity="many">%d de solicitudes</item>
+        <item quantity="other">%d solicitudes</item>
+    </plurals>
+    <plurals name="food_expires_in_minutes">
+        <item quantity="one">Caduca en %d minuto</item>
+        <item quantity="many">Caduca en %d de minutos</item>
+        <item quantity="other">Caduca en %d minutos</item>
+    </plurals>
+    <plurals name="food_expires_in_hours">
+        <item quantity="one">Caduca en %d hora</item>
+        <item quantity="many">Caduca en %d de horas</item>
+        <item quantity="other">Caduca en %d horas</item>
+    </plurals>
+</resources>

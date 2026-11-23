@@ -13,6 +13,11 @@ enum PushKind: String, CaseIterable, Sendable {
     case eventReminder = "event_reminder"
     case food
     case market
+    // Requests (20261124100000_requests_food_expiry.sql): carry `item_kind` (food / market).
+    case itemRequest = "item_request"
+    case itemRequestWithdrawn = "item_request_withdrawn"
+    case itemPicked = "item_picked"
+    case itemMissed = "item_missed"
 
     /// The iOS category the backend puts in `aps.category`.
     var category: String {
@@ -24,11 +29,20 @@ enum PushKind: String, CaseIterable, Sendable {
         case .eventReminder: "EVENT_REMINDER"
         case .food: "FOOD_POST"
         case .market: "MARKET_ITEM"
+        case .itemRequest: "ITEM_REQUEST"
+        case .itemRequestWithdrawn: "ITEM_REQUEST_WITHDRAWN"
+        case .itemPicked: "ITEM_PICKED"
+        case .itemMissed: "ITEM_MISSED"
         }
     }
 
-    /// Where a tap on this push leads (§5).
-    var destination: PushDestination {
+    var isItemRequest: Bool { [.itemRequest, .itemRequestWithdrawn, .itemPicked, .itemMissed].contains(self) }
+
+    /// The owner-side types also open the item's Requests sheet (§5).
+    var opensRequests: Bool { self == .itemRequest || self == .itemRequestWithdrawn }
+
+    /// Where a tap on this push leads (§5). Request types go by `item_kind`; without one they open Home.
+    func destination(itemKind: ItemKind? = nil) -> PushDestination {
         switch self {
         case .chat: .chat
         case .joinRequest: .joinRequests
@@ -36,13 +50,19 @@ enum PushKind: String, CaseIterable, Sendable {
         case .newEvent, .eventReminder: .events
         case .food: .food
         case .market: .marketplace
+        case .itemRequest, .itemRequestWithdrawn, .itemPicked, .itemMissed:
+            switch itemKind {
+            case .food: .food
+            case .market: .marketplace
+            case nil: .home
+            }
         }
     }
 
     /// Types whose `target_id` is a row the destination screen highlights.
     var highlightsTarget: Bool {
         switch self {
-        case .newEvent, .eventReminder, .food, .market: true
+        case .newEvent, .eventReminder, .food, .market, .itemRequest, .itemRequestWithdrawn, .itemPicked, .itemMissed: true
         case .chat, .joinRequest, .approval: false
         }
     }
@@ -52,16 +72,19 @@ enum PushDestination: Equatable, Sendable {
     case home, chat, joinRequests, events, food, marketplace
 }
 
-/// `{ type, bubble_id, target_id }` from a notification's `userInfo` (strings, top level next to `aps`).
+/// `{ type, bubble_id, target_id, item_kind? }` from a notification's `userInfo` (strings, top level next to `aps`).
 struct PushPayload: Equatable, Sendable {
     let kind: PushKind
     let bubbleID: UUID
     let targetID: UUID?
+    /// Request types only: which screen holds the item.
+    let itemKind: ItemKind?
 
-    init(kind: PushKind, bubbleID: UUID, targetID: UUID? = nil) {
+    init(kind: PushKind, bubbleID: UUID, targetID: UUID? = nil, itemKind: ItemKind? = nil) {
         self.kind = kind
         self.bubbleID = bubbleID
         self.targetID = targetID
+        self.itemKind = itemKind
     }
 
     /// nil for anything that isn't a Boolaa push (unknown type, missing or malformed bubble id).
@@ -71,6 +94,7 @@ struct PushPayload: Equatable, Sendable {
         self.kind = kind
         self.bubbleID = bubbleID
         self.targetID = (userInfo["target_id"] as? String).flatMap(UUID.init(uuidString:))
+        self.itemKind = kind.isItemRequest ? (userInfo["item_kind"] as? String).flatMap(ItemKind.init(rawValue:)) : nil
     }
 }
 
@@ -80,9 +104,12 @@ struct PushRoute: Equatable, Identifiable, Sendable {
     let payload: PushPayload
 
     /// Resolves the screen: a bubble the user is no longer in (left, removed) opens Home without switching.
-    func resolve(joined: Set<UUID>) -> (bubble: UUID?, destination: PushDestination, highlight: UUID?) {
-        guard joined.contains(payload.bubbleID) else { return (nil, .home, nil) }
-        return (payload.bubbleID, payload.kind.destination, payload.kind.highlightsTarget ? payload.targetID : nil)
+    func resolve(joined: Set<UUID>) -> (bubble: UUID?, destination: PushDestination, highlight: UUID?, openRequests: UUID?) {
+        guard joined.contains(payload.bubbleID) else { return (nil, .home, nil, nil) }
+        let destination = payload.kind.destination(itemKind: payload.itemKind)
+        guard destination != .home || !payload.kind.isItemRequest else { return (payload.bubbleID, .home, nil, nil) }
+        return (payload.bubbleID, destination, payload.kind.highlightsTarget ? payload.targetID : nil,
+                payload.kind.opensRequests ? payload.targetID : nil)
     }
 
     static func == (a: PushRoute, b: PushRoute) -> Bool { a.id == b.id }
@@ -136,9 +163,29 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
     var eventReminders = true
     var food = false
     var market = false
+    /// Owner side: item_request, item_request_withdrawn. Requester side: item_picked, item_missed. Both on by default.
+    var itemRequests = true
+    var requestUpdates = true
     var previewContent = true
 
     init(userId: UUID) { self.userId = userId }
+
+    /// Columns added later (item_requests, request_updates) read as their defaults when a row predates them.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userId = try c.decode(UUID.self, forKey: .userId)
+        enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+        chat = try c.decodeIfPresent(Bool.self, forKey: .chat) ?? true
+        joinRequests = try c.decodeIfPresent(Bool.self, forKey: .joinRequests) ?? true
+        approvals = try c.decodeIfPresent(Bool.self, forKey: .approvals) ?? true
+        newEvents = try c.decodeIfPresent(Bool.self, forKey: .newEvents) ?? true
+        eventReminders = try c.decodeIfPresent(Bool.self, forKey: .eventReminders) ?? true
+        food = try c.decodeIfPresent(Bool.self, forKey: .food) ?? false
+        market = try c.decodeIfPresent(Bool.self, forKey: .market) ?? false
+        itemRequests = try c.decodeIfPresent(Bool.self, forKey: .itemRequests) ?? true
+        requestUpdates = try c.decodeIfPresent(Bool.self, forKey: .requestUpdates) ?? true
+        previewContent = try c.decodeIfPresent(Bool.self, forKey: .previewContent) ?? true
+    }
 
     enum CodingKeys: String, CodingKey {
         case enabled, chat, approvals, food, market
@@ -146,6 +193,8 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
         case joinRequests = "join_requests"
         case newEvents = "new_events"
         case eventReminders = "event_reminders"
+        case itemRequests = "item_requests"
+        case requestUpdates = "request_updates"
         case previewContent = "preview_content"
     }
 
@@ -158,6 +207,8 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
         (\.eventReminders, LocalizedStringResource("Event reminders (1 hour before)", comment: "Notification setting"), "event-reminders"),
         (\.food, LocalizedStringResource("Food Circle", comment: "Tab title"), "food"),
         (\.market, LocalizedStringResource("Marketplace", comment: "Tab title"), "market"),
+        (\.itemRequests, LocalizedStringResource("Requests for my posts", comment: "Notification setting: someone wants my food or item"), "item-requests"),
+        (\.requestUpdates, LocalizedStringResource("Updates on my requests", comment: "Notification setting: my request was picked or someone else got it"), "request-updates"),
     ] }
 }
 

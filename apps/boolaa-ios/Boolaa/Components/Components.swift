@@ -16,7 +16,7 @@ struct AvatarView: View {
             if let url {
                 StoredImage(stored: url.absoluteString) { phase in
                     if let image = phase.image {
-                        image.resizable().scaledToFill()
+                        image.resizable().scaledToFill().allowsHitTesting(false)
                     } else {
                         initials
                     }
@@ -27,6 +27,7 @@ struct AvatarView: View {
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
+        .contentShape(Circle())
         .overlay(Circle().strokeBorder(Theme.card, lineWidth: size >= 32 ? 2 : 1.5))
         .accessibilityLabel(Text("Avatar of \(name)", comment: "Accessibility label; the argument is a person's name"))
     }
@@ -92,15 +93,24 @@ struct ChipView: View {
 struct RemoteImage: View {
     var url: String?
     var hue: Hue = .grape
+    /// Fills the proposed frame and is cropped to it. `.clipped()` only crops the drawing: a scaledToFill photo
+    /// lays out larger than its frame and its hidden overflow would still take taps, covering the controls next
+    /// to it (the "New item" / "Share food" buttons above the first card). So the photo never takes taps; the
+    /// frame does, through its content shape.
     var body: some View {
-        StoredImage(stored: url, transaction: Transaction(animation: Motion.fade)) { phase in
-            switch phase {
-            case .success(let image): image.resizable().scaledToFill().transition(.opacity)
-            case .failure: placeholder(icon: "photo")
-            default: placeholder(icon: nil)
+        Color.clear
+            .overlay {
+                StoredImage(stored: url, transaction: Transaction(animation: Motion.fade)) { phase in
+                    switch phase {
+                    case .success(let image): image.resizable().scaledToFill().transition(.opacity)
+                    case .failure: placeholder(icon: "photo")
+                    default: placeholder(icon: nil)
+                    }
+                }
+                .allowsHitTesting(false)
             }
-        }
-        .clipped()
+            .clipped()
+            .contentShape(Rectangle())
     }
 
     private func placeholder(icon: String?) -> some View {
@@ -260,10 +270,12 @@ struct BubbleLogo: View {
                 StoredImage(stored: logo, transaction: Transaction(animation: Motion.fade)) { phase in
                     if let image = phase.image { image.resizable().scaledToFill().transition(.opacity) } else { Color.clear }
                 }
+                .allowsHitTesting(false)
                 .clipShape(Circle())
             }
         }
         .frame(width: size, height: size)
+        .contentShape(Circle())
         .accessibilityElement()
         .accessibilityLabel(Text("Photo of \(name)", comment: "Accessibility label of a bubble's photo; the argument is the bubble name"))
         .accessibilityHidden(logo == nil)

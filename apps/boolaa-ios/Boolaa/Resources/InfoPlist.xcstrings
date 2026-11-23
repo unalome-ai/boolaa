@@ -107,6 +107,41 @@
         }
       }
     },
+    "NSCameraUsageDescription": {
+      "comment": "Camera permission prompt (Take photo)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa uses the camera to take photos for your posts, items, profile and chat."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa folosește camera ca să faci poze pentru postări, obiecte, profil și chat."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa utilise l’appareil photo pour prendre des photos pour tes posts, objets, profil et chat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa usa la cámara para hacer fotos para tus publicaciones, artículos, perfil y chat."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boolaa usa la fotocamera per scattare foto per i tuoi post, oggetti, profilo e chat."
+          }
+        }
+      }
+    },
     "NSPhotoLibraryUsageDescription": {
       "comment": "Photo library permission prompt",
       "localizations": {

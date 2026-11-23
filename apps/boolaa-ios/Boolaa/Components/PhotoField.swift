@@ -1,7 +1,6 @@
-import PhotosUI
 import SwiftUI
 
-/// Photo picker with preview. Produces the upload-ready JPEG for `bucket` (ImageCompression: upright, downsized,
+/// Photo slot with preview: "Take photo" or "Choose from gallery" (PhotoSourcePicker). Produces the upload-ready JPEG for `bucket` (ImageCompression: upright, downsized,
 /// no EXIF/GPS), or shows an existing remote image. A photo that can't be used sets `error`.
 struct PhotoField: View {
     @Binding var jpeg: Data?
@@ -11,25 +10,18 @@ struct PhotoField: View {
     var height: CGFloat = 200
     var hue: Hue = .grape
 
-    @State private var item: PhotosPickerItem?
     @State private var loading = false
     @State private var showPicker = false
 
     var body: some View {
-        // The .photosPicker modifier avoids PhotosPicker's @Sendable label closure under Swift 6.
         Button { showPicker = true } label: { pickerLabel }
         .buttonStyle(.squish)
-        .photosPicker(isPresented: $showPicker, selection: $item, matching: .images)
-        .accessibilityIdentifier("photo-picker")
-        .onChange(of: item) { _, newItem in
-            guard let newItem else { return }
+        .photoSourcePicker(isPresented: $showPicker) { picked in
             loading = true
             Task {
                 defer { loading = false }
                 do {
-                    guard let data = try await newItem.loadTransferable(type: Data.self) else {
-                        throw ImageCompression.Failure.unsupported
-                    }
+                    let data = try await picked.data()
                     let bucket = bucket
                     jpeg = try await Task.detached(priority: .userInitiated) {
                         try ImageCompression.jpeg(from: data, for: bucket)
@@ -39,12 +31,14 @@ struct PhotoField: View {
                 }
             }
         }
+        .accessibilityIdentifier("photo-picker")
     }
 
     private var pickerLabel: some View {
             ZStack {
                 if let jpeg, let image = UIImage(data: jpeg) {
-                    Image(uiImage: image).resizable().scaledToFill()
+                    // The photo never takes taps: its scaledToFill overflow would cover the fields below.
+                    Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
                 } else if let existingURL {
                     RemoteImage(url: existingURL)
                 } else {
@@ -62,5 +56,6 @@ struct PhotoField: View {
             .frame(maxWidth: .infinity)
             .frame(height: height)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }

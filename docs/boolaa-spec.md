@@ -59,6 +59,13 @@ Every client runs a picked photo through the same pipeline before upload (web `s
 - **Errors** (glossary, "Image upload errors"): too large (client check, or Storage `statusCode` 413 / `EntityTooLarge`) → `imageTooLarge`; undecodable file, or Storage 415 / `invalid_mime_type` → `imageUnsupported`. Storage answers both with HTTP 400 locally and 413/415 hosted.
 - **Thumbnails**: none. Supabase image transformations are a paid feature, and a `_thumb` variant would double the uploads and the deletion paths (replace, delete, account deletion, moderation cleanup). Lists show the same image, sized by CSS / native views and loaded lazily; a 1600 px JPEG is a few hundred KB.
 
+#### Camera
+Everywhere a photo is added (food post, marketplace item, avatar, bubble photo, chat photo) the client offers **Take photo** next to **Choose from gallery** (plus **Remove photo** where it exists). A camera photo goes through the same pipeline above; there is no second path.
+- **iOS**: `UIImagePickerController(sourceType: .camera)` in a full-screen cover; hidden when `isSourceTypeAvailable(.camera)` is false. `NSCameraUsageDescription` is localized in all 5 languages.
+- **Android**: `ActivityResultContracts.TakePicture` into a FileProvider `content://` Uri in `cacheDir`, deleted after the pipeline read it; hidden without `FEATURE_CAMERA_ANY`. The app does not declare `CAMERA`, so the system camera app needs no permission.
+- **Web**: a second `<input type="file" accept="image/*" capture>` (`environment`; avatar `user`) feeding the same handler, shown only where the primary pointer is touch (`(pointer: coarse)`, `src/lib/camera.ts`). Desktop browsers ignore `capture`, so desktop keeps the single "Choose a photo".
+- Denied permission shows "camera denied" with a way to open Settings (iOS/Android); on the web the browser owns the camera prompt. Strings: glossary, "Camera".
+
 ### Private photos (migration `20261123210000_private_photos.sql`)
 - **Why**: before, anyone holding a photo URL could open it without an account. Now Storage serves an object only to a signed-in, verified caller the policies allow; the old `/object/public/...` URL answers 400 and anon reads nothing.
 - **Who reads** (`can_read_image(bucket, name)`, plus the existing owner, manager and moderation policies):

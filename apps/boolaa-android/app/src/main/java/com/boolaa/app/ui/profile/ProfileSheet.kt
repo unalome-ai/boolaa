@@ -2,9 +2,6 @@ package com.boolaa.app.ui.profile
 
 import android.content.ContentResolver
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.boolaa.app.AppContainer
@@ -118,6 +115,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.boolaa.app.ui.components.PhotoSourceMenu
+import com.boolaa.app.ui.components.rememberPhotoSource
 import com.boolaa.app.ui.components.AddButton
 import com.boolaa.app.ui.components.Avatar
 import com.boolaa.app.ui.components.BoolaaChip
@@ -209,16 +208,14 @@ fun ProfileSheet(onDismiss: () -> Unit) {
     val view = LocalView.current
     val c = BoolaaTheme.colors
     val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0] ?: Locale.ENGLISH
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) vm.uploadAvatar(uri, resolver)
-    }
+    val photoSource = rememberPhotoSource { uri -> vm.uploadAvatar(uri, resolver) }
 
     BoolaaSheet(onDismiss, stringResource(R.string.profile), tag = "profile-sheet") {
         // The camera badge sits outside the avatar's circle, so only the avatar itself is clipped.
         Box(Modifier.align(Alignment.CenterHorizontally).popIn().testTag("avatar-button")) {
             val changePhoto = stringResource(R.string.change_photo)
             Avatar(state.profile, 112.dp, Modifier.clip(CircleShape).clickableRipple(role = Role.Button) {
-                picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                photoSource.open()
             }.semantics { contentDescription = changePhoto }, rainbow = true)
             Box(
                 Modifier.align(Alignment.BottomEnd).size(38.dp).clip(CircleShape).background(c.background).padding(2.dp)
@@ -228,6 +225,7 @@ fun ProfileSheet(onDismiss: () -> Unit) {
                 if (busy) CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
                 else Icon(BoolaaIcons.Camera, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
             }
+            PhotoSourceMenu(photoSource)
         }
         BoolaaTextField(name, { name = it }, stringResource(R.string.name), Modifier.testTag("profile-name"))
         BoolaaTextField(state.email.orEmpty(), {}, stringResource(R.string.email), enabled = false)

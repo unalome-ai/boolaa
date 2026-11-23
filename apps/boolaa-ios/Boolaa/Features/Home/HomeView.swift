@@ -43,7 +43,8 @@ enum FeedItem: Identifiable, Hashable, Sendable {
     /// Merges the sections into one feed, newest first.
     static func combine(messages: [ChatMessage], food: [FoodPost], market: [MarketItem],
                         events: [BubbleEvent], links: [SharedLink]) -> [FeedItem] {
-        (messages.map(FeedItem.message) + food.map(FeedItem.food) + market.map(FeedItem.market)
+        // Home never shows expired or handed-over food (docs/boolaa-spec.md, "Food expiry").
+        (messages.map(FeedItem.message) + food.filter { $0.isVisible(at: .now) }.map(FeedItem.food) + market.map(FeedItem.market)
          + events.map(FeedItem.event) + links.map(FeedItem.link))
             .sorted { $0.date > $1.date }
     }

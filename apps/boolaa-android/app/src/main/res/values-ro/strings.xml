@@ -338,6 +338,12 @@
     <string name="chat_start">Aici începe chatul</string>
     <string name="chat_add_photo">Adaugă o fotografie</string>
     <string name="chat_remove_photo">Elimină fotografia</string>
+    <!-- Camera capture (docs/boolaa-spec.md "Images" → "Camera"). -->
+    <string name="take_photo">Fă o poză</string>
+    <string name="choose_from_gallery">Alege din galerie</string>
+    <string name="camera_unavailable">Camera nu e disponibilă pe acest dispozitiv.</string>
+    <string name="camera_denied">Permite accesul la cameră din Setări ca să faci poze.</string>
+    <string name="open_settings">Deschide Setările</string>
     <string name="chat_photo">Fotografie</string>
     <plurals name="chat_unread">
         <item quantity="one">%d mesaj necitit</item>

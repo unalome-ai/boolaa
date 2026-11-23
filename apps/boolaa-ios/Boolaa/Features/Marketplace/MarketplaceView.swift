@@ -8,13 +8,18 @@ final class MarketModel: CacheFirstModel {
     var failed = false
     var error: String?
     let reactions = ReactionStore(.marketItem)
+    let requests = RequestStore(.market)
 
     /// The cached view first (offline / slow network), then the server's list.
     func load(api: BoolaaAPI, bubbleID: UUID) async {
         let ok = await loadCacheFirst(key: OfflineCache.Key.market(bubbleID),
                                       apply: { (rows: [MarketItem]) in items = rows },
                                       fetch: { try await api.marketItems(bubbleID: bubbleID).sorted(by: MarketItem.precedes) })
-        if ok { await reactions.load(api: api, bubbleID: bubbleID, targetIDs: items.map(\.id)) }
+        if ok {
+            async let r: Void = reactions.load(api: api, bubbleID: bubbleID, targetIDs: items.map(\.id))
+            async let q: Void = requests.load(api: api, bubbleID: bubbleID)
+            _ = await (r, q)
+        }
     }
 
     /// Other members' inserts, edits and deletes stream in until the view goes away (docs/boolaa-spec.md, Realtime tables).
@@ -23,7 +28,7 @@ final class MarketModel: CacheFirstModel {
                                rows: { [weak self] in self?.items ?? [] },
                                apply: { [weak self] in self?.items = $0 },
                                reload: { [weak self] in await self?.load(api: api, bubbleID: bubbleID) },
-                               reactions: reactions)
+                               reactions: reactions, requests: requests)
     }
 
     func delete(api: BoolaaAPI, item: MarketItem) async {
@@ -34,16 +39,22 @@ final class MarketModel: CacheFirstModel {
         } catch { self.error = error.userMessage }
     }
 
-    /// Owner only. Applied locally at once; other members get the UPDATE live.
+    /// Owner only. Applied locally at once; other members get the UPDATE live. The database maps the new
+    /// availability onto the requests (spec, "Requests and picking"); the held requests mirror it.
     func setAvailability(api: BoolaaAPI, item: MarketItem, _ availability: MarketAvailability) async {
         guard item.availability != availability else { return }
         do {
             try await api.setMarketAvailability(id: item.id, availability)
-            if let idx = items.firstIndex(where: { $0.id == item.id }) {
-                items[idx].availability = availability
-                items.sort(by: MarketItem.precedes)
-            }
+            applyLocal(availability, of: item.id)
+            requests.applyAvailability(availability, item: item.id)
         } catch { self.error = error.userMessage }
+    }
+
+    func applyLocal(_ availability: MarketAvailability, of id: UUID) {
+        if let idx = items.firstIndex(where: { $0.id == id }) {
+            items[idx].availability = availability
+            items.sort(by: MarketItem.precedes)
+        }
     }
 
     /// nil filter = All. `hideTaken` drops taken items; the rest keep their order (taken last).
@@ -62,6 +73,9 @@ struct MarketplaceView: View {
     @Environment(ShellRouter.self) private var router
     @State private var editing: MarketEditorTarget?
     @State private var detail: MarketItem?
+    @State private var requestsFor: UUID?
+    /// A "Mark as" that needs a confirmation first (a pick exists): Available clears it, Taken hands over.
+    @State private var pendingMarkAs: MarkAsRequest?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -119,7 +133,9 @@ struct MarketplaceView: View {
                     ForEach(Array(visible.enumerated()), id: \.element.id) { index, item in
                         Button { detail = item } label: {
                             MarketCard(item: item, isMine: item.ownerId == session.userID,
-                                       reactions: model.reactions.summary(for: item.id, me: session.userID))
+                                       reactions: model.reactions.summary(for: item.id, me: session.userID),
+                                       picked: item.ownerId == session.userID ? model.requests.picked(for: item.id) : nil,
+                                       mine: model.requests.mine(for: item.id, me: session.userID))
                         }
                             .buttonStyle(.squish)
                             .safetyContextMenu(.market(item), react: item.ownerId == session.userID ? nil : { react(item, $0) })
@@ -167,8 +183,27 @@ struct MarketplaceView: View {
                          onAvailability: { setAvailability(live, $0) },
                          onAskInChat: { draft in detail = nil; router.openChat(draft: draft) },
                          reactions: model.reactions.summary(for: live.id, me: session.userID),
-                         onReact: { react(live, $0) })
+                         onReact: { react(live, $0) },
+                         requestTarget: requestTarget(live),
+                         requests: model.requests,
+                         me: session.userID,
+                         onRequestAvailability: { model.applyLocal($0, of: live.id) },
+                         onRequestError: reloadIfStale)
+                .markAsConfirmation(Binding(get: { pendingMarkAs }, set: { pendingMarkAs = $0 })) { performMarkAs($0) }
                 .boolaaSheet()
+        }
+        .sheet(item: Binding(get: { requestsFor.flatMap { id in model.items.first { $0.id == id && $0.ownerId == session.userID } } },
+                             set: { if $0 == nil { requestsFor = nil } })) { item in
+            RequestsSheet(target: requestTarget(item), store: model.requests,
+                          onAvailability: { model.applyLocal($0, of: item.id) }, onError: reloadIfStale)
+        }
+        .markAsConfirmation(Binding(get: { detail == nil ? pendingMarkAs : nil }, set: { pendingMarkAs = $0 })) { performMarkAs($0) }
+        // An item_request push: open the Requests sheet of my item once it has loaded.
+        .task(id: "\(router.openRequestsFor?.uuidString ?? "")|\(model.items.count)") {
+            guard let id = router.openRequestsFor,
+                  model.items.contains(where: { $0.id == id && $0.ownerId == session.userID }) else { return }
+            router.openRequestsFor = nil
+            requestsFor = id
         }
         .errorAlert($model.error)
     }
@@ -186,8 +221,41 @@ struct MarketplaceView: View {
         .accessibilityIdentifier("market-hide-taken")
     }
 
+    /// "Mark as" from the card menu, the detail or (owner) any other place. With a pick, Available asks before
+    /// clearing it and Taken is the hand-over (same confirmation); otherwise it applies at once.
     private func setAvailability(_ item: MarketItem, _ availability: MarketAvailability) {
-        Task { await model.setAvailability(api: session.api, item: item, availability) }
+        guard availability != item.availability else { return }
+        if let pick = model.requests.picked(for: item.id), pick.status == .picked, availability != .reserved {
+            pendingMarkAs = MarkAsRequest(item: item, availability: availability, pickName: pick.requester?.displayName ?? "")
+        } else {
+            Task { await model.setAvailability(api: session.api, item: item, availability) }
+        }
+    }
+
+    private func performMarkAs(_ request: MarkAsRequest) {
+        if request.availability == .taken {
+            Task {
+                if let error = await model.requests.handOver(api: session.api, item: request.item.id) { handle(error) }
+                else { model.applyLocal(.taken, of: request.item.id) }
+            }
+        } else {
+            Task { await model.setAvailability(api: session.api, item: request.item, request.availability) }
+        }
+    }
+
+    private func requestTarget(_ item: MarketItem) -> RequestTarget {
+        RequestTarget(kind: .market, id: item.id, bubbleID: item.bubbleId, ownerID: item.ownerId, title: item.title,
+                      ownerName: item.owner?.displayName ?? "", availability: item.availability, requestCount: item.requestCount)
+    }
+
+    private func handle(_ error: UserFacingError) {
+        model.error = String(localized: error.message)
+        reloadIfStale(error)
+    }
+
+    /// For sheets that show the error themselves.
+    private func reloadIfStale(_ error: UserFacingError) {
+        if error.reloadsItems { Task { await reload() } }
     }
 
     private var hue: Hue { Feature.market.hue }
@@ -210,6 +278,40 @@ struct MarketplaceView: View {
     private func reload() async {
         guard let id = session.currentBubble?.id else { return }
         await model.load(api: session.api, bubbleID: id)
+    }
+}
+
+/// A "Mark as" waiting for the owner's confirmation.
+struct MarkAsRequest: Identifiable {
+    let id = UUID()
+    let item: MarketItem
+    let availability: MarketAvailability
+    let pickName: String
+}
+
+extension View {
+    /// "This clears your pick ({name})…" before Available; the hand-over confirmation before Taken.
+    func markAsConfirmation(_ pending: Binding<MarkAsRequest?>, perform: @escaping (MarkAsRequest) -> Void) -> some View {
+        alert(pending.wrappedValue?.availability == .taken
+                ? Text("Mark as handed over?", comment: "Confirmation title before handing an item over")
+                : Text(MarketAvailability.available.label),
+              isPresented: Binding(get: { pending.wrappedValue != nil }, set: { if !$0 { pending.wrappedValue = nil } }),
+              presenting: pending.wrappedValue) { request in
+            Button {
+                perform(request)
+            } label: {
+                request.availability == .taken
+                    ? Text("Mark as handed over", comment: "Button: the owner gave the item to the picked person")
+                    : Text(MarketAvailability.available.label)
+            }
+            .accessibilityIdentifier("mark-as-confirm")
+            Button("Cancel", role: .cancel) {}
+        } message: { request in
+            request.availability == .taken
+                ? Text(RequestsSheet.handOverMessage(kind: .market, name: request.pickName, title: request.item.title))
+                : Text("This clears your pick (\(request.pickName)). Their request stays on the list.",
+                       comment: "Confirmation before marking a picked market item available; the argument is the picked person's name")
+        }
     }
 }
 
@@ -295,6 +397,9 @@ struct MarketCard: View {
     var isMine: Bool
     /// Read-only here (the card is a button); reacting happens in the detail sheet or the long-press menu.
     var reactions: [ReactionSummary] = []
+    /// The owner's pick (owner only) and my own request, for "Reserved for …" / "It's yours".
+    var picked: ItemRequest? = nil
+    var mine: ItemRequest? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -307,7 +412,15 @@ struct MarketCard: View {
                 }
                 .clipped()
                 .overlay(alignment: .topLeading) { StatusBadge(status: item.status).padding(8) }
-                .overlay(alignment: .bottomLeading) { AvailabilityBadge(availability: item.availability).padding(8) }
+                .overlay(alignment: .bottomLeading) {
+                    HStack(spacing: 6) {
+                        RequestAwareBadge(availability: item.availability, hue: Feature.market.hue, isOwner: isMine, picked: picked, mine: mine)
+                        if item.availability != .taken && item.requestCount > 0 {
+                            RequestCountPill(count: item.requestCount, hue: Feature.market.hue)
+                        }
+                    }
+                    .padding(8)
+                }
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: item.title).font(.rounded(.subheadline)).lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 HStack(spacing: 6) {
@@ -350,7 +463,14 @@ struct MarketDetail: View {
     var onAskInChat: (String) -> Void = { _ in }
     var reactions: [ReactionSummary] = []
     var onReact: ((ReactionKind) -> Void)? = nil
+    var requestTarget: RequestTarget? = nil
+    var requests: RequestStore? = nil
+    var me: UUID? = nil
+    var onRequestAvailability: (MarketAvailability) -> Void = { _ in }
+    var onRequestError: (UserFacingError) -> Void = { _ in }
     @State private var confirmDelete = false
+    @State private var showRequests = false
+    @State private var requestError: String?
 
     var body: some View {
         ScrollView {
@@ -364,7 +484,9 @@ struct MarketDetail: View {
                         .accessibilityAddTraits(.isHeader)
                     Spacer(minLength: 0)
                     HStack(spacing: 6) {
-                        AvailabilityBadge(availability: item.availability)
+                        RequestAwareBadge(availability: item.availability, hue: Feature.market.hue, isOwner: isMine,
+                                          picked: isMine ? requests?.picked(for: item.id) : nil,
+                                          mine: requests?.mine(for: item.id, me: me))
                         StatusBadge(status: item.status)
                     }
                 }
@@ -376,6 +498,19 @@ struct MarketDetail: View {
                 }
                 if let onReact {
                     ReactionBar(summaries: reactions, hue: Feature.market.hue, onToggle: onReact)
+                }
+                if item.availability != .taken && item.requestCount > 0 {
+                    RequestCountPill(count: item.requestCount, hue: Feature.market.hue, onTap: isMine ? { showRequests = true } : nil)
+                }
+                if let requestTarget, let requests {
+                    if isMine {
+                        OwnerRequestsButton(count: item.requestCount, hue: Feature.market.hue) { showRequests = true }
+                    } else {
+                        RequestActionRow(target: requestTarget, store: requests, me: me) { e in
+                            requestError = String(localized: e.message)
+                            onRequestError(e)
+                        }
+                    }
                 }
                 if !isMine, let chatDraft {
                     Button { onAskInChat(chatDraft) } label: {
@@ -404,6 +539,12 @@ struct MarketDetail: View {
             .padding(.top, 8)
         }
         .presentationDetents([.large])
+        .errorAlert($requestError)
+        .sheet(isPresented: $showRequests) {
+            if let requestTarget, let requests {
+                RequestsSheet(target: requestTarget, store: requests, onAvailability: onRequestAvailability, onError: onRequestError)
+            }
+        }
         .confirmationDialog(Text("Delete “\(item.title)”?", comment: "Confirmation title; the argument is the item title"), isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { Interaction.destructiveConfirm.play(); onDelete() }
         }

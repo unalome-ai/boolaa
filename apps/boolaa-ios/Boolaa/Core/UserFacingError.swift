@@ -13,6 +13,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         .noActiveCode, .tooManyCodeAttempts, .tooManyCodes, .emailSendFailed, .emailRateLimited, .samePassword,
         .oauthFailed, .accountSuspended, .userBanned, .invalidEmail, .imageTooLarge, .imageUnsupported,
         .tooManyInviteAttempts, .ownerOnlyRotate, .ownerOnlyAction, .chatMessageGone, .exportRateLimited,
+        .itemGone, .itemNotAvailable, .alreadyRequested, .cannotRequestOwn, .requestNoteTooLong, .requestGone,
+        .requestDecided, .nothingPicked, .invalidExpiry,
     ]
 
     case invalidInviteCode
@@ -68,6 +70,16 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     case chatMessageGone
     // "Download my data": data-export answers 429 export_rate_limited (one export an hour).
     case exportRateLimited
+    // Requests and food expiry (20261124100000_requests_food_expiry.sql; glossary "Requests and food expiry")
+    case itemGone
+    case itemNotAvailable
+    case alreadyRequested
+    case cannotRequestOwn
+    case requestNoteTooLong
+    case requestGone
+    case requestDecided
+    case nothingPicked
+    case invalidExpiry
 
     /// Classifies any error thrown by the SDK or by URLSession.
     static func classify(_ error: any Error) -> UserFacingError {
@@ -115,6 +127,16 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     static func classify(message: String, code: String?) -> UserFacingError? {
         let text = message.lowercased()
         let table: [(String, UserFacingError)] = [
+            // Requests and food expiry: none of these contains an older mapped text, checked first anyway.
+            ("item request gone", .requestGone),
+            ("item not found", .itemGone),
+            ("item not available", .itemNotAvailable),
+            ("already requested", .alreadyRequested),
+            ("cannot request own item", .cannotRequestOwn),
+            ("request note too long", .requestNoteTooLong),
+            ("request already decided", .requestDecided),
+            ("nothing picked", .nothingPicked),
+            ("invalid expiry", .invalidExpiry),
             ("invalid invite code", .invalidInviteCode),
             ("too many attempts", .tooManyInviteAttempts),
             ("only the owner can change the invite code", .ownerOnlyRotate),
@@ -240,6 +262,15 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .ownerOnlyAction: "Only the owner can do that."
         case .chatMessageGone: "That message no longer exists."
         case .exportRateLimited: "You can download your data once an hour. Try again later."
+        case .itemGone: "This post isn't here any more."
+        case .itemNotAvailable: "It's no longer available."
+        case .alreadyRequested: "You've already asked for this."
+        case .cannotRequestOwn: "This is your own post."
+        case .requestNoteTooLong: "Keep the note under 200 characters."
+        case .requestGone: "That request was withdrawn."
+        case .requestDecided: "This request has already been decided."
+        case .nothingPicked: "Pick someone first."
+        case .invalidExpiry: "Pick a time in the next 14 days."
         }
     }
 }

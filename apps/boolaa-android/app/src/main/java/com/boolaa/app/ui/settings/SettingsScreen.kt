@@ -13,12 +13,11 @@ import android.content.Context
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.LinearProgressIndicator
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.ImageCompression
+import com.boolaa.app.ui.components.PhotoSourceMenu
+import com.boolaa.app.ui.components.rememberPhotoSource
 import com.boolaa.app.ui.components.BubbleLogo
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -566,25 +565,26 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, canManage: Boolean, vm: S
     }
 }
 
-/** Owner and admins: add / change / remove the bubble photo (Android Photo Picker, no permission needed). */
+/** Owner and admins: add / change (camera or Android Photo Picker, no permission needed) / remove the bubble photo. */
 @Composable
 private fun BubbleLogoControls(bubble: Bubble, vm: SettingsViewModel) {
     val c = BoolaaTheme.colors
     val resolver = LocalContext.current.contentResolver
     val logoBusy by vm.logoBusy.collectAsStateWithLifecycle()
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) vm.setLogo(bubble, resolver, uri)
-    }
+    val photoSource = rememberPhotoSource { uri -> vm.setLogo(bubble, resolver, uri) }
     val hasLogo = !bubble.logo.isNullOrBlank()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("bubble-photo-controls")) {
         Text(stringResource(R.string.bubble_photo), style = Type.headline, color = c.textPrimary)
         Text(stringResource(R.string.bubble_photo_hint), style = Type.caption, color = c.textSecondary)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SecondaryButton(
-                stringResource(if (hasLogo) R.string.change_bubble_photo else R.string.add_bubble_photo),
-                onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                enabled = !logoBusy, modifier = Modifier.weight(1f).testTag("bubble-photo-pick"),
-            )
+            Box(Modifier.weight(1f)) {
+                SecondaryButton(
+                    stringResource(if (hasLogo) R.string.change_bubble_photo else R.string.add_bubble_photo),
+                    onClick = { photoSource.open() },
+                    enabled = !logoBusy, modifier = Modifier.fillMaxWidth().testTag("bubble-photo-pick"),
+                )
+                PhotoSourceMenu(photoSource)
+            }
             if (hasLogo) {
                 SecondaryButton(
                     stringResource(R.string.remove_bubble_photo), onClick = { vm.removeLogo(bubble) },

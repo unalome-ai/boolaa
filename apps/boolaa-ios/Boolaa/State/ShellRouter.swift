@@ -48,6 +48,8 @@ final class ShellRouter {
     var showAddBubble = false
     /// A row a tapped notification points at (event, food post, market item): scrolled to and highlighted.
     var highlight: UUID?
+    /// An `item_request` push: Food / Marketplace opens the owner's Requests sheet on this item once it has loaded.
+    var openRequestsFor: UUID?
     /// A join-request notification: Settings scrolls to the pending requests.
     var scrollToRequests = false
     /// Text the chat composer picks up once when it opens ("Ask in chat" on a market item). Never sent automatically.

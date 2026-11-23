@@ -212,6 +212,8 @@ fun NotificationsScreen(onBack: () -> Unit) {
                         PrefKey.EVENT_REMINDERS to R.string.notifications_event_reminders,
                         PrefKey.FOOD to R.string.notifications_food,
                         PrefKey.MARKET to R.string.notifications_market,
+                        PrefKey.ITEM_REQUESTS to R.string.notifications_item_requests,
+                        PrefKey.REQUEST_UPDATES to R.string.notifications_request_updates,
                     ).forEach { (key, label) ->
                         PrefSwitch(stringResource(label), key.get(p), enabled = sub, tag = "pref-${key.column}") { vm.set(key, it) }
                     }

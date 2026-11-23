@@ -82,7 +82,7 @@ struct JoinInviteSheet: View {
                 if let logo = preview.logo, !logo.isEmpty {
                     // Private bucket: the preview granted this caller the cover for an hour (get_invite_preview).
                     StoredImage(stored: logo) { phase in
-                        if let image = phase.image { image.resizable().scaledToFill() } else { BubbleOrb(hue: hue) }
+                        if let image = phase.image { image.resizable().scaledToFill().allowsHitTesting(false) } else { BubbleOrb(hue: hue) }
                     }
                     .clipShape(Circle())
                 } else {

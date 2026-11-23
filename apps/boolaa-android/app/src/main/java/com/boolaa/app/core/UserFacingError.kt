@@ -71,6 +71,16 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     IMAGE_UNSUPPORTED(R.string.error_image_unsupported),
     // "Download my data": data-export answers 429 export_rate_limited (one export an hour).
     EXPORT_RATE_LIMITED(R.string.error_export_rate_limited),
+    // "I want it" requests and food expiry (20261124100000_requests_food_expiry.sql).
+    ITEM_GONE(R.string.error_item_gone),
+    ITEM_NOT_AVAILABLE(R.string.error_item_not_available),
+    ALREADY_REQUESTED(R.string.error_already_requested),
+    CANNOT_REQUEST_OWN(R.string.error_cannot_request_own),
+    REQUEST_NOTE_TOO_LONG(R.string.error_request_note_too_long),
+    REQUEST_GONE(R.string.error_request_gone),
+    REQUEST_DECIDED(R.string.error_request_decided),
+    NOTHING_PICKED(R.string.error_nothing_picked),
+    INVALID_EXPIRY(R.string.error_invalid_expiry),
     GENERIC(R.string.error_generic);
 
     companion object {
@@ -139,6 +149,18 @@ enum class UserFacingError(@param:StringRes val message: Int) {
         fun classify(message: String, code: String?): UserFacingError? {
             val text = message.lowercase()
             val table = listOf(
+                // Requests and food expiry: checked first; none contains an older mapped text (or the reverse).
+                "item request gone" to REQUEST_GONE,
+                "item not found" to ITEM_GONE,
+                "item not available" to ITEM_NOT_AVAILABLE,
+                "already requested" to ALREADY_REQUESTED,
+                "cannot request own item" to CANNOT_REQUEST_OWN,
+                "request note too long" to REQUEST_NOTE_TOO_LONG,
+                "request already decided" to REQUEST_DECIDED,
+                "nothing picked" to NOTHING_PICKED,
+                "invalid expiry" to INVALID_EXPIRY,
+                "not your item" to GENERIC,
+                "invalid item kind" to GENERIC,
                 "invalid invite code" to INVALID_INVITE_CODE,
                 "too many attempts" to TOO_MANY_INVITE_ATTEMPTS,
                 "only the owner can change the invite code" to ONLY_OWNER_CAN_ROTATE,

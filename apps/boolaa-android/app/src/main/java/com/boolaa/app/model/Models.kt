@@ -163,6 +163,13 @@ data class FoodPost(
     val description: String? = null,
     @SerialName("created_at") val createdAt: Timestamp,
     val user: UserProfile? = null,
+    /** Required since 20261124100000_requests_food_expiry.sql; null only in caches written by older app versions. */
+    @SerialName("expires_at") val expiresAt: Timestamp? = null,
+    /** Written only by the request RPCs (docs/boolaa-spec.md "Requests and picking"); taken food is never rendered. */
+    val availability: MarketAvailability = MarketAvailability.AVAILABLE,
+    @SerialName("handed_over_at") val handedOverAt: Timestamp? = null,
+    /** Open requests (pending + picked), kept by a trigger. */
+    @SerialName("request_count") val requestCount: Int = 0,
 )
 
 @Serializable
@@ -193,6 +200,39 @@ data class MarketItem(
     val availability: MarketAvailability = MarketAvailability.AVAILABLE,
     @SerialName("created_at") val createdAt: Timestamp,
     val owner: UserProfile? = null,
+    /** Open requests (pending + picked), kept by a trigger. */
+    @SerialName("request_count") val requestCount: Int = 0,
+)
+
+/** `item_requests.item_kind`: which table an "I want it" request points at. */
+@Serializable
+enum class ItemKind { @SerialName("food") FOOD, @SerialName("market") MARKET;
+    val wire: String get() = name.lowercase()
+
+    companion object { fun fromWire(value: String?): ItemKind? = entries.firstOrNull { it.wire == value } }
+}
+
+/** `item_requests.status`. Unknown values decode as [PENDING] (`coerceInputValues`). */
+@Serializable
+enum class RequestStatus { @SerialName("pending") PENDING, @SerialName("picked") PICKED, @SerialName("received") RECEIVED, @SerialName("missed") MISSED }
+
+/**
+ * `public.item_requests` (20261124100000_requests_food_expiry.sql). RLS returns the caller's own requests and the
+ * requests on the caller's items; every write is an RPC. [requester] comes from `requester:users!requester_id(...)`.
+ */
+@Serializable
+data class ItemRequest(
+    val id: String,
+    @SerialName("bubble_id") val bubbleId: String,
+    @SerialName("owner_id") val ownerId: String,
+    @SerialName("requester_id") val requesterId: String,
+    @SerialName("item_kind") val itemKind: ItemKind,
+    @SerialName("item_id") val itemId: String,
+    val note: String? = null,
+    val status: RequestStatus = RequestStatus.PENDING,
+    @SerialName("created_at") val createdAt: Timestamp,
+    @SerialName("status_changed_at") val statusChangedAt: Timestamp? = null,
+    val requester: UserProfile? = null,
 )
 
 /** `public.shared_links` */

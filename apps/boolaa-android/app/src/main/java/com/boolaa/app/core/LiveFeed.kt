@@ -104,7 +104,7 @@ suspend fun <T> BoolaaApi.feedRow(spec: FeedSpec<T>, id: String): T? {
  */
 suspend fun <T> BoolaaApi.keepFeedLive(
     spec: FeedSpec<T>, bubbleId: String, rows: MutableStateFlow<List<T>?>,
-    reactions: ReactionStore? = null, reload: suspend () -> Unit,
+    reactions: ReactionStore? = null, requests: RequestStore? = null, reload: suspend () -> Unit,
 ) {
     val ch = client.channel("${spec.table}:$bubbleId:${UUID.randomUUID()}")
     val inserts = ch.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
@@ -118,6 +118,8 @@ suspend fun <T> BoolaaApi.keepFeedLive(
     val deletes = ch.postgresChangeFlow<PostgresAction.Delete>(schema = "public") { table = spec.table }
     // Reactions on this feed's rows ride on the same channel (docs/boolaa-spec.md "Reactions").
     val reactionListeners = reactions?.listenOn(ch)
+    // "I want it" requests too (docs/boolaa-spec.md "Requests and picking", Live).
+    val requestListeners = requests?.listenOn(ch)
 
     suspend fun fetchAndMerge(id: String) {
         runCatching { feedRow(spec, id) }
@@ -145,6 +147,7 @@ suspend fun <T> BoolaaApi.keepFeedLive(
                 }
             }
             reactionListeners?.invoke(this)
+            requestListeners?.invoke(this)
             runCatching { ch.subscribe(blockUntilSubscribed = true) }
                 .onSuccess { reload() }
                 .onFailure { Log.w("Boolaa", "realtime subscribe ${spec.table} failed", it) } // pull-to-refresh still works

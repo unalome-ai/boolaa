@@ -209,12 +209,52 @@ struct FoodPost: Codable, Identifiable, Hashable, Sendable {
     var description: String?
     var createdAt: Date
     var user: UserProfile?
+    /// When the post disappears for everyone (20261124100000_requests_food_expiry.sql). nil only in caches
+    /// written before the column existed.
+    var expiresAt: Date?
+    /// Written only by the request RPCs: reserved after a pick, taken at hand-over (then hidden).
+    var availability: MarketAvailability = .available
+    var handedOverAt: Date?
+    /// Open requests (pending + picked), kept by a trigger.
+    var requestCount = 0
 
     enum CodingKeys: String, CodingKey {
-        case id, image, description, user
+        case id, image, description, user, availability
         case bubbleId = "bubble_id"
         case userId = "user_id"
         case createdAt = "created_at"
+        case expiresAt = "expires_at"
+        case handedOverAt = "handed_over_at"
+        case requestCount = "request_count"
+    }
+
+    init(id: UUID, bubbleId: UUID, userId: UUID, image: String, description: String?, createdAt: Date,
+         user: UserProfile? = nil, expiresAt: Date? = nil, availability: MarketAvailability = .available,
+         handedOverAt: Date? = nil, requestCount: Int = 0) {
+        self.id = id; self.bubbleId = bubbleId; self.userId = userId; self.image = image; self.description = description
+        self.createdAt = createdAt; self.user = user; self.expiresAt = expiresAt; self.availability = availability
+        self.handedOverAt = handedOverAt; self.requestCount = requestCount
+    }
+
+    /// Columns added later read as their defaults (older caches, payloads from before the migration).
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        bubbleId = try c.decode(UUID.self, forKey: .bubbleId)
+        userId = try c.decode(UUID.self, forKey: .userId)
+        image = try c.decode(String.self, forKey: .image)
+        description = try c.decodeIfPresent(String.self, forKey: .description)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        user = try c.decodeIfPresent(UserProfile.self, forKey: .user)
+        expiresAt = try c.decodeIfPresent(Date.self, forKey: .expiresAt)
+        availability = try c.decodeIfPresent(MarketAvailability.self, forKey: .availability) ?? .available
+        handedOverAt = try c.decodeIfPresent(Date.self, forKey: .handedOverAt)
+        requestCount = try c.decodeIfPresent(Int.self, forKey: .requestCount) ?? 0
+    }
+
+    /// Food lists and Home never show expired or handed-over posts (docs/boolaa-spec.md, "Food expiry").
+    func isVisible(at now: Date) -> Bool {
+        availability != .taken && (expiresAt.map { $0 > now } ?? true)
     }
 }
 
@@ -257,12 +297,15 @@ struct MarketItem: Codable, Identifiable, Hashable, Sendable {
     var availability: MarketAvailability = .available
     var createdAt: Date
     var owner: UserProfile?
+    /// Open requests (pending + picked), kept by a trigger.
+    var requestCount = 0
 
     enum CodingKeys: String, CodingKey {
         case id, image, title, description, status, availability, owner
         case bubbleId = "bubble_id"
         case ownerId = "owner_id"
         case createdAt = "created_at"
+        case requestCount = "request_count"
     }
 }
 
@@ -280,6 +323,7 @@ extension MarketItem {
         availability = try c.decodeIfPresent(MarketAvailability.self, forKey: .availability) ?? .available
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         owner = try c.decodeIfPresent(UserProfile.self, forKey: .owner)
+        requestCount = try c.decodeIfPresent(Int.self, forKey: .requestCount) ?? 0
     }
 
     /// The "Ask in chat" draft for someone else's item that isn't taken; nil for your own or taken items.
@@ -393,13 +437,17 @@ struct FoodInput: Encodable, Sendable {
     var userId: UUID?
     var image: String
     var description: String?
-    enum CodingKeys: String, CodingKey { case image, description; case bubbleId = "bubble_id"; case userId = "user_id" }
+    /// Always sent on create; on edit only when the user changed it (the trigger re-checks any value sent).
+    var expiresAt: Date?
+    enum CodingKeys: String, CodingKey { case image, description; case bubbleId = "bubble_id"; case userId = "user_id"; case expiresAt = "expires_at" }
     func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encodeIfPresent(bubbleId, forKey: .bubbleId)
         try c.encodeIfPresent(userId, forKey: .userId)
         try c.encode(image, forKey: .image)
         try c.encode(description, forKey: .description)
+        // An ISO-8601 UTC instant, whatever date strategy the client's encoder uses.
+        try c.encodeIfPresent(expiresAt.map { $0.formatted(.iso8601) }, forKey: .expiresAt)
     }
 }
 

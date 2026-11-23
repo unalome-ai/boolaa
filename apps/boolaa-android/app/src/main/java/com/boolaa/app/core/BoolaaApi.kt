@@ -45,7 +45,8 @@ import kotlin.time.Duration.Companion.seconds
 
 /** Inputs for the editable bubble content. */
 data class EventInput(val title: String, val description: String?, val datetime: Instant, val location: String?)
-data class FoodInput(val image: String, val description: String?)
+/** [expiresAt]: always on create; on edit only when the user changed it (docs/boolaa-spec.md "Food expiry"). */
+data class FoodInput(val image: String, val description: String?, val expiresAt: java.time.Instant? = null)
 data class MarketInput(
     val image: String, val title: String, val description: String?, val status: MarketStatus,
     val availability: MarketAvailability = MarketAvailability.AVAILABLE,
@@ -400,6 +401,7 @@ class BoolaaApi(val client: SupabaseClient) {
             put("bubble_id", bubbleId); put("user_id", userId)
             put("image", input.image)
             put("description", input.description?.let(::JsonPrimitive) ?: JsonNull)
+            input.expiresAt?.let { put("expires_at", it.toString()) }
         })
     }
 
@@ -407,6 +409,7 @@ class BoolaaApi(val client: SupabaseClient) {
         client.from("food_posts").update(buildJsonObject {
             put("image", input.image)
             put("description", input.description?.let(::JsonPrimitive) ?: JsonNull)
+            input.expiresAt?.let { put("expires_at", it.toString()) }
         }) { filter { eq("id", id) } }
     }
 

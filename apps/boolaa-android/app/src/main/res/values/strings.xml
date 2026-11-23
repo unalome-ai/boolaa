@@ -338,6 +338,12 @@
     <string name="chat_start">That\'s the start of the chat</string>
     <string name="chat_add_photo">Add a photo</string>
     <string name="chat_remove_photo">Remove photo</string>
+    <!-- Camera capture (docs/boolaa-spec.md "Images" → "Camera"). -->
+    <string name="take_photo">Take photo</string>
+    <string name="choose_from_gallery">Choose from gallery</string>
+    <string name="camera_unavailable">Camera isn\'t available on this device.</string>
+    <string name="camera_denied">Allow camera access in Settings to take photos.</string>
+    <string name="open_settings">Open Settings</string>
     <string name="chat_photo">Photo</string>
     <plurals name="chat_unread">
         <item quantity="one">%d unread message</item>

@@ -291,6 +291,8 @@ struct BoolaaAPI: Sendable {
         var q = client.from("food_posts")
             .select("*, user:users!user_id(\(Self.authorColumns))")
             .eq("bubble_id", value: bubbleID)
+            // Handed-over food stays readable for an hour (so the UPDATE reaches everyone) but is never shown.
+            .neq("availability", value: "taken")
             .order("created_at", ascending: false)
         if let limit { q = q.limit(limit) }
         return try await q.execute().value

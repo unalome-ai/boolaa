@@ -1,4 +1,3 @@
-import PhotosUI
 import Supabase
 import SwiftUI
 
@@ -288,7 +287,6 @@ struct ChatView: View {
     @State private var viewing: ViewedPhoto?
     // Composer photo
     @State private var photo: Data?
-    @State private var photoItem: PhotosPickerItem?
     @State private var showPicker = false
     @State private var preparingPhoto = false
     @FocusState private var composerFocused: Bool
@@ -506,11 +504,7 @@ struct ChatView: View {
             Text("It disappears for everyone in the bubble.")
         }
         .fullScreenCover(item: $viewing) { photo in PhotoViewer(url: photo.url) }
-        .photosPicker(isPresented: $showPicker, selection: $photoItem, matching: .images)
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            Task { await preparePhoto(item) }
-        }
+        .photoSourcePicker(isPresented: $showPicker) { picked in Task { await preparePhoto(picked) } }
         .haptic(.send, trigger: sentCount)
         .haptic(.add, trigger: pickerTaps)
         .errorAlert($model.error)
@@ -608,7 +602,7 @@ struct ChatView: View {
         HStack(spacing: 12) {
             ZStack {
                 if let photo, let image = UIImage(data: photo) {
-                    Image(uiImage: image).resizable().scaledToFill()
+                    Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false)
                 } else {
                     Theme.field
                     ProgressView()
@@ -616,9 +610,10 @@ struct ChatView: View {
             }
             .frame(width: 72, height: 72)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .accessibilityIdentifier("chat-photo-preview")
             Button(role: .destructive) {
-                withAnimation(Motion.snappy) { photo = nil; photoItem = nil }
+                withAnimation(Motion.snappy) { photo = nil }
             } label: {
                 Label("Remove photo", systemImage: "xmark.circle.fill")
                     .font(.rounded(.subheadline))
@@ -634,17 +629,16 @@ struct ChatView: View {
         !sending && !preparingPhoto && (photo != nil || !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 
-    private func preparePhoto(_ item: PhotosPickerItem) async {
+    private func preparePhoto(_ picked: PickedPhoto) async {
         preparingPhoto = true
         defer { preparingPhoto = false }
         do {
-            guard let data = try await item.loadTransferable(type: Data.self) else { throw ImageCompression.Failure.unsupported }
+            let data = try await picked.data()
             let jpeg = try await Task.detached(priority: .userInitiated) {
                 try ImageCompression.jpeg(from: data, for: .chat)
             }.value
             withAnimation(Motion.snappy) { photo = jpeg }
         } catch {
-            photoItem = nil
             model.error = error.userMessage
         }
     }
@@ -659,7 +653,6 @@ struct ChatView: View {
         // composer clears without losing anything. Offline it waits and is sent when the app is back online.
         draft = ""
         photo = nil
-        photoItem = nil
         sentCount += 1
         await outbox.enqueue(bubbleID: bubbleID, senderID: me, text: String(text.prefix(4000)), photo: picked,
                              online: connectivity.status == .online)
@@ -886,10 +879,14 @@ struct PendingMessageRow: View {
             VStack(alignment: .trailing, spacing: 3) {
                 VStack(alignment: .leading, spacing: 0) {
                     if let photo = message.photo, let image = UIImage(data: photo) {
-                        Image(uiImage: image).resizable().scaledToFill()
+                        Color.clear
                             .frame(width: min(photoSide, 300), height: min(photoSide, 300))
+                            .overlay { Image(uiImage: image).resizable().scaledToFill().allowsHitTesting(false) }
                             .clipped()
+                            .contentShape(Rectangle())
+                            .accessibilityElement(children: .ignore)
                             .accessibilityLabel(Text("Photo"))
+                            .accessibilityAddTraits(.isImage)
                     }
                     if !message.content.isEmpty {
                         Text(ChatBubbleStyle.text(message.content, isMine: true, bubbleHue: hue, senderHue: hue))

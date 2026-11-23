@@ -226,6 +226,14 @@ class PushManager(
 
     fun clearHighlight(id: String) { if (_highlight.value == id) _highlight.value = null }
 
+    private val _openRequests = MutableStateFlow<String?>(null)
+    /** `item_request` / `item_request_withdrawn`: the item whose Requests sheet Food / Marketplace should open. */
+    val openRequests: StateFlow<String?> = _openRequests.asStateFlow()
+
+    fun setOpenRequests(itemId: String?) { _openRequests.value = itemId }
+
+    fun consumeOpenRequests(itemId: String) { if (_openRequests.value == itemId) _openRequests.value = null }
+
     /** ChatScreen on screen for [bubbleId] (null when it leaves); also clears that bubble's delivered chat notification. */
     fun setVisibleChat(bubbleId: String?) {
         visibleChatBubble = bubbleId
@@ -243,6 +251,6 @@ class PushManager(
         private const val KEY_TOKEN = "fcm_token"
         const val ACTION_OPEN_PUSH = "ro.boolaa.app.OPEN_PUSH"
         const val HIGHLIGHT_PENDING = "pending-header"
-        private val PAYLOAD_KEYS = setOf(PushPayload.KEY_TYPE, PushPayload.KEY_BUBBLE, PushPayload.KEY_TARGET)
+        private val PAYLOAD_KEYS = PushPayload.KEYS.toSet()
     }
 }

@@ -117,11 +117,12 @@ class PushTest {
         PrefKey.entries.forEach { k ->
             assertTrue(k.get(k.set(p, true))); assertFalse(k.get(k.set(p, false)))
         }
-        // Server defaults: everything on except food and market.
+        // Server defaults: everything on except food and market (item_requests / request_updates on, 20261124100000).
         val d = NotificationPrefs()
-        assertEquals(listOf(true, true, true, true, true, true, false, false, true), PrefKey.entries.map { it.get(d) })
+        assertEquals(listOf(true, true, true, true, true, true, false, false, true, true, true), PrefKey.entries.map { it.get(d) })
         assertEquals(
-            listOf("enabled", "chat", "join_requests", "approvals", "new_events", "event_reminders", "food", "market", "preview_content"),
+            listOf("enabled", "chat", "join_requests", "approvals", "new_events", "event_reminders", "food", "market",
+                "item_requests", "request_updates", "preview_content"),
             PrefKey.entries.map { it.column },
         )
     }

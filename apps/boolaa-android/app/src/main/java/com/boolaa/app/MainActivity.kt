@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleDeeplink(intent: Intent?, pushAllowed: Boolean = true) {
         PushPayload.from { key -> intent?.getStringExtra(key) }?.let { payload ->
             if (pushAllowed) container.push.open(payload)
-            listOf(PushPayload.KEY_TYPE, PushPayload.KEY_BUBBLE, PushPayload.KEY_TARGET).forEach { intent?.removeExtra(it) }
+            PushPayload.KEYS.forEach { intent?.removeExtra(it) }
             return
         }
         if (intent?.action == Intent.ACTION_VIEW) {

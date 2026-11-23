@@ -98,6 +98,7 @@ struct MainShellView: View {
         router.path = []
         if let bubble = target.bubble { session.selectBubble(bubble) }
         router.highlight = target.highlight
+        router.openRequestsFor = target.openRequests
         switch target.destination {
         case .home: router.tab = .home
         case .chat: router.open(.chat)

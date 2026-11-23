@@ -106,9 +106,10 @@ sealed class FeedItem {
         /** Merges the sections into one feed, newest first. */
         fun combine(
             messages: List<ChatMessage>, food: List<FoodPost>, market: List<MarketItem>,
-            events: List<BubbleEvent>, links: List<SharedLink>,
+            events: List<BubbleEvent>, links: List<SharedLink>, now: java.time.Instant = java.time.Instant.now(),
         ): List<FeedItem> =
-            (messages.filterNot { it.isDeleted }.map(::Message) + food.map(::Food) + market.map(::Market) + events.map(::Event) + links.map(::Link))
+            // Expired and handed-over food is never rendered (docs/boolaa-spec.md "Requests and picking").
+            (messages.filterNot { it.isDeleted }.map(::Message) + com.boolaa.app.core.FoodExpiry.visible(food, now).map(::Food) + market.map(::Market) + events.map(::Event) + links.map(::Link))
                 .sortedByDescending { it.date }
     }
 }

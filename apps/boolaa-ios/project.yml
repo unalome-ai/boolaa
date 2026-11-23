@@ -79,6 +79,7 @@ targets:
         GIDServerClientID: 816126337836-0k4begddfi0f1usm1hg2e6va9fddni3m.apps.googleusercontent.com
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        NSCameraUsageDescription: Boolaa uses the camera to take photos for your posts, items, profile and chat.
         NSPhotoLibraryUsageDescription: Boolaa uses your photos for avatars, food posts and marketplace items.
         # "Add to calendar" (EKEventEditViewController): write-only on iOS 17+, legacy key for completeness.
         NSCalendarsWriteOnlyAccessUsageDescription: Boolaa adds the events you pick to your calendar.

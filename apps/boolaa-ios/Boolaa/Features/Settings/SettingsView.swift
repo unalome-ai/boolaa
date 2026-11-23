@@ -1,4 +1,3 @@
-import PhotosUI
 import SwiftUI
 import UIKit
 
@@ -99,7 +98,6 @@ struct SettingsView: View {
     @State private var memberToRemove: BubbleMember?
     @State private var memberToTransfer: BubbleMember?
     @State private var notice: String?
-    @State private var photoItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
     @State private var photoBusy = false
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -365,12 +363,7 @@ struct SettingsView: View {
             }
         }
         .card()
-        .photosPicker(isPresented: $showPhotoPicker, selection: $photoItem, matching: .images)
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            photoItem = nil
-            Task { await uploadPhoto(item) }
-        }
+        .photoSourcePicker(isPresented: $showPhotoPicker) { picked in Task { await uploadPhoto(picked) } }
     }
 
     /// Owner and admins (can_manage_bubble): add, change or remove the bubble's photo.
@@ -402,10 +395,10 @@ struct SettingsView: View {
         .padding(.top, 6)
     }
 
-    private func uploadPhoto(_ item: PhotosPickerItem) async {
+    private func uploadPhoto(_ picked: PickedPhoto) async {
         photoBusy = true; defer { photoBusy = false }
         do {
-            guard let raw = try await item.loadTransferable(type: Data.self) else { throw ImageCompression.Failure.unsupported }
+            let raw = try await picked.data()
             let jpeg = try await Task.detached(priority: .userInitiated) {
                 try ImageCompression.jpeg(from: raw, for: .bubbles)
             }.value

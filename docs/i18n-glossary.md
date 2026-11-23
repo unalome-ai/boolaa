@@ -78,6 +78,19 @@ Web keys `errors.imageTooLarge` / `errors.imageUnsupported`; iOS `UserFacingErro
 | Input above 50 MB or output above the bucket limit; Storage `statusCode` 413 / `EntityTooLarge` | `imageTooLarge` | That photo is too large. Pick a smaller one. | Fotografia e prea mare. Alege una mai mică. | Cette photo est trop lourde. Choisis-en une plus petite. | Esa foto es demasiado grande. Elige una más pequeña. | Questa foto è troppo grande. Scegline una più piccola. |
 | File can't be decoded (e.g. HEIC in Chrome, not an image); Storage `statusCode` 415 / `invalid_mime_type` | `imageUnsupported` | We can't read that image. Try a different photo. | Nu putem citi această imagine. Încearcă altă fotografie. | Impossible de lire cette image. Essaie une autre photo. | No podemos leer esa imagen. Prueba con otra foto. | Non riusciamo a leggere questa immagine. Prova con un'altra foto. |
 
+## Camera (docs/boolaa-spec.md, "Images" → "Camera")
+
+Web keys `common.takePhoto`, `common.chooseFromGallery`, `common.cameraUnavailable`, `common.cameraDenied` (the last two are kept for parity; the web never shows them, the browser owns the camera prompt). Android: `take_photo`, `choose_from_gallery`, `camera_unavailable`, `camera_denied`, plus `open_settings` (the button in the "camera denied" dialog). iOS: the English text is the key in `Localizable.xcstrings`; the "camera denied" alert reuses "Open Settings" and "Not now", and `NSCameraUsageDescription` lives in `InfoPlist.xcstrings`.
+
+| key idea | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| take photo | Take photo | Fă o poză | Prendre une photo | Hacer una foto | Scatta una foto |
+| choose from gallery | Choose from gallery | Alege din galerie | Choisir dans la galerie | Elegir de la galería | Scegli dalla galleria |
+| camera unavailable | Camera isn't available on this device. | Camera nu e disponibilă pe acest dispozitiv. | L’appareil photo n’est pas disponible sur cet appareil. | La cámara no está disponible en este dispositivo. | La fotocamera non è disponibile su questo dispositivo. |
+| camera denied | Allow camera access in Settings to take photos. | Permite accesul la cameră din Setări ca să faci poze. | Autorise l’accès à l’appareil photo dans Réglages pour prendre des photos. | Permite el acceso a la cámara en Ajustes para hacer fotos. | Consenti l’accesso alla fotocamera in Impostazioni per scattare foto. |
+| iOS `NSCameraUsageDescription` | Boolaa uses the camera to take photos for your posts, items, profile and chat. | Boolaa folosește camera ca să faci poze pentru postări, obiecte, profil și chat. | Boolaa utilise l’appareil photo pour prendre des photos pour tes posts, objets, profil et chat. | Boolaa usa la cámara para hacer fotos para tus publicaciones, artículos, perfil y chat. | Boolaa usa la fotocamera per scattare foto per i tuoi post, oggetti, profilo e chat. |
+| Android: open Settings (button) | Open Settings | Deschide Setările | Ouvrir les Réglages | Abrir Ajustes | Apri Impostazioni |
+
 ## Chat (docs/boolaa-spec.md, "Chat")
 
 Web keys under `chat.*` (`errors.chatMessageGone`); iOS and Android use the same English texts as keys / `chat_*` resource names.

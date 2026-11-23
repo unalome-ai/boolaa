@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Take photo" (core/CameraCapture.kt): the system camera app writes into cacheDir/camera/ through this FileProvider. -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+</paths>

@@ -77,6 +77,18 @@
         <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_boolaa" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/brand_purple" />
 
+        <!-- "Take photo": the system camera app writes the capture to a content Uri in cacheDir/camera/ (core/CameraCapture.kt).
+             No CAMERA permission is declared on purpose: ACTION_IMAGE_CAPTURE needs none unless the app declares it. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.camera"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/camera_paths" />
+        </provider>
+
         <!-- Persists the per-app language below API 33 (AppCompatDelegate.setApplicationLocales). -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

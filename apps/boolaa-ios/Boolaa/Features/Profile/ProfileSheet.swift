@@ -1,4 +1,3 @@
-import PhotosUI
 import SwiftUI
 
 /// Avatar, name, email, safety, legal and account actions (spec §12, Safety and account).
@@ -6,7 +5,6 @@ struct ProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SessionStore.self) private var session
     @State private var name = ""
-    @State private var photo: PhotosPickerItem?
     @State private var busy = false
     @State private var showPicker = false
     @State private var error: String?
@@ -128,10 +126,6 @@ struct ProfileSheet: View {
                 default: break
                 }
             }
-            .onChange(of: photo) { _, item in
-                guard let item else { return }
-                Task { await uploadAvatar(item) }
-            }
             .errorAlert($error)
         }
     }
@@ -142,10 +136,10 @@ struct ProfileSheet: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Change profile photo", comment: "Accessibility label of the avatar button in the profile sheet"))
             .accessibilityAddTraits(.isButton)
-            .photosPicker(isPresented: $showPicker, selection: $photo, matching: .images)
+            .photoSourcePicker(isPresented: $showPicker, cameraDevice: .front) { picked in Task { await uploadAvatar(picked) } }
     }
 
-    // Built here (main actor) because PhotosPicker's label closure is nonisolated.
+    // Built here (main actor), outside the Button closure.
     private var avatarLabel: some View {
         ZStack(alignment: .bottomTrailing) {
             AvatarView(user: session.profile, size: 112)
@@ -160,11 +154,11 @@ struct ProfileSheet: View {
         .overlay { if busy { ProgressView() } }
     }
 
-    private func uploadAvatar(_ item: PhotosPickerItem) async {
+    private func uploadAvatar(_ picked: PickedPhoto) async {
         guard let me = session.userID else { return }
         busy = true; defer { busy = false }
         do {
-            guard let raw = try await item.loadTransferable(type: Data.self) else { throw ImageCompression.Failure.unsupported }
+            let raw = try await picked.data()
             let jpeg = try await Task.detached(priority: .userInitiated) {
                 try ImageCompression.jpeg(from: raw, for: .avatars)
             }.value

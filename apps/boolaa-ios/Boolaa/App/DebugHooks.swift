@@ -24,6 +24,9 @@ import Foundation
 ///                                          in the banner area turns it on and off
 ///     -UITestCheer joined                  Home plays the "You're in" cheer once (screenshots)
 ///     -UITestOpen mascots                  a sheet with the four mascot expressions (screenshots)
+///     -UITestCamera fixture|denied         the simulator has no camera: photo slots offer "Take photo" anyway;
+///                                          `fixture` feeds a stand-in photo through the camera path,
+///                                          `denied` shows the camera-denied message (CameraCapture)
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {

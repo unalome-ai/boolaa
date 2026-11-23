@@ -88,7 +88,8 @@ enum LiveFeed {
         rows: @escaping @MainActor @Sendable () -> [T],
         apply: @escaping @MainActor @Sendable ([T]) -> Void,
         reload: @escaping @MainActor @Sendable () async -> Void,
-        reactions: ReactionStore? = nil
+        reactions: ReactionStore? = nil,
+        requests: RequestStore? = nil
     ) async {
         let client = api.client
         let channel = client.realtimeV2.channel("\(T.table):\(bubbleID.uuidString.lowercased())")
@@ -99,6 +100,8 @@ enum LiveFeed {
         // Reactions on this screen's rows ride on the same channel (docs/boolaa-spec.md, "Reactions").
         let reactionStreams = await reactions?.streams(on: channel, bubbleID: bubbleID,
                                                        holds: { id in rows().contains { $0.id == id } })
+        // "I want it" requests too (docs/boolaa-spec.md, "Requests and picking", Live).
+        let requestStreams = await requests?.streams(on: channel, api: api, bubbleID: bubbleID)
 
         @Sendable func fetchAndMerge(_ id: UUID) async {
             guard let row = try? await api.feedRow(T.self, id: id) else { return }
@@ -114,6 +117,7 @@ enum LiveFeed {
         }
         await withTaskGroup(of: Void.self) { group in
             if let reactionStreams { group.addTask { await reactionStreams() } }
+            if let requestStreams { group.addTask { await requestStreams() } }
             group.addTask {
                 for await action in inserts {
                     if let id = LiveChanges.id(of: action.record) { await fetchAndMerge(id) }

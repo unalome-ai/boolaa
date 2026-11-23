@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "I want it" requests, owner picks and food expiry (docs/boolaa-spec.md "Requests and picking", "Food expiry";
+     texts: docs/i18n-glossary.md "Requests and food expiry"). -->
+<resources>
+    <string name="requests_i_want_it">Vreau asta</string>
+    <string name="requests_i_want_it_a11y">Vreau asta: %1$s</string>
+    <string name="requests_action_a11y">%1$s: %2$s</string>
+    <string name="requests_note_placeholder">Adaugă un mesaj (opțional)</string>
+    <string name="requests_send">Trimite cererea</string>
+    <string name="requests_sent_toast">Cererea a fost trimisă. %1$s o va vedea.</string>
+    <string name="requests_requested">Ai cerut</string>
+    <string name="requests_on_list">Rezervat · ești pe listă</string>
+    <string name="requests_withdraw">Retrage cererea</string>
+    <string name="requests_withdraw_confirm_title">Îți retragi cererea?</string>
+    <string name="requests_withdraw_confirm_body">%1$s va afla că te-ai răzgândit.</string>
+    <string name="requests_reserved_for_you">Rezervat pentru tine</string>
+    <string name="requests_reserved_for">Rezervat pentru %1$s</string>
+    <string name="requests_you_got_it">E al tău</string>
+    <string name="requests_someone_else">Altcineva l-a primit</string>
+    <string name="requests_button">Cereri · %1$d</string>
+    <string name="requests_title">Cereri</string>
+    <string name="requests_none_yet">Nicio cerere încă.</string>
+    <string name="requests_none_yet_hint">Membrii pot apăsa „Vreau asta” la postarea ta.</string>
+    <string name="requests_pick">Alege</string>
+    <string name="requests_pick_instead">Alege în schimb</string>
+    <string name="requests_your_pick">Alegerea ta</string>
+    <string name="requests_undo_pick">Anulează alegerea</string>
+    <string name="requests_picked_toast">Rezervat pentru %1$s. Stabiliți predarea în chat.</string>
+    <string name="requests_hand_over">Marchează ca predat</string>
+    <string name="requests_hand_over_title">Marchezi ca predat?</string>
+    <string name="requests_hand_over_body_market">„%2$s” ajunge la %1$s. Ceilalți care l-au cerut vor afla că a ajuns la altcineva.</string>
+    <string name="requests_hand_over_body_food">Mâncarea ajunge la %1$s. Postarea dispare din Cercul culinar, iar ceilalți care au cerut-o vor afla că a ajuns la altcineva.</string>
+    <string name="requests_clear_pick_confirm">Asta anulează alegerea ta (%1$s). Cererea rămâne pe listă.</string>
+    <string name="food_good_until">Bun până</string>
+    <string name="food_expiry_today">Azi</string>
+    <string name="food_expiry_tomorrow">Mâine</string>
+    <string name="food_expiry_in_3_days">În 3 zile</string>
+    <string name="food_expiry_custom">Altă dată</string>
+    <string name="food_expiry_hint">Postarea ta dispare după ora asta.</string>
+    <string name="food_good_until_today">Bun până azi la %1$s</string>
+    <string name="food_good_until_tomorrow">Bun până mâine la %1$s</string>
+    <string name="food_good_until_day">Bun până %1$s la %2$s</string>
+    <string name="food_good_until_date">Bun până pe %1$s, la %2$s</string>
+    <string name="error_item_gone">Postarea nu mai există.</string>
+    <string name="error_item_not_available">Nu mai e disponibil.</string>
+    <string name="error_already_requested">Ai cerut deja asta.</string>
+    <string name="error_cannot_request_own">E postarea ta.</string>
+    <string name="error_request_note_too_long">Mesajul poate avea cel mult 200 de caractere.</string>
+    <string name="error_request_gone">Cererea a fost retrasă.</string>
+    <string name="error_request_decided">Cererea asta a fost deja decisă.</string>
+    <string name="error_nothing_picked">Alege mai întâi pe cineva.</string>
+    <string name="error_invalid_expiry">Alege o oră din următoarele 14 zile.</string>
+    <string name="notifications_item_requests">Cereri pentru postările mele</string>
+    <string name="notifications_request_updates">Noutăți despre cererile mele</string>
+    <plurals name="requests_count">
+        <item quantity="one">%d cerere</item>
+        <item quantity="few">%d cereri</item>
+        <item quantity="other">%d de cereri</item>
+    </plurals>
+    <plurals name="food_expires_in_minutes">
+        <item quantity="one">Expiră într-un minut</item>
+        <item quantity="few">Expiră în %d minute</item>
+        <item quantity="other">Expiră în %d de minute</item>
+    </plurals>
+    <plurals name="food_expires_in_hours">
+        <item quantity="one">Expiră într-o oră</item>
+        <item quantity="few">Expiră în %d ore</item>
+        <item quantity="other">Expiră în %d de ore</item>
+    </plurals>
+</resources>

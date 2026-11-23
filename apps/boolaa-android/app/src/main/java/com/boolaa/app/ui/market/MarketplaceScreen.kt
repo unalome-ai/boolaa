@@ -143,6 +143,13 @@ import com.boolaa.app.ui.components.FitText
 import com.boolaa.app.ui.components.Haptics
 import com.boolaa.app.ui.components.HintCard
 import com.boolaa.app.ui.components.ItemMenu
+import com.boolaa.app.ui.components.HandOverDialog
+import com.boolaa.app.ui.components.IWantItSheet
+import com.boolaa.app.ui.components.OwnerRequestsButton
+import com.boolaa.app.ui.components.RequestBadge
+import com.boolaa.app.ui.components.RequestCountPill
+import com.boolaa.app.ui.components.RequesterActions
+import com.boolaa.app.ui.components.RequestsSheet
 import com.boolaa.app.ui.components.MenuExtra
 import com.boolaa.app.ui.components.MorphIcon
 import com.boolaa.app.ui.components.PhotoField
@@ -177,7 +184,8 @@ import com.boolaa.app.ui.theme.Motion
 import com.boolaa.app.ui.theme.Radius
 import com.boolaa.app.ui.theme.Type
 
-class MarketViewModel(private val container: AppContainer, private val bubbleId: String) : BaseViewModel() {
+class MarketViewModel(container: AppContainer, bubbleId: String) :
+    com.boolaa.app.ui.RequestsViewModel(container, bubbleId, com.boolaa.app.model.ItemKind.MARKET) {
     private val _items = MutableStateFlow<List<MarketItem>?>(null)
     val items = _items.asStateFlow()
     val reactions = reactionStore(container.api, bubbleId, com.boolaa.app.model.ReactionTarget.MARKET_ITEM, _items) { it.id }
@@ -192,7 +200,20 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
     }
 
     /** Other members' inserts, edits, RSVPs and deletes stream in while the screen is shown (docs/boolaa-spec.md). */
-    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.market, bubbleId, _items, reactions) { load().join() }
+    suspend fun keepLive() = container.api.keepFeedLive(FeedSpecs.market, bubbleId, _items, reactions, requests) { load().join() }
+
+    override fun applyItem(itemId: String, availability: MarketAvailability?, countDelta: Int) = _items.update { list ->
+        list?.map { i ->
+            if (i.id != itemId) i
+            else i.copy(
+                availability = availability ?: i.availability,
+                // Hand-over decides everything: no open requests are left.
+                requestCount = if (availability == MarketAvailability.TAKEN) 0 else (i.requestCount + countDelta).coerceAtLeast(0),
+            )
+        }?.sortedWith(MarketRules.order)
+    }
+
+    override fun reloadAll() { load() }
 
     fun react(itemId: String, kind: com.boolaa.app.model.ReactionKind) =
         toggleReaction(reactions, itemId, kind, container.session.state.value.userId)
@@ -202,6 +223,8 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
         _items.value = loaded
         saveCache(container, cacheKey, serializer, loaded)
         reactions.refresh(loaded.map { it.id })
+        // "I want it" rows after the list (docs/boolaa-spec.md "Requests and picking", Loading).
+        runCatching { loadRequests() }.onFailure { android.util.Log.w("Boolaa", "market requests load failed", it) }
     }
 
     fun save(existing: MarketItem?, picked: Uri?, title: String, description: String, status: MarketStatus,
@@ -214,10 +237,16 @@ class MarketViewModel(private val container: AppContainer, private val bubbleId:
         load()
     }
 
-    /** Owner only. Applied locally at once; everyone else gets the UPDATE live. */
+    /**
+     * Owner only ("Mark as"). Applied locally at once; everyone else gets the UPDATE live. The database maps the new
+     * availability onto the requests (Available clears a pick, Reserved restores a winner, Taken = hand over); the same
+     * mapping is applied to the rows held here.
+     */
     fun setAvailability(item: MarketItem, availability: MarketAvailability) = launchCatching {
         container.api.setMarketAvailability(item.id, availability)
-        _items.update { list -> list?.map { if (it.id == item.id) it.copy(availability = availability) else it }?.sortedWith(MarketRules.order) }
+        requests.update { com.boolaa.app.core.RequestRules.applyAvailability(it, item.id, availability) }
+        applyItem(item.id, availability, 0)
+        if (availability != MarketAvailability.TAKEN) runCatching { loadRequests() } // a restored winner, counts
     }
 
     fun delete(item: MarketItem) = launchCatching {
@@ -258,10 +287,27 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     val reactionsByItem = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     var editing by remember { mutableStateOf<MarketItem?>(null) }
     var creating by rememberSaveable { mutableStateOf(false) }
+    // Bumped on every "new item", so the editor's saved state never carries over to the next item.
+    var editorSession by rememberSaveable { mutableIntStateOf(0) }
     var deleting by remember { mutableStateOf<MarketItem?>(null) }
     var reporting by remember { mutableStateOf<ReportTarget?>(null) }
+    val requests by vm.requests.rows.collectAsStateWithLifecycle()
+    val working by vm.working.collectAsStateWithLifecycle()
+    var wanting by rememberSaveable { mutableStateOf<String?>(null) }
+    var sheetFor by rememberSaveable { mutableStateOf<String?>(null) }
+    /** "Mark as" with a pick: Available clears it (confirm), Taken hands over (confirm). */
+    var markConfirm by remember { mutableStateOf<Pair<MarketItem, MarketAvailability>?>(null) }
     val someone = stringResource(R.string.someone)
+    val context = LocalContext.current
     val hue = Feature.MARKET.hue
+    // item_request / item_request_withdrawn push: open the Requests sheet on my item.
+    val openRequests by container.push.openRequests.collectAsStateWithLifecycle()
+    LaunchedEffect(openRequests, items) {
+        val id = openRequests ?: return@LaunchedEffect
+        val item = items?.firstOrNull { it.id == id } ?: return@LaunchedEffect
+        container.push.consumeOpenRequests(id)
+        if (item.ownerId == me) sheetFor = id
+    }
     val gridState = rememberLazyGridState()
     PushHighlightScroll(gridState, loaded = items != null)
     // A push or search hit hidden by a filter: show everything so it can be scrolled to.
@@ -302,7 +348,7 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
                         }
                         BoolaaChip(stringResource(R.string.market_hide_taken), active = hideTaken, onClick = { hideTaken = !hideTaken }, hue = hue,
                             modifier = Modifier.testTag("filter-hide-taken"))
-                        AddButton(stringResource(R.string.new_item), onClick = { creating = true }, hue = hue)
+                        AddButton(stringResource(R.string.new_item), onClick = { editorSession++; editing = null; creating = true }, hue = hue)
                     }
                     if (list != null && visible.isNotEmpty()) {
                         RollingCount(visible.size, Modifier.padding(start = 2.dp)) {
@@ -325,11 +371,32 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
                     val mine = item.ownerId == me
                     val ownerName = item.owner?.name?.takeIf { it.isNotBlank() } ?: someone
                     val askDraft = stringResource(R.string.market_ask_draft, ownerName, item.title)
-                    MarketCard(item, if (mine) ({ editing = item }) else null, if (mine) ({ deleting = item }) else null,
+                    val pick = if (mine) com.boolaa.app.core.RequestRules.pick(requests, item.id) else null
+                    val myRequest = if (mine) null else com.boolaa.app.core.RequestRules.mine(requests, item.id, me)
+                    val view = com.boolaa.app.core.RequestRules.viewerState(item.availability, myRequest)
+                    MarketCard(item, if (mine) ({ editorSession++; creating = false; editing = item }) else null, if (mine) ({ deleting = item }) else null,
                         if (mine) null else ({ reporting = ReportTarget(ReportTargetType.MARKET_ITEM, item.id, item.ownerId, ownerName) }),
-                        onMark = if (mine) ({ a -> vm.setAvailability(item, a) }) else null,
+                        onMark = if (mine) ({ a ->
+                            if (pick != null && (a == MarketAvailability.AVAILABLE || a == MarketAvailability.TAKEN)) markConfirm = item to a
+                            else vm.setAvailability(item, a)
+                        }) else null,
                         onAsk = if (MarketRules.canAskOwner(item, me)) ({ onAskInChat(askDraft) }) else null,
                         reactions = reactionsByItem[item.id].orEmpty(), onReact = { vm.react(item.id, it) },
+                        badge = when {
+                            pick != null -> stringResource(R.string.requests_reserved_for, displayName(pick.requester)) to "reserved-for"
+                            view == com.boolaa.app.core.RequesterView.RESERVED_FOR_YOU -> stringResource(R.string.requests_reserved_for_you) to "reserved-for-you"
+                            view == com.boolaa.app.core.RequesterView.YOURS -> stringResource(R.string.requests_you_got_it) to "request-yours"
+                            else -> null
+                        },
+                        onCountClick = if (mine) ({ sheetFor = item.id }) else null,
+                        footer = when {
+                            item.availability == MarketAvailability.TAKEN && mine -> null
+                            mine -> ({ OwnerRequestsButton(item.requestCount, hue, onClick = { sheetFor = item.id }) })
+                            else -> ({
+                                RequesterActions(view, item.title, ownerName, hue, busy = working == item.id,
+                                    onWant = { wanting = item.id }, onWithdraw = { myRequest?.let(vm::withdraw) })
+                            })
+                        },
                         modifier = Modifier.pushHighlight(item.id).animateItem(fadeInSpec = Motion.fade(), placementSpec = Motion.snappy(), fadeOutSpec = Motion.fade()).popIn(index))
                 }
             }
@@ -337,12 +404,45 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     }
     if (creating || editing != null) {
         val resolver = LocalContext.current.contentResolver
-        MarketEditor(editing, busy, onDismiss = { creating = false; editing = null }) { picked, title, description, status, availability ->
-            val first = editing == null && items.orEmpty().none { it.ownerId == me }
-            vm.save(editing, picked, title, description, status, availability, resolver) {
-                creating = false; editing = null
-                if (first) com.boolaa.app.ui.components.CheerCenter.show(com.boolaa.app.core.Cheer.FIRST_ITEM)
+        androidx.compose.runtime.key(editorSession) {
+            MarketEditor(editing, busy, onDismiss = { creating = false; editing = null }) { picked, title, description, status, availability ->
+                val first = editing == null && items.orEmpty().none { it.ownerId == me }
+                vm.save(editing, picked, title, description, status, availability, resolver) {
+                    creating = false; editing = null
+                    if (first) com.boolaa.app.ui.components.CheerCenter.show(com.boolaa.app.core.Cheer.FIRST_ITEM)
+                }
             }
+        }
+    }
+    wanting?.let { id -> items?.firstOrNull { it.id == id } }?.let { item ->
+        val ownerName = item.owner?.name?.takeIf { it.isNotBlank() } ?: someone
+        val sent = stringResource(R.string.requests_sent_toast, ownerName)
+        IWantItSheet(hue, busy = working == item.id, onDismiss = { wanting = null }) { note ->
+            wanting = null
+            vm.request(item.id, item.ownerId, note) { android.widget.Toast.makeText(context, sent, android.widget.Toast.LENGTH_SHORT).show() }
+        }
+    }
+    sheetFor?.let { id -> items?.firstOrNull { it.id == id && it.availability != MarketAvailability.TAKEN } }?.let { item ->
+        val rows = com.boolaa.app.core.RequestRules.sheetRows(requests, item.id)
+        val pickedTemplate = stringResource(R.string.requests_picked_toast)
+        RequestsSheet(com.boolaa.app.model.ItemKind.MARKET, item.title, rows, busy = working == item.id, hue = hue,
+            onPick = { r ->
+                val text = pickedTemplate.format(r.requester?.name?.takeIf { it.isNotBlank() } ?: someone)
+                vm.pick(r) { android.widget.Toast.makeText(context, text, android.widget.Toast.LENGTH_SHORT).show() }
+            },
+            onUndo = { vm.unpick(item.id) },
+            onHandOver = { sheetFor = null; vm.handOver(item.id) },
+            onDismiss = { sheetFor = null })
+    }
+    markConfirm?.let { (item, a) ->
+        val pickName = com.boolaa.app.core.RequestRules.pick(requests, item.id)?.requester?.let { displayName(it) } ?: someone
+        if (a == MarketAvailability.TAKEN) {
+            HandOverDialog(stringResource(R.string.requests_hand_over_body_market, pickName, item.title),
+                onConfirm = { vm.handOver(item.id) }, onDismiss = { markConfirm = null })
+        } else {
+            ConfirmDialog(stringResource(R.string.market_mark_as, availabilityLabel(a)), stringResource(R.string.requests_clear_pick_confirm, pickName),
+                stringResource(R.string.market_mark_as, availabilityLabel(a)), onConfirm = { vm.setAvailability(item, a) },
+                onDismiss = { markConfirm = null }, destructive = false)
         }
     }
     deleting?.let { i ->
@@ -383,6 +483,10 @@ fun MarketCard(
     item: MarketItem, onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)? = null,
     onMark: ((MarketAvailability) -> Unit)? = null, onAsk: (() -> Unit)? = null, modifier: Modifier = Modifier,
     reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
+    /** "Reserved for {name}" (owner), "Reserved for you" or "It's yours" with its test tag; replaces the plain badge. */
+    badge: Pair<String, String>? = null,
+    onCountClick: (() -> Unit)? = null,
+    footer: (@Composable () -> Unit)? = null,
 ) {
     val c = BoolaaTheme.colors
     val taken = item.availability == MarketAvailability.TAKEN
@@ -394,7 +498,8 @@ fun MarketCard(
                 stringResource(R.string.a11y_photo_from, displayName(item.owner)))
             Column(Modifier.align(Alignment.TopStart).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 MarketBadge(item.status)
-                AvailabilityBadge(item.availability)
+                if (badge != null) RequestBadge(badge.first, Feature.MARKET.hue, badge.second) else AvailabilityBadge(item.availability)
+                if (!taken) RequestCountPill(item.requestCount, Feature.MARKET.hue, onClick = onCountClick)
             }
         }
         Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.Top) {
@@ -421,6 +526,7 @@ fun MarketCard(
             com.boolaa.app.ui.components.ReactionBar(reactions, onReact, Modifier.padding(start = 12.dp, end = 12.dp, bottom = 10.dp),
                 hue = Feature.MARKET.hue, picker = picker, tag = "reactions-${item.id}")
         }
+        if (footer != null) Box(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp)) { footer() }
         if (onAsk != null) {
             // 48dp touch target around the slimmer pill.
             val askSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }

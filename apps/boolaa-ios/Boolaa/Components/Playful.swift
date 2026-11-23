@@ -256,6 +256,8 @@ struct SegmentedPill<Value: Hashable>: View {
     @Binding var selection: Value
     var options: [Option]
     var hue: Hue = .grape
+    /// Options shown but not selectable (e.g. "Today" after 23:00 in the food expiry picker).
+    var disabled: Set<Value> = []
     @Namespace private var namespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -288,6 +290,8 @@ struct SegmentedPill<Value: Hashable>: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.squish)
+                .disabled(disabled.contains(option.value))
+                .opacity(disabled.contains(option.value) ? 0.45 : 1)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }

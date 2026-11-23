@@ -3,9 +3,6 @@ package com.boolaa.app.ui.chat
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -93,6 +90,8 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import com.boolaa.app.core.BandScreen
+import com.boolaa.app.ui.components.PhotoSourceMenu
+import com.boolaa.app.ui.components.rememberPhotoSource
 import com.boolaa.app.ui.components.BandedHeader
 import com.boolaa.app.ui.components.ChatOrbs
 import com.boolaa.app.R
@@ -674,18 +673,21 @@ fun ChatScreen(
             Modifier.fillMaxWidth().background(c.background.copy(alpha = 0.86f)).navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> if (uri != null) photo = uri }
+            val photoSource = rememberPhotoSource { uri -> photo = uri }
             val addPhotoLabel = stringResource(R.string.chat_add_photo)
             Box(
                 Modifier.padding(end = 8.dp, bottom = 4.dp).size(48.dp).clip(CircleShape).background(c.field)
                     .clickableRipple(scale = 0.88f, enabled = !sending) {
                         Haptics.light(view)
-                        picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        photoSource.open()
                     }
                     .semantics { contentDescription = addPhotoLabel; role = Role.Button }
                     .testTag("chat-add-photo"),
                 contentAlignment = Alignment.Center,
-            ) { Icon(BoolaaIcons.Camera, contentDescription = null, tint = Hue.grape.text, modifier = Modifier.size(24.dp)) }
+            ) {
+                Icon(BoolaaIcons.Camera, contentDescription = null, tint = Hue.grape.text, modifier = Modifier.size(24.dp))
+                PhotoSourceMenu(photoSource)
+            }
             val source = remember { MutableInteractionSource() }
             val focused by source.collectIsFocusedAsState()
             val ring by animateColorAsState(if (focused) c.focusRing else c.fieldBorder, Motion.fade())

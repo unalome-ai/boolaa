@@ -67,7 +67,8 @@ struct PushPayloadTests {
 
     @Test func categoriesMatchTheBackend() {
         #expect(Set(PushRules.categories.map(\.identifier)) ==
-                ["CHAT_MESSAGE", "JOIN_REQUEST", "BUBBLE_JOINED", "NEW_EVENT", "EVENT_REMINDER", "FOOD_POST", "MARKET_ITEM"])
+                ["CHAT_MESSAGE", "JOIN_REQUEST", "BUBBLE_JOINED", "NEW_EVENT", "EVENT_REMINDER", "FOOD_POST", "MARKET_ITEM",
+                 "ITEM_REQUEST", "ITEM_REQUEST_WITHDRAWN", "ITEM_PICKED", "ITEM_MISSED"])
     }
 }
 
@@ -129,12 +130,15 @@ struct NotificationSettingsTests {
         #expect(!prefs.chat && !prefs.newEvents && prefs.food && !prefs.previewContent)
         let encoded = try JSONSerialization.jsonObject(with: BoolaaJSON.encoder.encode(prefs)) as? [String: Any]
         #expect(Set(encoded?.keys.map { $0 } ?? []) == ["user_id", "enabled", "chat", "join_requests", "approvals",
-                                                        "new_events", "event_reminders", "food", "market", "preview_content"])
+                                                        "new_events", "event_reminders", "food", "market", "item_requests",
+                                                        "request_updates", "preview_content"])
+        // A row from before the requests migration: the two new switches read as on.
+        #expect(prefs.itemRequests && prefs.requestUpdates)
         // Defaults match the backend: everything on except food and market.
         let defaults = NotificationPrefs(userId: id)
         #expect(defaults.enabled && defaults.chat && defaults.joinRequests && defaults.approvals && defaults.newEvents
                 && defaults.eventReminders && !defaults.food && !defaults.market && defaults.previewContent)
-        #expect(NotificationPrefs.toggles.count == 7)
+        #expect(NotificationPrefs.toggles.count == 9)
     }
 
     @Test(arguments: [

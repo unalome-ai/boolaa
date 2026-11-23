@@ -36,6 +36,64 @@
         }
       }
     },
+    "%@ gets your food. The post disappears from the Food Circle, and everyone else who asked will hear that someone else got it." : {
+      "comment" : "Hand-over confirmation (food); the argument is the picked person's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu comida es para %@. La publicación desaparece del Círculo de comida y avisaremos al resto de quienes la pidieron."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton plat va à %@. La publication disparaît du Cercle gourmand et les autres personnes qui l'ont demandé seront prévenues."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo cibo va a %@. Il post sparisce dal Cerchio del cibo e avviseremo chi altro l'ha chiesto."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mâncarea ajunge la %@. Postarea dispare din Cercul culinar, iar ceilalți care au cerut-o vor afla că a ajuns la altcineva."
+          }
+        }
+      }
+    },
+    "%@ gets “%@”. Everyone else who asked will hear that someone else got it." : {
+      "comment" : "Hand-over confirmation (market); arguments: the picked person's name, the item title",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%2$@» es para %1$@. Avisaremos al resto de quienes lo pidieron de que se lo ha llevado otra persona."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %2$@ » va à %1$@. Les autres personnes qui l'ont demandé seront prévenues."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%2$@» va a %1$@. Avviseremo chi altro l'ha chiesto che è andato a qualcun altro."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%2$@” ajunge la %1$@. Ceilalți care l-au cerut vor afla că a ajuns la altcineva."
+          }
+        }
+      }
+    },
     "%@ is no longer an admin." : {
       "comment" : "Notice after removing a member's admin role",
       "localizations" : {
@@ -119,6 +177,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ e acum proprietarul."
+          }
+        }
+      }
+    },
+    "%@ will be told you changed your mind." : {
+      "comment" : "Withdraw confirmation; the argument is the owner's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisaremos a %@ de que has cambiado de idea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ saura que tu as changé d'avis."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avviseremo %@ che hai cambiato idea."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ va afla că te-ai răzgândit."
           }
         }
       }
@@ -982,6 +1069,125 @@
         }
       }
     },
+    "%lld requests" : {
+      "comment" : "Pill: number of open requests on a food post or market item",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld request"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld requests"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld de solicitudes"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld solicitud"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld solicitudes"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld de demandes"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld demande"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld demandes"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld di richieste"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld richiesta"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld richieste"
+                }
+              }
+            }
+          }
+        },
+        "ro" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cereri"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cerere"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld de cereri"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld results" : {
       "comment" : "Number of search results (announced by VoiceOver)",
       "localizations" : {
@@ -1514,6 +1720,35 @@
         }
       }
     },
+    "Add a note (optional)" : {
+      "comment" : "Placeholder of the note sent with a request",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade una nota (opcional)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoute un mot (facultatif)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi una nota (facoltativa)"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adaugă un mesaj (opțional)"
+          }
+        }
+      }
+    },
     "Add a photo" : {
       "comment" : "Pick a photo (bubble photo in Settings, chat composer)",
       "localizations" : {
@@ -1717,6 +1952,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Permite accesul la calendar din Setări ca să adaugi evenimente."
+          }
+        }
+      }
+    },
+    "Allow camera access in Settings to take photos." : {
+      "comment" : "Camera permission was denied",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite el acceso a la cámara en Ajustes para hacer fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autorise l’accès à l’appareil photo dans Réglages pour prendre des photos."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consenti l’accesso alla fotocamera in Impostazioni per scattare foto."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite accesul la cameră din Setări ca să faci poze."
           }
         }
       }
@@ -2455,6 +2719,35 @@
         }
       }
     },
+    "Camera isn't available on this device." : {
+      "comment" : "The device has no usable camera",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cámara no está disponible en este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’appareil photo n’est pas disponible sur cet appareil."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fotocamera non è disponibile su questo dispositivo."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera nu e disponibilă pe acest dispozitiv."
+          }
+        }
+      }
+    },
     "Can't reach Boolaa — showing what you saw last" : {
       "comment" : "Banner while the server doesn't answer",
       "localizations" : {
@@ -2902,6 +3195,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alege o parolă mai puternică (cel puțin 6 caractere)."
+          }
+        }
+      }
+    },
+    "Choose from gallery" : {
+      "comment" : "Photo source menu: open the photo library",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir de la galería"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir dans la galerie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli dalla galleria"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alege din galerie"
           }
         }
       }
@@ -3410,6 +3732,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Creează bula"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "comment" : "Food expiry preset: pick a date and time",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otra fecha"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altro"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altă dată"
           }
         }
       }
@@ -4571,6 +4922,244 @@
         }
       }
     },
+    "Expires in %lld hours" : {
+      "comment" : "Food card: less than 6 hours left",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expires in %lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expires in %lld hours"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caduca en %lld de horas"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caduca en %lld hora"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caduca en %lld horas"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expire dans %lld d'heures"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expire dans %lld heure"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expire dans %lld heures"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Scade tra %lld di ore"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Scade tra %lld ora"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Scade tra %lld ore"
+                }
+              }
+            }
+          }
+        },
+        "ro" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expiră în %lld ore"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expiră într-o oră"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expiră în %lld de ore"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Expires in %lld minutes" : {
+      "comment" : "Food card: less than an hour left",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expires in %lld minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expires in %lld minutes"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caduca en %lld de minutos"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caduca en %lld minuto"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Caduca en %lld minutos"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expire dans %lld de minutes"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expire dans %lld minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expire dans %lld minutes"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Scade tra %lld di minuti"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Scade tra %lld minuto"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Scade tra %lld minuti"
+                }
+              }
+            }
+          }
+        },
+        "ro" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expiră în %lld minute"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expiră într-un minut"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Expiră în %lld de minute"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Find messages, events, food, items and links." : {
       "comment" : "Search hint before typing",
       "localizations" : {
@@ -4939,6 +5528,151 @@
         }
       }
     },
+    "Good until" : {
+      "comment" : "Food form: label of the expiry control",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bueno hasta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon jusqu'à"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buono fino a"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bun până"
+          }
+        }
+      }
+    },
+    "Good until %@ %@" : {
+      "comment" : "Food card expiry; arguments: weekday name, time of day",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bueno hasta el %1$@ a las %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon jusqu'à %1$@ %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buono fino a %1$@ alle %2$@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bun până %1$@ la %2$@"
+          }
+        }
+      }
+    },
+    "Good until %@, %@" : {
+      "comment" : "Food card expiry; arguments: short date, time of day",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bueno hasta el %1$@, a las %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon jusqu'au %1$@, %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buono fino al %1$@, alle %2$@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bun până pe %1$@, la %2$@"
+          }
+        }
+      }
+    },
+    "Good until today %@" : {
+      "comment" : "Food card expiry; the argument is a time of day",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bueno hasta hoy a las %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon jusqu'à aujourd'hui %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buono fino a oggi alle %@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bun până azi la %@"
+          }
+        }
+      }
+    },
+    "Good until tomorrow %@" : {
+      "comment" : "Food card expiry; the argument is a time of day",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bueno hasta mañana a las %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bon jusqu'à demain %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buono fino a domani alle %@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bun până mâine la %@"
+          }
+        }
+      }
+    },
     "Got a plan?" : {
       "comment" : "Events, empty “My events” title",
       "localizations" : {
@@ -5258,6 +5992,64 @@
         }
       }
     },
+    "I want it" : {
+      "comment" : "Button asking the owner for a food post or market item",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Me lo pido!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ça m'intéresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi interessa"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vreau asta"
+          }
+        }
+      }
+    },
+    "I want it: %@" : {
+      "comment" : "Accessibility label; the argument is the item",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Me lo pido: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ça m'intéresse : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi interessa: %@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vreau asta: %@"
+          }
+        }
+      }
+    },
     "I'm 16 or older" : {
       "localizations" : {
         "es" : {
@@ -5310,6 +6102,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dacă există un cont cu adresa %@, am trimis acolo un cod din 6 cifre. E valabil 10 minute."
+          }
+        }
+      }
+    },
+    "In 3 days" : {
+      "comment" : "Food expiry preset",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En 3 días"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans 3 jours"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tra 3 giorni"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "În 3 zile"
           }
         }
       }
@@ -5423,6 +6244,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Va avea nevoie de un cod nou pe email înainte să-ți vadă din nou bulele."
+          }
+        }
+      }
+    },
+    "It's no longer available." : {
+      "comment" : "Error: item not available",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya no está disponible."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n'est plus disponible."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è più disponibile."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nu mai e disponibil."
+          }
+        }
+      }
+    },
+    "It's yours" : {
+      "comment" : "Badge on an item handed over to me",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es tuyo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C'est pour toi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È tuo"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E al tău"
           }
         }
       }
@@ -5570,6 +6449,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cereri de alăturare"
+          }
+        }
+      }
+    },
+    "Keep the note under 200 characters." : {
+      "comment" : "Error: request note too long",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La nota no puede superar los 200 caracteres."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le mot ne doit pas dépasser 200 caractères."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La nota può avere al massimo 200 caratteri."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mesajul poate avea cel mult 200 de caractere."
           }
         }
       }
@@ -6187,6 +7095,64 @@
         }
       }
     },
+    "Mark as handed over" : {
+      "comment" : "Button: the owner gave the item to the picked person",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcar como entregado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marquer comme remis"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segna come consegnato"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marchează ca predat"
+          }
+        }
+      }
+    },
+    "Mark as handed over?" : {
+      "comment" : "Confirmation title before handing an item over",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Marcar como entregado?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marquer comme remis ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnare come consegnato?"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marchezi ca predat?"
+          }
+        }
+      }
+    },
     "Marketplace" : {
       "localizations" : {
         "es" : {
@@ -6295,6 +7261,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Membri"
+          }
+        }
+      }
+    },
+    "Members can tap “I want it” on your post." : {
+      "comment" : "Requests sheet empty state hint",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los miembros pueden tocar «¡Me lo pido!» en tu publicación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les membres peuvent appuyer sur « Ça m'intéresse » sur ta publication."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I membri possono toccare «Mi interessa» sul tuo post."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membrii pot apăsa „Vreau asta” la postarea ta."
           }
         }
       }
@@ -6941,6 +7936,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nimeni nu așteaptă să se alăture."
+          }
+        }
+      }
+    },
+    "No requests yet." : {
+      "comment" : "Owner's item with no requests",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay solicitudes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore de demande."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancora nessuna richiesta."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicio cerere încă."
           }
         }
       }
@@ -7775,6 +8799,151 @@
         }
       }
     },
+    "Pick" : {
+      "comment" : "Button: give the item to this requester",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alege"
+          }
+        }
+      }
+    },
+    "Pick a time in the next 14 days." : {
+      "comment" : "Error: invalid expiry",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige un momento de los próximos 14 días."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisis un moment dans les 14 prochains jours."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli un momento entro i prossimi 14 giorni."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alege o oră din următoarele 14 zile."
+          }
+        }
+      }
+    },
+    "Pick instead" : {
+      "comment" : "Button: give the item to this requester instead of the current pick",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir en su lugar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir plutôt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli invece"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alege în schimb"
+          }
+        }
+      }
+    },
+    "Pick someone first." : {
+      "comment" : "Error: nothing picked",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige a alguien primero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisis d'abord quelqu'un."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli prima qualcuno."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alege mai întâi pe cineva."
+          }
+        }
+      }
+    },
+    "Pick: %@" : {
+      "comment" : "Accessibility label of Pick; the argument is the requester's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli: %@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alege: %@"
+          }
+        }
+      }
+    },
     "Plan the next thing and your bubble can join in." : {
       "comment" : "Events empty state hint (no events at all)",
       "localizations" : {
@@ -8514,6 +9683,35 @@
         }
       }
     },
+    "Request sent. %@ will see it." : {
+      "comment" : "Toast; the argument is the owner's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitud enviada. %@ la verá."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demande envoyée. %@ va la voir."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiesta inviata. %@ la vedrà."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cererea a fost trimisă. %@ o va vedea."
+          }
+        }
+      }
+    },
     "Request sent. The members of the bubble will vote on it." : {
       "localizations" : {
         "es" : {
@@ -8570,6 +9768,35 @@
         }
       }
     },
+    "Requested" : {
+      "comment" : "Chip: I asked for this item",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiesto"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai cerut"
+          }
+        }
+      }
+    },
     "Requested %@" : {
       "localizations" : {
         "es" : {
@@ -8594,6 +9821,93 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trimisă %@"
+          }
+        }
+      }
+    },
+    "Requests" : {
+      "comment" : "Title of the owner's requests sheet",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cereri"
+          }
+        }
+      }
+    },
+    "Requests for my posts" : {
+      "comment" : "Notification setting: someone wants my food or item",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes de mis publicaciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandes sur mes publications"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste per i miei post"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cereri pentru postările mele"
+          }
+        }
+      }
+    },
+    "Requests · %lld" : {
+      "comment" : "Owner's button opening the requests; the argument is the number",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes · %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandes · %lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste · %lld"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cereri · %lld"
           }
         }
       }
@@ -8679,6 +9993,122 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rezervat"
+          }
+        }
+      }
+    },
+    "Reserved for %@" : {
+      "comment" : "Owner's badge; the argument is the picked person's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reservado para %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réservé pour %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prenotato per %@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rezervat pentru %@"
+          }
+        }
+      }
+    },
+    "Reserved for %@. Sort out the pick-up in the chat." : {
+      "comment" : "Toast after picking; the argument is the picked person's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reservado para %@. Quedad para la entrega en el chat."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réservé pour %@. Organisez la remise dans la discussion."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prenotato per %@. Accordatevi per il ritiro in chat."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rezervat pentru %@. Stabiliți predarea în chat."
+          }
+        }
+      }
+    },
+    "Reserved for you" : {
+      "comment" : "Badge on an item the owner picked for me",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reservado para ti"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réservé pour toi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prenotato per te"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rezervat pentru tine"
+          }
+        }
+      }
+    },
+    "Reserved · you're on the list" : {
+      "comment" : "Chip: my request is pending while the item is reserved for someone else",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reservado · estás en la lista"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réservé · tu es sur la liste"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prenotato · sei in lista"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rezervat · ești pe listă"
           }
         }
       }
@@ -9065,6 +10495,35 @@
         }
       }
     },
+    "Send request" : {
+      "comment" : "Sends an \"I want it\" request",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar solicitud"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer la demande"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia richiesta"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trimite cererea"
+          }
+        }
+      }
+    },
     "Sending…" : {
       "comment" : "Under a chat message while it is being sent",
       "localizations" : {
@@ -9431,6 +10890,35 @@
         }
       }
     },
+    "Someone else got it" : {
+      "comment" : "Muted line: the owner gave the item to someone else",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se lo ha llevado otra persona"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelqu'un d'autre l'a eu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È andato a qualcun altro"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altcineva l-a primit"
+          }
+        }
+      }
+    },
     "Something else" : {
       "localizations" : {
         "es" : {
@@ -9595,6 +11083,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etichete, separate prin virgulă"
+          }
+        }
+      }
+    },
+    "Take photo" : {
+      "comment" : "Photo source menu: open the camera",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer una foto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prendre une photo"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scatta una foto"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fă o poză"
           }
         }
       }
@@ -10005,6 +11522,35 @@
         }
       }
     },
+    "That request was withdrawn." : {
+      "comment" : "Error: item request gone",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esa solicitud se ha retirado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette demande a été retirée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quella richiesta è stata ritirata."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cererea a fost retrasă."
+          }
+        }
+      }
+    },
     "That's the start of the chat" : {
       "comment" : "Chat: shown above the oldest message",
       "localizations" : {
@@ -10314,6 +11860,35 @@
         }
       }
     },
+    "This clears your pick (%@). Their request stays on the list." : {
+      "comment" : "Confirmation before marking a picked market item available; the argument is the picked person's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto deshace tu elección (%@). Su solicitud sigue en la lista."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela annule ton choix (%@). Sa demande reste dans la liste."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Così annulli la tua scelta (%@). La sua richiesta resta in lista."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asta anulează alegerea ta (%@). Cererea rămâne pe listă."
+          }
+        }
+      }
+    },
     "This device" : {
       "localizations" : {
         "es" : {
@@ -10426,6 +12001,35 @@
         }
       }
     },
+    "This is your own post." : {
+      "comment" : "Error: cannot request own item",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es tu propia publicación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C'est ta propre publication."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È un tuo post."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E postarea ta."
+          }
+        }
+      }
+    },
     "This join request no longer exists." : {
       "localizations" : {
         "es" : {
@@ -10507,6 +12111,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Această persoană nu mai face parte din bulă."
+          }
+        }
+      }
+    },
+    "This post isn't here any more." : {
+      "comment" : "Error: item not found",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta publicación ya no existe."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette publication n'existe plus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo post non c'è più."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postarea nu mai există."
+          }
+        }
+      }
+    },
+    "This request has already been decided." : {
+      "comment" : "Error: request already decided",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta solicitud ya se ha resuelto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette demande a déjà été traitée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa richiesta è già stata decisa."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cererea asta a fost deja decisă."
           }
         }
       }
@@ -10703,6 +12365,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ca să pleci, folosește „Părăsește bula”."
+          }
+        }
+      }
+    },
+    "Today" : {
+      "comment" : "Food expiry preset",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aujourd'hui"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oggi"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Azi"
+          }
+        }
+      }
+    },
+    "Tomorrow" : {
+      "comment" : "Food expiry preset",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mañana"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demain"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domani"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mâine"
           }
         }
       }
@@ -11046,6 +12766,35 @@
         }
       }
     },
+    "Undo pick" : {
+      "comment" : "Button: clear the owner's pick",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshacer elección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler le choix"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla la scelta"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anulează alegerea"
+          }
+        }
+      }
+    },
     "Unknown device" : {
       "localizations" : {
         "es" : {
@@ -11154,6 +12903,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Până atunci nu îți poți vedea bulele și nu poți posta nimic."
+          }
+        }
+      }
+    },
+    "Updates on my requests" : {
+      "comment" : "Notification setting: my request was picked or someone else got it",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novedades de mis solicitudes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivi de mes demandes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti sulle mie richieste"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noutăți despre cererile mele"
           }
         }
       }
@@ -11661,6 +13439,122 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "De ce raportezi asta?"
+          }
+        }
+      }
+    },
+    "Withdraw" : {
+      "comment" : "Confirmation button: withdraw my request",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritira"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrage"
+          }
+        }
+      }
+    },
+    "Withdraw request" : {
+      "comment" : "Text button: take back my request",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirar solicitud"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer la demande"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritira la richiesta"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrage cererea"
+          }
+        }
+      }
+    },
+    "Withdraw request: %@" : {
+      "comment" : "Accessibility label; the argument is the item",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirar solicitud: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer la demande : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritira la richiesta: %@"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrage cererea: %@"
+          }
+        }
+      }
+    },
+    "Withdraw your request?" : {
+      "comment" : "Confirmation title before withdrawing a picked request",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Retirar tu solicitud?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer ta demande ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi ritirare la richiesta?"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Îți retragi cererea?"
           }
         }
       }
@@ -12271,6 +14165,35 @@
         }
       }
     },
+    "You've already asked for this." : {
+      "comment" : "Error: already requested",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya lo has pedido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu l'as déjà demandé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'hai già chiesto."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ai cerut deja asta."
+          }
+        }
+      }
+    },
     "You've already asked to join. Waiting for the members to approve." : {
       "localizations" : {
         "es" : {
@@ -12633,6 +14556,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cererile tale în așteptare"
+          }
+        }
+      }
+    },
+    "Your pick" : {
+      "comment" : "Badge on the request the owner picked",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu elección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton choix"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tua scelta"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alegerea ta"
+          }
+        }
+      }
+    },
+    "Your post disappears after this." : {
+      "comment" : "Food form: hint under the expiry control",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu publicación desaparece después."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta publication disparaît ensuite."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopo, il tuo post sparisce."
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Postarea ta dispare după ora asta."
           }
         }
       }
