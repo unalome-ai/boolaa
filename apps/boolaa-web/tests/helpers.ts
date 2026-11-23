@@ -98,10 +98,31 @@ export async function deleteUsers(key: string, emails: string[]) {
   }
 }
 
-/** True while a public storage URL still serves the object. */
+/** True while a (signed) storage URL still serves the object. */
 export async function objectExists(request: APIRequestContext, url: string) {
   const res = await request.get(url, { headers: { "cache-control": "no-cache" } });
   return res.ok();
+}
+
+/**
+ * `<bucket>/<path>` of a signed (or stored public-form) storage URL. Photos are private
+ * (20261123210000_private_photos.sql): each viewer gets their own signed URL, so tests compare paths.
+ */
+export function storageKey(url: string) {
+  const m = /\/storage\/v1\/object\/(?:public|sign)\/([^?#]+)/.exec(url);
+  if (!m) throw new Error(`not a storage URL: ${url}`);
+  return decodeURIComponent(m[1]);
+}
+
+/** The old public URL of the object behind a signed URL (must no longer serve anything). */
+export function publicUrlOf(url: string) {
+  return `${SUPABASE_URL}/storage/v1/object/public/${storageKey(url)}`;
+}
+
+/** A matcher for any signed URL of the same object. */
+export function sameObject(url: string) {
+  const key = storageKey(url).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("/storage/v1/object/sign/" + key + "\\?token=");
 }
 
 /** Signs up (or signs in) a throwaway user through the API and returns their Supabase client. */

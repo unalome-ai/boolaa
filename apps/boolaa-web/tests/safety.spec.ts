@@ -85,7 +85,7 @@ test("report a message, also block, messages disappear; unblock from the profile
 });
 
 async function uploadedSrc(page: Page, img: ReturnType<Page["locator"]>) {
-  await expect(img).toHaveAttribute("src", /\/storage\/v1\/object\/public\//);
+  await expect(img).toHaveAttribute("src", /\/storage\/v1\/object\/sign\//);
   return (await img.getAttribute("src"))!;
 }
 
@@ -107,7 +107,7 @@ test("delete account removes the user's images and the auth user", async ({ brow
   await page.getByRole("dialog").locator('input[type="file"]').setInputFiles(FIXTURE);
   await page.locator("#food-desc").fill(`E2E bye ${RUN}`);
   await page.getByRole("dialog").locator('button[type="submit"]').click();
-  const food = await uploadedSrc(page, page.getByTestId("food-card").locator("img").first());
+  const food = await uploadedSrc(page, page.getByTestId("food-card").locator('img[src*="/food.images/"]').first());
   expect(await objectExists(page.request, avatar)).toBe(true);
   expect(await objectExists(page.request, food)).toBe(true);
 

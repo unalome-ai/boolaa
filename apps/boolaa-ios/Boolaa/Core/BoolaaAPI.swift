@@ -221,8 +221,14 @@ struct BoolaaAPI: Sendable {
 
     /// Signed URLs (1 hour) for chat photos, in one request. Paths the caller may not read are left out.
     func signedChatImageURLs(paths: [String], expiresIn: Int = 3600) async throws -> [String: URL] {
+        try await signedImageURLs(bucket: ImageBucket.chat.rawValue, paths: paths, expiresIn: expiresIn)
+    }
+
+    /// Signed URLs for objects of one private photo bucket, in one request (PhotoURLs batches through this).
+    /// Paths the caller may not read are left out.
+    func signedImageURLs(bucket: String, paths: [String], expiresIn: Int = 3600) async throws -> [String: URL] {
         guard !paths.isEmpty else { return [:] }
-        let results = try await client.storage.from(ImageBucket.chat.rawValue).createSignedURLs(paths: paths, expiresIn: expiresIn)
+        let results = try await client.storage.from(bucket).createSignedURLs(paths: paths, expiresIn: expiresIn)
         var out: [String: URL] = [:]
         for result in results { if let url = result.signedURL { out[result.path] = url } }
         return out
@@ -338,15 +344,17 @@ struct BoolaaAPI: Sendable {
 
     // MARK: Storage
 
+    /// Every bucket is private (20261123210000_private_photos.sql): photos are shown through signed URLs
+    /// (PhotoURLs), never public URLs. The public-form URL stored in rows only names the object.
     enum ImageBucket: String {
         case avatars, food = "food.images", market = "market.images", bubbles = "bubble.images"
-        /// Private: shown through signed URLs, never public URLs.
         case chat = "chat.images"
         /// Round images (avatars, bubble photos): 512 px and 2 MB.
         var isSmall: Bool { self == .avatars || self == .bubbles }
     }
 
-    /// Uploads JPEG data to `<uid>/<uuid>.jpg` (the path shape the storage policy enforces) and returns the public URL.
+    /// Uploads JPEG data to `<uid>/<uuid>.jpg` (the path shape the storage policy enforces) and returns the
+    /// public-form URL that rows store as the photo's identifier (shown through PhotoURLs).
     func uploadImage(_ jpeg: Data, bucket: ImageBucket, userID: UUID) async throws -> String {
         let path = "\(userID.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
         let storage = client.storage.from(bucket.rawValue)

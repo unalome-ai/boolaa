@@ -6,6 +6,7 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
+import com.boolaa.app.core.PhotoUrlInterceptor
 
 class BoolaaApplication : Application(), SingletonImageLoader.Factory {
     lateinit var container: AppContainer
@@ -22,7 +23,11 @@ class BoolaaApplication : Application(), SingletonImageLoader.Factory {
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
-            .components { add(OkHttpNetworkFetcherFactory()) }
+            .components {
+                // Private photo buckets: stored URLs are signed (batched, cached per path) before loading.
+                add(PhotoUrlInterceptor(container.photoUrls))
+                add(OkHttpNetworkFetcherFactory())
+            }
             .crossfade(true)
             .build()
 }

@@ -5,6 +5,7 @@ import { ExternalLink, RefreshCw, Search, ShieldAlert } from "lucide-react";
 import { Modal, Spinner } from "@/components/ui";
 import { getSupabase } from "@/lib/supabase/client";
 import { cx } from "@/lib/utils";
+import { storageUrlOf, useSignedUrl, type PhotoBucket } from "@/lib/storage-url";
 import { A, REASON_LABEL, STATUS_LABEL, TARGET_LABEL } from "./strings";
 
 type Queue = "open" | "actioned" | "dismissed";
@@ -136,27 +137,11 @@ function UserStatus({ status, until, ended }: { status: string | null; until: st
   );
 }
 
-/** Signed URL for a chat photo (admins may read reported ones, 20261123120000_chat_improvements.sql). */
-function useSignedImage(bucket?: string, path?: string) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!bucket || !path) return;
-    let alive = true;
-    getSupabase()
-      .storage.from(bucket)
-      .createSignedUrl(path, 600)
-      .then(({ data }) => alive && setUrl(data?.signedUrl ?? null));
-    return () => {
-      alive = false;
-    };
-  }, [bucket, path]);
-  return url;
-}
-
 function SnapshotView({ r }: { r: Report }) {
   const s = r.snapshot;
-  const signed = useSignedImage(s.image_bucket, s.image_path);
-  const image = s.image ?? signed ?? undefined;
+  // Every photo bucket is private: admins read reported photos through signed URLs (lib/storage-url).
+  const stored = s.image ?? (s.image_bucket && s.image_path ? storageUrlOf(s.image_bucket as PhotoBucket, s.image_path) : null);
+  const { url: image, onError } = useSignedUrl(stored);
   if (s.deleted)
     return <p className="rounded-small bg-field px-3 py-2 text-sm italic text-muted">{A.contentDeleted}</p>;
   return (
@@ -164,7 +149,7 @@ function SnapshotView({ r }: { r: Report }) {
       {image && (
         <a href={image} target="_blank" rel="noreferrer" className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={image} alt="" className="h-16 w-16 rounded-small object-cover" data-testid="admin-snapshot-image" />
+          <img src={image} onError={onError} alt="" className="h-16 w-16 rounded-small object-cover" data-testid="admin-snapshot-image" />
         </a>
       )}
       <div className="min-w-0 space-y-0.5">

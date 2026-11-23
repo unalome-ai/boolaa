@@ -55,7 +55,7 @@ async function until(fn: () => boolean | Promise<boolean>, ms = 8000) {
 Deno.test("bucket, realtime publication and sweep job are set up", opts, async () => {
   const [b] = await sql`select public, file_size_limit, allowed_mime_types from storage.buckets where id = ${BUCKET}`;
   assert(b, "bucket exists");
-  assertEq(b.public, true, "public bucket");
+  assertEq(b.public, false, "private bucket (20261123210000_private_photos.sql)");
   assertEq(Number(b.file_size_limit), 2 * 1024 * 1024, "2 MB like avatars");
   assertEq([...b.allowed_mime_types].sort(), ["image/jpeg", "image/webp"], "JPEG/WebP only");
   const pub = await sql`select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'bubbles'`;

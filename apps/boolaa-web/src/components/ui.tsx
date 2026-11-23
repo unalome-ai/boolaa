@@ -6,6 +6,7 @@ import { ArrowLeftRight, Gift, ImagePlus, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BubbleCluster } from "@/components/orb";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
+import { useSignedUrl } from "@/lib/storage-url";
 import { cx, initials } from "@/lib/utils";
 
 /** Photo, or initials on the person's hue (derived from their id, see lib/hue). */
@@ -26,9 +27,11 @@ export function Avatar({
   const t = useTranslations("common");
   const style = { width: size, height: size, fontSize: Math.max(11, size * 0.38) };
   const label = t("avatarOf", { name: name || t("someone") });
-  return src ? (
+  const photo = useSignedUrl(src);
+  return photo.url ? (
     <img
-      src={src}
+      src={photo.url}
+      onError={photo.onError}
       alt={label}
       style={style}
       className={cx("shrink-0 rounded-full bg-field object-cover", size < 32 ? "ring-[1.5px]" : "ring-2", "ring-card", className)}
@@ -67,9 +70,11 @@ export function BubblePhoto({
   const t = useTranslations("common");
   const style = { width: size, height: size, fontSize: Math.max(10, size * 0.36) };
   const label = t("bubblePhotoOf", { name: bubble?.name ?? "" });
-  return bubble?.logo ? (
+  const photo = useSignedUrl(bubble?.logo);
+  return photo.url ? (
     <img
-      src={bubble.logo}
+      src={photo.url}
+      onError={photo.onError}
       alt={label}
       style={style}
       data-testid="bubble-photo"
@@ -251,7 +256,8 @@ export function ImagePicker({
   const inputRef = useRef<HTMLInputElement>(null);
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
-  const shown = preview ?? value ?? null;
+  const signed = useSignedUrl(value);
+  const shown = preview ?? signed.url ?? null;
 
   return (
     <div>
@@ -282,8 +288,11 @@ export function ImagePicker({
   );
 }
 
-export function Img({ src, alt, className }: { src: string; alt: string; className?: string }) {
-  return <img src={src} alt={alt} loading="lazy" className={className} />;
+/** A stored photo (signed when it's one of ours); a plain `field` block while signing or when unreadable. */
+export function Img({ src, alt, className }: { src: string | null | undefined; alt: string; className?: string }) {
+  const photo = useSignedUrl(src);
+  if (!photo.url) return <span role="img" aria-label={alt} className={cx("block bg-field", className)} />;
+  return <img src={photo.url} onError={photo.onError} alt={alt} loading="lazy" className={className} />;
 }
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {

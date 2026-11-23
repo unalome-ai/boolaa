@@ -178,6 +178,7 @@ final class SessionStore {
         userID = nil; email = nil; profile = nil; memberships = nil; pendingRequests = []
         deviceGate = .checking; needsAgeConfirmation = false; recoveringPassword = false; deviceCodeSentAt = nil
         gateError = nil; currentUser = nil
+        PhotoURLs.shared.reset()
         if suspension?.kind != .signInBlocked { suspension = nil }
         isRestoringSession = false
     }

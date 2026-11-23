@@ -280,7 +280,7 @@ struct LinkPreviewCard: View {
 }
 
 extension BoolaaAPI {
-    /// Public URL of a preview image in the `link.previews` bucket.
+    /// Public-form URL naming a preview image in the private `link.previews` bucket; RemoteImage signs it (PhotoURLs).
     func linkPreviewImageURL(path: String?) -> URL? {
         guard let path, !path.isEmpty else { return nil }
         return try? client.storage.from("link.previews").getPublicURL(path: path)

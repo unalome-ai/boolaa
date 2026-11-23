@@ -3,12 +3,13 @@
  * (docs/boolaa-spec.md, "Chat"; migration 20261123120000_chat_improvements.sql).
  */
 import { prepareImage } from "@/lib/image";
+import { signPaths } from "@/lib/storage-url";
 import type { BoolaaClient } from "@/lib/supabase/client";
 
 export const CHAT_PAGE = 50;
 export const CHAT_BUCKET = "chat.images" as const;
 /** Signed URLs for chat photos (private bucket) live this long; they are cached a bit less. */
-export const SIGNED_URL_TTL_S = 3600;
+export { SIGNED_URL_TTL_S } from "@/lib/storage-url";
 
 type Keyed = { id: string; created_at: string };
 
@@ -74,25 +75,7 @@ export async function removeChatImage(supabase: BoolaaClient, path: string | nul
   await supabase.storage.from(CHAT_BUCKET).remove([path]);
 }
 
-const signed = new Map<string, { url: string; until: number }>();
-
-/** Signed URLs for chat photo paths (one request per batch), cached per path. */
-export async function signChatImages(supabase: BoolaaClient, paths: string[]) {
-  const now = Date.now();
-  const out: Record<string, string> = {};
-  const missing: string[] = [];
-  for (const p of new Set(paths)) {
-    const hit = signed.get(p);
-    if (hit && hit.until > now) out[p] = hit.url;
-    else missing.push(p);
-  }
-  if (missing.length > 0) {
-    const { data } = await supabase.storage.from(CHAT_BUCKET).createSignedUrls(missing, SIGNED_URL_TTL_S);
-    for (const r of data ?? []) {
-      if (!r.path || !r.signedUrl || r.error) continue;
-      signed.set(r.path, { url: r.signedUrl, until: now + (SIGNED_URL_TTL_S - 300) * 1000 });
-      out[r.path] = r.signedUrl;
-    }
-  }
-  return out;
+/** Signed URLs for chat photo paths (one request per batch), cached per path (lib/storage-url). */
+export function signChatImages(_supabase: BoolaaClient, paths: string[]) {
+  return signPaths(CHAT_BUCKET, paths);
 }

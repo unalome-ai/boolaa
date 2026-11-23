@@ -85,7 +85,11 @@ class SafetyTest {
             assertTrue(a.latestChatMessages(bubble.id, 50).any { it.id == fromB.id })
 
             // delete_my_account: storage under <uid>/ is removed first, then the auth user and everything it owns.
-            val avatar = b.uploadImage(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()), ImageBucket.AVATARS, bId)
+            val stored = b.uploadImage(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()), ImageBucket.AVATARS, bId)
+            // Private bucket (20261123210000_private_photos.sql): no public URL; the owner reads it through a signed URL.
+            assertTrue(httpStatus(stored) >= 400)
+            val path = BoolaaApi.storagePath(stored, ImageBucket.AVATARS)!!
+            val avatar = b.signedImageUrls(ImageBucket.AVATARS.id, listOf(path)).getValue(path)
             assertEquals(200, httpStatus(avatar))
             b.deleteMyAccount(bId); bDeleted = true
             assertTrue(httpStatus(avatar) >= 400)

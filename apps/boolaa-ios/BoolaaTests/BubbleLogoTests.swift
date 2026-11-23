@@ -68,7 +68,15 @@ struct BubbleLogoIntegrationTests {
         return row.logo
     }
 
-    private func exists(_ url: String) async throws -> Bool {
+    /// True while the object behind a stored logo URL exists: the bucket is private
+    /// (20261123210000_private_photos.sql), so this signs it as `api` first.
+    private func exists(_ url: String, as api: BoolaaAPI) async throws -> Bool {
+        guard let path = BoolaaAPI.storagePath(fromPublicURL: url, bucket: .bubbles),
+              let signed = try? await api.signedImageURLs(bucket: "bubble.images", paths: [path])[path] else { return false }
+        return try await serves(signed.absoluteString)
+    }
+
+    private func serves(_ url: String) async throws -> Bool {
         var request = URLRequest(url: try #require(URL(string: url)), cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
         request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
         let (_, response) = try await URLSession(configuration: .ephemeral).data(for: request)
@@ -96,14 +104,15 @@ struct BubbleLogoIntegrationTests {
         let second = try await alice.uploadBubbleLogo(jpeg, bubbleID: bubble.id)
         try await alice.setBubbleLogo(bubbleID: bubble.id, logo: second)
         await alice.removeBubbleLogo(publicURL: first, bubbleID: bubble.id)
-        #expect(try await exists(first) == false)
-        #expect(try await exists(second))
+        #expect(try await exists(first, as: alice) == false)
+        #expect(try await exists(second, as: alice))
+        #expect(try await serves(second) == false, "no public URL")
 
         // Remove.
         try await alice.setBubbleLogo(bubbleID: bubble.id, logo: nil)
         await alice.removeBubbleLogo(publicURL: second, bubbleID: bubble.id)
         #expect(try await logo(alice, bubble.id) == nil)
-        #expect(try await exists(second) == false)
+        #expect(try await exists(second, as: alice) == false)
 
         try await alice.leaveBubble(bubbleID: bubble.id, userID: Seed.alice)
     }

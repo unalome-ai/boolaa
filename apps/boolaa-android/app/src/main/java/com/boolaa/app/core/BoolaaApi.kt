@@ -49,11 +49,12 @@ data class MarketInput(
     val availability: MarketAvailability = MarketAvailability.AVAILABLE,
 )
 
+/** Every bucket is private (20261123210000_private_photos.sql): images load through signed URLs (PhotoUrls). */
 enum class ImageBucket(val id: String) {
     AVATARS("avatars"), FOOD("food.images"), MARKET("market.images"),
     /** Bubble logos: `<bubble id>/<uuid>.jpg`, written by whoever may manage the bubble (20261123130000_bubble_cover.sql). */
     BUBBLE("bubble.images"),
-    /** Chat photos: PRIVATE, `<uid>/<uuid>.jpg`, read through signed URLs (20261123120000_chat_improvements.sql). */
+    /** Chat photos: `<uid>/<uuid>.jpg`, rows store the path (20261123120000_chat_improvements.sql). */
     CHAT("chat.images");
 
     companion object {
@@ -289,9 +290,16 @@ class BoolaaApi(val client: SupabaseClient) {
     }
 
     /** Signed URLs (1 hour) for `chat.images` paths, in one call; paths the caller may not read are left out. */
-    suspend fun signedChatImageUrls(paths: Collection<String>): Map<String, String> {
+    suspend fun signedChatImageUrls(paths: Collection<String>): Map<String, String> =
+        signedImageUrls(ImageBucket.CHAT.id, paths)
+
+    /**
+     * Signed URLs (1 hour) for objects of one private photo bucket, in one call (PhotoUrls batches through this);
+     * paths the caller may not read are left out.
+     */
+    suspend fun signedImageUrls(bucket: String, paths: Collection<String>): Map<String, String> {
         if (paths.isEmpty()) return emptyMap()
-        return client.storage.from(ImageBucket.CHAT.id).createSignedUrls(CHAT_URL_TTL_SECONDS.seconds, paths)
+        return client.storage.from(bucket).createSignedUrls(CHAT_URL_TTL_SECONDS.seconds, paths)
             .filter { it.error == null && it.signedURL.isNotEmpty() }
             .associate { it.path to it.signedURL }
     }
@@ -425,7 +433,7 @@ class BoolaaApi(val client: SupabaseClient) {
         })
     }
 
-    /** Public URL of a server-made preview image (bucket `link.previews`, docs/boolaa-spec.md "Link previews"). */
+    /** Public-form URL naming a server-made preview image (private bucket `link.previews`); Coil signs it (PhotoUrls). */
     fun linkPreviewImageUrl(path: String?): String? =
         path?.takeIf { it.isNotBlank() && ".." !in it }?.let { client.storage.from(LINK_PREVIEWS_BUCKET).publicUrl(it) }
 
@@ -479,7 +487,10 @@ class BoolaaApi(val client: SupabaseClient) {
 
     // Storage
 
-    /** Uploads JPEG bytes to `<uid>/<uuid>.jpg` (the path shape the storage policy enforces) and returns the public URL. */
+    /**
+     * Uploads JPEG bytes to `<uid>/<uuid>.jpg` (the path shape the storage policy enforces) and returns the public-form
+     * URL rows store as the photo's identifier. Every bucket is private: images load through PhotoUrls (signed URLs).
+     */
     suspend fun uploadImage(jpeg: ByteArray, bucket: ImageBucket, userId: String): String {
         val path = imagePath(userId)
         val api = client.storage.from(bucket.id)

@@ -32,7 +32,4 @@ Deno.serve(createHandler({
     for (const r of data ?? []) if (!r.error && r.path && r.signedUrl) out.set(r.path, toPublic(r.signedUrl));
     return out;
   },
-  publicUrl(bucket, path) {
-    return toPublic(admin.storage.from(bucket).getPublicUrl(path).data.publicUrl);
-  },
 }));

@@ -169,7 +169,10 @@ struct ImageUploadIntegrationTests {
         let api = try await alice()
         let jpeg = try ImageCompression.jpeg(from: try exifFixture(), for: .food)
         let url = try await api.uploadImage(jpeg, bucket: .food, userID: Seed.alice)
-        var request = URLRequest(url: try #require(URL(string: url)), cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
+        // Private bucket: the owner reads it through a signed URL.
+        let path = try #require(BoolaaAPI.storagePath(fromPublicURL: url, bucket: .food))
+        let signed = try #require(try await api.signedImageURLs(bucket: "food.images", paths: [path])[path])
+        var request = URLRequest(url: signed, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
         request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
         let (stored, response) = try await URLSession(configuration: .ephemeral).data(for: request)
         #expect((response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type") == "image/jpeg")

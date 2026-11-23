@@ -520,6 +520,32 @@ export type Database = {
           },
         ]
       }
+      invite_preview_grants: {
+        Row: {
+          at: string
+          bubble_id: string
+          user_id: string
+        }
+        Insert: {
+          at?: string
+          bubble_id: string
+          user_id: string
+        }
+        Update: {
+          at?: string
+          bubble_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_preview_grants_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       join_requests: {
         Row: {
           approver_ids: string[]
@@ -1272,6 +1298,10 @@ export type Database = {
       can_manage_bubble: { Args: { p_bubble_id: string }; Returns: boolean }
       can_manage_bubble_object: { Args: { p_name: string }; Returns: boolean }
       can_read_chat_image: { Args: { p_path: string }; Returns: boolean }
+      can_read_image: {
+        Args: { p_bucket: string; p_name: string }
+        Returns: boolean
+      }
       chat_image_uploaded: { Args: { p_path: string }; Returns: boolean }
       chat_messages_around: {
         Args: {
@@ -1568,6 +1598,7 @@ export type Database = {
         Args: { p_device_id: string; p_label?: string }
         Returns: Json
       }
+      storage_folder_uuid: { Args: { p_name: string }; Returns: string }
       storage_path_from_url: {
         Args: { p_bucket: string; p_url: string }
         Returns: string

@@ -41,7 +41,6 @@ function localHandler() {
       for (const r of data ?? []) if (!r.error && r.path && r.signedUrl) out.set(r.path, r.signedUrl);
       return out;
     },
-    publicUrl: (bucket, path) => admin.storage.from(bucket).getPublicUrl(path).data.publicUrl,
   });
 }
 const handler = localHandler();
@@ -76,7 +75,7 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
 // --- Scenario: U is the exporter; V shares U's bubble; W shares it too and gets blocked by U;
 // X is in another bubble only. ---------------------------------------------------------------
 let U: Member, V: Member, W: Member, X: Member;
-let bubbleId = "", otherBubbleId = "", chatPhoto = "";
+let bubbleId = "", otherBubbleId = "", chatPhoto = "", avatarPhoto = "";
 const S = {
   uMsg: `u-message-${tag}`, uGone: `u-deleted-${tag}`, vMsg: `v-private-${tag}`, wMsg: `w-private-${tag}`,
   xMsg: `x-other-bubble-${tag}`, uFood: `u-food-${tag}`, uItem: `u-item-${tag}`, uLink: `https://example.com/u-${tag}`,
@@ -104,6 +103,8 @@ Deno.test({ name: "setup: two bubbles with content from four users", ...opts, fn
   chatPhoto = `${U.id}/${crypto.randomUUID()}.jpg`;
   await must(U.c.storage.from("chat.images").upload(chatPhoto, JPEG, { contentType: "image/jpeg" }), "upload chat photo");
   await must(U.c.from("chat_messages").insert({ bubble_id: bubbleId, sender_id: U.id, content: "", image_path: chatPhoto }), "photo msg");
+  avatarPhoto = `${U.id}/${crypto.randomUUID()}.jpg`;
+  await must(U.c.storage.from("avatars").upload(avatarPhoto, JPEG, { contentType: "image/jpeg" }), "upload avatar");
   await must(U.c.from("events").insert({ bubble_id: bubbleId, creator_id: U.id, title: S.uEvent, datetime: new Date(Date.now() + 864e5).toISOString() }), "u event");
   await must(U.c.from("food_posts").insert({ bubble_id: bubbleId, user_id: U.id, image: "https://example.com/f.jpg", description: S.uFood }), "food");
   await must(U.c.from("market_items").insert({ bubble_id: bubbleId, owner_id: U.id, image: "https://example.com/m.jpg", title: S.uItem }), "item");
@@ -193,6 +194,12 @@ Deno.test({ name: "export contains the user's own rows and photo links, nobody e
   assert(f && f.bucket === "chat.images" && f.url && f.url_expires_at, "file entry with signed url");
   const days = (Date.parse(f.url_expires_at) - Date.now()) / 864e5;
   assert(days > 6.9 && days <= 7.01, `link valid 7 days (${days})`);
+  // Avatars are private too (20261123210000_private_photos.sql): a 7-day signed link, no public one.
+  const av = (file.files as any[]).find((x) => x.path === avatarPhoto);
+  assert(av?.url?.includes("/storage/v1/object/sign/avatars/") && av.url_expires_at, "signed avatar link");
+  const avDl = await fetch(av.url);
+  assertEq(avDl.status, 200, "signed avatar link downloads");
+  await avDl.body?.cancel();
 
   // Own content in every section.
   assertEq(file.events.map((e: any) => e.title), [S.uEvent], "own events only");
@@ -277,7 +284,6 @@ function fakeDeps(over: Partial<Deps> = {}): Deps {
       error: null,
     }),
     signUrls: async (_b, paths) => new Map(paths.map((p) => [p, `https://signed/${p}`])),
-    publicUrl: (b, p) => `https://public/${b}/${p}`,
     now: () => new Date("2026-11-23T10:00:00Z"),
     ...over,
   };
@@ -285,7 +291,7 @@ function fakeDeps(over: Partial<Deps> = {}): Deps {
 const post = (h: ReturnType<typeof createHandler>, jwt?: string) =>
   h(new Request("http://x/", { method: "POST", headers: jwt ? { Authorization: `Bearer ${jwt}` } : {} }));
 
-Deno.test("handler: signs only the user's own private photos and orders keys", async () => {
+Deno.test("handler: signs only the user's own photos and orders keys", async () => {
   const signed: string[] = [];
   const h = createHandler(fakeDeps({
     signUrls: async (_b, paths) => {
@@ -297,8 +303,9 @@ Deno.test("handler: signs only the user's own private photos and orders keys", a
   assertEq(res.status, 200, "ok");
   assertEq(res.headers.get("content-disposition"), 'attachment; filename="boolaa-data-2026-11-23.json"', "filename");
   const doc = await res.json();
-  assertEq(signed, ["u1/a.jpg"], "only own chat photo signed");
-  assertEq(doc.files.map((f: any) => f.url), ["https://signed/u1/a.jpg", "https://public/avatars/u1/b.jpg"], "files filtered + linked");
+  assertEq(signed.sort(), ["u1/a.jpg", "u1/b.jpg"], "only own photos signed (every bucket is private)");
+  assertEq(doc.files.map((f: any) => f.url), ["https://signed/u1/a.jpg", "https://signed/u1/b.jpg"], "files filtered + signed");
+  assertEq(doc.files[1].url_expires_at, "2026-11-30T10:00:00.000Z", "avatar link expires too");
   assertEq(doc.files[0].url_expires_at, "2026-11-30T10:00:00.000Z", "7-day expiry");
   assertEq(doc.chat_messages.map((m: any) => m.photo_url ?? null), ["https://signed/u1/a.jpg", null, null], "message links");
   assertEq(Object.keys(doc).slice(0, 3), ["format", "user_id", "about"], "ordered keys");
@@ -331,6 +338,7 @@ Deno.test("handler: error mapping", async () => {
 
 Deno.test({ name: "cleanup", ...opts, fn: async () => {
   if (U) await admin.storage.from("chat.images").remove([chatPhoto]).catch(() => {});
+  if (U) await admin.storage.from("avatars").remove([avatarPhoto]).catch(() => {});
   await cleanupUsers();
   await sql.end();
 }});

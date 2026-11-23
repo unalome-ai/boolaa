@@ -71,12 +71,16 @@ struct SafetyIntegrationTests {
 
         // One uploaded file in each bucket (chat.images is private: checked by listing the folder).
         let jpeg = try ImageCompression.jpeg(from: Self.tinyPNG, maxSide: 8, quality: 0.5)
+        // Every bucket is private (20261123210000_private_photos.sql): the owner reads through signed URLs.
         var urls: [String] = []
         for bucket in BoolaaAPI.userBuckets where bucket != .chat {
-            urls.append(try await api.uploadImage(jpeg, bucket: bucket, userID: userID))
+            let stored = try await api.uploadImage(jpeg, bucket: bucket, userID: userID)
+            #expect(await Self.status(of: stored) != 200, "no public URL")
+            let path = try #require(BoolaaAPI.storagePath(fromPublicURL: stored, bucket: bucket))
+            urls.append(try #require(try await api.signedImageURLs(bucket: bucket.rawValue, paths: [path])[path]).absoluteString)
         }
         _ = try await api.uploadChatImage(jpeg, userID: userID)
-        for url in urls { #expect(await Self.status(of: url) == 200, "uploaded file is public") }
+        for url in urls { #expect(await Self.status(of: url) == 200, "owner reads the uploaded file") }
         let chatFolder = { try await api.client.storage.from("chat.images").list(path: userID.uuidString.lowercased()) }
         #expect(try await chatFolder().count == 1)
 

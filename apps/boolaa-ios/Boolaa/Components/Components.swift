@@ -14,7 +14,7 @@ struct AvatarView: View {
         ZStack {
             Circle().fill(hue.gradient)
             if let url {
-                AsyncImage(url: url) { phase in
+                StoredImage(stored: url.absoluteString) { phase in
                     if let image = phase.image {
                         image.resizable().scaledToFill()
                     } else {
@@ -84,12 +84,12 @@ struct ChipView: View {
     }
 }
 
-/// Remote image that fills its frame.
+/// Remote image that fills its frame. Our storage photos are signed first (PhotoURLs).
 struct RemoteImage: View {
     var url: String?
     var hue: Hue = .grape
     var body: some View {
-        AsyncImage(url: url.flatMap(URL.init(string:)), transaction: Transaction(animation: Motion.fade)) { phase in
+        StoredImage(stored: url, transaction: Transaction(animation: Motion.fade)) { phase in
             switch phase {
             case .success(let image): image.resizable().scaledToFill().transition(.opacity)
             case .failure: placeholder(icon: "photo")
@@ -249,8 +249,8 @@ struct BubbleLogo: View {
         ZStack {
             BubbleOrb(hue: hue)
             if size >= 28 { initials(hue) }
-            if let url = logo.flatMap(URL.init(string:)) {
-                AsyncImage(url: url, transaction: Transaction(animation: Motion.fade)) { phase in
+            if let logo, !logo.isEmpty {
+                StoredImage(stored: logo, transaction: Transaction(animation: Motion.fade)) { phase in
                     if let image = phase.image { image.resizable().scaledToFill().transition(.opacity) } else { Color.clear }
                 }
                 .clipShape(Circle())

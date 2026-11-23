@@ -28,6 +28,7 @@ import { BubbleLogo } from "@/components/orb";
 import { Avatar, Modal } from "@/components/ui";
 import { FEATURE_HUE, HUES, hueClass, hueFor, type Hue } from "@/lib/hue";
 import { cx } from "@/lib/utils";
+import { useSignedUrl } from "@/lib/storage-url";
 
 type NavKey = "home" | "events" | "food" | "marketplace" | "settings" | "chat" | "links";
 type NavItem = { href: string; key: NavKey; icon: LucideIcon };
@@ -116,12 +117,9 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
             )}
           >
             {b.logo ? (
-              /* eslint-disable-next-line @next/next/no-img-element -- Supabase storage URL */
-              <img
+              <ChipPhoto
                 key={pulse === b.id ? "pulse" : "still"}
-                src={b.logo}
-                alt=""
-                data-testid="bubble-chip-photo"
+                logo={b.logo}
                 className={cx(
                   "-my-0.5 h-5 w-5 rounded-full bg-field object-cover",
                   pulse === b.id && "anim-orb-pulse",
@@ -401,4 +399,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Modal>
     </div>
   );
+}
+
+/** A bubble's photo in the switcher chip (signed URL, lib/storage-url); an empty dot while signing. */
+function ChipPhoto({ logo, className }: { logo: string; className?: string }) {
+  const photo = useSignedUrl(logo);
+  if (!photo.url) return <span className={cx("inline-block", className)} aria-hidden data-testid="bubble-chip-photo" />;
+  /* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL */
+  return <img src={photo.url} onError={photo.onError} alt="" data-testid="bubble-chip-photo" className={className} />;
 }

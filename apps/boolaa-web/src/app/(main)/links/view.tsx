@@ -11,9 +11,9 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { cx } from "@/lib/utils";
+import { storageUrlOf, useSignedUrl } from "@/lib/storage-url";
 import { useReactions } from "@/lib/reactions";
 import { ReactionBar } from "@/components/reactions";
-import type { BoolaaClient } from "@/lib/supabase/client";
 
 function hostOf(url: string) {
   try {
@@ -148,7 +148,7 @@ export default function LinksPage() {
                 </button>
               )}
               </div>
-              <LinkPreview supabase={supabase} link={l} />
+              <LinkPreview link={l} />
               <ReactionBar state={reactions} targetId={l.id} className="hue-sky" />
             </li>
           ))}
@@ -172,7 +172,7 @@ export default function LinksPage() {
  * Open Graph card fetched and stored by the server (docs/boolaa-spec.md, "Link previews"). The image
  * is our own re-encoded copy in Storage, never the third-party host, so opening the list leaks nothing.
  */
-function LinkPreview({ supabase, link }: { supabase: BoolaaClient; link: SharedLink }) {
+function LinkPreview({ link }: { link: SharedLink }) {
   const t = useTranslations("links");
   if (link.preview_status === "pending" || link.preview_status === "fetching") {
     return (
@@ -182,7 +182,12 @@ function LinkPreview({ supabase, link }: { supabase: BoolaaClient; link: SharedL
     );
   }
   if (link.preview_status !== "ready" || !(link.preview_title || link.preview_description || link.preview_image_path)) return null;
-  const image = link.preview_image_path ? supabase.storage.from("link.previews").getPublicUrl(link.preview_image_path).data.publicUrl : null;
+  return <PreviewCard link={link} />;
+}
+
+function PreviewCard({ link }: { link: SharedLink }) {
+  // Private bucket: a signed URL for our own copy (lib/storage-url), never the third-party host.
+  const { url: image, onError } = useSignedUrl(link.preview_image_path ? storageUrlOf("link.previews", link.preview_image_path) : null);
   const host = hostOf(link.url);
   return (
     <a
@@ -193,8 +198,8 @@ function LinkPreview({ supabase, link }: { supabase: BoolaaClient; link: SharedL
       className="hue-sky lift block overflow-hidden rounded-field border border-line bg-field/60 hover:border-[var(--h)]"
     >
       {image && (
-        /* eslint-disable-next-line @next/next/no-img-element -- public Storage URL of our own copy */
-        <img src={image} alt="" loading="lazy" data-testid="link-preview-image" className="aspect-[1.91/1] w-full object-cover" />
+        /* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL of our own copy */
+        <img src={image} onError={onError} alt="" loading="lazy" data-testid="link-preview-image" className="aspect-[1.91/1] w-full object-cover" />
       )}
       <div className="space-y-0.5 p-3">
         {link.preview_title && <p className="line-clamp-2 font-bold" data-testid="link-preview-title">{link.preview_title}</p>}

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { apiUser, bubbleChip, deleteUsers, login, objectExists, serviceRoleKey, throwaway } from "./helpers";
+import { apiUser, bubbleChip, deleteUsers, login, objectExists, publicUrlOf, sameObject, serviceRoleKey, throwaway } from "./helpers";
 import { IMAGE_LIMITS } from "../src/lib/image";
 
 /**
@@ -13,12 +13,13 @@ const KEY = serviceRoleKey();
 const RUN = Date.now().toString(36);
 const owner = throwaway("PhotoOwner", RUN);
 const mate = throwaway("PhotoMate", RUN);
+const guest = throwaway("PhotoGuest", RUN);
 const FIXTURE = path.join(__dirname, "fixtures", "item.png");
 const LIVE = { timeout: 15_000 };
 
 test.skip(!KEY, "SUPABASE_SERVICE_ROLE_KEY not available for cleanup");
 test.afterAll(async () => {
-  if (KEY) await deleteUsers(KEY, [owner.email, mate.email]);
+  if (KEY) await deleteUsers(KEY, [owner.email, mate.email, guest.email]);
 });
 
 test("bubble photos use the avatar size and limit", () => {
@@ -56,23 +57,36 @@ test("owner adds, replaces and removes the bubble photo; a member sees it live",
   const img = editor.getByTestId("bubble-photo");
   await expect(img).toBeVisible(LIVE);
   const first = (await img.getAttribute("src"))!;
-  expect(first).toContain(`/storage/v1/object/public/bubble.images/${bubble!.id}/`);
+  expect(first).toContain(`/storage/v1/object/sign/bubble.images/${bubble!.id}/`);
   expect(await objectExists(o.request, first)).toBe(true);
-  await expect(bubbleChip(o, name).getByTestId("bubble-chip-photo")).toHaveAttribute("src", first);
-  // The member gets it live, without reloading.
-  await expect(mChip.getByTestId("bubble-chip-photo")).toHaveAttribute("src", first, LIVE);
+  // Private bucket (20261123210000_private_photos.sql): no public URL.
+  expect(await objectExists(o.request, publicUrlOf(first))).toBe(false);
+  await expect(bubbleChip(o, name).getByTestId("bubble-chip-photo")).toHaveAttribute("src", sameObject(first));
+  // The member gets it live, without reloading (their own signed URL for the same object).
+  await expect(mChip.getByTestId("bubble-chip-photo")).toHaveAttribute("src", sameObject(first), LIVE);
+
+  // A non-member with the invite link sees the cover on /join/CODE (invite preview grant, signed URL).
+  await apiUser(guest);
+  const gCtx = await browser.newContext();
+  const g = await gCtx.newPage();
+  await login(g, guest.email);
+  await g.goto(`/join/${bubble!.invite_code}`);
+  const cover = g.getByTestId("join-preview").getByTestId("bubble-photo");
+  await expect(cover).toHaveAttribute("src", sameObject(first), LIVE);
+  await expect.poll(() => cover.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+  await gCtx.close();
 
   // Replace: the new file is shown and the old one is deleted.
   await editor.getByTestId("bubble-photo-input").setInputFiles(FIXTURE);
-  await expect(img).not.toHaveAttribute("src", first, LIVE);
+  await expect(img).not.toHaveAttribute("src", sameObject(first), LIVE);
   const second = (await img.getAttribute("src"))!;
   expect(second).toContain(`/bubble.images/${bubble!.id}/`);
   await expect.poll(() => objectExists(o.request, first)).toBe(false);
-  await expect(mChip.getByTestId("bubble-chip-photo")).toHaveAttribute("src", second, LIVE);
+  await expect(mChip.getByTestId("bubble-chip-photo")).toHaveAttribute("src", sameObject(second), LIVE);
 
   // A member sees the photo in Settings but gets no controls.
   await m.goto("/settings");
-  await expect(m.getByTestId("bubble-photo").filter({ visible: true })).toHaveAttribute("src", second);
+  await expect(m.getByTestId("bubble-photo").filter({ visible: true })).toHaveAttribute("src", sameObject(second));
   await expect(m.getByTestId("bubble-photo-editor")).toHaveCount(0);
 
   // Remove: back to the fallback everywhere, file gone.

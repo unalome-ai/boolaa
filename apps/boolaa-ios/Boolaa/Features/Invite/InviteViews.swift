@@ -79,11 +79,10 @@ struct JoinInviteSheet: View {
             Text("You've got an invite").font(.rounded(.subheadline, weight: .heavy)).foregroundStyle(.secondary)
                 .textCase(.uppercase)
             Group {
-                if let logo = preview.logo, let url = URL(string: logo) {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        BubbleOrb(hue: hue)
+                if let logo = preview.logo, !logo.isEmpty {
+                    // Private bucket: the preview granted this caller the cover for an hour (get_invite_preview).
+                    StoredImage(stored: logo) { phase in
+                        if let image = phase.image { image.resizable().scaledToFill() } else { BubbleOrb(hue: hue) }
                     }
                     .clipShape(Circle())
                 } else {

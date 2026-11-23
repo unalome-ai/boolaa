@@ -18,7 +18,7 @@ const EXIF_FIXTURE = path.join(__dirname, "fixtures", "exif-gps.jpg");
 
 /** The stored object is a clean JPEG of the expected (upright) size: no EXIF, GPS, XMP or IPTC. */
 async function expectCleanJpeg(page: Page, url: string, width: number, height: number) {
-  expect(url).toMatch(/\.jpg$/);
+  expect(url).toMatch(/\.jpg\?token=/); // a signed URL: every photo bucket is private
   const res = await page.request.get(url);
   expect(res.headers()["content-type"]).toBe("image/jpeg");
   const bytes = await res.body();
@@ -67,14 +67,17 @@ test("old files are removed on delete and on photo replacement", async ({ browse
   await page.locator("#food-desc").fill(`E2E food ${RUN}`);
   await page.getByRole("dialog").locator('button[type="submit"]').click();
   const card = page.getByTestId("food-card").filter({ hasText: `E2E food ${RUN}` });
-  const food1 = (await card.locator("img").first().getAttribute("src"))!;
+  // The photo is an <img> once its signed URL is ready (the author's avatar is another <img>).
+  const photo = card.locator('img[src*="/food.images/"]');
+  await expect(photo).toHaveCount(1);
+  const food1 = (await photo.getAttribute("src"))!;
   expect(food1).toContain("/food.images/");
   await expectCleanJpeg(page, food1, 1067, 1600); // long edge 1600, upright
   await card.getByTestId("edit-post").click();
   await page.getByRole("dialog").locator('input[type="file"]').setInputFiles(FIXTURE);
   await page.getByRole("dialog").locator('button[type="submit"]').click();
-  await expect(card.locator("img").first()).not.toHaveAttribute("src", food1);
-  const food2 = (await card.locator("img").first().getAttribute("src"))!;
+  await expect(photo).not.toHaveAttribute("src", food1);
+  const food2 = (await photo.getAttribute("src"))!;
   await gone(page, food1);
   await card.getByTestId("delete-post").click();
   await expect(card).toHaveCount(0);

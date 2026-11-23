@@ -9,7 +9,7 @@ Boolaa is being rebuilt as a **native SwiftUI iOS app** (`apps/boolaa-ios`), a *
 - **Product spec**: `docs/boolaa-spec.md` lists the screens, flows and visual language, and summarizes the backend contract. Keep both clients in step with it.
 - **Backend contract**: `supabase/migrations/*.sql` holds the tables, RLS policies and RPCs. Membership changes go only through RPCs (`create_bubble`, `request_to_join`, `approve_join_request` (majority vote), `reject_join_request`, `remove_member` (owner only), `toggle_rsvp`). After a member is removed, a trigger hands ownership to the oldest member, deletes a bubble once it has no members, and admits queued requests that now have a majority. `try_admit_join_request` is internal only. Change the schema with a new migration, never by editing an applied one. Then regenerate the web types with `yarn db:types`.
 - **Fixed names**: the Expo app's queries use a `profiles` table and a `desc` column. The real names are `users` and `description`.
-- **Storage**: the buckets are `avatars`, `food.images` and `market.images`. Object paths must start with `<auth uid>/`, which RLS enforces.
+- **Storage**: the photo buckets are `avatars`, `food.images`, `market.images`, `bubble.images` (`<bubble id>/`), `link.previews` (server-written) and `chat.images`, and **all are private** (`20261123210000_private_photos.sql`). Object paths must start with `<auth uid>/`, which RLS enforces. Rows keep the `/object/public/` URL only as an identifier; clients show signed URLs through one helper each (web `src/lib/storage-url.ts`, iOS `PhotoURLs`, Android `PhotoUrls`). Never render a stored photo URL directly.
 
 ## Local Supabase
 

@@ -2,7 +2,7 @@ import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 import type { Database } from "../src/lib/database.types";
-import { PASSWORD, SUPABASE_KEY, SUPABASE_URL, bubbleChip, login, newSession, selectBubble } from "./helpers";
+import { PASSWORD, SUPABASE_KEY, SUPABASE_URL, bubbleChip, login, newSession, publicUrlOf, selectBubble } from "./helpers";
 
 const RUN = Date.now().toString(36);
 const FIXTURE = path.join(__dirname, "fixtures", "item.png");
@@ -100,9 +100,11 @@ test("alice: chat, realtime, bubble switch, events, marketplace, links", async (
   await expect(item).toBeVisible();
   await expect(item.getByTestId("status-badge")).toHaveAttribute("data-status", "trade");
   const src = await item.getByRole("img", { name: itemTitle }).getAttribute("src");
-  expect(src).toContain("/storage/v1/object/public/market.images/");
+  expect(src).toContain("/storage/v1/object/sign/market.images/");
   const img = await page.request.get(src!);
   expect(img.ok()).toBeTruthy();
+  // Private bucket: the old public URL of the same photo serves nothing.
+  expect((await page.request.get(publicUrlOf(src!))).ok()).toBe(false);
   await page.getByTestId("filter-free").click();
   await expect(item).toHaveCount(0);
 

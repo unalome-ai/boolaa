@@ -327,9 +327,14 @@ Deno.test("link previews: handler end to end with the real DB and Storage; membe
       ["ready", "Sourdough & friends", "Bake it slow.", "Bread Weekly"], "stored text");
     assert(new RegExp(`^${link.id}/[0-9a-f-]{36}\\.jpg$`).test(row.preview_image_path), "image path");
     uploaded.push(row.preview_image_path);
-    const pub = await fetch(`${API}/storage/v1/object/public/link.previews/${row.preview_image_path}`);
+    // Private bucket (20261123210000_private_photos.sql): members read it through a signed URL.
+    const { data: signed } = await friend.c.storage.from("link.previews").createSignedUrl(row.preview_image_path, 60);
+    const pub = await fetch(signed!.signedUrl);
     const bytes = new Uint8Array(await pub.arrayBuffer());
-    assertEq([pub.status, sniff(bytes)], [200, "jpeg"], "public JPEG copy served from our Storage");
+    assertEq([pub.status, sniff(bytes)], [200, "jpeg"], "JPEG copy served from our Storage");
+    const anon = await fetch(`${API}/storage/v1/object/public/link.previews/${row.preview_image_path}`);
+    await anon.body?.cancel();
+    assert(!anon.ok, "no public URL");
     assert(await until(() => updates.some((u) => u.id === link.id && u.preview_status === "ready" && u.preview_title === "Sourdough & friends")), "friend gets the card live");
 
     // Changing the URL while a fetch is in flight: the old result is discarded with its image.

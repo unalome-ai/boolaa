@@ -151,7 +151,7 @@ test("react, count, highlight and toggle live on food, chat and links; link prev
     await expect(card.getByTestId("link-preview-domain")).toHaveText("example.org · Bread Weekly");
     await expect(card).toHaveAttribute("href", `https://www.example.org/bread-${RUN}`);
     const img = card.getByTestId("link-preview-image");
-    await expect(img).toHaveAttribute("src", new RegExp(`/storage/v1/object/public/link\\.previews/${imgPath}$`));
+    await expect(img).toHaveAttribute("src", new RegExp(`/storage/v1/object/sign/link\\.previews/${imgPath}\\?token=`));
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
 
     // Links take reactions too.

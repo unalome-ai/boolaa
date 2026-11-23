@@ -4,8 +4,8 @@
 //   POST /functions/v1/data-export   (body ignored)
 //
 // It calls the RPC export_my_data() AS THE USER (so auth.uid(), the session's code proof and the
-// rate limit are checked in SQL), then adds links for the user's photos: public URLs for the public
-// buckets and 7-day signed URLs for the private `chat.images` bucket, and returns one JSON file
+// rate limit are checked in SQL), then adds 7-day signed links for the user's photos (every photo
+// bucket is private, 20261123210000_private_photos.sql), and returns one JSON file
 // (Content-Disposition: attachment). docs/boolaa-spec.md "Data export"; errors in
 // docs/auth-security.md "Flow: download my data".
 //
@@ -17,7 +17,6 @@
 
 export const SIGNED_URL_TTL_S = 7 * 24 * 3600;
 export const PER_USER_BUCKETS = ["avatars", "food.images", "market.images", "chat.images"] as const;
-export const PRIVATE_BUCKETS = new Set(["chat.images"]);
 
 export interface RpcError {
   message?: string;
@@ -33,7 +32,6 @@ export interface Deps {
   exportData(jwt: string): Promise<{ data: unknown; error: RpcError | null }>;
   /** Signed URLs for paths in a private bucket (service role). Missing / failed paths are left out. */
   signUrls(bucket: string, paths: string[], expiresIn: number): Promise<Map<string, string>>;
-  publicUrl(bucket: string, path: string): string;
   now?: () => Date;
   log?: (msg: string) => void;
 }
@@ -86,7 +84,7 @@ type Doc = Record<string, unknown> & {
 export const fileName = (d: Date) => `boolaa-data-${d.toISOString().slice(0, 10)}.json`;
 
 /** Adds photo links. Only paths in the user's own folder of a per-user bucket are ever signed. */
-export async function addLinks(doc: Doc, userId: string, deps: Pick<Deps, "signUrls" | "publicUrl">, now: Date) {
+export async function addLinks(doc: Doc, userId: string, deps: Pick<Deps, "signUrls">, now: Date) {
   const own = (bucket: string, path: unknown): path is string =>
     (PER_USER_BUCKETS as readonly string[]).includes(bucket) && typeof path === "string" &&
     path.startsWith(`${userId}/`) && !path.includes("..");
@@ -97,7 +95,7 @@ export async function addLinks(doc: Doc, userId: string, deps: Pick<Deps, "signU
     if (!privatePaths.has(bucket)) privatePaths.set(bucket, new Set());
     privatePaths.get(bucket)!.add(path);
   };
-  for (const f of files) if (PRIVATE_BUCKETS.has(f.bucket)) wantPrivate(f.bucket, f.path);
+  for (const f of files) wantPrivate(f.bucket, f.path);
   for (const m of doc.chat_messages ?? []) if (own("chat.images", m.photo_path)) wantPrivate("chat.images", m.photo_path!);
 
   const signed = new Map<string, Map<string, string>>();
@@ -112,7 +110,6 @@ export async function addLinks(doc: Doc, userId: string, deps: Pick<Deps, "signU
   const expires = new Date(now.getTime() + SIGNED_URL_TTL_S * 1000).toISOString();
 
   doc.files = files.map((f) => {
-    if (!PRIVATE_BUCKETS.has(f.bucket)) return { ...f, url: deps.publicUrl(f.bucket, f.path) };
     const url = signed.get(f.bucket)?.get(f.path) ?? null;
     return { ...f, url, url_expires_at: url ? expires : null };
   });
@@ -178,8 +175,9 @@ export function createHandler(deps: Deps) {
     }
     doc.about = {
       description: "Everything Boolaa stores about you, from https://boolaa.ro. Times are UTC (ISO 8601).",
-      photo_links: "files[].url and chat_messages[].photo_url. Links to private chat photos stop working at " +
-        `${linksExpire}; download the photos before then. Public photo links work while the photo exists.`,
+      photo_links: "files[].url and chat_messages[].photo_url. Photo links stop working at " +
+        `${linksExpire}; download the photos before then. Photo URLs elsewhere in this file (profile avatar, ` +
+        "food and marketplace posts) only name the stored file: photos are private, use files[].url to download them.",
       not_included: "See not_included at the end of this file.",
       privacy_policy: "https://boolaa.ro/privacy",
       contact: "privacy@boolaa.ro",

@@ -414,4 +414,50 @@ end $$;
 reset role;
 rollback;
 
+\echo '11. private photos (20261123210000_private_photos.sql): storage.objects reads by bucket'
+begin;
+update public.app_settings set device_verification_enforced = false, age_confirmation_required = false;
+do $$ begin
+  assert not exists (select 1 from storage.buckets
+                      where id in ('avatars', 'food.images', 'market.images', 'bubble.images', 'link.previews', 'chat.images')
+                        and public), 'every photo bucket is private';
+  assert not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects'
+                      and cmd in ('SELECT', 'ALL') and 'anon' = any(roles)), 'no anon read policy';
+end $$;
+insert into storage.objects (bucket_id, name, owner_id) values
+  ('avatars',       '22222222-2222-2222-2222-222222222222/a.jpg', '22222222-2222-2222-2222-222222222222'),
+  ('food.images',   '22222222-2222-2222-2222-222222222222/f.jpg', '22222222-2222-2222-2222-222222222222'),
+  ('food.images',   '22222222-2222-2222-2222-222222222222/loose.jpg', '22222222-2222-2222-2222-222222222222'),
+  ('bubble.images', 'aaaaaaaa-0000-0000-0000-000000000001/c.jpg', '11111111-1111-1111-1111-111111111111'),
+  ('bubble.images', 'aaaaaaaa-0000-0000-0000-000000000001/old.jpg', '11111111-1111-1111-1111-111111111111');
+update public.food_posts set image = 'http://h/storage/v1/object/public/food.images/22222222-2222-2222-2222-222222222222/f.jpg'
+ where user_id = '22222222-2222-2222-2222-222222222222';
+update public.bubbles set logo = 'http://h/storage/v1/object/public/bubble.images/aaaaaaaa-0000-0000-0000-000000000001/c.jpg'
+ where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set local role anon;
+do $$ begin
+  assert (select count(*) from storage.objects) = 0, 'anon reads no object';
+end $$;
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  assert exists (select 1 from storage.objects where bucket_id = 'avatars' and name like '2222%'), 'alice reads bob''s avatar';
+  assert exists (select 1 from storage.objects where bucket_id = 'food.images' and name like '%/f.jpg'), 'alice reads bob''s food photo';
+  assert not exists (select 1 from storage.objects where bucket_id = 'food.images' and name like '%/loose.jpg'), 'not an unreferenced upload';
+  assert (select count(*) from storage.objects where bucket_id = 'bubble.images') = 2, 'owner alice reads the bubble folder';
+end $$;
+select set_config('request.jwt.claims', :'carol', true);
+do $$ begin
+  assert not exists (select 1 from storage.objects where bucket_id in ('avatars', 'food.images')), 'pending carol reads no member photos';
+  assert (select array_agg(name) from storage.objects where bucket_id = 'bubble.images')
+         = array['aaaaaaaa-0000-0000-0000-000000000001/c.jpg'], 'pending carol reads only the current cover';
+end $$;
+select set_config('request.jwt.claims', :'dave', true);
+do $$ begin
+  assert (select count(*) from storage.objects where bucket_id in ('avatars', 'food.images', 'bubble.images')) = 0, 'outsider dave reads nothing';
+end $$;
+reset role;
+rollback;
+
 \echo 'ALL RLS CHECKS PASSED'
