@@ -59,6 +59,8 @@
 	<string>816126337836-4111v58ciqce0gavcrcvuks2tj2c6un7.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
 	<string>816126337836-0k4begddfi0f1usm1hg2e6va9fddni3m.apps.googleusercontent.com</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

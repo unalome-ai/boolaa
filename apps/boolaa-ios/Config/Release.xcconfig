@@ -1,0 +1,6 @@
+// Release builds (archive → TestFlight / App Store) talk to production. Committed; the anon key
+// lives in Production.xcconfig (gitignored), written from the DigitalOcean web env.
+SUPABASE_URL = https:/$()/rstugahfcpwllumgxwrm.supabase.co
+SUPABASE_ANON_KEY =
+WEB_BASE_URL = https:/$()/boolaa.ro
+#include? "Production.xcconfig"

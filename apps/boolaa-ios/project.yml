@@ -9,7 +9,7 @@ options:
 
 configFiles:
   Debug: Config/Base.xcconfig
-  Release: Config/Base.xcconfig
+  Release: Config/Release.xcconfig
 
 settings:
   base:
@@ -57,6 +57,8 @@ targets:
         CFBundleLocalizations: [en, ro, fr, es, it]
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
+        # HTTPS only (exempt): skips the export-compliance question on every TestFlight build.
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
