@@ -53,7 +53,7 @@
         "id": "sharing",
         "title": "Cine îți poate vedea datele",
         "body": [
-          "Conținutul publicat într-o bulă este vizibil doar membrilor acelei bule. Numele și fotografia ta sunt vizibile persoanelor cu care ai o bulă în comun. Persoanele pe care le blochezi și cele care te blochează nu mai văd conținutul celuilalt.",
+          "Conținutul publicat într-o bulă este vizibil doar membrilor acelei bule. Numele și fotografia ta sunt vizibile persoanelor cu care ai o bulă în comun. Dacă blochezi pe cineva sau dacă te blochează cineva, nu mai vezi conținutul acelei persoane, iar ea nu-l mai vede pe al tău.",
           "Folosim următorii împuterniciți, care au semnat acorduri de prelucrare a datelor, doar pentru funcționarea serviciului:",
           "- Supabase (bază de date, autentificare și stocare de fișiere); datele noastre sunt găzduite la Zurich, în Elveția.",
           "- DigitalOcean, care găzduiește site-ul și serverul aplicației la Frankfurt, în Germania.",
@@ -163,7 +163,7 @@
         "title": "Raportare, blocare și moderare",
         "body": [
           "Avem toleranță zero față de conținutul inacceptabil și utilizatorii abuzivi. Poți raporta din aplicație orice mesaj, eveniment, postare, obiect, link sau membru și poți bloca pe oricine, ca să nu vă mai vedeți conținutul. Ne poți scrie și la moderation@boolaa.ro.",
-          "Verificăm rapoartele în cel mult 24 de ore. Putem elimina conținut și putem suspenda sau închide conturile celor care încalcă acești termeni, fără notificare atunci când este necesar pentru a-i proteja pe ceilalți."
+          "Verificăm raportările în cel mult 24 de ore. Putem elimina conținut și putem suspenda sau închide conturile celor care încalcă acești termeni, fără notificare atunci când este necesar pentru a-i proteja pe ceilalți."
         ]
       },
       {
@@ -194,14 +194,14 @@
         "title": "Limitarea răspunderii",
         "body": [
           "Boolaa este un serviciu gratuit, necomercial, administrat de o singură persoană. Este oferit „ca atare” și „în măsura disponibilității”, fără garanții de niciun fel, în limitele permise de lege. Ne străduim să îl menținem disponibil și sigur, dar nu putem garanta că va funcționa mereu fără întreruperi sau erori ori că nu se va pierde niciodată conținut.",
-          "În limitele permise de lege, nu răspundem pentru pierderi indirecte sau consecutive, pentru pierderea datelor sau a conținutului ori pentru conținutul publicat de alți utilizatori, cu excepția prejudiciilor cauzate cu intenție sau din culpă gravă. Nimic din acești termeni nu limitează răspunderea care nu poate fi limitată prin lege sau drepturile tale de consumator."
+          "În limitele permise de lege, nu răspundem pentru prejudicii indirecte, pentru pierderea datelor sau a conținutului ori pentru conținutul publicat de alți utilizatori, cu excepția prejudiciilor cauzate cu intenție sau din culpă gravă. Nimic din acești termeni nu limitează răspunderea care nu poate fi limitată prin lege sau drepturile tale de consumator."
         ]
       },
       {
         "id": "termination",
         "title": "Încetarea acordului",
         "body": [
-          "Poți înceta oricând să folosești Boolaa și îți poți șterge contul din aplicație. Putem suspenda sau închide accesul tău dacă încalci grav sau în mod repetat acești termeni ori dacă legea o cere."
+          "Poți înceta oricând să folosești Boolaa și îți poți șterge contul din aplicație. Putem suspenda accesul tău sau îi putem pune capăt dacă încalci grav sau în mod repetat acești termeni ori dacă legea o cere."
         ]
       },
       {

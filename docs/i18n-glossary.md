@@ -26,18 +26,25 @@ Languages: **en** (source and fallback), **ro**, **fr**, **es**, **it**. Both cl
 | Create account | Create account | Creează cont | Créer un compte | Crear cuenta | Crea account |
 | Profile | Profile | Profil | Profil | Perfil | Profilo |
 | Language | Language | Limbă | Langue | Idioma | Lingua |
+| report (noun, safety) | report | raportare | signalement | denuncia | segnalazione |
+| marketplace item | item | anunț / obiect | objet | artículo | oggetto |
 | Add buttons (Events / Food / Market / Links) | New event / Share food / New item / Add link | Eveniment nou / Împarte mâncare / Anunț nou / Adaugă link | Nouvel événement / Partager / Nouvel objet / Ajouter le lien | Nuevo evento / Compartir comida / Nuevo artículo / Añadir enlace | Nuovo evento / Condividi cibo / Nuovo oggetto / Aggiungi link |
 
 Language names in the picker are shown in their own language: English, Română, Français, Español, Italiano.
 
 ## Rules
 - **Plurals** use real plural rules, never "item(s)". Romanian has the forms one, few and other ("1 membru", "2 membri", "20 de membri"). French uses the singular for 0 and 1.
+- **Two numbers in one plural** ("2 of 5 members"): the plural form is chosen by the number the noun sits next to. Android `members_of_max`, `approvals_of_needed` and `code_field_progress` pass the total (`%2$d`) as the quantity, so every language puts the noun after the total: "2 din 5 membri", "2 sur 5 membres", "2 de 5 miembros", "2 su 5 membri".
+- **CLDR "many"** (fr, es, it; only for millions): add "de" / "d'" / "di" before the noun ("1 000 000 de résultats").
+- **"on Boolaa"** in Romanian is "pe Boolaa" (not "în Boolaa"); an invitation is "Ai o invitație" / "Tu as une invitation" / "Hai un invito" rather than the gendered "invited".
+- **Emails and push** live in `supabase/functions/_shared/email/locales/*.json` and `supabase/functions/push-dispatch/locales/*.json`. Strings with a number are plural objects (`one`/`few`/`many`/`other`, picked with `Intl.PluralRules`): `chat.more` and `chat.private` in push ("+3 mesaje în plus"), and `code_expiry` in emails, because the code lifetime comes from `AUTH_OTP_EXPIRY_MINUTES` ("Codul e valabil 10 minute", "20 de minute").
+- **Email change** needs confirmation from both addresses (`double_confirm_changes`); every client says so (web `profile.emailChangeSent`, iOS "Almost done: confirm the change from the emails we sent…", Android `change_email_done`).
 - **Dates, times and numbers** are formatted with the active locale (`Intl` on the web, `FormatStyle` / `Date.FormatStyle` on iOS), never with hard-coded formats. For relative times use `Intl.RelativeTimeFormat` or `RelativeDateTimeFormatter`.
 - **Backend errors**: map the RPC exception texts `invalid invite code`, `already a member`, `bubble is full`, `not a member of this bubble`, `request not found`, `event not found` and `event has ended`, and the RLS/network failures, to translated messages. Fall back to a generic translated error and never show raw English from Postgres.
 
 - **User content** (chat, posts, bubble names, links) is never translated.
 - **Diacritics** must be correct: Romanian uses ș and ț with a comma below, not the cedilla forms ş and ţ.
-- **Review**: the first translations were drafted by AI and should be reviewed by a native speaker before release.
+- **Review**: the first translations were drafted by AI. A language review (Nov 2026, two parts: app texts, then emails, push, native-only texts and the legal pages) has edited ro, fr, es and it; that is a language edit, not a certified or legal translation, so the legal pages still carry the draft banner.
 
 ## Auth security errors (docs/auth-security.md §3)
 

@@ -239,7 +239,7 @@
     <string name="password_changed">¡Contraseña cambiada!</string>
     <string name="change_password_message">Elige tu nueva contraseña. Te enviaremos un código por correo para confirmar que eres tú.</string>
     <string name="code_sent_to">Te hemos enviado un código de 6 dígitos a %1$s.</string>
-    <string name="change_email_done">Casi listo. Hemos enviado un correo a %1$s y a %2$s. Confirma el cambio desde el correo que llegó a tu dirección nueva.</string>
+    <string name="change_email_done">Casi listo: confirma el cambio desde los correos que enviamos a %1$s y a %2$s.</string>
     <string name="change_email_message">Introduce tu nuevo correo. Antes te enviaremos un código a tu dirección actual para confirmar que eres tú.</string>
     <string name="new_email">Nuevo correo</string>
     <string name="delete_account_send_code">Continuar</string>
@@ -251,7 +251,7 @@
     </plurals>
     <plurals name="approvals_so_far">
         <item quantity="one">%d aprobación hasta ahora</item>
-        <item quantity="many">%d aprobaciones hasta ahora</item>
+        <item quantity="many">%d de aprobaciones hasta ahora</item>
         <item quantity="other">%d aprobaciones hasta ahora</item>
     </plurals>
     <plurals name="going_count">
@@ -276,7 +276,7 @@
     </plurals>
     <plurals name="code_tries_left">
         <item quantity="one">Ese código no es correcto. Te queda %d intento.</item>
-        <item quantity="many">Ese código no es correcto. Te quedan %d intentos.</item>
+        <item quantity="many">Ese código no es correcto. Te quedan %d de intentos.</item>
         <item quantity="other">Ese código no es correcto. Te quedan %d intentos.</item>
     </plurals>
     <plurals name="code_field_progress">
@@ -341,7 +341,7 @@
     <string name="chat_photo">Foto</string>
     <plurals name="chat_unread">
         <item quantity="one">%d mensaje sin leer</item>
-        <item quantity="many">%d mensajes sin leer</item>
+        <item quantity="many">%d de mensajes sin leer</item>
         <item quantity="other">%d mensajes sin leer</item>
     </plurals>
     <string name="error_chat_message_gone">Ese mensaje ya no existe.</string>

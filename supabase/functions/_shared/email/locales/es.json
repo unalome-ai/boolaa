@@ -2,7 +2,7 @@
   "greeting": "Hola, {name}:",
   "greeting_noname": "Hola:",
   "code_label": "Tu código",
-  "code_expiry": "El código vale durante {minutes} minutos.",
+  "code_expiry": { "one": "El código es válido durante {minutes} minuto.", "other": "El código es válido durante {minutes} minutos." },
   "link_alternative": "O usa este enlace:",
   "ignore": "¿No lo has pedido tú? Puedes ignorar este correo. No cambia nada hasta que alguien introduzca el código.",
   "footer": "Recibes este correo porque tienes una cuenta de Boolaa.",

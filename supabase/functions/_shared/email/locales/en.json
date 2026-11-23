@@ -2,7 +2,7 @@
   "greeting": "Hi {name},",
   "greeting_noname": "Hi there,",
   "code_label": "Your code",
-  "code_expiry": "The code works for {minutes} minutes.",
+  "code_expiry": { "one": "The code works for {minutes} minute.", "other": "The code works for {minutes} minutes." },
   "link_alternative": "Or use this link instead:",
   "ignore": "Didn't ask for this? You can ignore this email. Nothing changes until someone enters the code.",
   "footer": "You're getting this because of your Boolaa account.",

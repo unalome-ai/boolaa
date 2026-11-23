@@ -9,7 +9,7 @@
     <string name="approve">Aprobă</string>
     <string name="approved_waiting_for_spot">Aprobat, așteaptă un loc liber</string>
     <string name="auth_check_email">Verifică-ți emailul ca să confirmi contul, apoi autentifică-te.</string>
-    <string name="auth_tagline">Bulele tale private de prieteni, colegi de apartament și cluburi.</string>
+    <string name="auth_tagline">Bulele tale private pentru prieteni, colegi de apartament și cluburi.</string>
     <string name="back">Înapoi</string>
     <string name="block">Blochează</string>
     <string name="block_explainer">Nu veți mai vedea unul altuia mesajele, evenimentele, mâncarea, anunțurile sau linkurile.</string>
@@ -128,7 +128,7 @@
     <string name="owner">Proprietar</string>
     <string name="password">Parolă</string>
     <string name="pending_approval">În așteptarea aprobării</string>
-    <string name="pending_approval_hint">Intri după ce te aprobă majoritatea membrilor. Trage în jos ca să reîmprospătezi.</string>
+    <string name="pending_approval_hint">Intri după ce majoritatea membrilor aprobă cererea. Trage în jos ca să actualizezi.</string>
     <string name="pending_join_requests">Cereri de alăturare în așteptare</string>
     <string name="photo">Fotografie</string>
     <string name="privacy_policy">Politica de confidențialitate</string>
@@ -146,7 +146,7 @@
     <string name="report_reason_sexual">Conținut sexual</string>
     <string name="report_reason_spam">Spam</string>
     <string name="report_reason_violence">Violență sau amenințări</string>
-    <string name="report_sent">Mulțumim că ne-ai spus. O vom analiza.</string>
+    <string name="report_sent">Mulțumim că ne-ai spus. Vom analiza raportarea.</string>
     <string name="report_submit">Trimite raportarea</string>
     <string name="report_subtitle">%1$s nu va ști că ai raportat.</string>
     <string name="report_title">Ce nu e în regulă?</string>
@@ -239,7 +239,7 @@
     <string name="password_changed">Parola a fost schimbată!</string>
     <string name="change_password_message">Alege parola nouă. Îți trimitem un cod pe email ca să confirmăm că ești tu.</string>
     <string name="code_sent_to">Ți-am trimis un cod din 6 cifre la %1$s.</string>
-    <string name="change_email_done">Aproape gata. Am trimis câte un email la %1$s și la %2$s. Confirmă schimbarea din emailul primit la adresa nouă.</string>
+    <string name="change_email_done">Aproape gata: confirmă schimbarea din emailurile trimise la %1$s și la %2$s.</string>
     <string name="change_email_message">Introdu noul email. Mai întâi îți trimitem un cod la adresa actuală ca să confirmăm că ești tu.</string>
     <string name="new_email">Email nou</string>
     <string name="delete_account_send_code">Continuă</string>

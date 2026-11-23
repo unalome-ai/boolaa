@@ -12,7 +12,7 @@
     <string name="search_retry">Reintentar</string>
     <plurals name="search_results">
         <item quantity="one">%d resultado</item>
-        <item quantity="many">%d resultados</item>
+        <item quantity="many">%d de resultados</item>
         <item quantity="other">%d resultados</item>
     </plurals>
     <string name="search_kind_message">Mensaje</string>

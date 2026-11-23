@@ -246,7 +246,7 @@
     <string name="password_changed">Password changed!</string>
     <string name="change_password_message">Choose your new password. We\'ll email you a code to confirm it\'s you.</string>
     <string name="code_sent_to">We\'ve sent a 6-digit code to %1$s.</string>
-    <string name="change_email_done">Almost done. We\'ve emailed %1$s and %2$s. Confirm the change from the email sent to your new address.</string>
+    <string name="change_email_done">Almost done: confirm the change from the emails we sent to %1$s and to %2$s.</string>
     <string name="change_email_message">Enter your new email. First we\'ll send a code to your current address to confirm it\'s you.</string>
     <string name="new_email">New email</string>
     <string name="delete_account_send_code">Continue</string>

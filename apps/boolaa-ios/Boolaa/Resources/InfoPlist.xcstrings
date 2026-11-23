@@ -119,7 +119,7 @@
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boolaa folosește fotografiile tale pentru avatare, postări cu mâncare și articole din piață."
+            "value": "Boolaa folosește fotografiile tale pentru avatare, postări cu mâncare și obiecte din Piață."
           }
         },
         "fr": {
@@ -137,7 +137,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boolaa usa le tue foto per avatar, post di cibo e articoli del mercatino."
+            "value": "Boolaa usa le tue foto per avatar, post di cibo e oggetti del Mercatino."
           }
         }
       }

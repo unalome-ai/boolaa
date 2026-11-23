@@ -30,7 +30,7 @@
     "title": "Cercle gourmand · {bubble}",
     "body": "{name} : {text}",
     "bodyNoText": "{name} a partagé quelque chose à manger",
-    "private": "Nouveau post dans le Cercle gourmand de {bubble}"
+    "private": "Nouvelle publication dans le Cercle gourmand de {bubble}"
   },
   "market": {
     "title": "Marché · {bubble}",

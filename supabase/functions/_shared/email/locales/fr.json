@@ -2,7 +2,7 @@
   "greeting": "Salut {name},",
   "greeting_noname": "Salut,",
   "code_label": "Ton code",
-  "code_expiry": "Le code est valable {minutes} minutes.",
+  "code_expiry": { "one": "Le code est valable {minutes} minute.", "other": "Le code est valable {minutes} minutes." },
   "link_alternative": "Ou utilise plutôt ce lien :",
   "ignore": "Tu n'as rien demandé ? Tu peux ignorer cet e-mail. Rien ne change tant que personne ne saisit le code.",
   "footer": "Tu reçois cet e-mail parce que tu as un compte Boolaa.",
@@ -24,14 +24,14 @@
   "magiclink": {
     "subject": "Ton code de connexion Boolaa",
     "preheader": "Utilise ce code pour te connecter.",
-    "title": "Connexion à Boolaa",
+    "title": "Connecte-toi à Boolaa",
     "intro": "Saisis ce code dans Boolaa pour te connecter.",
     "button": "Se connecter avec un lien"
   },
   "invite": {
-    "subject": "Tu es invité sur Boolaa",
+    "subject": "Tu as une invitation sur Boolaa",
     "preheader": "Quelqu'un t'a gardé une place.",
-    "title": "Tu es invité !",
+    "title": "Tu as une invitation !",
     "intro": "Tu as été invité sur Boolaa, l'espace privé de tes petits groupes. Accepte l'invitation pour créer ton compte.",
     "button": "Accepter l'invitation"
   },
@@ -45,7 +45,7 @@
   "email_change_new": {
     "subject": "Confirme ta nouvelle adresse e-mail Boolaa",
     "preheader": "Confirme que c'est ta nouvelle adresse.",
-    "title": "Confirme ton nouvel e-mail",
+    "title": "Confirme ta nouvelle adresse e-mail",
     "intro": "Tu as demandé à changer ton e-mail Boolaa de {old_email} à {new_email}. Confirme cette nouvelle adresse.",
     "button": "Confirmer l'e-mail"
   },

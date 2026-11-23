@@ -53,7 +53,7 @@
         "id": "sharing",
         "title": "Qui peut voir tes données",
         "body": [
-          "Les contenus publiés dans une bulle ne sont visibles que par ses membres. Ton nom et ta photo sont visibles par les personnes qui partagent une bulle avec toi. Les personnes que tu bloques, et celles qui te bloquent, ne voient plus vos contenus respectifs.",
+          "Les contenus publiés dans une bulle ne sont visibles que par ses membres. Ton nom et ta photo sont visibles par les personnes qui partagent une bulle avec toi. Si tu bloques quelqu'un, ou si quelqu'un te bloque, tu ne vois plus ses contenus et cette personne ne voit plus les tiens.",
           "Nous faisons appel à ces sous-traitants, liés par des accords de traitement des données et uniquement pour faire fonctionner le service :",
           "- Supabase (base de données, authentification et stockage de fichiers), nos données étant hébergées à Zurich, en Suisse.",
           "- DigitalOcean, qui héberge le site et le serveur de l'application à Francfort, en Allemagne.",

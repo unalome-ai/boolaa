@@ -1009,7 +1009,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld resultados"
+                  "value" : "%lld de resultados"
                 }
               },
               "one" : {
@@ -1033,7 +1033,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld résultats"
+                  "value" : "%lld de résultats"
                 }
               },
               "one" : {
@@ -1057,7 +1057,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld risultati"
+                  "value" : "%lld di risultati"
                 }
               },
               "one" : {
@@ -1128,7 +1128,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld mensajes sin leer"
+                  "value" : "%lld de mensajes sin leer"
                 }
               },
               "one" : {
@@ -1152,7 +1152,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld messages non lus"
+                  "value" : "%lld de messages non lus"
                 }
               },
               "one" : {
@@ -1176,7 +1176,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld messaggi non letti"
+                  "value" : "%lld di messaggi non letti"
                 }
               },
               "one" : {
@@ -2404,7 +2404,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las burbujas de las que eres propietario pasan al miembro más antiguo. Las burbujas que se quedan sin nadie se eliminan."
+            "value" : "Las burbujas de las que eres propietario pasan al miembro que lleva más tiempo en ellas. Las burbujas que se quedan sin nadie se eliminan."
           }
         },
         "fr" : {
@@ -2416,13 +2416,13 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le bolle di cui sei proprietario passano al membro più anziano. Le bolle rimaste senza nessuno vengono eliminate."
+            "value" : "Le bolle di cui sei proprietario passano al membro che ne fa parte da più tempo. Le bolle rimaste senza nessuno vengono eliminate."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bulele pe care le deții trec la cel mai vechi membru. Bulele rămase fără membri sunt șterse."
+            "value" : "Bulele pe care le deții trec la membrul cu cea mai mare vechime. Bulele rămase fără membri sunt șterse."
           }
         }
       }
@@ -2817,7 +2817,7 @@
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verifică-ți inboxul ca să confirmi emailul, apoi autentifică-te."
+            "value" : "Verifică-ți emailul ca să confirmi adresa, apoi autentifică-te."
           }
         }
       }
@@ -5873,19 +5873,19 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Proposer un article"
+            "value" : "Proposer un objet"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pubblica un articolo"
+            "value" : "Pubblica un oggetto"
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adaugă un articol"
+            "value" : "Publică un anunț"
           }
         }
       }
@@ -6708,7 +6708,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nuovo post di cibo"
+            "value" : "Nuovo post di cibo da condividere"
           }
         },
         "ro" : {
@@ -8351,25 +8351,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Denunciar la publicación"
+            "value" : "Denunciar la publicación de comida"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Signaler la publication"
+            "value" : "Signaler la publication de nourriture"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Segnala post"
+            "value" : "Segnala il post di cibo"
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Raportează postarea"
+            "value" : "Raportează postarea cu mâncare"
           }
         }
       }
@@ -9829,7 +9829,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Ese código no es correcto. Te quedan %lld intentos."
+                  "value" : "Ese código no es correcto. Te quedan %lld de intentos."
                 }
               },
               "one" : {
@@ -9853,7 +9853,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Ce code n'est pas bon. Il te reste %lld essais."
+                  "value" : "Ce code n'est pas bon. Il te reste %lld d’essais."
                 }
               },
               "one" : {
@@ -9877,7 +9877,7 @@
               "many" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "Il codice non è corretto. Ti restano %lld tentativi."
+                  "value" : "Il codice non è corretto. Ti restano %lld di tentativi."
                 }
               },
               "one" : {
@@ -11444,25 +11444,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revisaremos tu denuncia y tomaremos medidas si incumple las normas."
+            "value" : "Revisaremos tu denuncia y tomaremos medidas si lo que has denunciado incumple las normas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nous allons examiner ton signalement et agir s'il enfreint les règles."
+            "value" : "Nous allons examiner ton signalement et agir si ce que tu as signalé enfreint les règles."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esamineremo la tua segnalazione e interverremo se viola le regole."
+            "value" : "Esamineremo la tua segnalazione e interverremo se ciò che hai segnalato viola le regole."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vom analiza raportarea și vom lua măsuri dacă încalcă regulile."
+            "value" : "Vom analiza raportarea ta și vom lua măsuri dacă ceea ce ai raportat încalcă regulile."
           }
         }
       }
@@ -12654,13 +12654,13 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le tue bolle private di coinquilini, amici e club."
+            "value" : "Le tue bolle private per coinquilini, amici e club."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bulele tale private de colegi de apartament, prieteni și cluburi."
+            "value" : "Bulele tale private pentru colegi de apartament, prieteni și cluburi."
           }
         }
       }

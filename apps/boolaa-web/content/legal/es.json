@@ -53,7 +53,7 @@
         "id": "sharing",
         "title": "Quién puede ver tus datos",
         "body": [
-          "El contenido que publicas en una burbuja solo lo ven sus miembros. Tu nombre y tu foto los ven las personas con las que compartes una burbuja. Las personas que bloqueas, y las que te bloquean, dejan de ver el contenido del otro.",
+          "El contenido que publicas en una burbuja solo lo ven sus miembros. Tu nombre y tu foto los ven las personas con las que compartes una burbuja. Si bloqueas a alguien, o si alguien te bloquea, dejas de ver su contenido y esa persona deja de ver el tuyo.",
           "Usamos estos encargados del tratamiento, vinculados por acuerdos de tratamiento de datos y solo para que el servicio funcione:",
           "- Supabase (base de datos, autenticación y almacenamiento de archivos), con nuestros datos alojados en Zúrich (Suiza).",
           "- DigitalOcean, que aloja la web y el servidor de la app en Fráncfort (Alemania).",
@@ -101,7 +101,7 @@
         "id": "security",
         "title": "Seguridad",
         "body": [
-          "Los datos se cifran en tránsito, el acceso está limitado mediante seguridad a nivel de fila para que solo las personas adecuadas puedan leer cada burbuja, y las contraseñas se guardan cifradas con hash.",
+          "Los datos se cifran en tránsito, el acceso está limitado mediante seguridad a nivel de fila para que solo las personas adecuadas puedan leer cada burbuja, y las contraseñas se guardan en forma de hash.",
           "Cuando inicias sesión en un dispositivo nuevo, podemos enviarte por correo un código de seguridad para confirmar que eres tú, y pedirte un código nuevo antes de acciones sensibles como eliminar tu cuenta. En la app puedes ver la lista de tus dispositivos de confianza y quitar cualquiera de ellos.",
           "Ningún sistema es totalmente seguro, así que usa una contraseña fuerte y única."
         ]

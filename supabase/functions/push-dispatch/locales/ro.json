@@ -3,7 +3,7 @@
   "someone": "Cineva",
   "chat": {
     "title": "{name} în {bubble}",
-    "more": { "one": "+# mesaj nou", "few": "+# mesaje noi", "other": "+# de mesaje noi" },
+    "more": { "one": "+# mesaj în plus", "few": "+# mesaje în plus", "other": "+# de mesaje în plus" },
     "private": { "one": "Mesaj nou în {bubble}", "few": "# mesaje noi în {bubble}", "other": "# de mesaje noi în {bubble}" },
     "photo": "📷 Fotografie"
   },

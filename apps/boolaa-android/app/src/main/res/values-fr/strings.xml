@@ -239,19 +239,19 @@
     <string name="password_changed">Mot de passe modifié !</string>
     <string name="change_password_message">Choisis ton nouveau mot de passe. On t\'envoie un code par e-mail pour confirmer que c\'est bien toi.</string>
     <string name="code_sent_to">On a envoyé un code à 6 chiffres à %1$s.</string>
-    <string name="change_email_done">Presque fini. On a envoyé un e-mail à %1$s et à %2$s. Confirme le changement depuis l\'e-mail reçu à ta nouvelle adresse.</string>
+    <string name="change_email_done">Presque fini : confirme le changement depuis les e-mails envoyés à %1$s et à %2$s.</string>
     <string name="change_email_message">Saisis ta nouvelle adresse. D\'abord, on envoie un code à ton adresse actuelle pour confirmer que c\'est bien toi.</string>
     <string name="new_email">Nouvel e-mail</string>
     <string name="delete_account_send_code">Continuer</string>
     <string name="delete_account_code_message">Pour confirmer, saisis le code à 6 chiffres envoyé à %1$s. Ton compte est supprimé dès que le code est bon.</string>
     <plurals name="approvals_of_needed">
-        <item quantity="one">%1$d approbation sur %2$d</item>
-        <item quantity="many">%1$d approbations sur %2$d</item>
-        <item quantity="other">%1$d approbations sur %2$d</item>
+        <item quantity="one">%1$d sur %2$d approbation</item>
+        <item quantity="many">%1$d sur %2$d approbations</item>
+        <item quantity="other">%1$d sur %2$d approbations</item>
     </plurals>
     <plurals name="approvals_so_far">
         <item quantity="one">%d approbation pour l\'instant</item>
-        <item quantity="many">%d approbations pour l\'instant</item>
+        <item quantity="many">%d d’approbations pour l\'instant</item>
         <item quantity="other">%d approbations pour l\'instant</item>
     </plurals>
     <plurals name="going_count">
@@ -270,19 +270,19 @@
         <item quantity="other">%d membres</item>
     </plurals>
     <plurals name="members_of_max">
-        <item quantity="one">%1$d membre sur %2$d</item>
-        <item quantity="many">%1$d membres sur %2$d</item>
-        <item quantity="other">%1$d membres sur %2$d</item>
+        <item quantity="one">%1$d sur %2$d membre</item>
+        <item quantity="many">%1$d sur %2$d membres</item>
+        <item quantity="other">%1$d sur %2$d membres</item>
     </plurals>
     <plurals name="code_tries_left">
         <item quantity="one">Ce code n\'est pas bon. Il te reste %d essai.</item>
-        <item quantity="many">Ce code n\'est pas bon. Il te reste %d essais.</item>
+        <item quantity="many">Ce code n\'est pas bon. Il te reste %d d’essais.</item>
         <item quantity="other">Ce code n\'est pas bon. Il te reste %d essais.</item>
     </plurals>
     <plurals name="code_field_progress">
-        <item quantity="one">%1$d chiffre sur %2$d</item>
-        <item quantity="many">%1$d chiffres sur %2$d</item>
-        <item quantity="other">%1$d chiffres sur %2$d</item>
+        <item quantity="one">%1$d sur %2$d chiffre</item>
+        <item quantity="many">%1$d sur %2$d chiffres</item>
+        <item quantity="other">%1$d sur %2$d chiffres</item>
     </plurals>
     <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
     <string name="error_account_suspended">Ton compte est suspendu, tu ne peux donc pas faire ça pour le moment.</string>
@@ -341,7 +341,7 @@
     <string name="chat_photo">Photo</string>
     <plurals name="chat_unread">
         <item quantity="one">%d message non lu</item>
-        <item quantity="many">%d messages non lus</item>
+        <item quantity="many">%d de messages non lus</item>
         <item quantity="other">%d messages non lus</item>
     </plurals>
     <string name="error_chat_message_gone">Ce message n\'existe plus.</string>

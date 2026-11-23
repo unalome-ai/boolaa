@@ -86,7 +86,7 @@ Deno.test("invite, magic link and email change emails are localized; email chang
   const r = await admin.auth.admin.inviteUserByEmail(inv, { data: { locale: "it" } });
   assert(!r.error, `invite: ${r.error?.message}`);
   trackUser(r.data.user!.id);
-  assertEq((await waitMail(inv)).subject, "Sei stato invitato su Boolaa", "invite subject");
+  assertEq((await waitMail(inv)).subject, "Hai un invito su Boolaa", "invite subject");
 
   const u = await createUser({ locale: "es" });
   await client().auth.signInWithOtp({ email: u.email, options: { shouldCreateUser: false } });

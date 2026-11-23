@@ -50,6 +50,15 @@ function fill(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 }
 
+// Plural strings are { one, few?, many?, other } objects picked with Intl.PluralRules (ro needs
+// "few" and "de" from 20 up). code_expiry is plural because {minutes} is not fixed: send-email
+// passes AUTH_OTP_EXPIRY_MINUTES (default 10, config.toml otp_expiry = 600 s) and device-code
+// passes 10.
+function plural(locale: Locale, forms: string | Record<string, string>, n: number): string {
+  if (typeof forms === "string") return forms;
+  return forms[new Intl.PluralRules(locale).select(n)] ?? forms.other;
+}
+
 // Palette (docs/design-system.md 2.1, 2.4).
 const C = {
   bg: "#FBF8FF", card: "#FFFFFF", field: "#F1ECFB", ink: "#1E1638", ink2: "#6A6382",
@@ -165,9 +174,10 @@ export function render(input: RenderInput): RenderedEmail {
   const text: string[] = [greeting, "", tx(T.intro)];
 
   if (input.code) {
+    const expiry = tx(plural(locale, S.code_expiry, Number(vars.minutes) || 10));
     html.push(codeBlock(input.code, S.code_label));
-    html.push(small(escapeHtml(tx(S.code_expiry))));
-    text.push("", `${S.code_label}: ${input.code}`, tx(S.code_expiry));
+    html.push(small(escapeHtml(expiry)));
+    text.push("", `${S.code_label}: ${input.code}`, expiry);
   }
   if (input.link && T.button) {
     if (input.code) {

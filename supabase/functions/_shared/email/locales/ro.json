@@ -1,8 +1,8 @@
 {
-  "greeting": "Salut, {name},",
+  "greeting": "Salut, {name}!",
   "greeting_noname": "Salut,",
   "code_label": "Codul tău",
-  "code_expiry": "Codul e valabil {minutes} minute.",
+  "code_expiry": { "one": "Codul e valabil {minutes} minut.", "few": "Codul e valabil {minutes} minute.", "other": "Codul e valabil {minutes} de minute." },
   "link_alternative": "Sau folosește linkul acesta:",
   "ignore": "Nu ai cerut tu asta? Poți ignora emailul. Nu se schimbă nimic până nu introduce cineva codul.",
   "footer": "Primești acest email pentru că ai un cont Boolaa.",
@@ -10,7 +10,7 @@
   "signup": {
     "subject": "Confirmă-ți emailul pentru Boolaa",
     "preheader": "O atingere și ai intrat.",
-    "title": "Bine ai venit în Boolaa!",
+    "title": "Bine ai venit pe Boolaa!",
     "intro": "Confirmă-ți emailul și te poți alătura bulelor tale.",
     "button": "Confirmă emailul"
   },
@@ -24,28 +24,28 @@
   "magiclink": {
     "subject": "Codul tău de autentificare Boolaa",
     "preheader": "Folosește codul ca să te autentifici.",
-    "title": "Autentificare în Boolaa",
+    "title": "Autentifică-te pe Boolaa",
     "intro": "Introdu acest cod în Boolaa ca să te autentifici.",
     "button": "Autentifică-te cu un link"
   },
   "invite": {
-    "subject": "Ai o invitație în Boolaa",
+    "subject": "Ai o invitație pe Boolaa",
     "preheader": "Cineva ți-a păstrat un loc.",
-    "title": "Ești invitat!",
-    "intro": "Ai primit o invitație în Boolaa, locul privat al grupurilor tale mici. Acceptă invitația ca să-ți creezi contul.",
+    "title": "Ai o invitație!",
+    "intro": "Ai primit o invitație pe Boolaa, spațiul privat pentru grupurile tale mici. Acceptă invitația ca să-ți creezi contul.",
     "button": "Acceptă invitația"
   },
   "email_change_current": {
-    "subject": "Confirmă noul tău email Boolaa",
+    "subject": "Confirmă noua ta adresă de email pentru Boolaa",
     "preheader": "Confirmă schimbarea de pe această adresă.",
     "title": "Îți schimbi emailul",
     "intro": "Ai cerut să-ți schimbi emailul Boolaa din {old_email} în {new_email}. Confirmă schimbarea și de pe această adresă.",
     "button": "Confirmă schimbarea"
   },
   "email_change_new": {
-    "subject": "Confirmă noul tău email Boolaa",
+    "subject": "Confirmă noua ta adresă de email pentru Boolaa",
     "preheader": "Confirmă că aceasta e noua ta adresă.",
-    "title": "Confirmă noul email",
+    "title": "Confirmă noua adresă de email",
     "intro": "Ai cerut să-ți schimbi emailul Boolaa din {old_email} în {new_email}. Confirmă această adresă nouă.",
     "button": "Confirmă emailul"
   },

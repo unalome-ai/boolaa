@@ -9,7 +9,7 @@
     <string name="approve">Approva</string>
     <string name="approved_waiting_for_spot">Approvato, in attesa di un posto libero</string>
     <string name="auth_check_email">Controlla la tua email per confermare l\'account, poi accedi.</string>
-    <string name="auth_tagline">Le tue bolle private di amici, coinquilini e club.</string>
+    <string name="auth_tagline">Le tue bolle private per amici, coinquilini e club.</string>
     <string name="back">Indietro</string>
     <string name="block">Blocca</string>
     <string name="block_explainer">Non vedrete più messaggi, eventi, cibo, oggetti o link l\'uno dell\'altro.</string>
@@ -74,7 +74,7 @@
     <string name="feed_kind_chat">Chat</string>
     <string name="feed_kind_event">Evento</string>
     <string name="feed_kind_link">Link</string>
-    <string name="feed_new_food_post">Nuovo post di cibo</string>
+    <string name="feed_new_food_post">Nuovo post di cibo da condividere</string>
     <string name="filter_all">Tutti</string>
     <string name="food_empty_message">Hai degli avanzi? Hai cucinato troppo? Scatta una foto e condividi quello che è rimasto.</string>
     <string name="food_empty_title">Tavola vuota</string>
@@ -128,14 +128,14 @@
     <string name="owner">Proprietario</string>
     <string name="password">Password</string>
     <string name="pending_approval">In attesa di approvazione</string>
-    <string name="pending_approval_hint">Entrerai quando la maggioranza dei membri ti approverà. Trascina verso il basso per aggiornare.</string>
+    <string name="pending_approval_hint">Entrerai quando la maggioranza dei membri approverà la tua richiesta. Trascina verso il basso per aggiornare.</string>
     <string name="pending_join_requests">Richieste di adesione in attesa</string>
     <string name="photo">Foto</string>
     <string name="privacy_policy">Informativa sulla privacy</string>
     <string name="profile">Profilo</string>
     <string name="reject">Rifiuta</string>
     <string name="remove_member">Rimuovi membro</string>
-    <string name="remove_member_confirm_message">Per tornare servirà un nuovo invito e l\'approvazione dei membri.</string>
+    <string name="remove_member_confirm_message">Per tornare serviranno un nuovo invito e l’approvazione dei membri.</string>
     <string name="remove_member_confirm_title">Rimuovere %1$s?</string>
     <string name="report">Segnala</string>
     <string name="report_details">Dettagli (facoltativo)</string>
@@ -216,7 +216,7 @@
     <string name="legal_accept">Accetto i %1$s e l\'%2$s.</string>
     <string name="age_continue">Continua</string>
     <string name="new_password_title">Nuova password</string>
-    <string name="new_password_message">Scegli una nuova password. L\'ideale è di 8 caratteri o più.</string>
+    <string name="new_password_message">Scegli una nuova password. Meglio se ha almeno 8 caratteri.</string>
     <string name="new_password">Nuova password</string>
     <string name="repeat_password">Ripeti la password</string>
     <string name="passwords_dont_match">Le password non coincidono.</string>
@@ -239,19 +239,19 @@
     <string name="password_changed">Password cambiata!</string>
     <string name="change_password_message">Scegli la nuova password. Ti mandiamo un codice via email per confermare che sei tu.</string>
     <string name="code_sent_to">Ti abbiamo inviato un codice di 6 cifre a %1$s.</string>
-    <string name="change_email_done">Quasi fatto. Abbiamo inviato un\'email a %1$s e a %2$s. Conferma la modifica dall\'email arrivata al nuovo indirizzo.</string>
+    <string name="change_email_done">Quasi fatto: conferma il cambio dalle email che abbiamo inviato a %1$s e a %2$s.</string>
     <string name="change_email_message">Inserisci la nuova email. Prima ti mandiamo un codice all\'indirizzo attuale per confermare che sei tu.</string>
     <string name="new_email">Nuova email</string>
     <string name="delete_account_send_code">Continua</string>
     <string name="delete_account_code_message">Per confermare, inserisci il codice di 6 cifre inviato a %1$s. L\'account viene eliminato appena il codice è corretto.</string>
     <plurals name="approvals_of_needed">
-        <item quantity="one">%1$d di %2$d approvazione</item>
-        <item quantity="many">%1$d di %2$d approvazioni</item>
-        <item quantity="other">%1$d di %2$d approvazioni</item>
+        <item quantity="one">%1$d su %2$d approvazione</item>
+        <item quantity="many">%1$d su %2$d approvazioni</item>
+        <item quantity="other">%1$d su %2$d approvazioni</item>
     </plurals>
     <plurals name="approvals_so_far">
         <item quantity="one">%d approvazione finora</item>
-        <item quantity="many">%d approvazioni finora</item>
+        <item quantity="many">%d di approvazioni finora</item>
         <item quantity="other">%d approvazioni finora</item>
     </plurals>
     <plurals name="going_count">
@@ -270,19 +270,19 @@
         <item quantity="other">%d membri</item>
     </plurals>
     <plurals name="members_of_max">
-        <item quantity="one">%1$d di %2$d membro</item>
-        <item quantity="many">%1$d di %2$d membri</item>
-        <item quantity="other">%1$d di %2$d membri</item>
+        <item quantity="one">%1$d su %2$d membro</item>
+        <item quantity="many">%1$d su %2$d membri</item>
+        <item quantity="other">%1$d su %2$d membri</item>
     </plurals>
     <plurals name="code_tries_left">
         <item quantity="one">Il codice non è corretto. Ti resta %d tentativo.</item>
-        <item quantity="many">Il codice non è corretto. Ti restano %d tentativi.</item>
+        <item quantity="many">Il codice non è corretto. Ti restano %d di tentativi.</item>
         <item quantity="other">Il codice non è corretto. Ti restano %d tentativi.</item>
     </plurals>
     <plurals name="code_field_progress">
-        <item quantity="one">%1$d di %2$d cifra</item>
-        <item quantity="many">%1$d di %2$d cifre</item>
-        <item quantity="other">%1$d di %2$d cifre</item>
+        <item quantity="one">%1$d su %2$d cifra</item>
+        <item quantity="many">%1$d su %2$d cifre</item>
+        <item quantity="other">%1$d su %2$d cifre</item>
     </plurals>
     <!-- Suspended or banned account (docs/moderation.md "Clients"; wording from web messages suspended.*) -->
     <string name="error_account_suspended">Il tuo account è sospeso, quindi ora non puoi farlo.</string>
@@ -341,7 +341,7 @@
     <string name="chat_photo">Foto</string>
     <plurals name="chat_unread">
         <item quantity="one">%d messaggio non letto</item>
-        <item quantity="many">%d messaggi non letti</item>
+        <item quantity="many">%d di messaggi non letti</item>
         <item quantity="other">%d messaggi non letti</item>
     </plurals>
     <string name="error_chat_message_gone">Questo messaggio non esiste più.</string>

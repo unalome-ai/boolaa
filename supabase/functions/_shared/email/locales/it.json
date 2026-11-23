@@ -2,7 +2,7 @@
   "greeting": "Ciao {name},",
   "greeting_noname": "Ciao,",
   "code_label": "Il tuo codice",
-  "code_expiry": "Il codice vale per {minutes} minuti.",
+  "code_expiry": { "one": "Il codice è valido per {minutes} minuto.", "other": "Il codice è valido per {minutes} minuti." },
   "link_alternative": "Oppure usa questo link:",
   "ignore": "Non l'hai chiesto tu? Puoi ignorare questa email. Non cambia nulla finché qualcuno non inserisce il codice.",
   "footer": "Ricevi questa email perché hai un account Boolaa.",
@@ -29,9 +29,9 @@
     "button": "Accedi con un link"
   },
   "invite": {
-    "subject": "Sei stato invitato su Boolaa",
+    "subject": "Hai un invito su Boolaa",
     "preheader": "Qualcuno ti ha tenuto un posto.",
-    "title": "Sei invitato!",
+    "title": "Hai un invito!",
     "intro": "Sei stato invitato su Boolaa, lo spazio privato dei tuoi piccoli gruppi. Accetta l'invito per creare il tuo account.",
     "button": "Accetta l'invito"
   },
