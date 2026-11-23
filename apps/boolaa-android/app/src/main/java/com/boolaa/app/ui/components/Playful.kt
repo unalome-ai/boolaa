@@ -2,7 +2,6 @@ package com.boolaa.app.ui.components
 
 import android.graphics.BlurMaskFilter
 import android.os.Build
-import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -94,6 +93,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.boolaa.app.R
+import com.boolaa.app.core.Interaction
 import com.boolaa.app.ui.theme.BoolaaTheme
 import com.boolaa.app.ui.theme.Hue
 import com.boolaa.app.ui.theme.LocalReduceMotion
@@ -117,21 +117,26 @@ import kotlin.math.sin
 private fun fraction(value: Float): Float = value - floor(value)
 private const val TWO_PI = (2 * PI).toFloat()
 
-// MARK: Haptics (design-system.md §5.4)
+// MARK: Haptics (design-system.md §8.3 "Motion and haptics vocabulary")
 
+/** Plays the haptic of an [Interaction] (the mapping lives in core/BrandRules.kt and is unit-tested). */
 object Haptics {
-    /** Tab change, segment, filter chip, tag, stepper, report reason. */
-    fun selection(view: View) = view.perform(if (Build.VERSION.SDK_INT >= 34) HapticFeedbackConstants.SEGMENT_TICK else HapticFeedbackConstants.CLOCK_TICK)
-    /** Bubble switch. */
-    fun bubble(view: View) = view.perform(HapticFeedbackConstants.CONTEXT_CLICK)
-    /** Send message, RSVP tap, add buttons, chat button. */
-    fun light(view: View) = view.perform(HapticFeedbackConstants.VIRTUAL_KEY)
-    /** RSVP confirmed, invite code copied, refresh finished. */
-    fun success(view: View) = view.perform(if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.CONTEXT_CLICK)
-    /** Sign-in or form failure. */
-    fun error(view: View) = view.perform(if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS)
+    fun play(view: View, interaction: Interaction) { view.performHapticFeedback(interaction.hapticConstant(Build.VERSION.SDK_INT)) }
 
-    private fun View.perform(constant: Int) { performHapticFeedback(constant) }
+    /** Tab switch, segment, report reason. */
+    fun selection(view: View) = play(view, Interaction.TAB_SWITCH)
+    /** Bubble switch. */
+    fun bubble(view: View) = play(view, Interaction.BUBBLE_SWITCH)
+    /** Send message, RSVP tap, add buttons, chat button, photo picker. */
+    fun light(view: View) = play(view, Interaction.ADD)
+    /** RSVP confirmed, first post, copied, saved, refresh finished. */
+    fun success(view: View) = play(view, Interaction.SUCCESS)
+    /** Sign-in or form failure, failed send. */
+    fun error(view: View) = play(view, Interaction.ERROR)
+    /** Confirming a delete, leave, remove, block or account deletion. */
+    fun destructive(view: View) = play(view, Interaction.DESTRUCTIVE_CONFIRM)
+    /** Switch, filter chip, "Hide taken". */
+    fun toggle(view: View, on: Boolean) = play(view, Interaction.toggle(on))
 }
 
 /**
@@ -169,11 +174,13 @@ fun Modifier.floating(time: FloatState, amplitude: Dp = 5.dp, period: Float = 4f
  * Soft tinted shadow (elevation tokens, design-system.md §4.3): a blurred copy of the shape, offset down and
  * clipped out from under the shape itself so translucent surfaces stay clean. Drawn once into the display list.
  */
-fun Modifier.glow(color: Color, blur: Dp = 14.dp, y: Dp = 8.dp, radius: Dp? = null): Modifier {
+fun Modifier.glow(color: Color, blur: Dp = 14.dp, y: Dp = 8.dp, radius: Dp? = null, spread: Dp = 0.dp): Modifier {
     if (Build.VERSION.SDK_INT < 28 || color.alpha == 0f) return this
     return drawWithCache {
         val r = radius?.toPx() ?: (size.minDimension / 2)
         val dy = y.toPx()
+        // CSS-style spread: a negative spread shrinks the shadow's shape before it is blurred.
+        val sp = spread.toPx()
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             this.color = color.toArgb()
             maskFilter = BlurMaskFilter(blur.toPx(), BlurMaskFilter.Blur.NORMAL)
@@ -184,7 +191,7 @@ fun Modifier.glow(color: Color, blur: Dp = 14.dp, y: Dp = 8.dp, radius: Dp? = nu
                 val canvas = it.nativeCanvas
                 canvas.save()
                 canvas.clipOutPath(shape)
-                canvas.drawRoundRect(0f, dy, size.width, size.height + dy, r, r, paint)
+                canvas.drawRoundRect(-sp, dy - sp, size.width + sp, size.height + dy + sp, (r + sp).coerceAtLeast(0f), (r + sp).coerceAtLeast(0f), paint)
                 canvas.restore()
             }
         }
@@ -404,6 +411,23 @@ fun BubbleOrb(hue: Hue, modifier: Modifier = Modifier) {
 
 private val RimColor = Color.White.copy(alpha = 0.28f)
 private val HighlightColor = Color.White.copy(alpha = 0.6f)
+
+/** The same glossy orb drawn straight into a [androidx.compose.ui.graphics.drawscope.DrawScope] (mascot, chat orbs). */
+fun androidx.compose.ui.graphics.drawscope.DrawScope.drawOrb(hue: Hue, center: Offset, d: Float) {
+    val brush = Brush.radialGradient(
+        listOf(hue.glow, hue.fill, hue.deep),
+        center = Offset(center.x - d / 2 + d * 0.35f, center.y - d / 2 + d * 0.3f), radius = d * 0.75f,
+    )
+    val rimWidth = maxOf(1f, d * 0.03f)
+    drawCircle(brush, d / 2, center)
+    drawCircle(RimColor, d / 2 - rimWidth / 2, center, style = Stroke(rimWidth))
+    val highlightCenter = Offset(center.x - d * 0.2f, center.y - d * 0.24f)
+    val highlightSize = Size(d * 0.26f, d * 0.16f)
+    rotate(-35f, highlightCenter) {
+        drawOval(HighlightColor, Offset(highlightCenter.x - highlightSize.width / 2, highlightCenter.y - highlightSize.height / 2), highlightSize)
+    }
+}
+
 private val BackdropHues = listOf(Hue.grape, Hue.coral, Hue.mint, Hue.sunny, Hue.sky, Hue.pink)
 private const val BACKDROP_COUNT = 16
 
@@ -643,7 +667,7 @@ fun <T> SegmentedPill(
                 val color by androidx.compose.animation.animateColorAsState(if (active) hue.onFill else c.textSecondary, Motion.fade())
                 Box(
                     Modifier.weight(1f).heightIn(min = 48.dp).clip(CircleShape)
-                        .clickableRipple(role = Role.Tab) { if (!active) { Haptics.selection(view); onSelect(value) } }
+                        .clickableRipple(role = Role.Tab) { if (!active) { Haptics.toggle(view, true); onSelect(value) } }
                         .semantics { this.selected = active }
                         .then(tagFor(value)?.let { Modifier.testTag(it) } ?: Modifier)
                         .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -738,7 +762,7 @@ fun BoolaaRefreshBox(isRefreshing: Boolean, onRefresh: () -> Unit, modifier: Mod
     val view = LocalView.current
     var wasRefreshing by remember { mutableStateOf(false) }
     LaunchedEffect(isRefreshing) {
-        if (wasRefreshing && !isRefreshing) Haptics.success(view)
+        if (wasRefreshing && !isRefreshing) Haptics.play(view, com.boolaa.app.core.Interaction.REFRESH_FINISHED)
         wasRefreshing = isRefreshing
     }
     androidx.compose.material3.pulltorefresh.PullToRefreshBox(

@@ -62,6 +62,8 @@ import com.boolaa.app.ui.components.BoolaaRefreshBox
 import com.boolaa.app.ui.components.EmptyState
 import com.boolaa.app.ui.components.FeatureBadge
 import com.boolaa.app.ui.components.FitText
+import com.boolaa.app.ui.components.StickerLabel
+import com.boolaa.app.core.StickerKind
 import com.boolaa.app.ui.components.RemoteImage
 import com.boolaa.app.ui.components.SectionHeader
 import com.boolaa.app.ui.components.SkeletonList
@@ -186,7 +188,7 @@ fun HomeScreen(navigator: ShellNavigator) {
             when {
                 list == null -> item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow, Modifier.padding(top = 8.dp)) }
                 list.isEmpty() -> item(key = "empty") {
-                    EmptyState(BoolaaIcons.Sparkles, stringResource(R.string.home_empty_title), stringResource(R.string.home_empty_message))
+                    EmptyState(stringResource(R.string.home_empty_title), stringResource(R.string.home_empty_message), hue = com.boolaa.app.core.MascotPlace.HOME.hue(Hue.forId(bubble.id)))
                 }
                 else -> {
                     item(key = "whats-new") { SectionHeader(stringResource(R.string.whats_new), modifier = Modifier.popIn(1)) }
@@ -258,6 +260,13 @@ fun FeedCard(item: FeedItem, modifier: Modifier = Modifier, onClick: () -> Unit 
         is FeedItem.Event -> Feature.EVENTS
         is FeedItem.Link -> Feature.LINKS
     }
+    val sticker = when (item) {
+        is FeedItem.Message -> StickerKind.CHAT
+        is FeedItem.Food -> StickerKind.FOOD
+        is FeedItem.Market -> StickerKind.MARKET
+        is FeedItem.Event -> StickerKind.EVENT
+        is FeedItem.Link -> StickerKind.LINK
+    }
     val (icon, kind) = when (item) {
         is FeedItem.Message -> BoolaaIcons.Chat to R.string.feed_kind_chat
         is FeedItem.Food -> BoolaaIcons.Food to R.string.tab_food
@@ -295,13 +304,12 @@ fun FeedCard(item: FeedItem, modifier: Modifier = Modifier, onClick: () -> Unit 
         FeatureBadge(icon, feature.hue)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            // The kind and the time share a line when they fit and wrap at large font sizes or long translations.
-            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(stringResource(kind).uppercase(locale), style = Type.caption, color = feature.hue.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(end = 8.dp))
+            // The kind sticker (§8.5) and the time share a line when they fit and wrap at large font sizes or long translations.
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, itemVerticalAlignment = Alignment.CenterVertically) {
+                StickerLabel(stringResource(kind).uppercase(locale), sticker, Modifier.padding(end = 8.dp))
                 Text(Formats.relative(item.date, locale), style = Type.caption2, color = c.textSecondary, maxLines = 1)
             }
-            Text(title, style = Type.bodyStrong, color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(title, style = Type.feedTitle, color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
             subtitle?.let { Text(it, style = Type.subheadline, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis) }
         }
         if (image != null) {

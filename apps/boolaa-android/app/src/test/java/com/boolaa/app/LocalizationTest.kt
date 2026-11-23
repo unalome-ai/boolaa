@@ -71,6 +71,22 @@ class LocalizationTest {
         assertEquals("Părăsește bula", ctx("ro").getString(R.string.leave_bubble))
     }
 
+    @Test fun dock_short_names_per_locale() {
+        // docs/i18n-glossary.md "Dock short labels": home, events, food, marketplace, settings.
+        val expected = mapOf(
+            "en" to listOf("Home", "Events", "Food", "Market", "Settings"),
+            "ro" to listOf("Acasă", "Agendă", "Mâncare", "Piață", "Setări"),
+            "fr" to listOf("Accueil", "Agenda", "Repas", "Marché", "Réglages"),
+            "es" to listOf("Inicio", "Eventos", "Comida", "Mercado", "Ajustes"),
+            "it" to listOf("Home", "Eventi", "Cibo", "Mercato", "Opzioni"),
+        )
+        expected.forEach { (tag, names) ->
+            val r = ctx(tag).resources
+            assertEquals(names, listOf(R.string.dock_home, R.string.dock_events, R.string.dock_food, R.string.dock_marketplace, R.string.dock_settings).map(r::getString))
+        }
+        assertEquals("Sei dentro. Saluta Flatmates!", ctx("it").getString(R.string.cheer_joined, "Flatmates"))
+    }
+
     @Test fun dates_follow_locale() {
         val t = Instant.parse("2026-11-25T15:26:00Z")
         val en = Formats.dateTime(t, Locale.ENGLISH, ZoneOffset.UTC)

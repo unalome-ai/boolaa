@@ -237,7 +237,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (SearchHit) -> Unit) {
                 is SearchUiState.Results -> {
                     if (s.hits.isEmpty()) {
                         EmptyState(
-                            BoolaaIcons.Search, stringResource(R.string.search_no_results, s.query), stringResource(R.string.search_no_results_hint),
+                            stringResource(R.string.search_no_results, s.query), stringResource(R.string.search_no_results_hint),
                             Modifier.padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite }.testTag("search-empty"),
                         )
                     } else Results(s.hits, loading = false, onOpen = onOpen)

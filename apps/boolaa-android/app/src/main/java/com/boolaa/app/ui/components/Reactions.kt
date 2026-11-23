@@ -97,8 +97,12 @@ fun ReactionBar(
     hue: Hue = Hue.grape,
     picker: MutableState<Boolean> = rememberReactionPicker(),
     tag: String = "reactions",
+    /** Chat (§8.2): your reaction chip is the [hue] gradient with onFill text instead of a wash. */
+    filledMine: Boolean = false,
 ) {
     val c = BoolaaTheme.colors
+    // Chips present at first composition don't pop; ones that appear later pop in (0.4 → 1, bouncy).
+    val initial = remember { summaries.map { it.kind }.toSet() }
     val view = LocalView.current
     val locale = LocalConfiguration.current.locales[0]
     val youReacted = stringResource(R.string.reaction_by_you)
@@ -108,14 +112,18 @@ fun ReactionBar(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        summaries.forEach { s ->
+        summaries.forEach { s -> androidx.compose.runtime.key(s.kind) {
             val label = pluralStringResource(R.plurals.reaction_chip, s.count, reactionName(s.kind), s.count) +
                 if (s.mine) ", $youReacted" else ""
             val shape = CircleShape
             val source = remember { MutableInteractionSource() }
             // A toggle: "Love: 3 reactions, You reacted" + on/off; double tap adds or removes yours.
             Box(
-                Modifier.tapArea(source) { Haptics.selection(view); onToggle(s.kind) }
+                Modifier.tapArea(source) {
+                    Haptics.play(view, if (s.mine) com.boolaa.app.core.Interaction.REACTION_REMOVED else com.boolaa.app.core.Interaction.REACTION_ADDED)
+                    onToggle(s.kind)
+                }
+                    .popFrom(s.kind !in initial, 0.5f, 0.5f)
                     .testTag("$tag-chip-${s.kind.wire}")
                     .clearAndSetSemantics {
                         contentDescription = label; role = Role.Switch
@@ -125,22 +133,27 @@ fun ReactionBar(
             ) {
                 Row(
                     Modifier.heightIn(min = 34.dp)
-                        .tapVisual(source, shape, Modifier.background(if (s.mine) hue.wash else c.field)
-                            .border(if (s.mine) 1.5.dp else 1.dp, if (s.mine) hue.fill else c.hairline, shape), scale = 0.9f)
+                        .bounceOn(s.count, from = 0.9f)
+                        .tapVisual(source, shape, when {
+                            s.mine && filledMine -> Modifier.background(hue.gradient)
+                            s.mine -> Modifier.background(hue.wash).border(1.5.dp, hue.fill, shape)
+                            else -> Modifier.background(c.field).border(1.dp, c.hairline, shape)
+                        }, scale = 0.9f)
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(s.kind.emoji, fontSize = 15.sp)
-                    Text(Formats.number(s.count.toLong(), locale), style = Type.caption, color = if (s.mine) hue.text else c.textSecondary)
+                    Text(Formats.number(s.count.toLong(), locale), style = Type.caption,
+                        color = when { s.mine && filledMine -> hue.onFill; s.mine -> hue.text; filledMine -> c.textPrimary; else -> c.textSecondary })
                 }
             }
-        }
+        } }
         Box {
             val addLabel = stringResource(R.string.reaction_add)
             val addSource = remember { MutableInteractionSource() }
             Box(
-                Modifier.tapArea(addSource, role = Role.Button) { picker.value = true }
+                Modifier.tapArea(addSource, role = Role.Button) { Haptics.light(view); picker.value = true }
                     .semantics { contentDescription = addLabel }
                     .testTag("$tag-add"),
                 contentAlignment = Alignment.Center,

@@ -244,9 +244,12 @@ fun LinksScreen(onBack: () -> Unit) {
         if (tagFilter != null && tagFilter !in target.tags) tagFilter = null
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().testTag("links-screen")) {
-        PushedHeader(stringResource(R.string.links), bubble.name, Hue.forId(bubble.id), onBack, backTag = "links-back",
-            bubbleId = bubble.id, bubbleLogo = bubble.logo)
+    Column(Modifier.fillMaxSize().imePadding().testTag("links-screen")) {
+        // §8.1: Links keeps sky, like a feature list.
+        com.boolaa.app.ui.components.BandedHeader(com.boolaa.app.core.BandScreen.LINKS.hue(Hue.forId(bubble.id))) {
+            PushedHeader(stringResource(R.string.links), bubble.name, Hue.forId(bubble.id), onBack, backTag = "links-back",
+                bubbleId = bubble.id, bubbleLogo = bubble.logo, modifier = Modifier.statusBarsPadding())
+        }
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 40.dp),
@@ -280,7 +283,7 @@ fun LinksScreen(onBack: () -> Unit) {
             when {
                 list == null -> item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow) }
                 list.isEmpty() -> item(key = "empty") {
-                    EmptyState(BoolaaIcons.Link, stringResource(R.string.links_empty_title), stringResource(R.string.links_empty_message), hue = hue)
+                    EmptyState(stringResource(R.string.links_empty_title), stringResource(R.string.links_empty_message), hue = hue)
                 }
                 else -> itemsIndexed(list.filter { tagFilter == null || tagFilter in it.tags }, key = { _, it -> it.id }) { index, link ->
                     val open = { runCatching { uriHandler.openUri(link.url) }; Unit }

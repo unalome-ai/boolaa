@@ -283,12 +283,12 @@ fun EventsScreen() {
                 if (list == null) { item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow) }; return@LazyColumn }
                 if (list.isEmpty()) {
                     item(key = "empty") {
-                        EmptyState(BoolaaIcons.NewEvent, stringResource(R.string.events_empty_title), stringResource(R.string.events_empty_message), hue = hue)
+                        EmptyState(stringResource(R.string.events_empty_title), stringResource(R.string.events_empty_message), hue = hue)
                     }
                     return@LazyColumn
                 }
                 if (mine.isEmpty()) item(key = "my-empty") {
-                    EmptyState(BoolaaIcons.NewEvent, stringResource(R.string.events_empty_title), stringResource(R.string.my_events_empty), hue = hue)
+                    EmptyState(stringResource(R.string.events_empty_mine_title), stringResource(R.string.my_events_empty), hue = hue)
                 }
                 itemsIndexed(mine, key = { _, e -> e.id }) { index, e ->
                     EventCard(e, me, onRsvp = { vm.toggleRsvp(e) }, onEdit = { editing = e }, onDelete = { deleting = e }, confetti = confetti,
@@ -297,7 +297,7 @@ fun EventsScreen() {
                 }
                 item(key = "bubble-header") { SectionHeader(stringResource(R.string.bubble_events), others.size, hue = hue) }
                 if (others.isEmpty()) item(key = "bubble-empty") {
-                    EmptyState(BoolaaIcons.Events, stringResource(R.string.events_empty_title), stringResource(R.string.bubble_events_empty), hue = hue)
+                    EmptyState(stringResource(R.string.events_empty_title), stringResource(R.string.bubble_events_empty), hue = hue)
                 }
                 itemsIndexed(others, key = { _, e -> e.id }) { index, e ->
                     EventCard(e, me, onRsvp = { vm.toggleRsvp(e) }, onEdit = null, onDelete = null, confetti = confetti,
@@ -329,7 +329,14 @@ fun EventsScreen() {
             existing = editing,
             busy = busy,
             onDismiss = { creating = false; editing = null },
-            onSave = { input -> vm.save(editing, input, me) { creating = false; editing = null } },
+            onSave = { input ->
+                // "First" = none upcoming of yours in this bubble before the save (§8.4).
+                val first = editing == null && EventSchedule.split(events.orEmpty(), java.time.Instant.now()).first.none { it.creatorId == me }
+                vm.save(editing, input, me) {
+                    creating = false; editing = null
+                    if (first) com.boolaa.app.ui.components.CheerCenter.show(com.boolaa.app.core.Cheer.FIRST_EVENT)
+                }
+            },
         )
     }
     deleting?.let { e ->
@@ -465,8 +472,10 @@ private fun RsvpPill(going: Boolean, onClick: () -> Unit, confetti: ConfettiStat
     val content by animateColorAsState(if (going) mint.onFill else coral.text, Motion.fade())
     var centre by remember { mutableStateOf(Offset.Zero) }
     var wasGoing by remember { mutableStateOf(going) }
+    var taps by remember { mutableStateOf(0) }
     LaunchedEffect(going) {
-        if (going && !wasGoing) { Haptics.success(view); confetti?.fire(centre) }
+        // The server confirmed your RSVP: confetti and the cheer toast (which plays the success haptic, §8.4).
+        if (going && !wasGoing && taps > 0) { confetti?.fire(centre); com.boolaa.app.ui.components.CheerCenter.show(com.boolaa.app.core.Cheer.GOING) }
         wasGoing = going
     }
     Row(
@@ -478,7 +487,7 @@ private fun RsvpPill(going: Boolean, onClick: () -> Unit, confetti: ConfettiStat
             .clip(CircleShape)
             .background(coral.wash)
             .drawBehind { drawRect(mint.gradient, alpha = fill.coerceIn(0f, 1f)) }
-            .clickableRipple(role = Role.Button) { Haptics.light(view); onClick() }
+            .clickableRipple(role = Role.Button) { taps++; Haptics.play(view, com.boolaa.app.core.Interaction.RSVP_TAP); onClick() }
             .semantics { selected = going }
             .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),

@@ -57,7 +57,10 @@ class AccessibilityComponentsTest {
         rule.onNodeWithTag("tab-events").assertContentDescriptionEquals("Events").assert(hasRole(Role.Tab)).assertIsSelected()
             .assertHeightIsAtLeast(48.dp)
         rule.onNodeWithTag("tab-home").assertContentDescriptionEquals("Home").assertIsNotSelected()
-        rule.onNodeWithTag("pill-tab-bar").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup))
+        // Short dock names (nav.dock.*), not the screen titles: "Food", "Market".
+        rule.onNodeWithTag("tab-food").assertContentDescriptionEquals("Food").assertHeightIsAtLeast(48.dp)
+        rule.onNodeWithTag("tab-marketplace").assertContentDescriptionEquals("Market")
+        rule.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup), useUnmergedTree = true).assertExists()
     }
 
     @Test fun chat_button_reads_its_unread_count_once() {
@@ -141,5 +144,31 @@ class AccessibilityComponentsTest {
         assertTrue(deleted, deleted.startsWith("Ana, This message was deleted, "))
         val photo = rule.onNodeWithTag("message-p1").fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single()
         assertTrue(photo, photo.startsWith("Ana, Photo from Ana, "))
+    }
+
+    @Test fun mascot_is_hidden_from_talkback_and_absent_on_calm_surfaces() {
+        show {
+            androidx.compose.foundation.layout.Column {
+                com.boolaa.app.ui.components.EmptyState("Say hi!", "Nobody's talked yet.")
+                com.boolaa.app.ui.components.CalmSurface {
+                    com.boolaa.app.ui.components.Mascot(com.boolaa.app.core.MascotExpression.WORRIED, com.boolaa.app.ui.theme.Hue.grape,
+                        androidx.compose.ui.Modifier)
+                }
+            }
+        }
+        rule.onNodeWithTag("mascot-curious", useUnmergedTree = true).assertExists()
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+        rule.onNodeWithTag("mascot-worried", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test fun pending_failed_message_is_one_stop_with_retry_and_discard() {
+        val pending = com.boolaa.app.core.PendingMessage.create("b1", "me", "See you at 8", null)
+            .copy(state = com.boolaa.app.core.OutboxState.FAILED)
+        show { com.boolaa.app.ui.chat.PendingMessageRow(pending, com.boolaa.app.ui.theme.Hue.sky, onRetry = {}, onDiscard = {}) }
+        val node = rule.onNodeWithTag("pending-failed").assertContentDescriptionEquals("See you at 8")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not sent — tap to retry"))
+            .assert(hasRole(Role.Button)).fetchSemanticsNode()
+        val actions = node.config[androidx.compose.ui.semantics.SemanticsActions.CustomActions].map { it.label }
+        assertTrue(actions.toString(), actions == listOf("Try again", "Don't send"))
     }
 }

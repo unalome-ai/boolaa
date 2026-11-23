@@ -380,7 +380,7 @@ Boolaa talks like a friendly flatmate: short, warm, a little playful, never cute
 
 ## 8. Brand redesign (2026-11)
 
-Five changes that together make Boolaa louder and more of a character: **bubble-hue chat** (8.2), a **labelled glass dock with one motion and haptics vocabulary** (8.3), **feature-coloured headers** (8.1), the **bubble mascot** for empty and waiting states (8.4) and **chunky display type with sticker labels** (8.5). Every value here is normative for all three clients. Status: web done (`apps/boolaa-web`, tokens in `src/lib/brand.ts` + `globals.css`); iOS done (`apps/boolaa-ios`, tokens in `Theme.Brand`, rules in `Core/BrandRules.swift`, views in `Components/BrandViews.swift`; deviations in 8.7); Android follows this section exactly. Existing guarantees stay: axe clean in light and dark, 44 pt / 48 dp / 24 px targets, every animation has its reduced-motion form, visible focus ring.
+Five changes that together make Boolaa louder and more of a character: **bubble-hue chat** (8.2), a **labelled glass dock with one motion and haptics vocabulary** (8.3), **feature-coloured headers** (8.1), the **bubble mascot** for empty and waiting states (8.4) and **chunky display type with sticker labels** (8.5). Every value here is normative for all three clients. Status: web done (`apps/boolaa-web`, tokens in `src/lib/brand.ts` + `globals.css`); iOS done (`apps/boolaa-ios`, tokens in `Theme.Brand`, rules in `Core/BrandRules.swift`, views in `Components/BrandViews.swift`; deviations in 8.7); Android done (`apps/boolaa-android`, tokens in `ui/theme/Theme.kt` `BrandTokens`, rules in `core/BrandRules.kt`, views in `ui/components/BrandViews.kt`; deviations in 8.8). Existing guarantees stay: axe clean in light and dark, 44 pt / 48 dp / 24 px targets, every animation has its reduced-motion form, visible focus ring.
 
 ### 8.1 Colour roles: feature colour on top, bubble colour on the bubble
 
@@ -536,7 +536,7 @@ Reading order is unaffected: the sticker is plain text in the card's accessible 
 
 ### 8.6 Contrast of the new pairs (WCAG 2.2 AA, measured)
 
-Checked by `apps/boolaa-web/tests/brand.spec.ts` over the token table in `src/lib/brand.ts` (and that `globals.css` ships the same strengths). Ratios are rounded down.
+Checked by `apps/boolaa-web/tests/brand.spec.ts` over the token table in `src/lib/brand.ts` (and that `globals.css` ships the same strengths). Android checks the same pairs in `BrandRulesTest`, and `DesignTokensTest` checks that `Theme.kt`, `Theme.swift` and `globals.css` carry the same §8 strengths and hue values. Ratios are rounded down.
 
 | Pair | Light | Dark |
 |---|---|---|
@@ -566,3 +566,20 @@ Where SwiftUI can't do exactly what the tables say, the iOS client does the clos
 - **Calm surfaces.** `.calmSurface()` sets the `calm` environment value on the report sheet, blocked users, delete account and the suspended screen; `Mascot` draws nothing there and the inline load error keeps its system symbol.
 - **Haptics** come from one table (`Interaction` → `Haptic` in `BrandRules.swift`), played with `sensoryFeedback` or, on confirm buttons, the matching `UIFeedbackGenerator`.
 - **Debug hooks** for screenshots: `-UITestCheer going|firstEvent|firstPost|firstItem|joined` and `-UITestOpen mascots` (DEBUG builds only).
+
+### 8.8 Android notes
+
+Where Compose can't do exactly what the tables say, the Android client does the closest faithful thing:
+
+- **Dock glass.** Compose has no backdrop filter. The shell records its content into a `GraphicsLayer` each frame and the bar draws that layer behind itself through a `RenderEffect` chain (blur 24 dp, saturation ×1.8) on API 31+, under `card` at 72 % / 80 %. Below API 31 the bar is `card` at 90 % without blur (the table's fallback).
+- **Dock label.** Measured with `TextMeasurer` in Nunito ExtraBold 14 sp at the current font scale, so it re-measures on rotation, window size, font scale and locale changes. At 411 dp (Pixel) every English, Romanian, French, Spanish and Italian short name fits. Icon-only at `fontScale ≥ 1.5`. Inactive tabs show their short name in a Material plain tooltip on long press. Each tab is one TalkBack stop: its content description is the short name, with the tab role and the selected state. The visible label is hidden from TalkBack because it repeats the same word.
+- **Shadows.** The soft shadows are a `BlurMaskFilter` copy of the shape (API 28+). They support the CSS spread, so the dock's shadow is `0 16 36 −12` as specified. Below API 28 there are no shadows.
+- **Link underlines.** Compose draws a text decoration in the text's own colour. Links are underlined in their full link colour (onFill on your messages, the sender's `text` shade on others'), not at 70 % / 60 %. This only raises the contrast.
+- **"Not sent".** As on iOS: the warning triangle and "Not sent — tap to retry" in bold `dangerText`, plus the 2 dp outline offset 2. Try again and Don't send are in the long-press menu and the TalkBack custom actions rather than inline links. This keeps each message one TalkBack element (its state is the element's state description, announced politely).
+- **Band height.** As on iOS, the band also covers the status bar above the header (the app draws edge to edge), and its circles are placed from the top of the screen.
+- **Title size.** `TextAutoSize.StepBased` shrinks the title from 38 to 26 sp (pushed: 32 to 22) over at most two lines. Only text that still doesn't fit at the minimum size is ellipsized.
+- **High contrast.** The system "High contrast text" setting replaces the Home title gradient with plain ink.
+- **Calm surfaces.** `CalmSurface { }` provides `LocalCalm` to the report sheet, the delete-account flow and the suspended screen. In there `Mascot` draws nothing, and the inline load error keeps its plain cloud symbol. The blocked-users list has no mascot.
+- **Haptics** come from one table (`Interaction.hapticConstant(sdk)` in `core/BrandRules.kt`, with the table's fallbacks for older API levels). They are played with `View.performHapticFeedback`, which follows the system "Touch feedback" setting.
+- **Cheer toast** is announced with `announceForAccessibility` (only while a screen reader is on). It has no click handling, so it never takes focus or blocks taps.
+- **Debug hooks** for screenshots (debug builds only): `--es cheer going|firstEvent|firstPost|firstItem|joined` and `--es open mascots`.

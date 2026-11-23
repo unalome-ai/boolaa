@@ -19,6 +19,8 @@ data class DebugHooks(
     val signOut: Boolean = false,
     val deviceId: String? = null,
     val simulateOffline: Boolean = false,
+    /** Screenshot aid: `going`, `firstEvent`, `firstPost`, `firstItem` or `joined` shows that cheer toast once (§8.4). */
+    val cheer: String? = null,
 ) {
     companion object {
         /** Pre-trusted for the seeded users by supabase/seed.sql (local only). */
@@ -36,6 +38,7 @@ data class DebugHooks(
                 open = intent.getStringExtra("open"),
                 signOut = intent.getStringExtra("signOut") == "true" || intent.getBooleanExtra("signOut", false),
                 simulateOffline = intent.getStringExtra("simulateOffline") == "true" || intent.getBooleanExtra("simulateOffline", false),
+                cheer = intent.getStringExtra("cheer"),
             )
         }
     }

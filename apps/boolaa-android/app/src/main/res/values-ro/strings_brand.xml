@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand redesign (docs/design-system.md §8, docs/i18n-glossary.md "Brand redesign" and "Dock short labels"). -->
+<resources>
+    <string name="dock_home">Acasă</string>
+    <string name="dock_events">Agendă</string>
+    <string name="dock_food">Mâncare</string>
+    <string name="dock_marketplace">Piață</string>
+    <string name="dock_settings">Setări</string>
+    <string name="events_empty_mine_title">Ai un plan?</string>
+    <string name="food_empty_mine_title">Ai resturi?</string>
+    <string name="food_empty_others_title">Nimic împărțit încă</string>
+    <string name="cheer_going">Participi!</string>
+    <string name="cheer_first_event">Primul tău eveniment e gata!</string>
+    <string name="cheer_first_post">Prima postare e gata!</string>
+    <string name="cheer_first_item">Primul anunț e publicat!</string>
+    <string name="cheer_joined">Ai intrat. Salută-i pe cei din %1$s!</string>
+</resources>

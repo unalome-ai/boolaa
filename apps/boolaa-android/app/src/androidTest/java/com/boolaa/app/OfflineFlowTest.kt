@@ -3,10 +3,9 @@ package com.boolaa.app
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -83,7 +82,8 @@ class OfflineFlowTest {
         sentContents += text
         rule.onNodeWithTag("chat-input").performTextInput(text)
         rule.onNodeWithTag("chat-send").performClick()
-        rule.waitUntilExactlyOneExists(hasText(text), timeout)
+        // The pending message is one TalkBack element: its text is the content description (design-system.md §8.2).
+        rule.waitUntilExactlyOneExists(hasContentDescription(text, substring = true), timeout)
         rule.waitUntilExactlyOneExists(hasTestTag("pending-sending"), timeout)
 
         container.connectivity.setSimulatedOffline(false)
@@ -111,7 +111,9 @@ class OfflineFlowTest {
         rule.waitUntilExactlyOneExists(hasTestTag("pending-sending"), timeout)
         container.connectivity.handle(com.boolaa.app.core.NetEvent.PathChanged(true))
         rule.waitUntilExactlyOneExists(hasTestTag("pending-failed"), timeout)
-        rule.onNodeWithText(rule.activity.getString(R.string.offline_not_sent_tap_to_retry)).assertExists()
+        rule.onNodeWithTag("pending-failed").assert(
+            androidx.compose.ui.test.SemanticsMatcher.expectValue(
+                androidx.compose.ui.semantics.SemanticsProperties.StateDescription, rule.activity.getString(R.string.offline_not_sent_tap_to_retry)))
 
         // Network back: a tap retries (or the reconnect flush sends it); it lands exactly once.
         container.connectivity.setSimulatedOffline(false)

@@ -86,8 +86,7 @@ fun OnboardingScreen() {
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Row(Modifier.popIn(0), verticalAlignment = Alignment.CenterVertically) {
-                    FitText(stringResource(R.string.onboarding_title), Type.screenTitle, color = c.textPrimary, minScale = 0.6f,
-                        modifier = Modifier.weight(1f).semantics { heading() })
+                    com.boolaa.app.ui.components.DisplayTitle(stringResource(R.string.onboarding_title), modifier = Modifier.weight(1f))
                     Row(
                         Modifier.padding(start = 12.dp).heightIn(min = 48.dp).clip(CircleShape).background(c.card.copy(alpha = 0.8f))
                             .clickableRipple(role = Role.Button) { scope.launch { session.signOut() } }.testTag("onboarding-sign-out")

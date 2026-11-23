@@ -259,11 +259,11 @@ fun FoodScreen() {
             item(key = "stale") { com.boolaa.app.ui.components.StaleNotice(issue, vm::retryNow) }
             if (list == null) { item(key = "loading") { com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow) }; return@LazyColumn }
             if (list.isEmpty()) {
-                item(key = "empty") { EmptyState(BoolaaIcons.Food, stringResource(R.string.food_empty_title), stringResource(R.string.food_empty_message), hue = hue) }
+                item(key = "empty") { EmptyState(stringResource(R.string.food_empty_title), stringResource(R.string.food_empty_message), hue = hue) }
                 return@LazyColumn
             }
             if (mine.isEmpty()) item(key = "my-empty") {
-                EmptyState(BoolaaIcons.Food, stringResource(R.string.food_empty_title), stringResource(R.string.my_posts_empty), hue = hue)
+                EmptyState(stringResource(R.string.food_empty_mine_title), stringResource(R.string.my_posts_empty), hue = hue)
             }
             itemsIndexed(mine, key = { _, p -> p.id }) { index, p ->
                 FoodCard(p, onEdit = { editing = p }, onDelete = { deleting = p }, modifier = Modifier.pushHighlight(p.id).scrollFade(listState, p.id).popIn(index + 1),
@@ -271,7 +271,7 @@ fun FoodScreen() {
             }
             item(key = "bubble-header") { SectionHeader(stringResource(R.string.from_the_bubble), others.size, hue = hue) }
             if (others.isEmpty()) item(key = "bubble-empty") {
-                EmptyState(BoolaaIcons.Takeout, stringResource(R.string.food_empty_title), stringResource(R.string.from_the_bubble_empty), hue = hue)
+                EmptyState(stringResource(R.string.food_empty_others_title), stringResource(R.string.from_the_bubble_empty), hue = hue)
             }
             itemsIndexed(others, key = { _, p -> p.id }) { index, p ->
                 FoodCard(p, onEdit = null, onDelete = null, modifier = Modifier.pushHighlight(p.id).scrollFade(listState, p.id).popIn(mine.size + index + 2),
@@ -284,7 +284,11 @@ fun FoodScreen() {
     if (creating || editing != null) {
         val resolver = LocalContext.current.contentResolver
         FoodEditor(editing, busy, onDismiss = { creating = false; editing = null }) { picked, description ->
-            vm.save(editing, picked, description, resolver) { creating = false; editing = null }
+            val first = editing == null && posts.orEmpty().none { it.userId == me }
+            vm.save(editing, picked, description, resolver) {
+                creating = false; editing = null
+                if (first) com.boolaa.app.ui.components.CheerCenter.show(com.boolaa.app.core.Cheer.FIRST_POST)
+            }
         }
     }
     deleting?.let { p ->

@@ -88,6 +88,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.key
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import com.boolaa.app.core.BandScreen
+import com.boolaa.app.core.DockLayout
+import com.boolaa.app.ui.components.BandedHeader
+import com.boolaa.app.ui.components.CheerCenter
+import com.boolaa.app.ui.components.CheerHost
+import com.boolaa.app.ui.components.DisplayTitle
+import kotlinx.coroutines.delay
+import androidx.compose.material3.PlainTooltip
 import com.boolaa.app.R
 import com.boolaa.app.model.Bubble
 import com.boolaa.app.ui.LocalAppContainer
@@ -114,18 +133,27 @@ import com.boolaa.app.ui.market.MarketplaceScreen
 import com.boolaa.app.ui.profile.ProfileSheet
 import com.boolaa.app.ui.settings.SettingsScreen
 import com.boolaa.app.ui.theme.BoolaaTheme
-import com.boolaa.app.ui.theme.Glow
 import com.boolaa.app.ui.theme.Hue
 import com.boolaa.app.ui.theme.Motion
 import com.boolaa.app.ui.theme.Type
 import kotlin.math.floor
 
-enum class MainTab(val route: String, @param:StringRes val title: Int, val icon: ImageVector, val activeIcon: ImageVector, val hue: Hue) {
-    HOME("home", R.string.tab_home, BoolaaIcons.HomeOutline, BoolaaIcons.Home, Hue.grape),
-    EVENTS("events", R.string.tab_events, BoolaaIcons.EventsOutline, BoolaaIcons.Events, Hue.coral),
-    FOOD("food", R.string.tab_food, BoolaaIcons.FoodOutline, BoolaaIcons.Food, Hue.tangerine),
-    MARKETPLACE("marketplace", R.string.tab_marketplace, BoolaaIcons.MarketOutline, BoolaaIcons.Market, Hue.mint),
-    SETTINGS("settings", R.string.tab_settings, BoolaaIcons.SettingsOutline, BoolaaIcons.Settings, Hue.indigo);
+/**
+ * The five tabs. [title] is the screen title (full name), [dock] the short dock name (`nav.dock.*`, docs/i18n-glossary.md
+ * "Dock short labels"): the active pill's label and every tab's content description.
+ */
+enum class MainTab(
+    val route: String, @param:StringRes val title: Int, @param:StringRes val dock: Int, val icon: ImageVector, val activeIcon: ImageVector,
+    val band: BandScreen,
+) {
+    HOME("home", R.string.tab_home, R.string.dock_home, BoolaaIcons.HomeOutline, BoolaaIcons.Home, BandScreen.HOME),
+    EVENTS("events", R.string.tab_events, R.string.dock_events, BoolaaIcons.EventsOutline, BoolaaIcons.Events, BandScreen.EVENTS),
+    FOOD("food", R.string.tab_food, R.string.dock_food, BoolaaIcons.FoodOutline, BoolaaIcons.Food, BandScreen.FOOD),
+    MARKETPLACE("marketplace", R.string.tab_marketplace, R.string.dock_marketplace, BoolaaIcons.MarketOutline, BoolaaIcons.Market, BandScreen.MARKETPLACE),
+    SETTINGS("settings", R.string.tab_settings, R.string.dock_settings, BoolaaIcons.SettingsOutline, BoolaaIcons.Settings, BandScreen.SETTINGS);
+
+    /** The feature colour: the band and the dock pill (§8.1). */
+    val hue: Hue get() = band.hue(Hue.grape)
 
     companion object {
         fun fromRoute(route: String?): MainTab? = entries.firstOrNull { it.route == route }
@@ -176,9 +204,9 @@ class ShellNavigator(private val nav: NavHostController) {
     fun back() = nav.popBackStack()
 }
 
-/** Main shell (spec §4): bubble glow, header with the bubble switcher, the tab content and the floating dock. */
+/** Main shell (spec §4): feature band + header with the bubble switcher, the tab content, the glass dock and the cheer toast. */
 @Composable
-fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
+fun MainShell(initialTab: String? = null, initialOpen: String? = null, initialCheer: String? = null) {
     val nav = rememberNavController()
     val navigator = remember(nav) { ShellNavigator(nav) }
     val backStack by nav.currentBackStackEntryAsState()
@@ -188,6 +216,7 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
     if (tab != null) lastTab = tab
     var showProfile by rememberSaveable { mutableStateOf(false) }
     var showAddBubble by rememberSaveable { mutableStateOf(false) }
+    var showMascots by rememberSaveable { mutableStateOf(false) }
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val unread by container.unread.counts.collectAsStateWithLifecycle()
@@ -200,17 +229,48 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
             "links" -> navigator.openLinks()
             "profile" -> showProfile = true
             "addBubble" -> showAddBubble = true
+            "mascots" -> if (com.boolaa.app.BuildConfig.DEBUG) showMascots = true
+        }
+        // Screenshot aid (debug builds): a cheer toast on demand.
+        com.boolaa.app.core.Cheer.fromDebug(initialCheer)?.let { cheer ->
+            delay(600)
+            val bubble = container.session.state.value.currentBubble
+            CheerCenter.show(cheer, Hue.forId(bubble?.id), bubble?.name)
         }
     }
+    // Admitted to a bubble: its Home cheers once, in that bubble's colour (§8.4).
+    val currentId = state.currentBubble?.id
+    LaunchedEffect(currentId, tab) {
+        val bubble = state.currentBubble ?: return@LaunchedEffect
+        if (tab == MainTab.HOME && container.session.takeWelcome(bubble.id)) {
+            delay(300)
+            CheerCenter.show(com.boolaa.app.core.Cheer.JOINED, Hue.forId(bubble.id), bubble.name)
+        }
+    }
+    // §8.3 glass: what scrolls under the dock is recorded once per frame and drawn blurred behind the bar (API 31+).
+    val backdrop = remember { DockBackdrop() }
     // A tapped notification: switch bubble and open its screen.
     PushRouter(navigator)
 
+    val contentLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+    backdrop.layer = contentLayer
     Box(Modifier.fillMaxSize().background(BoolaaTheme.colors.background)) {
-        BubbleGlow(Hue.forId(state.currentBubble?.id))
-        Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier.fillMaxSize()
+                .onGloballyPositioned { backdrop.origin = it.positionInRoot() }
+                .drawWithContent {
+                    contentLayer.record { this@drawWithContent.drawContent() }
+                    drawLayer(contentLayer)
+                    // Without read observation: the content must not invalidate itself by bumping the counter.
+                    androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { backdrop.frames.longValue++ }
+                },
+        ) {
             AnimatedVisibility(tab != null, enter = fadeIn(Motion.fade()), exit = fadeOut(Motion.fade())) {
-                ShellHeader(title = stringResource(lastTab.title), onProfile = { showProfile = true }, onAddBubble = { showAddBubble = true },
-                    onSearch = { navigator.openSearch() })
+                // §8.1: the band is exactly as tall as the header (and the status bar above it), in the tab's feature colour.
+                BandedHeader(lastTab.band.hue(Hue.forId(state.currentBubble?.id))) {
+                    ShellHeader(title = stringResource(lastTab.title), onProfile = { showProfile = true }, onAddBubble = { showAddBubble = true },
+                        onSearch = { navigator.openSearch() }, gradientTitle = lastTab == MainTab.HOME)
+                }
             }
             // Offline / unreachable / "Back online" (docs/boolaa-spec.md "Offline and poor network"). On pushed screens
             // (no shell header) it sits under the status bar and the screen below gives up its own status-bar padding.
@@ -266,40 +326,29 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                 onSelect = { if (it != tab) { Haptics.selection(view); navigator.openTab(it) } },
                 onChat = { Haptics.light(view); navigator.openChat() },
                 chatUnread = state.currentBubble?.let { unread[it.id]?.unreadCount } ?: 0,
+                backdrop = backdrop,
             )
         }
+        CheerHost()
     }
     if (showProfile) ProfileSheet(onDismiss = { showProfile = false })
     if (showAddBubble) AddBubbleSheet(onDismiss = { showAddBubble = false })
+    if (showMascots) com.boolaa.app.ui.components.MascotGallery(onDismiss = { showMascots = false })
 }
 
 /**
- * The app background is not flat: a soft radial glow in the current bubble's hue sits behind the header
- * (top-right, radius 340, plus a smaller wash top-left) and cross-fades when the bubble changes.
+ * Display title (§8.5, the brand gradient on Home only), search and avatar buttons and the bubble chips with "+ New".
+ * No background: it sits on the feature band, and every control on it has its own opaque surface.
  */
 @Composable
-private fun BubbleGlow(hue: Hue) {
-    val dark = BoolaaTheme.colors.isDark
-    // Same strengths as iOS and web: secondary text over the glow stays ≥ 4.5:1 in every hue.
-    val main by animateColorAsState(hue.fill.copy(alpha = if (dark) Glow.MAIN_DARK else Glow.MAIN_LIGHT), Motion.gentle())
-    val side by animateColorAsState(hue.glow.copy(alpha = if (dark) Glow.SIDE_DARK else Glow.SIDE_LIGHT), Motion.gentle())
-    Box(Modifier.fillMaxWidth().height(380.dp).drawWithCache {
-        val r = Glow.mainRadius.toPx()
-        val mainBrush = Brush.radialGradient(listOf(main, Color.Transparent), center = Offset(size.width, 0f), radius = r)
-        val sideBrush = Brush.radialGradient(listOf(side, Color.Transparent), center = Offset(0f, 20.dp.toPx()), radius = Glow.sideRadius.toPx())
-        onDrawBehind { drawRect(mainBrush); drawRect(sideBrush) }
-    })
-}
-
-/** Large rolling title, avatar button and the bubble chips with "+ New". No background: the glow shows through. */
-@Composable
-fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit, onSearch: () -> Unit = {}) {
+fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit, onSearch: () -> Unit = {}, gradientTitle: Boolean = false) {
     val container = LocalAppContainer.current
     val session = container.session
     val state by session.state.collectAsStateWithLifecycle()
     val unread by container.unread.counts.collectAsStateWithLifecycle()
     val view = LocalView.current
-    Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 8.dp, bottom = 6.dp)) {
+    // 16 below the visible chips: the chip row's 7 + the chips' 5 inset + 4.
+    Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 8.dp, bottom = 4.dp)) {
         Row(Modifier.padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             val reduce = BoolaaTheme.reduceMotion
             AnimatedContent(
@@ -311,9 +360,8 @@ fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit, o
                         .using(SizeTransform(clip = false))
                 },
             ) { text ->
-                // Shrinks (down to 40% at the largest font scales) before it would truncate a long translation.
-                FitText(text, Type.screenTitle, color = BoolaaTheme.colors.textPrimary, minScale = 0.4f,
-                    modifier = Modifier.fillMaxWidth().testTag("screen-title").semantics { heading() })
+                // 38 black, up to two lines, auto-sized down to 26 before it would truncate a long translation.
+                DisplayTitle(text, gradient = gradientTitle, modifier = Modifier.fillMaxWidth().testTag("screen-title"))
             }
             // Search this bubble, next to the avatar.
             CircleIconButton(BoolaaIcons.Search, stringResource(R.string.search_open), onSearch,
@@ -419,14 +467,17 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, unread: (Stri
             }
             val grapeText = Hue.grape.text
             val newSource = remember { MutableInteractionSource() }
-            Box(Modifier.tapArea(newSource, role = Role.Button, onClick = onAdd).testTag("bubble-chip-new"), contentAlignment = Alignment.Center) {
+            val view = LocalView.current
+            var addTaps by remember { mutableIntStateOf(0) }
+            Box(Modifier.tapArea(newSource, role = Role.Button) { addTaps++; Haptics.light(view); onAdd() }.testTag("bubble-chip-new"), contentAlignment = Alignment.Center) {
                 Row(
                     Modifier.heightIn(min = 38.dp)
-                        .tapVisual(newSource, CircleShape, Modifier.dashedBorder(grapeText.copy(alpha = 0.55f), null, dash = 5.dp, gap = 4.dp))
+                        // On a card fill: it sits on the feature band (§8.1), where only opaque controls go.
+                        .tapVisual(newSource, CircleShape, Modifier.background(c.card).dashedBorder(grapeText.copy(alpha = 0.55f), null, dash = 5.dp, gap = 4.dp))
                         .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Icon(BoolaaIcons.Add, contentDescription = null, tint = grapeText, modifier = Modifier.size(18.dp))
+                    Icon(BoolaaIcons.Add, contentDescription = null, tint = grapeText, modifier = Modifier.size(18.dp).bounceOn(addTaps))
                     Text(stringResource(R.string.new_bubble_chip), color = grapeText, style = Type.chip, maxLines = 1)
                 }
             }
@@ -436,78 +487,189 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, unread: (Stri
     LaunchedEffect(bubbles) { bounds.keys.retainAll(bubbles.map { it.id }.toSet()) }
 }
 
-/** The dock: pill tab bar plus the chat button, floating above a fade that lets content dissolve underneath. */
+/**
+ * What scrolls beneath the dock: the shell content recorded into [layer] each time it draws, with its root position,
+ * so the glass can draw it blurred (§8.3). [frames] ticks on every recording so the dock redraws with it.
+ */
+@Stable
+class DockBackdrop {
+    var layer: androidx.compose.ui.graphics.layer.GraphicsLayer? = null
+    var origin by mutableStateOf(Offset.Zero)
+    val frames = androidx.compose.runtime.mutableLongStateOf(0L)
+}
+
+/** The dock (§8.3): the labelled glass tab bar plus the chat button, floating above a fade that lets content dissolve. */
 @Composable
-fun Dock(selected: MainTab, onSelect: (MainTab) -> Unit, onChat: () -> Unit, modifier: Modifier = Modifier, chatUnread: Int = 0) {
+fun Dock(
+    selected: MainTab, onSelect: (MainTab) -> Unit, onChat: () -> Unit, modifier: Modifier = Modifier, chatUnread: Int = 0,
+    backdrop: DockBackdrop? = null,
+) {
     val c = BoolaaTheme.colors
-    Box(
+    androidx.compose.foundation.layout.BoxWithConstraints(
         modifier.fillMaxWidth().drawWithCache {
             val fade = Brush.verticalGradient(listOf(Color.Transparent, c.background.copy(alpha = 0.92f)), endY = size.height * 0.45f)
             onDrawBehind { drawRect(fade) }
         },
     ) {
+        // Re-measured on rotation, window resize, text-size and locale change (all recompose this).
+        val rowWidth = maxWidth.value
+        val margin = DockLayout.sideMargin(rowWidth).dp
         Row(
-            Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically,
+            Modifier.fillMaxWidth().navigationBarsPadding().padding(start = margin, end = margin, top = 28.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(DockLayout.GAP.dp), verticalAlignment = Alignment.CenterVertically,
         ) {
-            PillTabBar(selected, onSelect, Modifier.weight(1f))
+            PillTabBar(selected, onSelect, Modifier.weight(1f), rowWidth = rowWidth, backdrop = backdrop)
             ChatButton(onChat, unread = chatUnread)
         }
     }
 }
 
-/** Floating capsule with five icon buttons. One filled circle slides to the active tab and takes its colour. */
+/** The pill's label: fades in over 200 ms after 60 ms while moving 4 → 0 dp from the leading side (reduced motion: fade only). */
 @Composable
-fun PillTabBar(selected: MainTab, onSelect: (MainTab) -> Unit, modifier: Modifier = Modifier) {
+private fun DockLabel(text: String, color: Color) {
+    val reduce = BoolaaTheme.reduceMotion
+    val progress = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, tween(200, delayMillis = if (reduce) 0 else 60, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+    }
+    Text(
+        text, style = Type.dockLabel, color = color, maxLines = 1, softWrap = false,
+        // The tab's content description is the same word (label in name); the text itself is not a second stop.
+        modifier = Modifier.clearAndSetSemantics { }.graphicsLayer {
+            alpha = progress.value
+            if (!reduce) translationX = -(1f - progress.value) * 4.dp.toPx()
+        },
+    )
+}
+
+/**
+ * Glass pill tab bar. The active tab is a capsule in the feature gradient with icon + short label that slides and
+ * stretches between tabs (`snappy`) and changes colour (200 ms); when the label doesn't fit (or at font scale ≥ 1.5)
+ * it is a 46 dp circle and the name lives on as the content description. Reduced motion: the pill jumps, the label fades.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun PillTabBar(
+    selected: MainTab, onSelect: (MainTab) -> Unit, modifier: Modifier = Modifier, rowWidth: Float = 412f, backdrop: DockBackdrop? = null,
+) {
     val c = BoolaaTheme.colors
+    val reduce = BoolaaTheme.reduceMotion
+    val density = LocalDensity.current
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val label = stringResource(selected.dock)
+    val labelWidth = with(density) { measurer.measure(label, Type.dockLabel, maxLines = 1, softWrap = false).size.width.toDp().value }
+    val showsLabel = DockLayout.showsLabel(labelWidth, rowWidth, density.fontScale)
+    val pill = if (showsLabel) DockLayout.labelledPillWidth(labelWidth) else null
+    val barWidth = DockLayout.barWidth(rowWidth)
+    val active = MainTab.entries.indexOf(selected)
+    val slots = DockLayout.slotWidths(barWidth, active, pill)
+    val before = slots.take(active).sum()
+    val indicatorWidth = pill ?: DockLayout.TAB_HEIGHT
+    val indicatorX = before + if (pill == null) (slots[active] - DockLayout.TAB_HEIGHT) / 2 else 0f
+    val move: androidx.compose.animation.core.AnimationSpec<Float> = if (reduce) snap() else Motion.snappy()
+    val x by animateFloatAsState(indicatorX, move)
+    val w by animateFloatAsState(indicatorWidth, move)
     val hue = selected.hue
-    val position by animateFloatAsState(selected.ordinal.toFloat(), Motion.snappy())
-    val top by animateColorAsState(hue.gradientTop, Motion.snappy())
-    val bottom by animateColorAsState(hue.gradientBottom, Motion.snappy())
-    Row(
+    val top by animateColorAsState(hue.gradientTop, tween(200))
+    val bottom by animateColorAsState(hue.gradientBottom, tween(200))
+    val blur = android.os.Build.VERSION.SDK_INT >= 31 && backdrop != null
+    val glass = when {
+        !blur -> com.boolaa.app.ui.theme.BrandTokens.GLASS_NO_BLUR
+        c.isDark -> com.boolaa.app.ui.theme.BrandTokens.GLASS_DARK
+        else -> com.boolaa.app.ui.theme.BrandTokens.GLASS_LIGHT
+    }
+    val edge = Color.White.copy(alpha = if (c.isDark) com.boolaa.app.ui.theme.BrandTokens.GLASS_EDGE_DARK else com.boolaa.app.ui.theme.BrandTokens.GLASS_EDGE_LIGHT)
+    val shadowBig = if (c.isDark) Color.Black.copy(alpha = 0.6f) else Color(0x522A1B5E)
+    val shadowSmall = if (c.isDark) Color.Black.copy(alpha = 0.3f) else Color(0x142A1B5E)
+    val blurLayer = androidx.compose.ui.graphics.rememberGraphicsLayer()
+    var barOrigin by remember { mutableStateOf(Offset.Zero) }
+    if (blur) {
+        LaunchedEffect(blurLayer, density) {
+            val r = with(density) { 24.dp.toPx() }
+            val saturate = android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix().apply { setSaturation(1.8f) })
+            blurLayer.renderEffect = android.graphics.RenderEffect.createChainEffect(
+                android.graphics.RenderEffect.createColorFilterEffect(saturate),
+                android.graphics.RenderEffect.createBlurEffect(r, r, android.graphics.Shader.TileMode.CLAMP),
+            ).asComposeRenderEffect()
+        }
+    }
+    Box(
         modifier
-            .glow(c.floatingShadow, 18.dp, 10.dp)
+            .width(barWidth.coerceAtLeast(0f).dp)
+            .glow(shadowBig, 36.dp, 16.dp, spread = (-12).dp)
+            .glow(shadowSmall, 6.dp, 2.dp)
             .clip(CircleShape)
-            .background(c.card.copy(alpha = if (c.isDark) 0.92f else 0.9f))
+            .onGloballyPositioned { barOrigin = it.positionInRoot() }
+            .drawBehind {
+                val source = backdrop?.layer
+                if (blur && source != null && source.size.width > 0) {
+                    backdrop.frames.longValue // redraw whenever the content re-records
+                    blurLayer.record(source.size) { drawLayer(source) }
+                    translate(backdrop.origin.x - barOrigin.x, backdrop.origin.y - barOrigin.y) { drawLayer(blurLayer) }
+                }
+                drawRect(c.card.copy(alpha = glass))
+            }
             .border(1.dp, c.hairline, CircleShape)
-            .padding(6.dp)
             .drawWithCache {
-                val slot = size.width / MainTab.entries.size
-                val r = minOf(26.dp.toPx(), slot / 2, size.height / 2)
-                val fill = Brush.verticalGradient(listOf(top, bottom), startY = size.height / 2 - r, endY = size.height / 2 + r)
-                val halo = Brush.radialGradient(listOf(top.copy(alpha = 0.45f), Color.Transparent), center = Offset.Zero, radius = r * 1.5f)
-                onDrawBehind {
-                    translate((position + 0.5f) * slot, size.height / 2) {
-                        translate(0f, 5.dp.toPx()) { drawCircle(halo, r * 1.5f, Offset.Zero) }
-                    }
-                    drawCircle(fill, r, Offset((position + 0.5f) * slot, size.height / 2))
+                // 1 dp inner highlight along the top edge.
+                val highlight = Brush.verticalGradient(0f to edge, 0.3f to Color.Transparent)
+                val stroke = Stroke(1.dp.toPx())
+                val inset = 0.5.dp.toPx()
+                onDrawWithContent {
+                    drawRoundRect(highlight, Offset(inset, inset), Size(size.width - 2 * inset, size.height - 2 * inset), CornerRadius(size.height / 2), style = stroke)
+                    drawContent()
                 }
             }
-            .selectableGroup()
+            .padding(horizontal = DockLayout.BAR_PADDING.dp)
             .testTag("pill-tab-bar"),
     ) {
-        MainTab.entries.forEach { tab ->
-            val active = tab == selected
-            val label = stringResource(tab.title)
-            val tint by animateColorAsState(if (active) tab.hue.onFill else c.textSecondary, Motion.fade())
-            Box(
-                Modifier
-                    .weight(1f)
-                    .height(52.dp)
-                    .clip(CircleShape)
-                    .clickableRipple(scale = 0.88f) { onSelect(tab) }
-                    .semantics { contentDescription = label; role = Role.Tab; this.selected = active }
-                    .testTag("tab-${tab.route}"),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    if (active) tab.activeIcon else tab.icon, contentDescription = null, tint = tint,
-                    modifier = Modifier.size(24.dp).bounceOn(active, from = 0.55f, enabled = active),
-                )
+        // The active pill (decorative): feature gradient with its glow.
+        Box(
+            Modifier.align(Alignment.CenterStart).offset { IntOffset(x.dp.roundToPx(), 0) }.width(w.dp).height(DockLayout.TAB_HEIGHT.dp)
+                .glow(top.copy(alpha = 0.45f), 16.dp, 4.dp)
+                .clip(CircleShape).background(Brush.verticalGradient(listOf(top, bottom))),
+        )
+        Row(Modifier.selectableGroup(), verticalAlignment = Alignment.CenterVertically) {
+            MainTab.entries.forEachIndexed { index, tab ->
+                val isActive = tab == selected
+                val labelled = isActive && pill != null
+                val name = stringResource(tab.dock)
+                val tint by animateColorAsState(if (isActive) tab.hue.onFill else c.textSecondary, Motion.fade())
+                val tooltip = androidx.compose.material3.rememberTooltipState()
+                androidx.compose.material3.TooltipBox(
+                    positionProvider = androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider(
+                        androidx.compose.material3.TooltipAnchorPosition.Above),
+                    tooltip = { PlainTooltip { Text(name) } },
+                    state = tooltip, enableUserInput = !isActive,
+                ) {
+                    Row(
+                        Modifier
+                            .width(slots[index].coerceAtLeast(0f).dp)
+                            // Touch target: the slot's width and the bar's full height (56 dp).
+                            .height((DockLayout.TAB_HEIGHT + 2 * DockLayout.BAR_PADDING).dp)
+                            .clickableRipple(scale = 0.88f) { onSelect(tab) }
+                            .semantics { contentDescription = name; role = Role.Tab; this.selected = isActive }
+                            .testTag("tab-${tab.route}")
+                            .padding(start = if (labelled) DockLayout.PILL_LEADING.dp else 0.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = if (labelled) Arrangement.Start else Arrangement.Center,
+                    ) {
+                        // Icon pop: 0.4 → 1 with `bouncy` when the tab becomes active (still under reduced motion).
+                        Icon(
+                            if (isActive) tab.activeIcon else tab.icon, contentDescription = null, tint = tint,
+                            modifier = Modifier.size(DockLayout.ICON.dp).bounceOn(isActive, from = 0.4f, enabled = isActive),
+                        )
+                        if (labelled) {
+                            Spacer(Modifier.width(DockLayout.ICON_GAP.dp))
+                            key(tab) { DockLabel(name, tint) }
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 
 /** 60dp grape bubble orb that opens the chat; a ring pulses outward every 3.2 s. [unread] shows as a badge. */
 @Composable

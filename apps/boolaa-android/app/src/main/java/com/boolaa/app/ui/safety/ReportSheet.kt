@@ -123,7 +123,6 @@ import com.boolaa.app.ui.components.CircleIconButton
 import com.boolaa.app.ui.components.ConfettiOverlay
 import com.boolaa.app.ui.components.ConfettiState
 import com.boolaa.app.ui.components.ConfirmDialog
-import com.boolaa.app.ui.components.EmptyState
 import com.boolaa.app.ui.components.FeatureBadge
 import com.boolaa.app.ui.components.FitText
 import com.boolaa.app.ui.components.Haptics
@@ -188,9 +187,13 @@ class ReportViewModel(private val container: AppContainer) : BaseViewModel() {
  * Report flow (App Store 1.2): 7 reasons + optional details, then "Also block <name>?".
  * A safety surface: flat buttons, plain cards, a system symbol and standard fades only. Grape marks the selected
  * reason, mint the "report sent" confirmation, danger the block.
+ * Calm surface: no mascot draws inside it (design-system.md §8.4).
  */
 @Composable
-fun ReportSheet(target: ReportTarget, onDismiss: () -> Unit) {
+fun ReportSheet(target: ReportTarget, onDismiss: () -> Unit) = com.boolaa.app.ui.components.CalmSurface { ReportSheetContent(target, onDismiss) }
+
+@Composable
+private fun ReportSheetContent(target: ReportTarget, onDismiss: () -> Unit) {
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val vm: ReportViewModel = viewModel(key = "report-${target.type}-${target.id}") { ReportViewModel(container) }

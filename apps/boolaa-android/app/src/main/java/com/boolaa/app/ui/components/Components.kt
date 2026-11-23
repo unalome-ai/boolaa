@@ -172,7 +172,7 @@ fun BoolaaChip(title: String, active: Boolean, onClick: () -> Unit, modifier: Mo
     // 48dp touch target around the 38dp chip; selection is announced ("Selected") with the tab role.
     Box(
         modifier
-            .tapArea(source, role = Role.Tab) { Haptics.selection(view); onClick() }
+            .tapArea(source, role = Role.Tab) { Haptics.toggle(view, !active); onClick() }
             .semantics { selected = active },
         contentAlignment = Alignment.Center,
     ) {
@@ -233,19 +233,22 @@ fun AddButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier,
     }
 }
 
-/** A block in the feature's wash with a dashed outline and a floating bubble cluster (one per empty section). */
+/** A block in the feature's wash with a dashed outline and the curious mascot (one per empty section, §8.4). */
 @Composable
-fun EmptyState(icon: ImageVector, title: String, message: String, modifier: Modifier = Modifier, hue: Hue = Hue.grape) {
+fun EmptyState(title: String, message: String, modifier: Modifier = Modifier, hue: Hue = Hue.grape) {
     Column(
         modifier.fillMaxWidth().popIn()
             .clip(RoundedCornerShape(Radius.card)).background(hue.wash.copy(alpha = hue.wash.alpha * 0.6f))
             .dashedBorder(hue.text.copy(alpha = 0.25f), Radius.card)
-            .padding(horizontal = 24.dp, vertical = 28.dp),
+            .padding(horizontal = 24.dp, vertical = 28.dp)
+            .testTag("empty-state"),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        BubbleCluster(icon, hue, size = 84.dp, modifier = Modifier.padding(bottom = 6.dp))
-        Text(title, style = Type.headline, color = BoolaaTheme.colors.textPrimary, textAlign = TextAlign.Center)
+        Mascot(com.boolaa.app.core.MascotExpression.forSituation(com.boolaa.app.core.MascotExpression.Situation.Empty), hue,
+            Modifier.padding(bottom = 8.dp))
+        Text(title, style = Type.headline.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Black), color = BoolaaTheme.colors.textPrimary,
+            textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
         Text(message, style = Type.subheadline, color = BoolaaTheme.colors.textSecondary, textAlign = TextAlign.Center)
     }
 }
@@ -370,11 +373,13 @@ fun ErrorDialog(message: String?, onDismiss: () -> Unit) {
 }
 
 @Composable
-fun ConfirmDialog(title: String, message: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+fun ConfirmDialog(title: String, message: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit, destructive: Boolean = true) {
+    val view = LocalView.current
+    // §8.3 Destructive: never bounces; the dialog fades and the confirm plays LONG_PRESS.
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = { onDismiss(); onConfirm() }, modifier = Modifier.testTag("confirm-dialog-confirm")) {
+            TextButton(onClick = { if (destructive) Haptics.destructive(view); onDismiss(); onConfirm() }, modifier = Modifier.testTag("confirm-dialog-confirm")) {
                 Text(confirm, style = Type.headline, color = BoolaaTheme.colors.dangerText)
             }
         },
@@ -445,18 +450,25 @@ fun BoolaaSheet(onDismiss: () -> Unit, title: String, tag: String? = null, spaci
     }
 }
 
-/** Pushed-screen header (Chat, Links): round back button, title and the bubble name with its orb. */
+/**
+ * Pushed-screen header (Chat, Links): round back button, the display title (32) and the bubble name tag on its own card
+ * capsule, since the header sits on the feature band (§8.1, §8.5). The caller puts the band behind it.
+ */
 @Composable
 fun PushedHeader(
     title: String, bubbleName: String, bubbleHue: Hue, onBack: () -> Unit, backTag: String, modifier: Modifier = Modifier,
     /** The bubble's cover photo (private, signed by PhotoUrls' Coil interceptor), shown like the switcher chip; else the dot. */
     bubbleId: String? = null, bubbleLogo: String? = null,
 ) {
-    Row(modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    val c = BoolaaTheme.colors
+    Row(modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         CircleIconButton(BoolaaIcons.Back, stringResource(R.string.back), onBack, Modifier.testTag(backTag), surface = true, size = 44.dp)
-        Column(Modifier.padding(start = 12.dp)) {
-            FitText(title, Type.title, color = BoolaaTheme.colors.textPrimary, modifier = Modifier.testTag("screen-title").semantics { heading() })
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(start = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            DisplayTitle(title, pushed = true, modifier = Modifier.testTag("screen-title"))
+            Row(
+                Modifier.clip(CircleShape).background(c.card).border(1.dp, c.hairline, CircleShape).padding(start = 6.dp, end = 10.dp, top = 3.dp, bottom = 3.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 if (bubbleId != null && !bubbleLogo.isNullOrBlank()) {
                     BubbleLogo(bubbleId, bubbleName, bubbleLogo, size = 20.dp, modifier = Modifier.testTag("header-bubble-logo"))
                 } else {

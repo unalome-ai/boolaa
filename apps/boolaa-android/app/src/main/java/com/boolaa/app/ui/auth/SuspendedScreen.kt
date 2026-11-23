@@ -61,9 +61,13 @@ class SuspendedViewModel(private val container: AppContainer) : BaseViewModel() 
  * confetti. Shows the end date and the reason when there is a session to read them with, the appeal address, sign
  * out and delete account. After a `user_banned` sign-in there is no session, so it only explains and goes back.
  * Coming back to the front re-runs the gate (MainActivity.onStart), so a suspension that has ended lets the user in.
+ * Calm surface: no mascot draws inside it (design-system.md §8.4).
  */
 @Composable
-fun SuspendedScreen() {
+fun SuspendedScreen() = com.boolaa.app.ui.components.CalmSurface { SuspendedScreenContent() }
+
+@Composable
+private fun SuspendedScreenContent() {
     val container = LocalAppContainer.current
     val vm: SuspendedViewModel = viewModel { SuspendedViewModel(container) }
     val state by container.session.state.collectAsStateWithLifecycle()

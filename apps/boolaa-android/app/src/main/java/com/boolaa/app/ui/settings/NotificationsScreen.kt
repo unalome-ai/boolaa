@@ -237,10 +237,13 @@ fun NotificationsScreen(onBack: () -> Unit) {
 @Composable
 private fun PrefSwitch(label: String, checked: Boolean, enabled: Boolean, tag: String, strong: Boolean = false, onChange: (Boolean) -> Unit) {
     val c = BoolaaTheme.colors
+    val view = androidx.compose.ui.platform.LocalView.current
     // The whole row is the switch, so TalkBack reads "<label>, on, switch" and the label is tappable too.
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(Radius.field))
-            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = {
+                com.boolaa.app.ui.components.Haptics.toggle(view, it); onChange(it)
+            })
             .testTag(tag)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

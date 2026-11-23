@@ -90,17 +90,27 @@ fun ConnectivityBanner(modifier: Modifier = Modifier) {
     }
 }
 
-/** Nothing could be loaded and nothing is cached: an inline error with Try again (never an empty screen). */
+/**
+ * Nothing could be loaded and nothing is cached: an inline error with Try again (never an empty screen). The mascot is
+ * sleepy while there is no connection and worried when the server answered with an error (§8.4); calm (safety)
+ * surfaces keep the plain symbol.
+ */
 @Composable
 fun LoadFailed(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     val c = BoolaaTheme.colors
+    val status by LocalAppContainer.current.connectivity.status.collectAsStateWithLifecycle()
     Column(
         modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.card).border(1.dp, c.hairline, RoundedCornerShape(24.dp))
             .padding(20.dp).testTag("load-failed"),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(Icons.Rounded.CloudOff, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(32.dp))
+        if (com.boolaa.app.ui.theme.LocalCalm.current) {
+            Icon(Icons.Rounded.CloudOff, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(32.dp))
+        } else {
+            val expression = com.boolaa.app.core.MascotExpression.forSituation(com.boolaa.app.core.MascotExpression.Situation.LoadError(status))
+            Mascot(expression, com.boolaa.app.core.MascotPlace.LOAD_ERROR.hue(Hue.grape), size = 72.dp)
+        }
         Text(stringResource(R.string.offline_load_failed), style = Type.body, color = c.textPrimary, textAlign = TextAlign.Center)
         SecondaryButton(stringResource(R.string.offline_retry), onClick = onRetry, modifier = Modifier.testTag("load-retry"))
     }

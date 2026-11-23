@@ -130,7 +130,6 @@ import com.boolaa.app.ui.components.CircleIconButton
 import com.boolaa.app.ui.components.ConfettiOverlay
 import com.boolaa.app.ui.components.ConfettiState
 import com.boolaa.app.ui.components.ConfirmDialog
-import com.boolaa.app.ui.components.EmptyState
 import com.boolaa.app.ui.components.FeatureBadge
 import com.boolaa.app.ui.components.FitText
 import com.boolaa.app.ui.components.Haptics

@@ -84,7 +84,7 @@ fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
                 AppRoute.AGE_CONFIRMATION -> AgeConfirmScreen()
                 AppRoute.SUSPENDED -> SuspendedScreen()
                 AppRoute.ONBOARDING -> OnboardingScreen()
-                AppRoute.MAIN -> MainShell(initialTab = debugHooks.tab, initialOpen = debugHooks.open)
+                AppRoute.MAIN -> MainShell(initialTab = debugHooks.tab, initialOpen = debugHooks.open, initialCheer = debugHooks.cheer)
             }
         }
         // An opened invite link waits through sign-in and the device / age gates, then shows its join preview.

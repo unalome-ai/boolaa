@@ -321,9 +321,13 @@ class DeleteAccountViewModel(private val container: AppContainer) : CodeStepView
  * Account deletion (App Store 5.1.1(v), docs/auth-security.md §2): can't-undo warning and a typed confirmation word,
  * then an emailed `sensitive_action` code, then storage cleanup, `delete_my_account()` and a local sign-out.
  * A safety surface: flat, still, danger only.
+ * Calm surface: no mascot draws inside it (design-system.md §8.4).
  */
 @Composable
-fun DeleteAccountFlow(onDismiss: () -> Unit, onDeleted: () -> Unit) {
+fun DeleteAccountFlow(onDismiss: () -> Unit, onDeleted: () -> Unit) = com.boolaa.app.ui.components.CalmSurface { DeleteAccountFlowContent(onDismiss, onDeleted) }
+
+@Composable
+private fun DeleteAccountFlowContent(onDismiss: () -> Unit, onDeleted: () -> Unit) {
     val container = LocalAppContainer.current
     val vm: DeleteAccountViewModel = viewModel(key = "delete-account") { DeleteAccountViewModel(container) }
     vm.onDeleted = onDeleted

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -135,15 +136,48 @@ object Radius {
     val hero = 32.dp    // hero card, sheets, auth panel
 }
 
-/** Header glow behind the shell (design-system.md §2.4), the same on every platform. */
-object Glow {
-    const val MAIN_LIGHT = 0.22f
-    const val MAIN_DARK = 0.20f
-    const val SIDE_LIGHT = 0.16f
-    const val SIDE_DARK = 0.12f
-    val mainRadius = 340.dp
-    val sideRadius = 240.dp
+/**
+ * Brand redesign tokens (design-system.md §8). iOS keeps the same numbers in `Theme.Brand` (Theme.swift), the web in
+ * `src/lib/brand.ts` and `globals.css`; DesignTokensTest checks all three. Contrast of the new pairs: §8.6, BrandRulesTest.
+ */
+object BrandTokens {
+    /** §8.1 Feature band: the hue `fill` at this strength over the background, opaque to 45 % of the band, then fading out. */
+    const val BAND_LIGHT = 0.28f
+    const val BAND_DARK = 0.22f
+    const val BAND_FADE_START = 0.45f
+    /** Band circles: white 20 % (light), the background at 40 % (dark). */
+    const val BAND_CIRCLE_LIGHT = 0.20f
+    const val BAND_CIRCLE_DARK = 0.40f
+    /** Band tint cross-fade on a tab or bubble change (200 ms under reduced motion). */
+    const val BAND_FADE_MS = 400
+    /** §8.2 Chat: orbs behind the thread, and the thread panel (card at 50 % over the background). */
+    const val CHAT_ORB_LIGHT = 0.06f
+    const val CHAT_ORB_DARK = 0.10f
+    const val CHAT_PANEL = 0.5f
+    /** §8.3 Dock glass: card at this opacity over the blur (API 31+); card at 90 % without blur below. */
+    const val GLASS_LIGHT = 0.72f
+    const val GLASS_DARK = 0.80f
+    const val GLASS_NO_BLUR = 0.90f
+    const val GLASS_EDGE_LIGHT = 0.75f
+    const val GLASS_EDGE_DARK = 0.14f
+    /** §8.4 Mascot face colours. */
+    val mascotCheek = Color(0xFFFF4F8B)
+    val mascotTongue = Color(0xFFFF6B8A)
+    /** §8.5 Sticker die-cut edge (both modes). */
+    val stickerEdge = Color.White.copy(alpha = 0.95f)
+    /** §8.4 Cheer toast: how long it stays. */
+    const val CHEER_MS = 2800L
+
+    /** §8.5 Home title gradient: the hue *text* shades grape → pink (55 %) → tangerine (large text only, ≥ 3:1 on the band). */
+    fun titleGradientStops(dark: Boolean): List<Pair<Float, Color>> =
+        listOf(0f to Hue.grape.text(dark), 0.55f to Hue.pink.text(dark), 1f to Hue.tangerine.text(dark))
+
+    /** The band tint itself: [hue]'s fill at the mode's strength. */
+    fun bandTint(hue: Hue, dark: Boolean): Color = hue.fill.copy(alpha = if (dark) BAND_DARK else BAND_LIGHT)
 }
+
+/** Safety surfaces (report, blocked users, delete account, suspended): the mascot refuses to draw inside them (§8.4). */
+val LocalCalm = staticCompositionLocalOf { false }
 
 @Immutable
 data class BoolaaColors(
@@ -217,10 +251,19 @@ val Display = FontFamily(
 /** Type scale (design-system.md §3). Sizes are sp, so they follow the system font scale. */
 object Type {
     val wordmark = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 46.sp, lineHeight = 52.sp)
-    val screenTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 34.sp, lineHeight = 40.sp)
+    /** §8.5 Screen title: Nunito black 38 / 41, tracking −0.025 em, up to 2 lines, auto-sized down to 26. */
+    val screenTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 38.sp, lineHeight = 41.sp, letterSpacing = (-0.025).em)
+    /** Pushed screens (Chat, Links): same face at 32. */
+    val pushedTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 32.sp, lineHeight = 35.sp, letterSpacing = (-0.025).em)
+    /** §8.5 Feed titles on Home: display 17 bold. */
+    val feedTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 17.sp, lineHeight = 22.sp)
+    /** §8.5 Sticker label: display 12 black, tracking 0.06 em. */
+    val sticker = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.06.em)
+    /** §8.3 Dock label: display 14 extra-bold. */
+    val dockLabel = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, lineHeight = 18.sp)
     val title = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 28.sp, lineHeight = 34.sp)
     val title2 = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 22.sp, lineHeight = 28.sp)
-    val sectionTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 20.sp, lineHeight = 26.sp)
+    val sectionTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 20.sp, lineHeight = 26.sp, letterSpacing = (-0.01).em)
     val headline = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, lineHeight = 22.sp)
     val body = TextStyle(fontSize = 17.sp, lineHeight = 22.sp)
     val bodyStrong = body.copy(fontWeight = FontWeight.SemiBold)

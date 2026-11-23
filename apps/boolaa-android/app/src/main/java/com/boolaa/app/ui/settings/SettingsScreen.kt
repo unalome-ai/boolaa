@@ -448,7 +448,7 @@ fun SettingsScreen(navigator: ShellNavigator) {
             title = stringResource(R.string.transfer_ownership_title),
             message = stringResource(R.string.transfer_ownership_body, name, bubble.name),
             confirm = stringResource(R.string.transfer_ownership),
-            onConfirm = { vm.transferOwnership(m) { notice(transferredText, name) } }, onDismiss = { transferring = null },
+            onConfirm = { vm.transferOwnership(m) { notice(transferredText, name) } }, onDismiss = { transferring = null }, destructive = false,
         )
     }
     removing?.let { m ->
@@ -680,7 +680,7 @@ private fun InviteCard(bubble: Bubble, canManage: Boolean, vm: SettingsViewModel
             message = stringResource(R.string.rotate_invite_body),
             confirm = stringResource(R.string.rotate_invite_confirm),
             onConfirm = { vm.rotateInvite { Toast.makeText(context, rotatedText, Toast.LENGTH_SHORT).show() } },
-            onDismiss = { confirmRotate = false },
+            onDismiss = { confirmRotate = false }, destructive = false,
         )
     }
 }

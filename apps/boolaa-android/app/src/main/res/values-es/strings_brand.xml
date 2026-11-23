@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand redesign (docs/design-system.md §8, docs/i18n-glossary.md "Brand redesign" and "Dock short labels"). -->
+<resources>
+    <string name="dock_home">Inicio</string>
+    <string name="dock_events">Eventos</string>
+    <string name="dock_food">Comida</string>
+    <string name="dock_marketplace">Mercado</string>
+    <string name="dock_settings">Ajustes</string>
+    <string name="events_empty_mine_title">¿Algún plan?</string>
+    <string name="food_empty_mine_title">¿Te ha sobrado algo?</string>
+    <string name="food_empty_others_title">Nada compartido aún</string>
+    <string name="cheer_going">¡Vas a ir!</string>
+    <string name="cheer_first_event">¡Tu primer evento ya está!</string>
+    <string name="cheer_first_post">¡Primera publicación compartida!</string>
+    <string name="cheer_first_item">¡Primer artículo publicado!</string>
+    <string name="cheer_joined">Ya estás dentro. ¡Saluda a %1$s!</string>
+</resources>

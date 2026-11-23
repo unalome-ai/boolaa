@@ -89,6 +89,8 @@ data class SessionState(
     val deviceCodeSentAt: Long? = null,
     /** Suspended or banned (signed in), or sign-in answered `user_banned` (signed out) (docs/moderation.md). */
     val suspension: Suspension? = null,
+    /** A bubble whose join request was just approved: its Home plays the "You're in" cheer once (§8.4). */
+    val welcomeBubbleId: String? = null,
 ) {
     val blockedIds: Set<String> get() = blocks.mapTo(mutableSetOf()) { it.blockedId }
     val route: AppRoute
@@ -411,7 +413,9 @@ class SessionStore(
         }.fold(
             onSuccess = { (profile, members, requests, blocks) ->
                 _state.update {
-                    it.copy(profile = profile, memberships = members.filter { m -> m.approved }, pendingRequests = requests, blocks = blocks)
+                    val approved = members.filter { m -> m.approved }
+                    val welcome = admittedBubble(it.pendingRequests, it.memberships, approved) ?: it.welcomeBubbleId
+                    it.copy(profile = profile, memberships = approved, pendingRequests = requests, blocks = blocks, welcomeBubbleId = welcome)
                 }
                 _state.value.currentBubble?.let { persistBubble(it.id) }
                 saveCachedBubbles(userId)
@@ -442,6 +446,13 @@ class SessionStore(
             if (it.userId != userId || it.memberships != null) it
             else it.copy(profile = cached.profile, memberships = cached.memberships, pendingRequests = cached.pendingRequests, blocks = cached.blocks)
         }
+    }
+
+    /** True once for the bubble that was just joined; the cheer then never repeats. */
+    fun takeWelcome(bubbleId: String): Boolean {
+        var taken = false
+        _state.update { if (it.welcomeBubbleId == bubbleId) { taken = true; it.copy(welcomeBubbleId = null) } else it }
+        return taken
     }
 
     fun selectBubble(id: String) {
@@ -735,6 +746,14 @@ class SessionStore(
     companion object {
         private const val KEY_BUBBLE = "boolaa.currentBubbleID"
         private const val KEY_INVITE = "boolaa.pendingInvite"
+
+        /** A bubble that was a pending request and is now an approved membership (null on the first load). */
+        fun admittedBubble(previousPending: List<JoinRequest>, previousMembers: List<BubbleMember>?, now: List<BubbleMember>): String? {
+            if (previousMembers == null) return null
+            val had = previousMembers.mapTo(HashSet()) { it.bubbleId }
+            val requested = previousPending.mapTo(HashSet()) { it.bubbleId }
+            return now.firstOrNull { it.bubbleId in requested && it.bubbleId !in had }?.bubbleId
+        }
 
         /** Sign-up `options.data` (docs/auth-security.md §6). */
         fun signUpMetadata(name: String, locale: String): JsonObject = buildJsonObject {

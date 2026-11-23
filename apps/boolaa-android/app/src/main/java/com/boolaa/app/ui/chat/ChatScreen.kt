@@ -83,6 +83,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.boolaa.app.AppContainer
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import com.boolaa.app.core.BandScreen
+import com.boolaa.app.ui.components.BandedHeader
+import com.boolaa.app.ui.components.ChatOrbs
 import com.boolaa.app.R
 import com.boolaa.app.core.BoolaaApi
 import com.boolaa.app.core.BoolaaJson
@@ -491,6 +503,8 @@ fun ChatScreen(
     val c = BoolaaTheme.colors
     val view = LocalView.current
     val resolver = LocalContext.current.contentResolver
+    /** The bubble's colour: your messages, the send button, the orbs and the header band (§8.2). */
+    val bubbleHue = Hue.forId(bubble.id)
     // Pop-in is for messages that arrive while the screen is open: the first page and older pages never animate.
     val openedAt = remember(list != null) { if (list == null) null else list.lastOrNull()?.createdAt ?: Instant.MIN }
     val popped = remember { HashSet<String>() }
@@ -578,14 +592,25 @@ fun ChatScreen(
         vm.jumpDone(target)
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().testTag("chat-screen")) {
-        PushedHeader(stringResource(R.string.chat), bubble.name, Hue.forId(bubble.id), onBack, backTag = "chat-back",
-            bubbleId = bubble.id, bubbleLogo = bubble.logo)
-        Box(Modifier.weight(1f)) {
+    Column(Modifier.fillMaxSize().imePadding().testTag("chat-screen")) {
+        // Chat is the bubble's own room: its band takes the bubble's colour (§8.1).
+        BandedHeader(BandScreen.CHAT.hue(bubbleHue)) {
+            PushedHeader(stringResource(R.string.chat), bubble.name, bubbleHue, onBack, backTag = "chat-back",
+                bubbleId = bubble.id, bubbleLogo = bubble.logo, modifier = Modifier.statusBarsPadding())
+        }
+        // §8.2 thread panel: card at 50 % over the background, radius 32, level-1 shadow, the bubble's orbs behind the thread.
+        val panelShape = RoundedCornerShape(com.boolaa.app.ui.theme.Radius.hero)
+        Box(
+            Modifier.weight(1f).padding(horizontal = 12.dp).padding(bottom = 8.dp)
+                .glow(c.cardShadow, 16.dp, 8.dp, com.boolaa.app.ui.theme.Radius.hero)
+                .clip(panelShape).background(c.card.copy(alpha = com.boolaa.app.ui.theme.BrandTokens.CHAT_PANEL))
+                .border(1.dp, c.hairline, panelShape),
+        ) {
+            ChatOrbs(bubbleHue)
             when {
                 list == null && pending.isEmpty() -> com.boolaa.app.ui.components.LoadingOrFailed(issue, vm::retryNow, Modifier.padding(16.dp))
-                list.orEmpty().isEmpty() && pending.isEmpty() -> EmptyState(BoolaaIcons.Chat, stringResource(R.string.chat_empty_title), stringResource(R.string.chat_empty_message),
-                    Modifier.padding(16.dp))
+                list.orEmpty().isEmpty() && pending.isEmpty() -> EmptyState(stringResource(R.string.chat_empty_title), stringResource(R.string.chat_empty_message),
+                    Modifier.padding(16.dp), hue = com.boolaa.app.core.MascotPlace.CHAT.hue(bubbleHue))
                 else -> LazyColumn(
                     state = listState,
                     reverseLayout = true,
@@ -600,7 +625,7 @@ fun ChatScreen(
                                 val mine = message.senderId == me
                                 val pop = remember(message.id) { openedAt != null && message.createdAt > openedAt && popped.add(message.id) }
                                 MessageRow(
-                                    message, isMine = mine, showAuthor = row.showAuthor, popIn = pop,
+                                    message, isMine = mine, showAuthor = row.showAuthor, popIn = pop, bubbleHue = bubbleHue,
                                     highlighted = message.id == highlightedId,
                                     imageUrl = message.imagePath?.let { imageUrls[it] },
                                     onReport = if (!mine && !message.isDeleted) ({
@@ -612,7 +637,7 @@ fun ChatScreen(
                                     onReact = if (!message.isDeleted) ({ kind -> vm.react(message.id, kind) }) else null,
                                 )
                             }
-                            is ChatRow.Pending -> PendingMessageRow(row.message, onRetry = { vm.retry(row.message.clientId) },
+                            is ChatRow.Pending -> PendingMessageRow(row.message, bubbleHue, onRetry = { vm.retry(row.message.clientId) },
                                 onDiscard = { vm.discard(row.message.clientId, me) })
                             ChatRow.Divider -> NewMessagesDivider()
                             ChatRow.LoadingOlder -> ListNote(stringResource(R.string.chat_loading_older), "chat-loading-older")
@@ -654,6 +679,7 @@ fun ChatScreen(
             Box(
                 Modifier.padding(end = 8.dp, bottom = 4.dp).size(48.dp).clip(CircleShape).background(c.field)
                     .clickableRipple(scale = 0.88f, enabled = !sending) {
+                        Haptics.light(view)
                         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     }
                     .semantics { contentDescription = addPhotoLabel; role = Role.Button }
@@ -681,13 +707,14 @@ fun ChatScreen(
             )
             val canSend = !sending && (draft.isNotBlank() || photo != null)
             val sendLabel = stringResource(R.string.send)
-            val arrow by animateColorAsState(if (canSend) Hue.grape.onFill else c.textSecondary, Motion.fade())
+            val arrow by animateColorAsState(if (canSend) bubbleHue.onFill else c.textSecondary, Motion.fade())
             Box(
                 Modifier.padding(start = 10.dp, bottom = 4.dp).size(48.dp)
                     .bounceOn(canSend, from = 0.88f, enabled = canSend)
-                    .then(if (canSend) Modifier.glow(Hue.grape.fill.copy(alpha = 0.4f), 10.dp, 5.dp) else Modifier)
+                    .then(if (canSend) Modifier.glow(bubbleHue.fill.copy(alpha = 0.4f), 10.dp, 5.dp) else Modifier)
                     .clip(CircleShape)
-                    .then(if (canSend) Modifier.background(Hue.grape.gradient) else Modifier.background(c.field))
+                    // §8.2: the send button wears the bubble's colour.
+                    .then(if (canSend) Modifier.background(bubbleHue.gradient) else Modifier.background(c.field))
                     .clickableRipple(scale = 0.88f) {
                         if (canSend) {
                             val text = draft
@@ -695,7 +722,7 @@ fun ChatScreen(
                             draft = ""
                             photo = null
                             sends++
-                            Haptics.light(view)
+                            Haptics.play(view, com.boolaa.app.core.Interaction.SEND)
                             vm.send(me, text, picked, resolver) { failedText, failedPhoto -> draft = failedText; photo = failedPhoto }
                         }
                     }
@@ -719,44 +746,56 @@ fun ChatScreen(
 }
 
 /**
- * A message in the outbox: our own bubble, dimmed, with "Sending…" or "Not sent — tap to retry" under it. Tapping a
- * failed one retries; long press (and an accessibility action) offers "Don't send".
+ * A message in the outbox (§8.2): your own bubble in full colours (no dimming, so the text keeps its contrast).
+ * "Sending…": no glow, a clock + "Sending…". "Not sent": a 2 dp dangerText outline offset 2, a warning triangle +
+ * "Not sent — tap to retry" in bold dangerText; a tap retries, long press (and TalkBack actions) offers Try again /
+ * Don't send. One TalkBack element: the message, then its state, announced politely on change.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PendingMessageRow(message: com.boolaa.app.core.PendingMessage, onRetry: () -> Unit, onDiscard: () -> Unit) {
+internal fun PendingMessageRow(message: com.boolaa.app.core.PendingMessage, hue: Hue, onRetry: () -> Unit, onDiscard: () -> Unit) {
     val c = BoolaaTheme.colors
+    val view = LocalView.current
     val failed = message.state == com.boolaa.app.core.OutboxState.FAILED
     val status = stringResource(if (failed) R.string.offline_not_sent_tap_to_retry else R.string.offline_sending)
     val retryLabel = stringResource(R.string.offline_retry)
     val discardLabel = stringResource(R.string.offline_discard)
-    // TalkBack reads the message itself, then its state ("Sending…" / "Not sent — tap to retry"), announced politely on change.
+    val photoLabel = stringResource(R.string.chat_photo)
     val spoken = listOfNotNull(
-        if (message.hasPhoto) stringResource(R.string.chat_photo) else null,
+        if (message.hasPhoto) photoLabel else null,
         message.content.takeIf { it.isNotEmpty() },
     ).joinToString(", ")
     var menu by remember { mutableStateOf(false) }
+    var wasFailed by remember { mutableStateOf(failed) }
+    LaunchedEffect(failed) {
+        if (failed && !wasFailed) Haptics.error(view)
+        wasFailed = failed
+    }
     Row(Modifier.fillMaxWidth().testTag("pending-${message.clientId}"), horizontalArrangement = Arrangement.End) {
-        Column(Modifier.padding(horizontal = 8.dp).widthIn(max = 290.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Column(
-                Modifier.graphicsLayer { alpha = 0.6f }.clip(MineShape).background(Hue.grape.gradient)
-                    .combinedClickable(onClick = { if (failed) onRetry() }, onLongClick = { menu = true })
-                    .semantics {
-                        contentDescription = spoken.ifEmpty { status }
-                        stateDescription = status
-                        liveRegion = LiveRegionMode.Polite
-                        if (failed) role = Role.Button
-                        customActions = listOfNotNull(
-                            if (failed) CustomAccessibilityAction(retryLabel) { onRetry(); true } else null,
-                            CustomAccessibilityAction(discardLabel) { onDiscard(); true },
-                        )
-                    },
-            ) {
-                if (message.hasPhoto) Text(stringResource(R.string.chat_photo), style = Type.body.copy(fontStyle = FontStyle.Italic),
-                    color = Hue.grape.onFill, modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
-                if (message.content.isNotEmpty()) Text(message.content, style = Type.body, color = Hue.grape.onFill,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
-                else if (message.hasPhoto) Spacer(Modifier.height(10.dp))
+        Column(
+            Modifier.padding(horizontal = 8.dp).widthIn(max = 296.dp)
+                .combinedClickable(onClick = { if (failed) onRetry() }, onLongClick = { menu = true })
+                .testTag(if (failed) "pending-failed" else "pending-sending")
+                .clearAndSetSemantics {
+                    contentDescription = spoken.ifEmpty { status }
+                    stateDescription = status
+                    liveRegion = LiveRegionMode.Polite
+                    if (failed) role = Role.Button
+                    customActions = listOfNotNull(
+                        if (failed) CustomAccessibilityAction(retryLabel) { onRetry(); true } else null,
+                        CustomAccessibilityAction(discardLabel) { onDiscard(); true },
+                    )
+                },
+            horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Box(if (failed) Modifier.border(2.dp, c.dangerText, FailedOutline).padding(4.dp) else Modifier) {
+                Column(Modifier.mineBubble(hue, glow = false, gloss = !message.hasPhoto)) {
+                    if (message.hasPhoto) Text(photoLabel, style = Type.body.copy(fontStyle = FontStyle.Italic),
+                        color = hue.onFill, modifier = Modifier.padding(start = 15.dp, end = 15.dp, top = 10.dp))
+                    if (message.content.isNotEmpty()) Text(message.content, style = Type.body, color = hue.onFill,
+                        modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp))
+                    else if (message.hasPhoto) Spacer(Modifier.height(10.dp))
+                }
                 androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     if (failed) androidx.compose.material3.DropdownMenuItem(text = { Text(retryLabel, style = Type.body) },
                         onClick = { menu = false; onRetry() })
@@ -764,12 +803,50 @@ private fun PendingMessageRow(message: com.boolaa.app.core.PendingMessage, onRet
                         onClick = { menu = false; onDiscard() }, modifier = Modifier.testTag("pending-discard"))
                 }
             }
-            Text(status, style = Type.caption2, color = if (failed) c.dangerText else c.textSecondary,
-                modifier = Modifier.then(if (failed) Modifier.minimumInteractiveComponentSize().clickableRipple(role = Role.Button, onClick = onRetry) else Modifier)
-                    .padding(horizontal = 6.dp, vertical = 2.dp).testTag(if (failed) "pending-failed" else "pending-sending"))
+            // Never colour-only: icon + words.
+            Row(Modifier.padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(if (failed) BoolaaIcons.Warning else BoolaaIcons.Time, contentDescription = null,
+                    tint = if (failed) c.dangerText else c.textSecondary, modifier = Modifier.size(if (failed) 13.dp else 12.dp))
+                Text(status, style = if (failed) Type.caption2.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) else Type.caption2,
+                    color = if (failed) c.dangerText else c.textSecondary)
+            }
         }
     }
 }
+
+/** Your message's fill (§8.2): the bubble's gradient with its glow, plus the gloss pill (not on photos). */
+@Composable
+private fun Modifier.mineBubble(hue: Hue, glow: Boolean = true, gloss: Boolean = true): Modifier =
+    this.then(if (glow) Modifier.glow(hue.fill.copy(alpha = 0.4f), 16.dp, 4.dp, 21.dp) else Modifier)
+        .clip(MineShape)
+        .background(hue.gradient)
+        .then(if (gloss) Modifier.drawBehind {
+            // 26 × 6, white 45 %, −4°, at (14, 3): inside the 10 dp top padding, never touching text.
+            val topLeft = Offset(14.dp.toPx(), 3.dp.toPx())
+            val size = Size(26.dp.toPx(), 6.dp.toPx())
+            rotate(-4f, Offset(topLeft.x + size.width / 2, topLeft.y + size.height / 2)) {
+                drawRoundRect(GlossColor, topLeft, size, CornerRadius(size.height / 2))
+            }
+        } else Modifier)
+
+/** Someone else's fill (§8.2): their wash over the card, a 3 dp edge in their fill on the leading side, level-1 shadow. */
+@Composable
+private fun Modifier.theirBubble(hue: Hue): Modifier {
+    val c = BoolaaTheme.colors
+    val wash = hue.wash
+    return this.glow(c.cardShadow, 12.dp, 6.dp, 21.dp)
+        .clip(TheirsShape)
+        .background(c.card)
+        .drawBehind {
+            drawRect(wash)
+            val edge = 3.dp.toPx()
+            val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Ltr) 0f else size.width - edge
+            drawRect(hue.fill, Offset(x, 0f), Size(edge, size.height))
+        }
+}
+
+private val GlossColor = Color.White.copy(alpha = 0.45f)
+private val FailedOutline = RoundedCornerShape(25.dp, 25.dp, 10.dp, 25.dp)
 
 /** "New messages": a hairline with a label in the middle, above the first unread message. */
 @Composable
@@ -795,7 +872,8 @@ private val MineShape = RoundedCornerShape(21.dp, 21.dp, 6.dp, 21.dp)
 private val TheirsShape = RoundedCornerShape(21.dp, 21.dp, 21.dp, 6.dp)
 
 /**
- * One message. Own bubbles are grape gradient; others sit on the card colour with the sender's name in their own hue.
+ * One message (§8.2). Your bubbles wear the bubble's gradient ([bubbleHue]) with gloss and glow; others' sit on their
+ * sender's wash with a 3 dp edge in the sender's colour, and the sender's name in their own hue.
  * A photo ([imageUrl], a signed URL) sits above its optional caption. Long press on someone else's message opens the
  * report sheet, on your own the delete confirmation (both also accessibility actions). A deleted message is a quiet
  * placeholder with no actions. With [popIn] the bubble pops out of its tail corner.
@@ -804,6 +882,7 @@ private val TheirsShape = RoundedCornerShape(21.dp, 21.dp, 21.dp, 6.dp)
 @Composable
 fun MessageRow(
     message: ChatMessage, isMine: Boolean, showAuthor: Boolean, popIn: Boolean = false, highlighted: Boolean = false, imageUrl: String? = null,
+    bubbleHue: Hue = Hue.grape,
     onReport: (() -> Unit)? = null, onDelete: (() -> Unit)? = null,
     reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
 ) {
@@ -869,20 +948,27 @@ fun MessageRow(
             val shape = if (isMine) MineShape else TheirsShape
             // A search hit opened in context: the same brand ring as push highlights, for 4 s.
             val ring = if (highlighted) Modifier.border(3.dp, com.boolaa.app.ui.theme.Brand.hue.fill, shape).testTag("message-highlighted") else Modifier
+            val senderHue = Hue.forId(message.senderId)
             if (message.isDeleted) {
+                // Unchanged on every hue: dashed 1.5 hairline outline, no fill, italic placeholder.
+                val hairline = c.hairline
                 Text(
                     stringResource(R.string.chat_deleted),
                     style = Type.body.copy(fontStyle = FontStyle.Italic),
                     color = c.textSecondary,
-                    modifier = Modifier.clip(shape).border(1.dp, c.hairline, shape).then(ring).padding(horizontal = 14.dp, vertical = 10.dp)
+                    modifier = Modifier
+                        .drawWithCache {
+                            val outline = shape.createOutline(size, layoutDirection, this)
+                            val dash = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx())))
+                            onDrawBehind { drawOutline(outline, hairline, style = dash) }
+                        }
+                        .then(ring).padding(horizontal = 15.dp, vertical = 10.dp)
                         .testTag("message-deleted-${message.id}"),
                 )
             } else {
                 Column(
                     Modifier
-                        .then(if (isMine) Modifier.glow(Hue.grape.fill.copy(alpha = 0.25f), 8.dp, 4.dp, 21.dp) else Modifier.glow(c.cardShadow, 8.dp, 3.dp, 21.dp))
-                        .clip(shape)
-                        .then(if (isMine) Modifier.background(Hue.grape.gradient) else Modifier.background(c.otherBubble).border(1.dp, c.hairline, shape))
+                        .then(if (isMine) Modifier.mineBubble(bubbleHue, gloss = message.imagePath == null) else Modifier.theirBubble(senderHue))
                         .then(ring)
                         .then(
                             // Long press: the reactions row plus Delete (own) or Report (others) below it.
@@ -909,26 +995,29 @@ fun MessageRow(
                                 ImageRequest.Builder(context).data(it).memoryCacheKey(message.imagePath).diskCacheKey(message.imagePath).build()
                             }
                         }
+                        // Edge to edge: the fill shows around the caption only.
                         AsyncImage(
                             model = request, contentDescription = photoLabel, contentScale = ContentScale.Crop,
                             modifier = Modifier.size(240.dp).background(c.field).testTag("message-photo-${message.id}"),
                         )
                     }
                     if (message.content.isNotEmpty()) {
-                        // Links are tappable and open in the browser (no previews in chat).
-                        val linkColor = if (isMine) Hue.grape.onFill else Hue.grape.text
+                        // Links are tappable and open in the browser (no previews in chat): onFill on yours, the sender's
+                        // text shade on others' (both ≥ 4.5:1, §8.6).
+                        val linkColor = if (isMine) bubbleHue.onFill else senderHue.text
                         val text = remember(message.content, linkColor) { linkified(message.content, linkColor) }
                         Text(
                             text,
                             style = Type.body,
-                            color = if (isMine) Hue.grape.onFill else c.textPrimary,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            color = if (isMine) bubbleHue.onFill else c.textPrimary,
+                            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
                         )
                     }
                 }
             }
             if (onReact != null && reactions.isNotEmpty()) {
-                com.boolaa.app.ui.components.ReactionBar(reactions, onReact, hue = Hue.grape, picker = picker, tag = "reactions-${message.id}")
+                // Reactions keep the chat feature colour (grape) whatever the bubble hue (§8.2).
+                com.boolaa.app.ui.components.ReactionBar(reactions, onReact, hue = Hue.grape, picker = picker, tag = "reactions-${message.id}", filledMine = true)
             }
             Text(time, style = Type.caption2, color = c.textSecondary, modifier = Modifier.padding(horizontal = 6.dp))
         }

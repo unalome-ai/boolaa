@@ -318,7 +318,7 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
                 }
                 list == null -> items(4, key = { "skeleton-$it" }) { SkeletonTile() }
                 visible.isEmpty() -> item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
-                    EmptyState(BoolaaIcons.Market, stringResource(R.string.market_empty_title), stringResource(R.string.market_empty_message), hue = hue)
+                    EmptyState(stringResource(R.string.market_empty_title), stringResource(R.string.market_empty_message), hue = hue)
                 }
                 // Filter change: tiles leaving fade out, arriving ones pop in, the rest slide to their new place.
                 else -> gridItemsIndexed(visible, key = { _, it -> it.id }) { index, item ->
@@ -338,7 +338,11 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     if (creating || editing != null) {
         val resolver = LocalContext.current.contentResolver
         MarketEditor(editing, busy, onDismiss = { creating = false; editing = null }) { picked, title, description, status, availability ->
-            vm.save(editing, picked, title, description, status, availability, resolver) { creating = false; editing = null }
+            val first = editing == null && items.orEmpty().none { it.ownerId == me }
+            vm.save(editing, picked, title, description, status, availability, resolver) {
+                creating = false; editing = null
+                if (first) com.boolaa.app.ui.components.CheerCenter.show(com.boolaa.app.core.Cheer.FIRST_ITEM)
+            }
         }
     }
     deleting?.let { i ->
