@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const [locale, messages, theme] = await Promise.all([getLocale(), getMessages(), readTheme()]);
   // The theme is in the server-rendered HTML (no flash); "system" leaves it to prefers-color-scheme.
   return (
-    <html lang={locale} data-theme={theme === "system" ? undefined : theme} className={`${nunito.variable} h-full antialiased`}>
+    <html lang={locale} data-scroll-behavior="smooth" data-theme={theme === "system" ? undefined : theme} className={`${nunito.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
         <IntlClientProvider locale={locale} messages={messages}>
           {children}

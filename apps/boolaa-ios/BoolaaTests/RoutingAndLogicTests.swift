@@ -131,6 +131,9 @@ struct FeatureLogicTests {
         #expect(AvatarView.initials(for: "Alice") == "A")
         #expect(AvatarView.initials(for: "Mary Jane Watson") == "MJ")
         #expect(AvatarView.initials(for: "  ") == "?")
+        #expect(AvatarView.initials(for: "Ana (Flat 4B)") == "AF")
+        #expect(AvatarView.initials(for: "Ion - Pop") == "IP")
+        #expect(AvatarView.initials(for: "🍕") == "🍕")
     }
 
     /// The bubble colour must match Android and web: FNV-1a 32-bit of the lowercase UUID, xor-folded, modulo the palette.

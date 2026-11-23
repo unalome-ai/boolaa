@@ -127,17 +127,20 @@ export default function MarketplacePage() {
             <li key={item.id} className="card anim-rise flex min-w-0 flex-col overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="market-item" data-item-id={item.id} data-availability={availabilityOf(item)}>
               <div className="relative">
                 <Img src={item.image} alt={item.title} className={cx("aspect-square w-full object-cover transition-[filter,opacity] duration-300", availabilityOf(item) === "taken" && "opacity-55 grayscale")} />
-                <StatusBadge status={item.status} className="absolute left-2 top-2" />
-                <AvailabilityBadge availability={availabilityOf(item)} className="absolute right-2 top-2" />
+                {/* One row that wraps, so the two badges never overlap on a narrow card. */}
+                <div className="pointer-events-none absolute inset-x-2 top-2 flex flex-wrap items-start gap-1">
+                  <StatusBadge status={item.status} />
+                  <AvailabilityBadge availability={availabilityOf(item)} className="ml-auto" />
+                </div>
               </div>
               <div className="flex flex-1 flex-col gap-1 p-3">
                 <h3 className="truncate text-[15px] font-extrabold">{item.title}</h3>
                 {item.description && <p className="line-clamp-2 text-sm text-muted">{item.description}</p>}
                 {item.owner_id === userId && (
-                  <label className="mt-1 flex items-center gap-2 text-xs font-bold text-muted">
+                  <label className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
                     <span className="shrink-0">{t("market.markAs")}</span>
                     <select
-                      className="hue-mint min-h-8 min-w-0 flex-1 rounded-full bg-field px-2 text-[13px] font-bold text-fg outline-none focus:ring-2 focus:ring-[var(--h)]"
+                      className="hue-mint min-h-8 min-w-[7.5rem] flex-1 rounded-full bg-field px-2 text-[13px] font-bold text-fg outline-none focus:ring-2 focus:ring-[var(--h)]"
                       value={availabilityOf(item)}
                       data-testid="availability-select"
                       onChange={(e) => setAvailability(item, e.target.value as Availability)}
@@ -151,8 +154,8 @@ export default function MarketplacePage() {
                   </label>
                 )}
                 {canAskOwner(item, userId) && (
-                  <button type="button" data-testid="ask-owner" onClick={() => askOwner(item)} className="chip hue-grape mt-1 self-start bg-hue-wash text-hue-ink hover:brightness-105">
-                    <MessageCircle size={15} strokeWidth={2.6} /> {t("market.askInChat")}
+                  <button type="button" data-testid="ask-owner" onClick={() => askOwner(item)} className="chip hue-grape mt-1 h-auto min-h-[38px] max-w-full self-start whitespace-normal bg-hue-wash py-1.5 text-left leading-tight text-hue-ink hover:brightness-105">
+                    <MessageCircle size={15} strokeWidth={2.6} className="shrink-0" /> {t("market.askInChat")}
                   </button>
                 )}
                 <div className="mt-auto flex items-center justify-between pt-2">

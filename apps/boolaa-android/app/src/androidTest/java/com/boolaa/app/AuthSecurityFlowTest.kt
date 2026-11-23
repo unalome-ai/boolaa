@@ -156,25 +156,29 @@ class AuthSecurityFlowTest {
         user.api.deviceCode(DeviceCodeBody.verify(CodePurpose.DEVICE, LocalStack.awaitCode(user.email, before), d1, "Test phone · Android 16"))
         assertTrue(user.api.startDeviceCheck(d1, "Test phone · Android 16").verified)
 
-        // Device 2: the app.
-        container.device.overrideForTesting(LocalStack.randomDeviceId())
-        before = LocalStack.messageIds(user.email)
-        signIn(user.email)
-        rule.waitUntilExactlyOneExists(hasTestTag("device-code-screen"), timeout)
-        typeCode(LocalStack.awaitCode(user.email, before))
-        rule.waitUntilExactlyOneExists(hasTestTag("chat-fab"), timeout)
+        // The app only shows the code screen while enforcement is on (code_required alone doesn't block).
+        LocalStack.withEnforcement {
+            // Device 2: the app.
+            container.device.overrideForTesting(LocalStack.randomDeviceId())
+            before = LocalStack.messageIds(user.email)
+            signIn(user.email)
+            rule.waitUntilExactlyOneExists(hasTestTag("device-code-screen"), timeout)
+            typeCode(LocalStack.awaitCode(user.email, before))
+            rule.waitUntilExactlyOneExists(hasTestTag("chat-fab"), timeout)
 
-        rule.onNodeWithTag("profile-button").performClick()
-        rule.waitUntilExactlyOneExists(hasTestTag("your-devices"), timeout)
-        rule.onNodeWithTag("your-devices").performScrollTo()
-        rule.waitUntilExactlyOneExists(hasTestTag("device-this"), timeout)
-        rule.waitUntilExactlyOneExists(hasTestTag("device-${DeviceIdentity.sha256Hex(d1).take(12)}"), timeout)
-        rule.onNodeWithTag("revoke-device").performScrollTo().performClick()
-        rule.onNodeWithTag("confirm-dialog-confirm").performClick()
-        rule.waitUntil(timeout) { rule.onAllNodesWithTag("revoke-device").fetchSemanticsNodes().isEmpty() }
+            rule.onNodeWithTag("profile-button").performClick()
+            rule.waitUntilExactlyOneExists(hasTestTag("your-devices"), timeout)
+            rule.onNodeWithTag("your-devices").performScrollTo()
+            rule.waitUntilExactlyOneExists(hasTestTag("device-this"), timeout)
+            rule.waitUntilExactlyOneExists(hasTestTag("device-${DeviceIdentity.sha256Hex(d1).take(12)}"), timeout)
+            rule.onNodeWithTag("revoke-device").performScrollTo().performClick()
+            rule.onNodeWithTag("confirm-dialog-confirm").performClick()
+            rule.waitUntil(timeout) { rule.onAllNodesWithTag("revoke-device").fetchSemanticsNodes().isEmpty() }
 
-        assertEquals(listOf(container.device.hash), container.session.devices().map { it.deviceHash })
-        // The revoked device needs a code again.
+            assertEquals(listOf(container.device.hash), container.session.devices().map { it.deviceHash })
+        }
+        // The revoked device needs a code again (checked with enforcement off: while it's on, the
+        // revoked session is refused outright, which is the point).
         assertFalse(user.api.startDeviceCheck(d1, "Test phone · Android 16").verified)
         assertEquals(1, user.api.listMyDevices().size)
     }

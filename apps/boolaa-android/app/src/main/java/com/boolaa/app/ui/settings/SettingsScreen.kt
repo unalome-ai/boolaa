@@ -451,10 +451,10 @@ private fun MemberRoleMenu(member: BubbleMember, onMakeAdmin: () -> Unit, onRemo
     DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = c.card) {
         if (member.role == MemberRole.ADMIN) {
             DropdownMenuItem(text = { Text(stringResource(R.string.remove_admin), style = Type.body) }, onClick = { open = false; onRemoveAdmin() },
-                modifier = Modifier.testTag("menu-remove-admin"))
+                leadingIcon = { Icon(BoolaaIcons.ManageMember, contentDescription = null) }, modifier = Modifier.testTag("menu-remove-admin"))
         } else {
             DropdownMenuItem(text = { Text(stringResource(R.string.make_admin), style = Type.body) }, onClick = { open = false; onMakeAdmin() },
-                modifier = Modifier.testTag("menu-make-admin"))
+                leadingIcon = { Icon(BoolaaIcons.ManageMember, contentDescription = null) }, modifier = Modifier.testTag("menu-make-admin"))
         }
         DropdownMenuItem(
             text = { Text(stringResource(R.string.transfer_ownership), style = Type.body) }, onClick = { open = false; onTransfer() },

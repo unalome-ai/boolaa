@@ -358,7 +358,8 @@ fun EventCard(
             Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            // The min width makes the buttons wrap below instead of squeezing the name to "Ana A…" (fr, ro).
+            Row(Modifier.weight(1f).widthIn(min = 168.dp), verticalAlignment = Alignment.CenterVertically) {
                 Avatar(event.creator, 24.dp)
                 Text(displayName(event.creator), style = Type.subheadline, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 6.dp).weight(1f))

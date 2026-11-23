@@ -95,7 +95,7 @@ fun InviteSheet(code: String) {
             InviteState.Invalid -> {
                 Text(stringResource(R.string.invite_invalid_body), style = Type.body, color = c.textSecondary,
                     modifier = Modifier.testTag("invite-invalid"))
-                SecondaryButton(stringResource(R.string.ok), onClick = dismiss)
+                SecondaryButton(stringResource(R.string.ok), onClick = dismiss, modifier = Modifier.fillMaxWidth())
             }
             is InviteState.Found -> {
                 val p = s.preview
@@ -124,7 +124,7 @@ fun InviteSheet(code: String) {
                                     .padding(12.dp).testTag("invite-requested"))
                         }
                         HintCard(stringResource(R.string.invite_pending), Modifier.testTag("invite-pending"))
-                        SecondaryButton(stringResource(R.string.ok), onClick = dismiss)
+                        SecondaryButton(stringResource(R.string.ok), onClick = dismiss, modifier = Modifier.fillMaxWidth())
                     }
                     InvitePreview.Status.MEMBER -> {
                         HintCard(stringResource(R.string.invite_member))
@@ -133,7 +133,7 @@ fun InviteSheet(code: String) {
                     }
                     InvitePreview.Status.FULL -> {
                         HintCard(stringResource(R.string.error_bubble_full))
-                        SecondaryButton(stringResource(R.string.ok), onClick = dismiss)
+                        SecondaryButton(stringResource(R.string.ok), onClick = dismiss, modifier = Modifier.fillMaxWidth())
                     }
                 }
             }

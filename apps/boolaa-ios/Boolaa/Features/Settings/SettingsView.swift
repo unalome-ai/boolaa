@@ -164,12 +164,14 @@ struct SettingsView: View {
                                         .font(.rounded(.caption, weight: .heavy)).foregroundStyle(Hue.sunny.onFill).lineLimit(1)
                                         .padding(.horizontal, 10).padding(.vertical, 5)
                                         .background(Hue.sunny.gradient, in: Capsule())
+                                        .fixedSize() // the name truncates first, never the role ("Proprie…" in ro)
                                         .accessibilityIdentifier("owner-badge")
                                 } else if member.role == .admin {
                                     Label { Text("Admin", comment: "Badge for a bubble admin") } icon: { Image(systemName: "shield.fill") }
                                         .font(.rounded(.caption, weight: .heavy)).foregroundStyle(Hue.sky.text).lineLimit(1)
                                         .padding(.horizontal, 10).padding(.vertical, 5)
                                         .background(Hue.sky.wash, in: Capsule())
+                                        .fixedSize() // the name truncates first, never the role ("Proprie…" in ro)
                                         .accessibilityIdentifier("admin-badge")
                                 }
                                 if member.userId != session.userID {

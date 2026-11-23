@@ -65,6 +65,13 @@ final class SessionStore {
         return true
     }
 
+    /// The join preview is on screen: stop persisting the code, so closing the app with the sheet still
+    /// open (e.g. right after "Request to join") doesn't bring the same preview back on every launch.
+    /// The code stays in memory until the sheet is dismissed.
+    func inviteShown() {
+        defaults.removeObject(forKey: Self.pendingInviteKey)
+    }
+
     /// The join preview shows only on Onboarding or Main (never over sign-in or the device gate).
     var inviteToShow: String? {
         route == .onboarding || route == .main ? pendingInviteCode : nil

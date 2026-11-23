@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -141,6 +142,9 @@ fun HomeScreen(navigator: ShellNavigator) {
     val items by vm.items.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    // The view model outlives the screen (tab switches, chat, config changes) and the feed isn't live: reload
+    // quietly whenever Home comes back, so messages sent meanwhile show up without a pull to refresh.
+    LaunchedEffect(vm) { if (vm.items.value != null) vm.load() }
     val firstName = state.profile?.name?.trim()?.split(Regex("\\s+"))?.firstOrNull()?.takeIf { it.isNotEmpty() }
 
     BoolaaRefreshBox(isRefreshing = busy, onRefresh = { vm.load(refresh = true) }, modifier = Modifier.fillMaxSize().testTag("home-screen")) {

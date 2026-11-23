@@ -107,7 +107,7 @@ struct MainShellView: View {
         switch DebugHooks.initialOpen {
         case "chat": router.open(.chat)
         case "links": router.open(.links)
-        case "profile", "blocked", "deleteAccount", "security", "notifications": router.showProfile = true
+        case "profile", "blocked", "deleteAccount", "security", "notifications", "exportData": router.showProfile = true
         case "report": Task { await openDebugReport() }
         case "addBubble": router.showAddBubble = true
         default: break

@@ -97,7 +97,7 @@ export default function HomePage() {
       kind: "chat" as const,
       icon: <MessagesSquare size={22} strokeWidth={2.4} />,
       author: m.sender,
-      body: <p className="text-[16px] font-semibold">{m.content || (m.image_path ? `📷 ${t("chat.photo")}` : "")}</p>,
+      body: <p className="line-clamp-3 text-[16px] font-semibold wrap-anywhere">{m.content || (m.image_path ? `📷 ${t("chat.photo")}` : "")}</p>,
     })),
     ...data.food.map((f) => ({
       key: `food-${f.id}`,

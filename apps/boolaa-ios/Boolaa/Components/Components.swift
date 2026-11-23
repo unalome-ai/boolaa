@@ -38,8 +38,12 @@ struct AvatarView: View {
     }
 
     nonisolated static func initials(for name: String) -> String {
-        let parts = name.split(whereSeparator: { $0.isWhitespace }).prefix(2)
-        let letters = parts.compactMap(\.first).map { String($0).uppercased() }.joined()
+        // First letter (or digit) of the first two words that have one, so "Ana (Flat 4B)" or
+        // "Ion - Pop" don't show punctuation; emoji-only names still fall back to their first character.
+        let words = name.split(whereSeparator: { $0.isWhitespace })
+        let firsts = words.compactMap { $0.first(where: { $0.isLetter || $0.isNumber }) }
+        let picked = firsts.isEmpty ? words.compactMap(\.first) : firsts
+        let letters = picked.prefix(2).map { String($0).uppercased() }.joined()
         return letters.isEmpty ? "?" : letters
     }
 }

@@ -97,6 +97,19 @@ struct InviteLinkSessionTests {
         relaunched.pendingInviteCode = nil
         #expect(SessionStore(api: api, device: device, defaults: defaults).pendingInviteCode == nil)
     }
+
+    /// Once the preview is on screen the code is no longer persisted: closing the app with the sheet open
+    /// must not bring the same preview back on every launch. It stays in memory until dismissed.
+    @Test func shownInviteIsNotRestoredAfterRelaunch() throws {
+        let defaults = try #require(UserDefaults(suiteName: "invite-test-\(UUID().uuidString)"))
+        let api = BoolaaAPI(client: Backend.makeClient(config: try AppConfig.load(), authStorage: InMemoryAuthStorage()))
+        let device = DeviceIdentity(id: DeviceIdentity.generateID(), label: "test")
+        let store = SessionStore(api: api, device: device, defaults: defaults)
+        #expect(store.handleInviteURL(URL(string: "boolaa://join/ABCDEFGH")!))
+        store.inviteShown()
+        #expect(store.pendingInviteCode == "ABCDEFGH")
+        #expect(SessionStore(api: api, device: device, defaults: defaults).pendingInviteCode == nil)
+    }
 }
 
 @Suite("Invite links: errors and strings")

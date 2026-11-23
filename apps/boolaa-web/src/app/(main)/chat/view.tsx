@@ -406,7 +406,7 @@ export default function ChatPage() {
                               setPickerFor(m.id);
                             }}
                             className={cx(
-                              "overflow-hidden whitespace-pre-wrap break-words rounded-[21px] text-[16px] leading-snug",
+                              "overflow-hidden whitespace-pre-wrap wrap-anywhere rounded-[21px] text-[16px] leading-snug",
                               mine ? "hue-grape rounded-br-[6px] bg-hue-grad text-white shadow-glow" : "rounded-bl-[6px] bg-card text-fg shadow-soft",
                               fresh && "anim-pop",
                               !m.image_path && "px-4 py-2.5",
@@ -422,6 +422,11 @@ export default function ChatPage() {
                                     alt={t("photo")}
                                     loading="lazy"
                                     data-testid="chat-photo"
+                                    // A photo is taller than its placeholder: stay at the bottom if we were there.
+                                    onLoad={() => {
+                                      const el = listRef.current;
+                                      if (el && pinned.current) el.scrollTop = el.scrollHeight;
+                                    }}
                                     className="max-h-80 w-full min-w-48 object-cover"
                                   />
                                 ) : (

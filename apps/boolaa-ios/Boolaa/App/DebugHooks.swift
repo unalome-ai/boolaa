@@ -16,6 +16,7 @@ import Foundation
 ///     -UITestDeviceID boolaa-test-device   use this device id instead of the Keychain one (the seed trusts it)
 ///     -UITestOpen security                 opens Profile → Sign-in & security
 ///     -UITestOpen notifications            opens Profile → Notifications
+///     -UITestOpen exportData               opens Profile → Download my data
 ///
 /// UserDefaults reads `-Key value` launch arguments automatically.
 enum DebugHooks {

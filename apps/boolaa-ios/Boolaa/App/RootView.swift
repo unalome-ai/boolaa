@@ -34,6 +34,7 @@ struct RootView: View {
             set: { if $0 == nil { session.pendingInviteCode = nil } }
         )) { invite in
             JoinInviteSheet(code: invite.code).boolaaSheet()
+                .onAppear { session.inviteShown() }
         }
     }
 

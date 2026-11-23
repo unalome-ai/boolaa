@@ -72,7 +72,15 @@ struct MarketplaceView: View {
                         AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }.fixedSize()
                     }
                     VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 8) { filterChips }
+                        // Longer translations (ro "Ascunde ce e luat") don't fit one line: scroll the chips
+                        // edge to edge instead of letting the row widen the whole screen.
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) { filterChips }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                        }
+                        .padding(.horizontal, -16)
+                        .padding(.vertical, -8)
                         AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }
                     }
                 }
