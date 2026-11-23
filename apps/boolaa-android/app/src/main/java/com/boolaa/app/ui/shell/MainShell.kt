@@ -24,7 +24,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,8 +69,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
@@ -98,6 +102,8 @@ import com.boolaa.app.ui.components.clickableRipple
 import com.boolaa.app.ui.components.dashedBorder
 import com.boolaa.app.ui.components.glow
 import com.boolaa.app.ui.components.rememberAmbientTime
+import com.boolaa.app.ui.components.tapArea
+import com.boolaa.app.ui.components.tapVisual
 import com.boolaa.app.ui.events.EventsScreen
 import com.boolaa.app.ui.food.FoodScreen
 import com.boolaa.app.ui.home.HomeScreen
@@ -204,10 +210,15 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                     onSearch = { navigator.openSearch() })
             }
             val rise = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.roundToPx() }
+            // Reduced motion: every screen change is the 200 ms fade, nothing rises, scales or slides.
+            val reduce = BoolaaTheme.reduceMotion
             NavHost(
                 nav, startDestination = MainTab.HOME.route, modifier = Modifier.weight(1f),
                 // Tab switch: new content rises 14dp with scale 0.98→1 and fades in; old content fades out.
-                enterTransition = { fadeIn(tween(220)) + slideInVertically(Motion.gentle()) { rise } + scaleIn(Motion.gentle(), initialScale = 0.98f) },
+                enterTransition = {
+                    if (reduce) fadeIn(Motion.fade())
+                    else fadeIn(tween(220)) + slideInVertically(Motion.gentle()) { rise } + scaleIn(Motion.gentle(), initialScale = 0.98f)
+                },
                 exitTransition = { fadeOut(tween(120)) },
                 popEnterTransition = { fadeIn(tween(220)) },
                 popExitTransition = { fadeOut(tween(120)) },
@@ -218,8 +229,8 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
                 composable(MainTab.MARKETPLACE.route) { MarketplaceScreen(onAskInChat = { navigator.openChat(it) }) }
                 composable(MainTab.SETTINGS.route) { SettingsScreen(navigator) }
                 // Pushed screens slide in from the trailing edge, the platform's own idiom.
-                val push = fadeIn(tween(200)) + slideInHorizontally(Motion.gentle()) { it / 5 }
-                val pop = fadeOut(tween(160)) + slideOutHorizontally(Motion.gentle()) { it / 5 }
+                val push = if (reduce) fadeIn(Motion.fade()) else fadeIn(tween(200)) + slideInHorizontally(Motion.gentle()) { it / 5 }
+                val pop = if (reduce) fadeOut(Motion.fade()) else fadeOut(tween(160)) + slideOutHorizontally(Motion.gentle()) { it / 5 }
                 composable(ShellRoutes.CHAT, enterTransition = { push }, popExitTransition = { pop }) {
                     ChatScreen(onBack = { navigator.back() }, pendingDraft = navigator.chatDraft, onDraftTaken = { navigator.chatDraft = null },
                         pendingJump = navigator.chatJump, onJumpTaken = { navigator.chatJump = null })
@@ -277,27 +288,31 @@ fun ShellHeader(title: String, onProfile: () -> Unit, onAddBubble: () -> Unit, o
     val view = LocalView.current
     Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 8.dp, bottom = 6.dp)) {
         Row(Modifier.padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            val reduce = BoolaaTheme.reduceMotion
             AnimatedContent(
                 title, modifier = Modifier.weight(1f),
                 transitionSpec = {
+                    if (reduce) return@AnimatedContent fadeIn(Motion.fade()) togetherWith fadeOut(Motion.fade())
                     (slideInVertically(Motion.snappy()) { it / 2 } + fadeIn(Motion.fade()))
                         .togetherWith(slideOutVertically(Motion.snappy()) { -it / 2 } + fadeOut(tween(90)))
                         .using(SizeTransform(clip = false))
                 },
             ) { text ->
-                FitText(text, Type.screenTitle, color = BoolaaTheme.colors.textPrimary, minScale = 0.6f,
+                // Shrinks (down to 40% at the largest font scales) before it would truncate a long translation.
+                FitText(text, Type.screenTitle, color = BoolaaTheme.colors.textPrimary, minScale = 0.4f,
                     modifier = Modifier.fillMaxWidth().testTag("screen-title").semantics { heading() })
             }
             // Search this bubble, next to the avatar.
             CircleIconButton(BoolaaIcons.Search, stringResource(R.string.search_open), onSearch,
-                Modifier.padding(start = 12.dp).testTag("search-button"), surface = true, size = 44.dp)
+                Modifier.padding(start = 10.dp).testTag("search-button"), surface = true, size = 44.dp)
             val profileLabel = stringResource(R.string.profile)
             Box(
-                Modifier.padding(start = 10.dp).glow(BoolaaTheme.colors.cardShadow, 10.dp, 4.dp).clip(CircleShape)
+                Modifier.padding(start = 8.dp).size(48.dp).clip(CircleShape)
                     .clickableRipple(scale = 0.88f, onClick = onProfile)
                     .semantics { contentDescription = profileLabel; role = Role.Button }
                     .testTag("profile-button"),
-            ) { Avatar(state.profile, 44.dp) }
+                contentAlignment = Alignment.Center,
+            ) { Avatar(state.profile, 44.dp, Modifier.glow(BoolaaTheme.colors.cardShadow, 10.dp, 4.dp)) }
         }
         BubbleChips(
             bubbles = state.bubbles, currentId = state.currentBubble?.id,
@@ -332,23 +347,27 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, unread: (Stri
         val centre = target.x + target.y / 2 - scroll.viewportSize / 2
         scroll.animateScrollTo(centre.toInt().coerceIn(0, scroll.maxValue.coerceAtLeast(0)))
     }
-    Box(Modifier.fillMaxWidth().horizontalScroll(scroll).padding(horizontal = 16.dp, vertical = 12.dp)) {
+    Box(Modifier.fillMaxWidth().horizontalScroll(scroll).padding(horizontal = 16.dp, vertical = 7.dp).selectableGroup()) {
         Row(
             Modifier.drawWithCache {
                 val radius = CornerRadius(size.height / 2)
                 val capsule = Brush.verticalGradient(listOf(top, bottom))
                 val glowColor = top.copy(alpha = 0.32f)
                 val hairline = Stroke(1.dp.toPx())
+                // Chips are 48dp tall touch targets; the visible capsule stays 38dp (inset 5dp) until the text needs more.
+                val inset = if (size.height <= 48.5f.dp.toPx()) 5.dp.toPx() else 0f
+                val h = size.height - 2 * inset
+                val visible = CornerRadius(h / 2)
                 onDrawBehind {
                     bounds.forEach { (id, b) ->
                         if (id != currentId) {
-                            drawRoundRect(c.card, Offset(b.x, 0f), Size(b.y, size.height), radius)
-                            drawRoundRect(c.hairline, Offset(b.x, 0f), Size(b.y, size.height), radius, style = hairline)
+                            drawRoundRect(c.card, Offset(b.x, inset), Size(b.y, h), visible)
+                            drawRoundRect(c.hairline, Offset(b.x, inset), Size(b.y, h), visible, style = hairline)
                         }
                     }
                     if (w > 0f) {
-                        drawRoundRect(glowColor, Offset(x + 6.dp.toPx(), 5.dp.toPx()), Size(w - 12.dp.toPx(), size.height), radius)
-                        drawRoundRect(capsule, Offset(x, 0f), Size(w, size.height), radius)
+                        drawRoundRect(glowColor, Offset(x + 6.dp.toPx(), inset + 5.dp.toPx()), Size(w - 12.dp.toPx(), h), visible)
+                        drawRoundRect(capsule, Offset(x, inset), Size(w, h), visible)
                     }
                 }
             },
@@ -359,14 +378,18 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, unread: (Stri
                     val active = bubble.id == currentId
                     val chipHue = Hue.forId(bubble.id)
                     val textColor by animateColorAsState(if (active) chipHue.onFill else c.textPrimary, Motion.fade())
+                    val count = unread(bubble.id)
+                    val unreadLabel = if (count > 0) pluralStringResource(R.plurals.chat_unread, count, count) else null
+                    // One TalkBack stop per chip: "Flatmates, 3 unread messages", tab role, "Selected" on the current one.
+                    val chipLabel = listOfNotNull(bubble.name, unreadLabel).joinToString(", ")
                     Row(
                         Modifier
                             .onGloballyPositioned { bounds[bubble.id] = Offset(it.positionInParent().x, it.size.width.toFloat()) }
-                            .heightIn(min = 38.dp)
+                            .heightIn(min = 48.dp)
                             .clip(CircleShape)
                             .clickableRipple(role = Role.Tab) { onSelect(bubble) }
-                            .semantics { selected = active }
                             .testTag("bubble-chip-${bubble.name}")
+                            .clearAndSetSemantics { contentDescription = chipLabel; selected = active; role = Role.Tab }
                             .padding(start = 11.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
@@ -377,19 +400,22 @@ private fun BubbleChips(bubbles: List<Bubble>, currentId: String?, unread: (Stri
                                 .then(if (active) Modifier.border(1.5.dp, Color.White, CircleShape) else Modifier),
                         )
                         Text(bubble.name, color = textColor, style = Type.chip, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        UnreadBadge(unread(bubble.id), tag = "unread-chip-${bubble.name}")
+                        UnreadBadge(count, tag = "unread-chip-${bubble.name}")
                     }
                 }
             }
             val grapeText = Hue.grape.text
-            Row(
-                Modifier.heightIn(min = 38.dp).clip(CircleShape).dashedBorder(grapeText.copy(alpha = 0.55f), null, dash = 5.dp, gap = 4.dp)
-                    .clickableRipple(role = Role.Button, onClick = onAdd).testTag("bubble-chip-new")
-                    .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(BoolaaIcons.Add, contentDescription = null, tint = grapeText, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.new_bubble_chip), color = grapeText, style = Type.chip, maxLines = 1)
+            val newSource = remember { MutableInteractionSource() }
+            Box(Modifier.tapArea(newSource, role = Role.Button, onClick = onAdd).testTag("bubble-chip-new"), contentAlignment = Alignment.Center) {
+                Row(
+                    Modifier.heightIn(min = 38.dp)
+                        .tapVisual(newSource, CircleShape, Modifier.dashedBorder(grapeText.copy(alpha = 0.55f), null, dash = 5.dp, gap = 4.dp))
+                        .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(BoolaaIcons.Add, contentDescription = null, tint = grapeText, modifier = Modifier.size(18.dp))
+                    Text(stringResource(R.string.new_bubble_chip), color = grapeText, style = Type.chip, maxLines = 1)
+                }
             }
         }
     }
@@ -444,6 +470,7 @@ fun PillTabBar(selected: MainTab, onSelect: (MainTab) -> Unit, modifier: Modifie
                     drawCircle(fill, r, Offset((position + 0.5f) * slot, size.height / 2))
                 }
             }
+            .selectableGroup()
             .testTag("pill-tab-bar"),
     ) {
         MainTab.entries.forEach { tab ->
@@ -472,7 +499,9 @@ fun PillTabBar(selected: MainTab, onSelect: (MainTab) -> Unit, modifier: Modifie
 /** 60dp grape bubble orb that opens the chat; a ring pulses outward every 3.2 s. [unread] shows as a badge. */
 @Composable
 fun ChatButton(onClick: () -> Unit, modifier: Modifier = Modifier, unread: Int = 0) {
-    val label = stringResource(R.string.open_chat)
+    val unreadLabel = if (unread > 0) pluralStringResource(R.plurals.chat_unread, unread, unread) else null
+    // "Open chat, 3 unread messages": the badge is read with the button, not as a separate stop.
+    val label = listOfNotNull(stringResource(R.string.open_chat), unreadLabel).joinToString(", ")
     val time = rememberAmbientTime()
     var taps by remember { mutableIntStateOf(0) }
     Box(modifier.size(60.dp), contentAlignment = Alignment.Center) {
@@ -497,6 +526,6 @@ fun ChatButton(onClick: () -> Unit, modifier: Modifier = Modifier, unread: Int =
             BubbleOrb(Hue.grape, Modifier.matchParentSize())
             Icon(BoolaaIcons.Chat, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp).bounceOn(taps))
         }
-        UnreadBadge(unread, Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp), tag = "chat-fab-badge")
+        UnreadBadge(unread, Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp), tag = "chat-fab-badge", labelled = false)
     }
 }

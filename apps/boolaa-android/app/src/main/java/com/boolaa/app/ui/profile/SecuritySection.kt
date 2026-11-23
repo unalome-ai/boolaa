@@ -158,7 +158,7 @@ private fun DeviceRow(device: TrustedDevice, isThis: Boolean, locale: Locale, on
         }
         // The current device can't be revoked from itself (sign out instead).
         if (!isThis) {
-            TextButton(onClick = onRevoke, modifier = Modifier.heightIn(min = 44.dp).testTag("revoke-device").semantics {
+            TextButton(onClick = onRevoke, modifier = Modifier.heightIn(min = 48.dp).testTag("revoke-device").semantics {
                 contentDescription = name
             }) {
                 Text(stringResource(R.string.revoke_device), style = Type.chip, color = c.dangerText)
@@ -356,7 +356,7 @@ fun DeleteAccountFlow(onDismiss: () -> Unit, onDeleted: () -> Unit) {
                 onSubmit = if (proven) ({ vm.retryDelete() }) else null, submitReady = proven, busy = deleting,
             )
         }
-        TextButton(onClick = onDismiss, enabled = !deleting, modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 44.dp)) {
+        TextButton(onClick = onDismiss, enabled = !deleting, modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 48.dp)) {
             Text(stringResource(R.string.cancel), style = Type.headline, color = Hue.grape.text)
         }
     }

@@ -51,3 +51,6 @@ supabase/.branches/
 
 # Firebase config: injected at build time from ~/.boolaa-signing, never committed
 google-services.json
+
+# Claude Code local state (worktrees, settings)
+.claude/

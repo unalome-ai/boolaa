@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Camera, Download, FileText, LogOut, ShieldCheck, Trash2, Undo2 } from "lucide-react";
 import { useBoolaa } from "@/components/boolaa-provider";
-import { Avatar, ErrorText, Modal } from "@/components/ui";
+import { Avatar, ErrorText, Modal, NewTabHint } from "@/components/ui";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { LocalePicker } from "@/i18n/locale-picker";
@@ -165,7 +165,7 @@ function BlockedUsers() {
       <ul className="space-y-2">
         {shown.map((r) => (
           <li key={r.blocked_id} className="flex items-center gap-3" data-testid="blocked-user">
-            <Avatar name={r.user?.name} id={r.user?.id} src={r.user?.avatar} size={32} />
+            <Avatar name={r.user?.name} id={r.user?.id} src={r.user?.avatar} size={32} decorative />
             <span className="min-w-0 flex-1 truncate">{r.user?.name ?? t("common.someone")}</span>
             <button
               type="button"
@@ -195,9 +195,11 @@ function AccountSection() {
       <div className="flex flex-wrap gap-2">
         <Link href="/privacy" className="chip bg-brand/15 text-brand-ink hover:bg-brand/20" target="_blank">
           <ShieldCheck size={15} /> {t("legal.privacy")}
+          <NewTabHint />
         </Link>
         <Link href="/terms" className="chip bg-brand/15 text-brand-ink hover:bg-brand/20" target="_blank">
           <FileText size={15} /> {t("legal.terms")}
+          <NewTabHint />
         </Link>
       </div>
       {!exporting ? (

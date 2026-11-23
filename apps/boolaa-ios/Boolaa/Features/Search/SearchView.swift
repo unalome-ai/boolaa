@@ -53,6 +53,7 @@ struct SearchView: View {
                     Image(systemName: "xmark").font(.system(size: 15, weight: .heavy))
                         .frame(width: 36, height: 36)
                         .background(Circle().fill(Theme.card))
+                        .minimumHitTarget()
                 }
                 .buttonStyle(.squishIcon)
                 .accessibilityLabel(Text("Close"))
@@ -79,7 +80,7 @@ struct SearchView: View {
 
     private var field: some View {
         HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+            Image(systemName: "magnifyingglass").foregroundStyle(Theme.inkSecondary).accessibilityHidden(true)
             TextField(text: $text, prompt: Text("Search \(session.currentBubble?.name ?? "")")) {
                 Text("Search this bubble")
             }
@@ -91,7 +92,7 @@ struct SearchView: View {
             .accessibilityIdentifier("search-field")
             if !text.isEmpty {
                 Button { text = ""; focused = true } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.inkSecondary)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Clear search"))
@@ -141,7 +142,7 @@ struct SearchView: View {
     }
 
     private func hint(_ text: LocalizedStringResource, id: String) -> some View {
-        Text(text).font(.subheadline).foregroundStyle(.secondary)
+        Text(text).font(.subheadline).foregroundStyle(Theme.inkSecondary)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .padding(.top, 24)
@@ -178,7 +179,7 @@ struct SearchHitRowView: View {
                         .font(.subheadline).lineLimit(2)
                         .accessibilityIdentifier("search-snippet")
                 }
-                Text(meta).font(.caption.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
+                Text(meta).font(.caption.weight(.semibold)).foregroundStyle(Theme.inkSecondary).lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .multilineTextAlignment(.leading)

@@ -8,7 +8,7 @@ struct BlockedUsersView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Blocked people can't see your messages, events, posts or links, and you won't see theirs.")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                 if safety.loaded && safety.blocked.isEmpty {
                     CalmEmptyState(icon: "hand.raised", title: "No blocked users",
                                    message: "Long-press a message, post or member to block someone.")
@@ -16,7 +16,7 @@ struct BlockedUsersView: View {
                 VStack(spacing: 0) {
                     ForEach(safety.blocked) { row in
                         HStack(spacing: 12) {
-                            AvatarView(user: row.user, size: 40)
+                            AvatarView(user: row.user, size: 40).accessibilityHidden(true)
                             Text(verbatim: row.user?.displayName ?? String(localized: "Someone", comment: "Placeholder for a user without a name"))
                                 .font(.body.weight(.medium)).lineLimit(1)
                             Spacer()
@@ -50,10 +50,10 @@ struct CalmEmptyState: View {
     var message: LocalizedStringResource
     var body: some View {
         VStack(spacing: 8) {
-            Image(systemName: icon).font(.system(size: 32, weight: .semibold)).foregroundStyle(.secondary)
+            Image(systemName: icon).font(.system(size: 32, weight: .semibold)).foregroundStyle(Theme.inkSecondary)
                 .padding(.bottom, 4)
             Text(title).font(.rounded(.headline)).multilineTextAlignment(.center)
-            Text(message).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            Text(message).font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(24)

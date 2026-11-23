@@ -156,7 +156,7 @@ struct EventsView: View {
                 Image(systemName: "chevron.down")
                     .rotationEffect(.degrees(showPast ? 180 : 0))
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Theme.inkSecondary)
             .padding(.top, 18).padding(.bottom, 4)
             .contentShape(Rectangle())
         }
@@ -222,6 +222,7 @@ struct EventCard: View {
     @State private var taps = 0
     @State private var bursts = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var going: Bool { myID.map(event.rsvpList.contains) ?? false }
     @ScaledMetric(relativeTo: .title2) private var tileWidth: CGFloat = 56
@@ -229,8 +230,8 @@ struct EventCard: View {
 
     @ViewBuilder private var creatorLabel: some View {
         if let creator = event.creator {
-            AvatarView(user: creator, size: 24)
-            Text(verbatim: creator.displayName).font(.caption.weight(.medium)).foregroundStyle(.secondary).lineLimit(1)
+            AvatarView(user: creator, size: 24).accessibilityHidden(true)
+            Text(verbatim: creator.displayName).font(.caption.weight(.medium)).foregroundStyle(Theme.inkSecondary).lineLimit(1)
         }
     }
 
@@ -238,7 +239,7 @@ struct EventCard: View {
         if ended {
             Text("\(event.rsvpList.count) went", comment: "Number of people who went to an event that ended")
                 .font(.rounded(.caption, weight: .semibold)).monospacedDigit()
-                .foregroundStyle(.secondary).lineLimit(1)
+                .foregroundStyle(Theme.inkSecondary).lineLimit(1)
         } else {
             liveGoingCount
         }
@@ -247,7 +248,7 @@ struct EventCard: View {
     private var liveGoingCount: some View {
         Text("\(event.rsvpList.count) going", comment: "Number of people who RSVPed to an event")
             .font(.rounded(.caption, weight: .semibold)).monospacedDigit()
-            .foregroundStyle(.secondary).lineLimit(1)
+            .foregroundStyle(Theme.inkSecondary).lineLimit(1)
             .contentTransition(.numericText(value: Double(event.rsvpList.count)))
     }
 
@@ -261,8 +262,8 @@ struct EventCard: View {
             Text("Ended", comment: "Shown instead of the RSVP button on an event that already ended").lineLimit(1)
         }
         .font(.rounded(.subheadline))
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 14).frame(minHeight: 38)
+        .foregroundStyle(Theme.inkSecondary)
+        .padding(.horizontal, 14).frame(minHeight: 44)
         .background(Capsule().fill(Theme.field))
         .fixedSize()
         .accessibilityElement(children: .combine)
@@ -284,7 +285,7 @@ struct EventCard: View {
             }
             .font(.rounded(.subheadline))
             .foregroundStyle(going ? Hue.mint.onFill : hue.text)
-            .padding(.horizontal, 14).frame(minHeight: 38)
+            .padding(.horizontal, 14).frame(minHeight: 44)
             .background {
                 if going {
                     Capsule().fill(Hue.mint.gradient).shadow(color: Hue.mint.fill.opacity(0.4), radius: 8, y: 4)
@@ -304,7 +305,9 @@ struct EventCard: View {
         let hue = Feature.events.hue
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 14) {
-                // Calendar-page tile, tipped a little like a sticker.
+                // Calendar-page tile, tipped a little like a sticker. Left out at the accessibility text sizes:
+                // the date is in the clock line below, and the text gets the full width.
+                if !typeSize.isAccessibilitySize {
                 VStack(spacing: 0) {
                     Text(event.datetime.formatted(.dateTime.month(.abbreviated)).uppercased(with: .current))
                         .font(.rounded(.caption2, weight: .heavy)).foregroundStyle(hue.onFill)
@@ -320,15 +323,17 @@ struct EventCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .rotationEffect(.degrees(-4))
                 .accessibilityHidden(true)
+                }
 
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(alignment: .top) {
                         Text(verbatim: event.title).font(.rounded(.headline))
+                            .accessibilityAddTraits(.isHeader)
                         Spacer()
                         if let onAddToCalendar {
                             Button(action: onAddToCalendar) {
                                 Image(systemName: "calendar.badge.plus").font(.body.weight(.semibold))
-                                    .foregroundStyle(Feature.events.hue.text).frame(width: 32, height: 28)
+                                    .foregroundStyle(Feature.events.hue.text).frame(width: 44, height: 44).contentShape(Rectangle()).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             }
                             .buttonStyle(.squish)
                             .accessibilityLabel(Text("Add to calendar", comment: "Button adding an event to the phone's calendar"))
@@ -339,16 +344,16 @@ struct EventCard: View {
                                 Button("Edit", systemImage: "pencil") { onEdit?() }
                                 Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
                             } label: {
-                                Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(.secondary).frame(width: 32, height: 28)
+                                Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(Theme.inkSecondary).frame(width: 44, height: 44).contentShape(Rectangle()).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                             }
                             .accessibilityLabel(Text("More actions"))
                             .accessibilityIdentifier("event-menu")
                         }
                     }
                     Label(event.datetime.formatted(date: .abbreviated, time: .shortened), systemImage: "clock.fill")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     if let location = event.location?.nilIfEmpty {
-                        Label { Text(verbatim: location) } icon: { Image(systemName: "mappin.circle.fill") }.font(.subheadline).foregroundStyle(.secondary)
+                        Label { Text(verbatim: location) } icon: { Image(systemName: "mappin.circle.fill") }.font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     }
                     if let description = event.description?.nilIfEmpty {
                         Text(verbatim: description).font(.subheadline).padding(.top, 2)

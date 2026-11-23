@@ -305,7 +305,6 @@
     "leaveConfirm": "Quitter",
     "waitingForSpot": "Approuvée, en attente d'une place libre",
     "removeMember": "Retirer le membre",
-    "removeMemberNamed": "Retirer {name}",
     "removeTitle": "Retirer le membre ?",
     "removeBody": "<strong>{name}</strong> n'aura plus accès à {bubble}. Pour revenir, il lui faudra le code d'invitation et l'approbation des membres.",
     "removed": "{name} ne fait plus partie de la bulle",
@@ -619,5 +618,12 @@
     "themeLight": "Clair",
     "themeDark": "Sombre",
     "hint": "Système suit le réglage clair ou sombre de ton appareil."
+  },
+  "a11y": {
+    "skipToContent": "Aller au contenu",
+    "photoFrom": "Photo de {name}",
+    "newMessageFrom": "Nouveau message de {name}",
+    "opensInNewTab": "s'ouvre dans un nouvel onglet",
+    "dismiss": "Fermer"
   }
 }

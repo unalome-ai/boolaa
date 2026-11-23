@@ -88,7 +88,7 @@ fun AuthMessage(text: String, modifier: Modifier = Modifier) {
 fun AuthLink(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, danger: Boolean = false, enabled: Boolean = true) {
     val c = BoolaaTheme.colors
     Box(
-        modifier.fillMaxWidth().heightIn(min = 44.dp).clip(RoundedCornerShape(Radius.small))
+        modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(Radius.small))
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 8.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {

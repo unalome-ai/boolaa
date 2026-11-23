@@ -89,7 +89,7 @@ fun OnboardingScreen() {
                     FitText(stringResource(R.string.onboarding_title), Type.screenTitle, color = c.textPrimary, minScale = 0.6f,
                         modifier = Modifier.weight(1f).semantics { heading() })
                     Row(
-                        Modifier.padding(start = 12.dp).heightIn(min = 44.dp).clip(CircleShape).background(c.card.copy(alpha = 0.8f))
+                        Modifier.padding(start = 12.dp).heightIn(min = 48.dp).clip(CircleShape).background(c.card.copy(alpha = 0.8f))
                             .clickableRipple(role = Role.Button) { scope.launch { session.signOut() } }.testTag("onboarding-sign-out")
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),

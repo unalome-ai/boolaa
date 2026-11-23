@@ -92,9 +92,9 @@ struct PendingRequestsList: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(verbatim: request.bubble?.name ?? "").font(.rounded(.headline))
                         Text("\(request.approverIds.count) approvals so far", comment: "Approvals a pending join request has received")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                         Text("Requested \(request.createdAt.relativeShort)", comment: "When a join request was sent; the argument is a relative time like “5 min ago”")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(Theme.inkSecondary)
                     }
                     Spacer()
                     Button("Cancel", role: .destructive) {

@@ -65,7 +65,7 @@ struct ExportDataSheet: View {
         Group {
             Text("You get one JSON file with everything Boolaa stores about you: your profile, bubbles, messages, posts, reactions, reports, blocks and settings. Your photos are listed as links that work for 7 days. Keep the file private.")
             Text("To keep it safe, we'll email you a code first. You can download your data once an hour.")
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(Theme.inkSecondary)
             if let limitedUntil {
                 FormMessage(text: DataExport.limitMessage(until: limitedUntil))
                     .accessibilityIdentifier("export-data-limited")
@@ -105,7 +105,7 @@ struct ExportDataSheet: View {
     private var preparing: some View {
         HStack(spacing: 10) {
             ProgressView()
-            Text("Preparing your data…").foregroundStyle(.secondary)
+            Text("Preparing your data…").foregroundStyle(Theme.inkSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)

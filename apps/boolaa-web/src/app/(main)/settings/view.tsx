@@ -7,6 +7,7 @@ import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, BubblePhoto, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
 import { removeImage, uploadImage } from "@/lib/utils";
+import { announce, useMenuKeys } from "@/lib/a11y";
 import { FeatureBadge } from "@/components/orb";
 import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type JoinRequest, type Member } from "@/lib/types";
@@ -119,6 +120,7 @@ export default function SettingsPage() {
   async function copyCode() {
     await navigator.clipboard?.writeText(bubble.invite_code).catch(() => undefined);
     setCopied(true);
+    announce(t("copied"));
     setTimeout(() => setCopied(false), 1500);
   }
 
@@ -138,6 +140,7 @@ export default function SettingsPage() {
   async function copyLink() {
     await navigator.clipboard?.writeText(link).catch(() => undefined);
     setLinkCopied(true);
+    announce(t("copied"));
     setTimeout(() => setLinkCopied(false), 1500);
   }
 
@@ -290,7 +293,7 @@ export default function SettingsPage() {
             const waiting = full && count >= needed;
             return (
               <li key={r.id} className="card flex flex-wrap items-center gap-3 p-4" data-testid="join-request">
-                <Avatar name={r.user?.name} id={r.user_id} src={r.user?.avatar} size={44} />
+                <Avatar name={r.user?.name} id={r.user_id} src={r.user?.avatar} size={44} decorative />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{r.user?.name ?? tc("someone")}</p>
                   <p className="text-sm text-muted">
@@ -337,7 +340,7 @@ export default function SettingsPage() {
         <ul className="card divide-y divide-line">
           {members.map((m) => (
             <li key={m.user_id} className="flex items-center gap-3 px-4 py-3" data-testid="member" data-user-id={m.user_id} data-role={m.role}>
-              <Avatar name={m.user?.name} id={m.user_id} src={m.user?.avatar} size={40} />
+              <Avatar name={m.user?.name} id={m.user_id} src={m.user?.avatar} size={40} decorative />
               <span className="flex-1 font-medium">
                 {m.user?.name ?? tc("someone")}
                 {m.user_id === userId && <span className="ml-1 text-muted">{tc("youSuffix")}</span>}
@@ -365,9 +368,10 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setRemoving(m)}
-                  aria-label={t("removeMemberNamed", { name: m.user?.name ?? tc("someone") })}
+                  // The name keeps the visible words (WCAG 2.5.3) and says who: "Remove member: Bob".
+                  aria-label={`${t("removeMember")}: ${m.user?.name ?? tc("someone")}`}
                   title={t("removeMember")}
-                  className="chip h-8 bg-danger/10 px-3 text-danger-ink hover:bg-danger/15"
+                  className="chip h-9 bg-danger/10 px-3 text-danger-ink hover:bg-danger/15"
                   data-testid="remove-member"
                 >
                   <UserMinus size={15} /> <span className="hidden sm:inline">{t("removeMember")}</span>
@@ -496,24 +500,23 @@ function RoleMenu({
   const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
+  useMenuKeys(open, () => setOpen(false), menuRef, trigger);
 
   const isAdmin = member.role === "admin";
-  const item = "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field disabled:opacity-50";
+  const item = "flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field disabled:opacity-50";
   return (
     <div ref={ref} className="relative">
       <button
+        ref={trigger}
         type="button"
         aria-label={t("memberActions", { name: member.user?.name ?? tc("someone") })}
         aria-haspopup="menu"
@@ -525,7 +528,7 @@ function RoleMenu({
         <Settings2 size={17} />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-full z-[250] mt-1 min-w-56 overflow-hidden rounded-field border border-line bg-card py-1 shadow-float">
+        <div ref={menuRef} role="menu" aria-label={t("memberActions", { name: member.user?.name ?? tc("someone") })} className="absolute right-0 top-full z-[250] mt-1 min-w-56 overflow-hidden rounded-field border border-line bg-card py-1 shadow-float">
           <button
             type="button"
             role="menuitem"
@@ -544,6 +547,7 @@ function RoleMenu({
             role="menuitem"
             disabled={busy}
             onClick={() => {
+              trigger.current?.focus();
               setOpen(false);
               onTransfer();
             }}
@@ -583,6 +587,7 @@ function BubbleDetails({ canEdit }: { canEdit: boolean }) {
     if (error) return setError(errorText(error));
     await refreshBubbles();
     setSaved(true);
+    announce(tc("saved"));
     setTimeout(() => setSaved(false), 1500);
   }
 

@@ -119,7 +119,6 @@ export function CompactLocalePicker({ className, align = "end", up = false }: { 
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        aria-label={`${t("language")}: ${localeNames[locale]}`}
         disabled={busy}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => {
@@ -132,9 +131,10 @@ export function CompactLocalePicker({ className, align = "end", up = false }: { 
         data-testid="language-button"
       >
         <Globe size={16} strokeWidth={2.4} aria-hidden />
-        <span className="uppercase" aria-hidden>
-          {locale}
-        </span>
+        {/* The accessible name contains the visible code (WCAG 2.5.3): "Language: EN (English)". */}
+        <span className="sr-only">{t("language")}: </span>
+        <span className="uppercase">{locale}</span>
+        <span className="sr-only"> ({localeNames[locale]})</span>
         <ChevronDown size={14} strokeWidth={2.6} aria-hidden className={cx("transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (

@@ -73,7 +73,7 @@ struct JoinBubbleForm: View {
                 .boolaaField()
                 .accessibilityIdentifier("join-code")
             Text("For example: \("FLAT2026")", comment: "Hint under the invite code field; the argument is an example code")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.inkSecondary)
             Button {
                 Task {
                     busy = true; defer { busy = false }

@@ -217,16 +217,17 @@ fun ProfileSheet(onDismiss: () -> Unit) {
     BoolaaSheet(onDismiss, stringResource(R.string.profile), tag = "profile-sheet") {
         // The camera badge sits outside the avatar's circle, so only the avatar itself is clipped.
         Box(Modifier.align(Alignment.CenterHorizontally).popIn().testTag("avatar-button")) {
-            Avatar(state.profile, 112.dp, Modifier.clip(CircleShape).clickableRipple {
+            val changePhoto = stringResource(R.string.change_photo)
+            Avatar(state.profile, 112.dp, Modifier.clip(CircleShape).clickableRipple(role = Role.Button) {
                 picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }, rainbow = true)
+            }.semantics { contentDescription = changePhoto }, rainbow = true)
             Box(
                 Modifier.align(Alignment.BottomEnd).size(38.dp).clip(CircleShape).background(c.background).padding(2.dp)
                     .clip(CircleShape).background(Hue.grape.gradient),
                 contentAlignment = Alignment.Center,
             ) {
                 if (busy) CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
-                else Icon(BoolaaIcons.Camera, contentDescription = stringResource(R.string.change_photo), tint = Color.White, modifier = Modifier.size(18.dp))
+                else Icon(BoolaaIcons.Camera, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
             }
         }
         BoolaaTextField(name, { name = it }, stringResource(R.string.name), Modifier.testTag("profile-name"))

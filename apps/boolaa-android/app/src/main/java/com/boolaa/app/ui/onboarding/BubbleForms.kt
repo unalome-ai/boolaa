@@ -165,7 +165,7 @@ fun PendingRequestsList(requests: List<JoinRequest>, onCancel: (JoinRequest) -> 
                     )
                 }
                 Box(
-                    Modifier.padding(start = 8.dp).heightIn(min = 44.dp).clip(CircleShape)
+                    Modifier.padding(start = 8.dp).heightIn(min = 48.dp).clip(CircleShape)
                         .background(c.dangerText.copy(alpha = if (c.isDark) 0.16f else 0.10f))
                         .clickableRipple(role = Role.Button) { onCancel(r) }.testTag("cancel-request")
                         .padding(horizontal = 14.dp, vertical = 8.dp),

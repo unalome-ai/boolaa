@@ -305,7 +305,6 @@
     "leaveConfirm": "Salir",
     "waitingForSpot": "Aprobada, a la espera de una plaza libre",
     "removeMember": "Quitar al miembro",
-    "removeMemberNamed": "Quitar a {name}",
     "removeTitle": "¿Quitar al miembro?",
     "removeBody": "<strong>{name}</strong> perderá el acceso a {bubble}. Para volver necesitará el código de invitación y la aprobación de los miembros.",
     "removed": "{name} ya no forma parte de la burbuja",
@@ -619,5 +618,12 @@
     "themeLight": "Claro",
     "themeDark": "Oscuro",
     "hint": "Sistema sigue el ajuste claro u oscuro de tu dispositivo."
+  },
+  "a11y": {
+    "skipToContent": "Saltar al contenido",
+    "photoFrom": "Foto de {name}",
+    "newMessageFrom": "Nuevo mensaje de {name}",
+    "opensInNewTab": "se abre en una pestaña nueva",
+    "dismiss": "Cerrar"
   }
 }

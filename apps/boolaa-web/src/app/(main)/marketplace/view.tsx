@@ -160,7 +160,7 @@ export default function MarketplacePage() {
                 )}
                 <div className="mt-auto flex items-center justify-between pt-2">
                   <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
-                    <Avatar name={item.owner?.name} id={item.owner_id} src={item.owner?.avatar} size={22} />
+                    <Avatar name={item.owner?.name} id={item.owner_id} src={item.owner?.avatar} size={22} decorative />
                     <span className="truncate">{item.owner?.name ?? t("common.someone")}</span>
                   </span>
                   {item.owner_id !== userId && <SafetyMenu type="market_item" id={item.id} author={{ id: item.owner_id, name: item.owner?.name }} />}

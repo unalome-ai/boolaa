@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent, type KeyboardEvent } from "react";
 import { getSupabase } from "@/lib/supabase/client";
 import type { Bubble } from "@/lib/types";
 import { useTranslations } from "next-intl";
@@ -135,6 +135,15 @@ export function CreateJoinTabs({
 }) {
   const [tab, setTab] = useState<"create" | "join">(initial);
   const t = useTranslations("createJoin");
+  const id = useId();
+  // Tabs pattern: arrow keys switch and focus the other tab; only the selected tab is in the Tab order.
+  const onKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+    e.preventDefault();
+    const next = e.key === "Home" ? "create" : e.key === "End" ? "join" : tab === "create" ? "join" : "create";
+    setTab(next);
+    document.getElementById(`${id}-tab-${next}`)?.focus();
+  };
   return (
     <div>
       <div className="relative mb-5 grid grid-cols-2 rounded-full bg-field p-1" role="tablist">
@@ -151,7 +160,11 @@ export function CreateJoinTabs({
             key={k}
             type="button"
             role="tab"
+            id={`${id}-tab-${k}`}
             aria-selected={tab === k}
+            aria-controls={`${id}-panel`}
+            tabIndex={tab === k ? 0 : -1}
+            onKeyDown={onKey}
             data-testid={`tab-${k}`}
             onClick={() => setTab(k)}
             className={cx(
@@ -163,7 +176,7 @@ export function CreateJoinTabs({
           </button>
         ))}
       </div>
-      <div key={tab} className="anim-fade">
+      <div key={tab} className="anim-fade" role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
       {tab === "create" ? <CreateBubbleForm onCreated={onCreated} /> : <JoinBubbleForm onRequested={onRequested} />}
       </div>
     </div>

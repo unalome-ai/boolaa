@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useBoolaa } from "@/components/boolaa-provider";
 import { REACTION_EMOJI, REACTIONS, summarize, type ReactionKey, type Reactions as ReactionState } from "@/lib/reactions";
 import { cx } from "@/lib/utils";
+import { useMenuKeys } from "@/lib/a11y";
 
 /**
  * "Add a reaction" button with a popover of the six reactions (docs/boolaa-spec.md, "Reactions").
@@ -35,24 +36,21 @@ export function ReactionPicker({
     setOpenRef.current = setOpen;
   });
   const ref = useRef<HTMLDivElement>(null);
-  const first = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    first.current?.focus();
     const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpenRef.current(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpenRef.current(false);
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
+  useMenuKeys(open, () => setOpenRef.current(false), menuRef, button, "horizontal");
 
   return (
     <div ref={ref} className={cx("relative", className)}>
       <button
+        ref={button}
         type="button"
         aria-label={t("addReaction")}
         title={t("addReaction")}
@@ -69,7 +67,9 @@ export function ReactionPicker({
       </button>
       {open && (
         <div
+          ref={menuRef}
           role="menu"
+          aria-orientation="horizontal"
           aria-label={t("react")}
           data-testid="reaction-picker"
           className={cx(
@@ -77,10 +77,9 @@ export function ReactionPicker({
             align === "right" ? "right-0" : "left-0",
           )}
         >
-          {REACTIONS.map((r, i) => (
+          {REACTIONS.map((r) => (
             <button
               key={r}
-              ref={i === 0 ? first : undefined}
               type="button"
               role="menuitem"
               aria-label={t(r)}
@@ -89,6 +88,7 @@ export function ReactionPicker({
               onClick={() => {
                 setOpen(false);
                 onPick(r);
+                button.current?.focus();
               }}
               className="press-round flex h-9 w-9 items-center justify-center rounded-full text-[20px] hover:bg-field"
             >

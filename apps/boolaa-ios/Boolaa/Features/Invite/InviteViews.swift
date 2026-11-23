@@ -51,13 +51,13 @@ struct JoinInviteSheet: View {
         case .loading:
             ProgressView().padding(.top, 60)
         case .invalid:
-            Image(systemName: "link.badge.plus").font(.system(size: 44, weight: .bold)).foregroundStyle(.secondary)
+            Image(systemName: "link.badge.plus").font(.system(size: 44, weight: .bold)).foregroundStyle(Theme.inkSecondary)
             Text("This invite isn't valid").font(.rounded(.title2, weight: .heavy)).multilineTextAlignment(.center)
                 .accessibilityIdentifier("invite-invalid")
             Text("The link may be old or the code was changed. Ask a member for a new one.")
-                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
         case .failed(let message):
-            Text(verbatim: message).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            Text(verbatim: message).font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
             Button("Try again") { Task { await load() } }.buttonStyle(SecondaryButtonStyle())
         case .loaded(let preview):
             header(preview)
@@ -68,7 +68,7 @@ struct JoinInviteSheet: View {
                 .font(.rounded(.headline))
                 .accessibilityIdentifier("invite-sent")
             Text("The members vote on your request. You're in once most of them say yes.")
-                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
             Button("Done") { dismiss() }.buttonStyle(PrimaryButtonStyle())
         }
     }
@@ -76,7 +76,7 @@ struct JoinInviteSheet: View {
     private func header(_ preview: InvitePreview) -> some View {
         let hue = Hue.forID(preview.bubbleId) // grape for non-members (no id)
         return VStack(spacing: 12) {
-            Text("You've got an invite").font(.rounded(.subheadline, weight: .heavy)).foregroundStyle(.secondary)
+            Text("You've got an invite").font(.rounded(.subheadline, weight: .heavy)).foregroundStyle(Theme.inkSecondary)
                 .textCase(.uppercase)
             Group {
                 if let logo = preview.logo, !logo.isEmpty {
@@ -105,7 +105,7 @@ struct JoinInviteSheet: View {
         switch preview.status {
         case .open:
             Text("The members vote on your request. You're in once most of them say yes.")
-                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
             Button {
                 Task { await request(preview) }
             } label: {
@@ -116,11 +116,11 @@ struct JoinInviteSheet: View {
             .accessibilityIdentifier("invite-request")
         case .pending:
             Label { Text("You've already asked to join. Waiting for the members to approve.") } icon: { Image(systemName: "hourglass") }
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                 .accessibilityIdentifier("invite-pending")
             Button("Done") { dismiss() }.buttonStyle(SecondaryButtonStyle())
         case .member:
-            Text("You're already in this bubble.").font(.subheadline).foregroundStyle(.secondary)
+            Text("You're already in this bubble.").font(.subheadline).foregroundStyle(Theme.inkSecondary)
                 .accessibilityIdentifier("invite-member")
             Button("Open bubble") {
                 if let id = preview.bubbleId { session.selectBubble(id) }
@@ -178,8 +178,8 @@ struct InviteQRSheet: View {
                         .accessibilityIdentifier("invite-qr")
                 }
                 Text("Let a friend scan this to ask to join \(bubbleName).", comment: "Under the invite QR code; the argument is the bubble name")
-                    .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                Text(verbatim: url.absoluteString).font(.footnote.monospaced()).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
+                Text(verbatim: url.absoluteString).font(.footnote.monospaced()).foregroundStyle(Theme.inkSecondary)
                     .textSelection(.enabled)
             }
             .padding(24)

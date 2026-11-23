@@ -126,14 +126,17 @@ struct FoodCard: View {
             Color.clear
                 .frame(height: 210)
                 .frame(maxWidth: .infinity)
-                .overlay { RemoteImage(url: post.image, hue: Feature.food.hue) }
+                .overlay {
+                    RemoteImage(url: post.image, hue: Feature.food.hue)
+                        .photoLabel(post.user?.displayName, present: !post.image.isEmpty)
+                }
                 .clipped()
                 .overlay(alignment: .bottomLeading) {
                     // Author pill floating on the photo.
                     HStack(spacing: 6) {
-                        AvatarView(user: post.user, size: 24)
-                        Text(verbatim: post.user?.displayName ?? "").font(.rounded(.caption)).lineLimit(1)
-                        Text(verbatim: "· " + post.createdAt.relativeShort).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        AvatarView(user: post.user, size: 24).accessibilityHidden(true)
+                        Text(verbatim: post.user?.displayName ?? "").font(.rounded(.caption)).lineLimit(2)
+                        Text(verbatim: "· " + post.createdAt.relativeShort).font(.caption).foregroundStyle(Theme.inkSecondary).lineLimit(2)
                     }
                     .padding(.leading, 5).padding(.trailing, 12).padding(.vertical, 5)
                     .background(.regularMaterial, in: Capsule())
@@ -148,7 +151,7 @@ struct FoodCard: View {
                             Button("Edit", systemImage: "pencil") { onEdit?() }
                             Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
                         } label: {
-                            Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(.secondary).frame(width: 32, height: 28)
+                            Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(Theme.inkSecondary).frame(width: 44, height: 44).contentShape(Rectangle()).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         }
                         .accessibilityLabel(Text("More actions"))
                     }

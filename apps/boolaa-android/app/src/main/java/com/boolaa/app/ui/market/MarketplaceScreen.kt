@@ -159,6 +159,8 @@ import com.boolaa.app.ui.components.StatusBadge
 import com.boolaa.app.ui.components.boolaaCard
 import com.boolaa.app.ui.components.bounceOn
 import com.boolaa.app.ui.components.clickableRipple
+import com.boolaa.app.ui.components.tapArea
+import com.boolaa.app.ui.components.tapVisual
 import com.boolaa.app.ui.components.dashedBorder
 import com.boolaa.app.ui.components.displayName
 import com.boolaa.app.ui.components.dockClearance
@@ -264,7 +266,8 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
     BoolaaRefreshBox(isRefreshing = busy && items != null && !creating && editing == null, onRefresh = { vm.load(refresh = true) },
         modifier = Modifier.fillMaxSize().testTag("market-screen")) {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            // One column at large font scales, so titles and badges are not squeezed into half the width.
+            columns = GridCells.Fixed(if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) 1 else 2),
             state = gridState,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = dockClearance()),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -372,7 +375,8 @@ fun MarketCard(
     Column(modifier.boolaaCard(0.dp).testTag("market-${item.id}")) {
         // Long press on the photo opens the reaction picker.
         Box(if (onReact != null) Modifier.longPressToReact(picker) else Modifier) {
-            RemoteImage(item.image, Modifier.fillMaxWidth().height(140.dp).graphicsLayer { alpha = if (taken) 0.45f else 1f }, item.title)
+            RemoteImage(item.image, Modifier.fillMaxWidth().height(140.dp).graphicsLayer { alpha = if (taken) 0.45f else 1f },
+                stringResource(R.string.a11y_photo_from, displayName(item.owner)))
             Column(Modifier.align(Alignment.TopStart).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 MarketBadge(item.status)
                 AvailabilityBadge(item.availability)
@@ -380,7 +384,8 @@ fun MarketCard(
         }
         Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f).padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(item.title, style = Type.chip, color = c.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(item.title, style = Type.chip, color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.semantics { heading() })
                 item.description?.takeIf { it.isNotBlank() }?.let {
                     Text(it, style = Type.caption2, color = c.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
@@ -402,15 +407,20 @@ fun MarketCard(
                 hue = Feature.MARKET.hue, picker = picker, tag = "reactions-${item.id}")
         }
         if (onAsk != null) {
-            Row(
-                Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 12.dp).clip(CircleShape).background(Feature.MARKET.hue.wash)
-                    .clickableRipple(onClick = onAsk).padding(vertical = 8.dp).testTag("ask-${item.id}"),
+            // 48dp touch target around the slimmer pill.
+            val askSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            Box(
+                Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 4.dp)
+                    .tapArea(askSource, role = Role.Button, onClick = onAsk).testTag("ask-${item.id}"),
+                contentAlignment = Alignment.Center,
+            ) { Row(
+                Modifier.fillMaxWidth().tapVisual(askSource, CircleShape, Modifier.background(Feature.MARKET.hue.wash)).padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(BoolaaIcons.Chat, contentDescription = null, tint = Feature.MARKET.hue.text, modifier = Modifier.size(16.dp))
                 Text(stringResource(R.string.market_ask_in_chat), style = Type.caption.copy(fontWeight = FontWeight.Bold), color = Feature.MARKET.hue.text,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 6.dp))
-            }
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(start = 6.dp))
+            } }
         }
     }
 }

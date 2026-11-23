@@ -19,6 +19,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -35,6 +37,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
@@ -64,6 +67,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -128,6 +132,16 @@ object Haptics {
     fun error(view: View) = view.perform(if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS)
 
     private fun View.perform(constant: Int) { performHapticFeedback(constant) }
+}
+
+/**
+ * Speaks [text] once with TalkBack (politely, after what it is reading) for changes that have no node to focus: a new
+ * chat message, a confirmation. No-op when no screen reader is on.
+ */
+@Suppress("DEPRECATION") // announceForAccessibility: still the only way to speak without moving focus or adding a node.
+fun announcePolitely(view: View, text: String) {
+    val manager = view.context.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE) as? android.view.accessibility.AccessibilityManager
+    if (manager?.isEnabled == true) view.announceForAccessibility(text)
 }
 
 // MARK: Frame clock
@@ -235,6 +249,26 @@ fun Modifier.clickableRipple(scale: Float = 0.96f, enabled: Boolean = true, role
     return this.squish(source, scale).clickable(interactionSource = source, indication = ripple(), enabled = enabled, role = role, onClick = onClick)
 }
 
+/** Minimum touch target on Android (Material / Accessibility Scanner): 48dp in both directions. */
+val MinTouchTarget = 48.dp
+
+/**
+ * The tappable area of a control whose visual is smaller than [MinTouchTarget] (chips, reaction pills, small round
+ * buttons): at least 48 × 48dp, centred on the visual. Put the semantics and test tag on this outer node, and pass the
+ * same [source] to [tapVisual] on the visual so the squish and ripple stay on the visible shape.
+ */
+fun Modifier.tapArea(source: MutableInteractionSource, enabled: Boolean = true, role: Role? = null, onClick: () -> Unit): Modifier =
+    this.sizeIn(minWidth = MinTouchTarget, minHeight = MinTouchTarget)
+        .clickable(interactionSource = source, indication = null, enabled = enabled, role = role, onClick = onClick)
+
+/**
+ * The visible shape of a [tapArea]: squish ([scale]), clip to [shape], the shape's own [fill] (background, border…)
+ * and the ripple of the shared [source] on top.
+ */
+@Composable
+fun Modifier.tapVisual(source: MutableInteractionSource, shape: Shape, fill: Modifier = Modifier, scale: Float = 0.96f): Modifier =
+    this.squish(source, scale).clip(shape).then(fill).indication(source, ripple())
+
 /** Error shake: −10, 9, −6, 3, 0 dp over 530 ms, each time [trigger] changes. */
 @Composable
 fun Modifier.shake(trigger: Int): Modifier {
@@ -256,9 +290,10 @@ fun Modifier.shake(trigger: Int): Modifier {
 fun Modifier.bounceOn(trigger: Any?, from: Float = 0.6f, enabled: Boolean = true): Modifier {
     val scale = remember { Animatable(1f) }
     var first by remember { mutableStateOf(true) }
+    val reduce = LocalReduceMotion.current
     LaunchedEffect(trigger) {
         if (first) { first = false; return@LaunchedEffect }
-        if (!enabled) return@LaunchedEffect
+        if (!enabled || reduce) return@LaunchedEffect
         scale.snapTo(from)
         scale.animateTo(1f, Motion.bouncy())
     }
@@ -271,14 +306,20 @@ fun Modifier.bounceOn(trigger: Any?, from: Float = 0.6f, enabled: Boolean = true
 @Composable
 fun Modifier.popIn(index: Int = 0, rise: Dp = 18.dp): Modifier {
     var shown by rememberSaveable { mutableStateOf(false) }
+    val reduce = LocalReduceMotion.current
     val progress = remember { Animatable(if (shown) 1f else 0f) }
     LaunchedEffect(Unit) {
         if (!shown) {
-            if (index in 1 until Motion.STAGGER_LIMIT) delay(index * Motion.STAGGER_MS)
-            progress.animateTo(1f, Motion.bouncy())
+            // Reduced motion: opacity only, no stagger delay, no rise or scale.
+            if (reduce) progress.animateTo(1f, Motion.fade())
+            else {
+                if (index in 1 until Motion.STAGGER_LIMIT) delay(index * Motion.STAGGER_MS)
+                progress.animateTo(1f, Motion.bouncy())
+            }
             shown = true
         }
     }
+    if (reduce) return graphicsLayer { alpha = progress.value.coerceIn(0f, 1f) }
     return graphicsLayer {
         val v = progress.value
         alpha = v.coerceIn(0f, 1f)
@@ -292,8 +333,10 @@ fun Modifier.popIn(index: Int = 0, rise: Dp = 18.dp): Modifier {
 @Composable
 fun Modifier.popFrom(enabled: Boolean, originX: Float, originY: Float, from: Float = 0.4f): Modifier {
     if (!enabled) return this
+    val reduce = LocalReduceMotion.current
     val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { progress.animateTo(1f, Motion.bouncy()) }
+    LaunchedEffect(Unit) { progress.animateTo(1f, if (reduce) Motion.fade() else Motion.bouncy()) }
+    if (reduce) return graphicsLayer { alpha = progress.value.coerceIn(0f, 1f) }
     return graphicsLayer {
         val v = progress.value
         alpha = (v * 1.5f).coerceIn(0f, 1f)
@@ -306,11 +349,13 @@ fun Modifier.popFrom(enabled: Boolean, originX: Float, originY: Float, from: Flo
 /** Digits roll up or down when [count] changes. */
 @Composable
 fun RollingCount(count: Int, modifier: Modifier = Modifier, content: @Composable (Int) -> Unit) {
+    val reduce = LocalReduceMotion.current
     AnimatedContent(
         targetState = count,
         modifier = modifier,
         transitionSpec = {
             val up = targetState > initialState
+            if (reduce) return@AnimatedContent fadeIn(Motion.fade()).togetherWith(fadeOut(Motion.fade()))
             (slideInVertically(Motion.snappy()) { if (up) it else -it } + fadeIn(Motion.fade()))
                 .togetherWith(slideOutVertically(Motion.snappy()) { if (up) -it else it } + fadeOut(Motion.fade()))
                 .using(SizeTransform(clip = false))
@@ -542,7 +587,7 @@ fun SkeletonCard(modifier: Modifier = Modifier) {
 @Composable
 fun SkeletonList(modifier: Modifier = Modifier, count: Int = 3) {
     val loading = stringResource(R.string.loading)
-    Column(modifier.clearAndSetSemantics { contentDescription = loading }.testTag("loading"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier.testTag("loading").clearAndSetSemantics { contentDescription = loading }, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         repeat(count) { SkeletonCard() }
     }
 }
@@ -576,7 +621,7 @@ fun <T> SegmentedPill(
     val glowColor = hue.fill.copy(alpha = 0.3f)
     Box(modifier.fillMaxWidth().clip(CircleShape).background(c.field).padding(4.dp)) {
         Row(
-            Modifier.fillMaxWidth().drawWithCache {
+            Modifier.selectableGroup().fillMaxWidth().drawWithCache {
                 val gap = 4.dp.toPx()
                 val w = (size.width - gap * (options.size - 1)) / options.size
                 val radius = CornerRadius(size.height / 2)
@@ -593,7 +638,7 @@ fun <T> SegmentedPill(
                 val active = value == selected
                 val color by androidx.compose.animation.animateColorAsState(if (active) hue.onFill else c.textSecondary, Motion.fade())
                 Box(
-                    Modifier.weight(1f).heightIn(min = 40.dp).clip(CircleShape)
+                    Modifier.weight(1f).heightIn(min = 48.dp).clip(CircleShape)
                         .clickableRipple(role = Role.Tab) { if (!active) { Haptics.selection(view); onSelect(value) } }
                         .semantics { this.selected = active }
                         .then(tagFor(value)?.let { Modifier.testTag(it) } ?: Modifier)
@@ -628,9 +673,9 @@ fun CircleIconButton(
         filled -> Modifier.glow(hue.fill.copy(alpha = 0.35f), 8.dp, 4.dp).clip(CircleShape).background(hue.gradient)
         else -> Modifier.clip(CircleShape).background(hue.wash)
     }
-    // The touch target is at least 44dp even when the visible circle is smaller.
+    // The touch target is at least 48dp (Android minimum) even when the visible circle is smaller.
     Box(
-        modifier.size(maxOf(size, 44.dp)).clip(CircleShape).clickableRipple(scale = 0.88f, role = Role.Button, onClick = onClick),
+        modifier.size(maxOf(size, 48.dp)).clip(CircleShape).clickableRipple(scale = 0.88f, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Box(Modifier.size(size).then(background), contentAlignment = Alignment.Center) {
@@ -671,7 +716,8 @@ fun Modifier.scrollFade(state: androidx.compose.foundation.lazy.LazyListState, k
             val hiddenTop = info.viewportStartOffset - item.offset
             val hiddenBottom = item.offset + item.size - info.viewportEndOffset
             val hidden = maxOf(hiddenTop, hiddenBottom, 0).toFloat()
-            val f = (hidden / minOf(item.size.toFloat(), 96.dp.toPx())).coerceIn(0f, 1f)
+            // Proportional to how much of the card is gone, so tall cards (large text) stay readable while mostly visible.
+            val f = (hidden / item.size.toFloat()).coerceIn(0f, 1f)
             val s = 1f - 0.06f * f
             scaleX = s; scaleY = s
             alpha = 1f - 0.45f * f

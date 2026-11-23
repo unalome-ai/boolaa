@@ -305,7 +305,6 @@
     "leaveConfirm": "Leave",
     "waitingForSpot": "Approved, waiting for a free spot",
     "removeMember": "Remove member",
-    "removeMemberNamed": "Remove {name}",
     "removeTitle": "Remove member?",
     "removeBody": "<strong>{name}</strong> will lose access to {bubble}. To come back they'll need the invite code and the members' approval.",
     "removed": "{name} is no longer in the bubble",
@@ -619,5 +618,12 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "hint": "System follows your device's light or dark setting."
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "photoFrom": "Photo from {name}",
+    "newMessageFrom": "New message from {name}",
+    "opensInNewTab": "opens in a new tab",
+    "dismiss": "Dismiss"
   }
 }

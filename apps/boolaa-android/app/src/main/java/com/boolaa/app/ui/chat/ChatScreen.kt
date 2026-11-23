@@ -104,9 +104,11 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.role
@@ -464,6 +466,15 @@ fun ChatScreen(
         onDispose { if (container.push.visibleChatBubble == bubble.id) container.push.setVisibleChat(null) }
     }
 
+    // A message from someone else arriving while the chat is open is announced politely ("New message from Bob").
+    val newest = list?.lastOrNull()
+    val newestSender = newest?.sender?.name?.takeIf { it.isNotBlank() } ?: someone
+    val announcement = stringResource(R.string.a11y_new_message_from, newestSender)
+    LaunchedEffect(newestId) {
+        if (newest != null && openedAt != null && newest.senderId != me && newest.createdAt > openedAt && !newest.isDeleted) {
+            com.boolaa.app.ui.components.announcePolitely(view, announcement)
+        }
+    }
     // A new newest message scrolls into view when the list was at (or next to) the bottom, or when it is ours.
     LaunchedEffect(newestId) {
         if (newestId != null && (listState.firstVisibleItemIndex <= 2 || list?.lastOrNull()?.senderId == me)) listState.animateScrollToItem(0)
@@ -571,13 +582,18 @@ fun ChatScreen(
                     model = picked, contentDescription = stringResource(R.string.chat_photo), contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize().clip(RoundedCornerShape(14.dp)).background(c.field),
                 )
+                // 48dp touch target in the corner; the visible dot stays 28dp.
                 Box(
-                    Modifier.align(Alignment.TopEnd).padding(4.dp).size(28.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.55f))
+                    Modifier.align(Alignment.TopEnd).size(48.dp).clip(CircleShape)
                         .clickableRipple(role = Role.Button) { photo = null }
                         .semantics { contentDescription = removeLabel }
                         .testTag("chat-photo-remove"),
                     contentAlignment = Alignment.Center,
-                ) { Icon(BoolaaIcons.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp)) }
+                ) {
+                    Box(Modifier.size(28.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+                        Icon(BoolaaIcons.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
+                }
             }
         }
         // Composer: photo button, a pill field on the card colour and a round send button, on a translucent bar.
@@ -697,8 +713,40 @@ fun MessageRow(
     val deleteLabel = stringResource(R.string.chat_delete_message)
     val locale = LocalConfiguration.current.locales[0]
     val c = BoolaaTheme.colors
+    val action = onDelete ?: onReport
+    val actionLabel = if (onDelete != null) deleteLabel else reportLabel
+    // TalkBack reads the whole message as one stop: sender, photo, text (or "deleted"), time and the reactions; react,
+    // delete/report and every link in the text are its actions.
+    val sender = if (isMine) stringResource(R.string.you) else displayName(message.sender)
+    val photoLabel = stringResource(R.string.a11y_photo_from, sender)
+    val deletedLabel = stringResource(R.string.chat_deleted)
+    val time = Formats.time(message.createdAt, locale)
+    val youReacted = stringResource(R.string.reaction_by_you)
+    val reactionLabels = reactions.map { r ->
+        pluralStringResource(R.plurals.reaction_chip, r.count, com.boolaa.app.ui.components.reactionName(r.kind), r.count) +
+            if (r.mine) ", $youReacted" else ""
+    }
+    val description = buildList {
+        add(sender)
+        if (message.isDeleted) add(deletedLabel)
+        else {
+            if (message.imagePath != null) add(photoLabel)
+            if (message.content.isNotEmpty()) add(message.content)
+        }
+        add(time)
+        if (!message.isDeleted) addAll(reactionLabels)
+    }.joinToString(", ")
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val links = remember(message.content) { com.boolaa.app.core.Linkify.split(message.content).mapNotNull { it.url } }
     Row(
-        Modifier.fillMaxWidth().popFrom(popIn, originX = if (isMine) 1f else 0f, originY = 1f).testTag("message-${message.id}"),
+        Modifier.fillMaxWidth().popFrom(popIn, originX = if (isMine) 1f else 0f, originY = 1f).testTag("message-${message.id}")
+            .clearAndSetSemantics {
+                contentDescription = description
+                if (!message.isDeleted) customActions = listOfNotNull(
+                    onReact?.let { CustomAccessibilityAction(reactLabel) { menu.value = true; true } },
+                    action?.let { CustomAccessibilityAction(actionLabel) { it(); true } },
+                ) + links.map { url -> CustomAccessibilityAction(url) { runCatching { uriHandler.openUri(url) }.isSuccess } }
+            },
         horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Bottom,
     ) {
@@ -720,8 +768,6 @@ fun MessageRow(
             val shape = if (isMine) MineShape else TheirsShape
             // A search hit opened in context: the same brand ring as push highlights, for 4 s.
             val ring = if (highlighted) Modifier.border(3.dp, com.boolaa.app.ui.theme.Brand.hue.fill, shape).testTag("message-highlighted") else Modifier
-            val action = onDelete ?: onReport
-            val actionLabel = if (onDelete != null) deleteLabel else reportLabel
             if (message.isDeleted) {
                 Text(
                     stringResource(R.string.chat_deleted),
@@ -741,12 +787,6 @@ fun MessageRow(
                             // Long press: the reactions row plus Delete (own) or Report (others) below it.
                             if (action != null || onReact != null) Modifier
                                 .combinedClickable(onClick = {}, onLongClick = { if (onReact != null) menu.value = true else action?.invoke() })
-                                .semantics {
-                                    customActions = listOfNotNull(
-                                        onReact?.let { CustomAccessibilityAction(reactLabel) { menu.value = true; true } },
-                                        action?.let { CustomAccessibilityAction(actionLabel) { it(); true } },
-                                    )
-                                }
                             else Modifier,
                         ),
                 ) {
@@ -769,7 +809,7 @@ fun MessageRow(
                             }
                         }
                         AsyncImage(
-                            model = request, contentDescription = stringResource(R.string.chat_photo), contentScale = ContentScale.Crop,
+                            model = request, contentDescription = photoLabel, contentScale = ContentScale.Crop,
                             modifier = Modifier.size(240.dp).background(c.field).testTag("message-photo-${message.id}"),
                         )
                     }
@@ -789,7 +829,7 @@ fun MessageRow(
             if (onReact != null && reactions.isNotEmpty()) {
                 com.boolaa.app.ui.components.ReactionBar(reactions, onReact, hue = Hue.grape, picker = picker, tag = "reactions-${message.id}")
             }
-            Text(Formats.time(message.createdAt, locale), style = Type.caption2, color = c.textSecondary, modifier = Modifier.padding(horizontal = 6.dp))
+            Text(time, style = Type.caption2, color = c.textSecondary, modifier = Modifier.padding(horizontal = 6.dp))
         }
     }
 }

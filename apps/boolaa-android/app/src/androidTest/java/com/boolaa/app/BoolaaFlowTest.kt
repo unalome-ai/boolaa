@@ -2,6 +2,7 @@ package com.boolaa.app
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -67,7 +68,8 @@ class BoolaaFlowTest {
         sentContents += text
         rule.onNodeWithTag("chat-input").performTextInput(text)
         rule.onNodeWithTag("chat-send").performClick()
-        rule.waitUntilExactlyOneExists(hasText(text), timeout)
+        // A message is one TalkBack stop: its text lives in the row's content description ("You, <text>, <time>").
+        rule.waitUntilExactlyOneExists(hasContentDescription(text, substring = true), timeout)
 
         rule.onNodeWithTag("chat-back").performClick()
         rule.waitUntilExactlyOneExists(hasTestTag("chat-fab"), timeout)

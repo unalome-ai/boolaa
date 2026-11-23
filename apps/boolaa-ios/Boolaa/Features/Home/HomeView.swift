@@ -148,13 +148,13 @@ struct BubbleHero: View {
                 .font(.rounded(.title, weight: .heavy))
                 .lineLimit(2).minimumScaleFactor(0.75)
             if let d = bubble.description?.nilIfEmpty {
-                Text(verbatim: d).font(.subheadline.weight(.medium)).lineLimit(3)
+                Text(verbatim: d).font(.subheadline.weight(.medium)).lineLimit(6)
             }
             Button(action: onLinks) {
                 Label("Links", systemImage: "link")
                     .font(.rounded(.subheadline))
                     .padding(.horizontal, 14)
-                    .frame(minHeight: 36)
+                    .frame(minHeight: 44)
                     .background(hue.onFill.opacity(0.16), in: Capsule())
                     .overlay(Capsule().strokeBorder(hue.onFill.opacity(0.25), lineWidth: 1))
             }
@@ -184,26 +184,31 @@ struct BubbleHero: View {
 
 struct FeedCard: View {
     var item: FeedItem
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        let large = typeSize.isAccessibilitySize
+        // At the accessibility sizes the badge, text and thumbnail stack so the text keeps the full width.
+        AdaptiveStack(spacing: 12, horizontalAlignment: .top) {
             FeatureBadge(icon: feature.icon, hue: feature.hue)
 
             VStack(alignment: .leading, spacing: 3) {
-                HStack {
+                AdaptiveStack(spacing: 4) {
                     Text(kind).font(.rounded(.caption)).foregroundStyle(feature.hue.text).textCase(.uppercase)
-                        .lineLimit(1).minimumScaleFactor(0.8)
-                    Spacer()
-                    Text(item.date.relativeShort).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        .lineLimit(large ? 2 : 1)
+                    if !large { Spacer() }
+                    Text(item.date.relativeShort).font(.caption).foregroundStyle(Theme.inkSecondary).lineLimit(large ? 2 : 1)
                 }
-                Text(verbatim: title).font(.body.weight(.semibold)).lineLimit(2).foregroundStyle(.primary)
+                Text(verbatim: title).font(.body.weight(.semibold)).lineLimit(large ? 5 : 2).foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                if let subtitle { Text(verbatim: subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(2) }
+                if let subtitle { Text(verbatim: subtitle).font(.subheadline).foregroundStyle(Theme.inkSecondary).lineLimit(large ? 4 : 2) }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             if let image {
                 RemoteImage(url: image, hue: feature.hue)
                     .frame(width: 60, height: 60)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .accessibilityHidden(true)
             }
         }
         .card()

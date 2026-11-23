@@ -129,9 +129,14 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Robolectric Compose tests of the accessibility contract (AccessibilityComponentsTest).
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
+    // Accessibility Test Framework checks (enableAccessibilityChecks) in AccessibilityChecksTest.
+    androidTestImplementation(libs.compose.ui.test.junit4.accessibility)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.core)

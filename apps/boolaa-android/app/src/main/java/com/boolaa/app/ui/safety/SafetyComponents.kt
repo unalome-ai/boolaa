@@ -39,7 +39,7 @@ import com.boolaa.app.ui.theme.BoolaaTheme
 @Composable
 fun MemberSafetyMenu(name: String, blocked: Boolean, onReport: () -> Unit, onBlock: () -> Unit, onUnblock: () -> Unit) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, modifier = Modifier.size(44.dp).testTag("member-menu-$name")) {
+    IconButton(onClick = { open = true }, modifier = Modifier.size(48.dp).testTag("member-menu-$name")) {
         Icon(BoolaaIcons.More, contentDescription = stringResource(R.string.more_actions), tint = BoolaaTheme.colors.textSecondary)
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = BoolaaTheme.colors.card) {

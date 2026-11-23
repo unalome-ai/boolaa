@@ -298,7 +298,7 @@ fun FoodCard(
     Column(modifier.boolaaCard(0.dp).testTag("food-${post.id}")) {
         // Long press on the photo opens the reaction picker.
         Box(if (onReact != null) Modifier.longPressToReact(picker) else Modifier) {
-            RemoteImage(post.image, Modifier.fillMaxWidth().height(210.dp), post.description)
+            RemoteImage(post.image, Modifier.fillMaxWidth().height(210.dp), stringResource(R.string.a11y_photo_from, displayName(post.user)))
             Row(
                 Modifier.align(Alignment.BottomStart).padding(10.dp).clip(CircleShape).background(c.card.copy(alpha = 0.9f))
                     .padding(start = 4.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
@@ -312,7 +312,7 @@ fun FoodCard(
         val description = post.description?.takeIf { it.isNotBlank() }
         val hasMenu = onDelete != null || onReport != null
         if (description != null || hasMenu) {
-            Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp).heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(description.orEmpty(), style = Type.body.copy(fontWeight = FontWeight.Medium), color = c.textPrimary, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
                 if (hasMenu) ItemMenu(onEdit, onDelete, onReport)
             }

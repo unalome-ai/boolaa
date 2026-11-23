@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -103,37 +104,51 @@ fun ReactionBar(
     val youReacted = stringResource(R.string.reaction_by_you)
     FlowRow(
         modifier.testTag(tag),
-        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+        // Each chip sits in a 48dp touch target, which already spaces the rows.
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
         summaries.forEach { s ->
             val label = pluralStringResource(R.plurals.reaction_chip, s.count, reactionName(s.kind), s.count) +
                 if (s.mine) ", $youReacted" else ""
             val shape = CircleShape
-            Row(
-                Modifier.heightIn(min = 34.dp).clip(shape)
-                    .background(if (s.mine) hue.wash else c.field)
-                    .border(if (s.mine) 1.5.dp else 1.dp, if (s.mine) hue.fill else c.hairline, shape)
-                    .clickableRipple(scale = 0.9f) { Haptics.selection(view); onToggle(s.kind) }
-                    .clearAndSetSemantics { contentDescription = label; selected = s.mine; role = Role.Button }
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
-                    .testTag("$tag-chip-${s.kind.wire}"),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            val source = remember { MutableInteractionSource() }
+            // A toggle: "Love: 3 reactions, You reacted" + on/off; double tap adds or removes yours.
+            Box(
+                Modifier.tapArea(source) { Haptics.selection(view); onToggle(s.kind) }
+                    .testTag("$tag-chip-${s.kind.wire}")
+                    .clearAndSetSemantics {
+                        contentDescription = label; role = Role.Switch
+                        toggleableState = androidx.compose.ui.state.ToggleableState(s.mine)
+                    },
+                contentAlignment = Alignment.Center,
             ) {
-                Text(s.kind.emoji, fontSize = 15.sp)
-                Text(Formats.number(s.count.toLong(), locale), style = Type.caption, color = if (s.mine) hue.text else c.textSecondary)
+                Row(
+                    Modifier.heightIn(min = 34.dp)
+                        .tapVisual(source, shape, Modifier.background(if (s.mine) hue.wash else c.field)
+                            .border(if (s.mine) 1.5.dp else 1.dp, if (s.mine) hue.fill else c.hairline, shape), scale = 0.9f)
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(s.kind.emoji, fontSize = 15.sp)
+                    Text(Formats.number(s.count.toLong(), locale), style = Type.caption, color = if (s.mine) hue.text else c.textSecondary)
+                }
             }
         }
         Box {
             val addLabel = stringResource(R.string.reaction_add)
+            val addSource = remember { MutableInteractionSource() }
             Box(
-                Modifier.size(34.dp).clip(CircleShape).background(c.field)
-                    .clickableRipple(scale = 0.88f, role = Role.Button) { picker.value = true }
+                Modifier.tapArea(addSource, role = Role.Button) { picker.value = true }
                     .semantics { contentDescription = addLabel }
                     .testTag("$tag-add"),
                 contentAlignment = Alignment.Center,
-            ) { Icon(BoolaaIcons.AddReaction, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(18.dp)) }
+            ) {
+                Box(Modifier.size(34.dp).tapVisual(addSource, CircleShape, Modifier.background(c.field), scale = 0.88f), contentAlignment = Alignment.Center) {
+                    Icon(BoolaaIcons.AddReaction, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(18.dp))
+                }
+            }
             ReactionPickerMenu(picker.value, onDismiss = { picker.value = false }, onPick = { picker.value = false; onToggle(it) }, tag = tag)
         }
     }
@@ -159,10 +174,10 @@ fun ReactionPickerRow(onPick: (ReactionKind) -> Unit, tag: String = "reactions")
         ReactionKind.entries.forEach { kind ->
             val name = reactionName(kind)
             Box(
-                Modifier.size(44.dp).clip(CircleShape)
+                Modifier.size(48.dp).clip(CircleShape)
                     .clickableRipple(scale = 0.85f) { Haptics.light(view); onPick(kind) }
-                    .clearAndSetSemantics { contentDescription = name; role = Role.Button }
-                    .testTag("$tag-pick-${kind.wire}"),
+                    .testTag("$tag-pick-${kind.wire}")
+                    .clearAndSetSemantics { contentDescription = name; role = Role.Button },
                 contentAlignment = Alignment.Center,
             ) { Text(kind.emoji, fontSize = 24.sp) }
         }

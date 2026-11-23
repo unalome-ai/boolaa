@@ -15,7 +15,7 @@
 
 /* ---- 2.1 Hues: fill / glow / deep are the same in both modes, `ink` is the text shade. ------- */
 :root {
-  --grape: #7357f6; --grape-glow: #9b86ff; --grape-deep: #5b3fd9; --grape-ink: #5b3fd9;
+  --grape: #7357f6; --grape-glow: #9b86ff; --grape-deep: #5b3fd9; --grape-ink: #5135cf;
   --coral: #ff6b5c; --coral-glow: #ff9a82; --coral-deep: #e8503f; --coral-ink: #c0392b;
   --mint: #1ec8a0; --mint-glow: #6be6c6; --mint-deep: #12a683; --mint-ink: #0b7a60;
   --sky: #3aa8ff; --sky-glow: #7cc9ff; --sky-deep: #1f8de6; --sky-ink: #0b6bbf;
@@ -25,7 +25,7 @@
   --indigo: #5468f0; --indigo-glow: #8795ff; --indigo-deep: #3f50d0; --indigo-ink: #3f50d0;
   --onfill-ink: #1e1638;
   --danger: #d92d3a;
-  --danger-ink: #d92d3a;
+  --danger-ink: #c0272f;
   --wash: 14%;
 
   /* 2.4 Surfaces and text */
@@ -304,7 +304,7 @@
   background: color-mix(in srgb, var(--danger) 10%, transparent);
   color: var(--danger-ink);
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--danger) 16%, transparent);
+    background: color-mix(in srgb, var(--danger) 13%, transparent);
   }
   &:disabled {
     opacity: 0.5;
@@ -324,7 +324,7 @@
   background: var(--danger);
 }
 @utility chip {
-  @apply press inline-flex h-[38px] shrink-0 items-center gap-1.5 rounded-full px-4 font-display text-[15px] font-bold whitespace-nowrap;
+  @apply press inline-flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-full px-4 font-display text-[15px] font-bold whitespace-nowrap;
 }
 /* Active chip / tab fill in the current hue. */
 @utility fill-hue {

@@ -29,6 +29,7 @@ import { Avatar, Modal } from "@/components/ui";
 import { FEATURE_HUE, HUES, hueClass, hueFor, type Hue } from "@/lib/hue";
 import { cx } from "@/lib/utils";
 import { useSignedUrl } from "@/lib/storage-url";
+import { scrollBehavior } from "@/lib/a11y";
 
 type NavKey = "home" | "events" | "food" | "marketplace" | "settings" | "chat" | "links";
 type NavItem = { href: string; key: NavKey; icon: LucideIcon };
@@ -62,7 +63,7 @@ function UnreadBadge({ count, className }: { count: number | undefined; classNam
       data-testid="unread-badge"
       aria-hidden
       className={cx(
-        "hue-coral anim-pop inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-hue px-1.5 font-display text-[11px] font-black leading-none text-white",
+        "hue-coral anim-pop inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-hue px-1.5 font-display text-[11px] font-black leading-none text-onfill",
         className,
       )}
     >
@@ -86,7 +87,7 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
   // Keep the active chip in view (centred) when the bubble changes.
   useEffect(() => {
     const el = rowRef.current?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    el?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    el?.scrollIntoView({ block: "nearest", inline: "center", behavior: scrollBehavior() });
   }, [bubble?.id]);
   return (
     <div
@@ -310,6 +311,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hue = hueFor(bubble?.id);
   return (
     <div className="isolate min-h-dvh lg:pl-64" data-testid="app-shell" data-live={live}>
+      <a
+        href="#main"
+        data-testid="skip-link"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[500] focus:rounded-full focus:bg-card focus:px-5 focus:py-3 focus:font-display focus:font-bold focus:text-brand-ink focus:shadow-float"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
+        {t("a11y.skipToContent")}
+      </a>
       <BubbleGlow hue={hue} />
       <DeepLinkTarget />
       <Sidebar pathname={pathname} />
@@ -343,7 +355,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               data-testid="profile-button"
               className="press-round rounded-full"
             >
-              <Avatar name={profile?.name} id={profile?.id} src={profile?.avatar} size={44} />
+              <Avatar name={profile?.name} id={profile?.id} src={profile?.avatar} size={44} decorative />
             </button>
           </div>
           <div className="mt-3">
@@ -362,12 +374,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="hue-sunny anim-pop-soft mb-3 flex items-center gap-2 rounded-field bg-hue-wash px-4 py-2.5 text-sm font-medium text-hue-ink"
           >
             <span className="flex-1">{t("shell.lostBubble", { bubble: lostBubble })}</span>
-            <button type="button" onClick={dismissLostBubble} aria-label={t("common.close")} className="press-round shrink-0 rounded-full p-1 hover:bg-hue-wash">
+            <button type="button" onClick={dismissLostBubble} aria-label={t("a11y.dismiss")} className="press-round flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-hue-wash">
               <X size={16} />
             </button>
           </p>
         )}
-        <main key={`${bubble?.id}:${pathname}`} className={cx("anim-route flex-1", isChat ? "min-h-0 pb-4" : "pb-36 lg:pb-16")}>
+        <main id="main" tabIndex={-1} key={`${bubble?.id}:${pathname}`} className={cx("anim-route flex-1 outline-none", isChat ? "min-h-0 pb-4" : "pb-36 lg:pb-16")}>
           {children}
         </main>
       </div>

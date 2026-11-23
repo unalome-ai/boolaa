@@ -59,8 +59,12 @@ struct MarketplaceView: View {
     @State private var editing: MarketEditorTarget?
     @State private var detail: MarketItem?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
-    private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+    /// Two columns; one at the accessibility text sizes so titles and badges have room.
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize.isAccessibilitySize ? 1 : 2)
+    }
 
     var body: some View {
         ScrollView {
@@ -87,7 +91,7 @@ struct MarketplaceView: View {
                 let visible = MarketModel.filter(model.items, by: filter, hideTaken: hideTaken)
                 if model.loaded && !visible.isEmpty {
                     Text("\(visible.count) items", comment: "Number of marketplace items shown")
-                        .font(.rounded(.subheadline, weight: .semibold)).monospacedDigit().foregroundStyle(.secondary)
+                        .font(.rounded(.subheadline, weight: .semibold)).monospacedDigit().foregroundStyle(Theme.inkSecondary)
                         .contentTransition(.numericText(value: Double(visible.count)))
                 }
                 if !model.loaded {
@@ -112,7 +116,7 @@ struct MarketplaceView: View {
                             .safetyContextMenu(.market(item), react: item.ownerId == session.userID ? nil : { react(item, $0) })
                             .modifier(OwnerAvailabilityMenu(item: item, isMine: item.ownerId == session.userID,
                                                             onReact: { react(item, $0) }) { setAvailability(item, $0) })
-                            .transition(.scale(scale: 0.85).combined(with: .opacity))
+                            .motionTransition(.scale(scale: 0.85).combined(with: .opacity))
                             .popIn(index)
                             .pushHighlightTarget(item.id)
                     }
@@ -206,6 +210,8 @@ struct StatusBadge: View {
             .labelStyle(.titleAndIcon)
             .font(.rounded(.caption, weight: .heavy))
             .foregroundStyle(hue.onFill)
+            .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 10).padding(.vertical, 5)
             .background(hue.gradient, in: Capsule())
             .overlay(Capsule().strokeBorder(.white.opacity(0.5), lineWidth: 1))
@@ -222,8 +228,10 @@ struct AvailabilityBadge: View {
                 .labelStyle(.titleAndIcon)
                 .font(.rounded(.caption, weight: .heavy))
                 .foregroundStyle(reserved ? Hue.tangerine.onFill : .white)
+                .lineLimit(1)
+                .fixedSize()
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .background { if reserved { Capsule().fill(Hue.tangerine.gradient) } else { Capsule().fill(Color.gray) } }
+                .background { if reserved { Capsule().fill(Hue.tangerine.gradient) } else { Capsule().fill(Color(hex: 0x6A6382)) } }
                 .overlay(Capsule().strokeBorder(.white.opacity(0.5), lineWidth: 1))
                 .accessibilityIdentifier("availability-\(availability.rawValue)")
         }
@@ -265,6 +273,7 @@ private struct OwnerAvailabilityMenu: ViewModifier {
 }
 
 struct MarketCard: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     var item: MarketItem
     var isMine: Bool
     /// Read-only here (the card is a button); reacting happens in the detail sheet or the long-press menu.
@@ -283,10 +292,10 @@ struct MarketCard: View {
                 .overlay(alignment: .topLeading) { StatusBadge(status: item.status).padding(8) }
                 .overlay(alignment: .bottomLeading) { AvailabilityBadge(availability: item.availability).padding(8) }
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: item.title).font(.rounded(.subheadline)).lineLimit(1)
+                Text(verbatim: item.title).font(.rounded(.subheadline)).lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 HStack(spacing: 6) {
-                    AvatarView(user: item.owner, size: 20)
-                    Text(verbatim: isMine ? String(localized: "You", comment: "Shown instead of your own name") : (item.owner?.displayName ?? "")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    AvatarView(user: item.owner, size: 20).accessibilityHidden(true)
+                    Text(verbatim: isMine ? String(localized: "You", comment: "Shown instead of your own name") : (item.owner?.displayName ?? "")).font(.caption).foregroundStyle(Theme.inkSecondary).lineLimit(1)
                 }
                 if !reactions.isEmpty {
                     FlowLayout(spacing: 4) {
@@ -332,17 +341,21 @@ struct MarketDetail: View {
                 Color.clear.frame(height: 300)
                     .overlay { RemoteImage(url: item.image, hue: Feature.market.hue) }
                     .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.hero, style: .continuous))
-                HStack {
+                    .photoLabel(item.owner?.displayName, present: !item.image.isEmpty)
+                AdaptiveStack {
                     Text(verbatim: item.title).font(.rounded(.title2, weight: .heavy))
-                    Spacer()
-                    AvailabilityBadge(availability: item.availability)
-                    StatusBadge(status: item.status)
+                        .accessibilityAddTraits(.isHeader)
+                    Spacer(minLength: 0)
+                    HStack(spacing: 6) {
+                        AvailabilityBadge(availability: item.availability)
+                        StatusBadge(status: item.status)
+                    }
                 }
                 if let d = item.description?.nilIfEmpty { Text(verbatim: d) }
                 HStack {
-                    AvatarView(user: item.owner, size: 28)
+                    AvatarView(user: item.owner, size: 28).accessibilityHidden(true)
                     Text(verbatim: item.owner?.displayName ?? "").font(.subheadline.weight(.semibold))
-                    Text(verbatim: "· " + item.createdAt.relativeShort).font(.subheadline).foregroundStyle(.secondary)
+                    Text(verbatim: "· " + item.createdAt.relativeShort).font(.subheadline).foregroundStyle(Theme.inkSecondary)
                 }
                 if let onReact {
                     ReactionBar(summaries: reactions, hue: Feature.market.hue, onToggle: onReact)
@@ -408,7 +421,7 @@ struct MarketEditor: View {
                                   hue: Feature.market.hue)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Availability", comment: "Label of the marketplace availability picker")
-                            .font(.rounded(.subheadline, weight: .semibold)).foregroundStyle(.secondary)
+                            .font(.rounded(.subheadline, weight: .semibold)).foregroundStyle(Theme.inkSecondary)
                         SegmentedPill(selection: $availability, options: MarketAvailability.allCases.map { .init(value: $0, label: $0.label) },
                                       hue: Feature.market.hue)
                     }

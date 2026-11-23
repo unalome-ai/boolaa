@@ -98,6 +98,19 @@ All text pairs are at least 4.5:1.
 | hue `text` (light) on white card: grape, coral, mint, sky, sunny, pink, tangerine, indigo | 6.7, 5.4, 5.3, 5.4, 5.4, 6.0, 5.2, 6.4 |
 | hue `text` (light) on its own wash: same order | 5.5, 4.7, 4.7, 4.8, 5.0, 5.1, 4.7, 5.4 |
 | hue `text` (dark) on dark card | 7.7 to 11.6 |
+
+**Accessibility pass (2026-11-23), light mode only, dark unchanged.** Measured in place (axe on the web, token checks on the apps), these pairs failed and were fixed by darkening the *text* shade only; fills are unchanged:
+
+| Token | Old → new | Ratio old → new | Platforms |
+|---|---|---|---|
+| danger text | `#D92D3A` → `#C0272F` | 3.93 → 4.8 on its 10% wash; 4.55 → 5.6 on background | web, iOS, Android |
+| grape text | `#5B3FD9` → `#5135CF` | 4.43 → 5.08 (grape text on a 15% grape wash over the bubble glow); 7.6 on white | web, iOS (Android has no such pair and keeps `#5B3FD9`) |
+| inkSecondary | `#6A6382` → `#5C5574` | 3.8–4.4 → ≥ 4.5 on nested washes and over the header glow; 6.98 on cards | iOS (also replaces the system `.secondary` label colour, 3.44 on white, in 81 places) |
+| header glow | fill 30% / glow 22% → 22% / 16% | secondary text over it ≥ 4.5 in every bubble hue | iOS |
+| "Taken" badge fill | system gray `#8E8E93` → `#6A6382` | white text 3.26 → 5.65 | iOS |
+| web unread badge | white on coral → ink on coral | 2.80 → 6.1 | web |
+
+Text fields are identified by their label and placeholder; their fill against the background is 1.10:1 (no border), a known gap against WCAG 1.4.11 kept for the look.
 | hue `text` (dark) on its own wash | 5.5 to 6.6 |
 | ink on background (light) / ink on background (dark) | 16.3 / 16.8 |
 | inkSecondary on background, card, field (light) | 5.4, 5.7, 4.9 |

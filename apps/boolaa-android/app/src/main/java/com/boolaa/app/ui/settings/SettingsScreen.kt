@@ -64,6 +64,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -299,6 +300,7 @@ class SettingsViewModel(private val container: AppContainer, private val bubbleI
 /** Settings for the current bubble (spec §11). */
 @Composable
 fun SettingsScreen(navigator: ShellNavigator) {
+    val largeText = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val bubble = state.currentBubble ?: return
@@ -350,20 +352,34 @@ fun SettingsScreen(navigator: ShellNavigator) {
                         Row(Modifier.fillMaxWidth().heightIn(min = 60.dp).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                             Avatar(m.user, 40.dp)
                             val you = if (m.userId == me) stringResource(R.string.you_suffix) else null
-                            Text(
-                                buildAnnotatedString {
-                                    append(displayName(m.user))
-                                    if (you != null) withStyle(SpanStyle(color = c.textSecondary, fontWeight = FontWeight.Normal)) { append(" $you") }
-                                },
-                                style = Type.bodyStrong, color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(start = 12.dp).weight(1f),
-                            )
+                            val nameText = @Composable { mod: Modifier ->
+                                Text(
+                                    buildAnnotatedString {
+                                        append(displayName(m.user))
+                                        if (you != null) withStyle(SpanStyle(color = c.textSecondary, fontWeight = FontWeight.Normal)) { append(" $you") }
+                                    },
+                                    style = Type.bodyStrong, color = c.textPrimary, maxLines = if (largeText) 4 else 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = mod,
+                                )
+                            }
                             val blocked = m.userId in state.blockedIds
-                            if (blocked) StatusBadge(stringResource(R.string.blocked_badge), danger = true, modifier = Modifier.padding(start = 6.dp))
-                            when (m.role) {
-                                MemberRole.OWNER -> StatusBadge(stringResource(R.string.owner), hue = Hue.sunny, icon = BoolaaIcons.Crown, modifier = Modifier.padding(start = 6.dp))
-                                MemberRole.ADMIN -> StatusBadge(stringResource(R.string.admin), hue = Hue.sky, modifier = Modifier.padding(start = 6.dp).testTag("admin-badge-${displayName(m.user)}"))
-                                MemberRole.MEMBER -> Unit
+                            val badges = @Composable {
+                                if (blocked) StatusBadge(stringResource(R.string.blocked_badge), danger = true, modifier = Modifier.padding(start = 6.dp))
+                                when (m.role) {
+                                    MemberRole.OWNER -> StatusBadge(stringResource(R.string.owner), hue = Hue.sunny, icon = BoolaaIcons.Crown, modifier = Modifier.padding(start = 6.dp))
+                                    MemberRole.ADMIN -> StatusBadge(stringResource(R.string.admin), hue = Hue.sky, modifier = Modifier.padding(start = 6.dp).testTag("admin-badge-${displayName(m.user)}"))
+                                    MemberRole.MEMBER -> Unit
+                                }
+                            }
+                            if (largeText) {
+                                // Large text: the badges go under the name so it keeps the row's width.
+                                Column(Modifier.padding(start = 12.dp).weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    nameText(Modifier)
+                                    Row(Modifier.offset(x = (-6).dp)) { badges() }
+                                }
+                            } else {
+                                nameText(Modifier.padding(start = 12.dp).weight(1f))
+                                badges()
                             }
                             if (MemberPermissions.canRemove(myRole, m.role, isSelf = m.userId == me)) {
                                 CircleIconButton(BoolaaIcons.RemoveMember, stringResource(R.string.remove_member), onClick = { removing = m },
@@ -445,7 +461,7 @@ private fun MemberRoleMenu(member: BubbleMember, onMakeAdmin: () -> Unit, onRemo
     val c = BoolaaTheme.colors
     val name = displayName(member.user)
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, modifier = Modifier.size(44.dp).testTag("member-roles-$name")) {
+    IconButton(onClick = { open = true }, modifier = Modifier.size(48.dp).testTag("member-roles-$name")) {
         Icon(BoolaaIcons.ManageMember, contentDescription = stringResource(R.string.member_actions, name), tint = c.textSecondary)
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = c.card) {
@@ -495,10 +511,9 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, canManage: Boolean, vm: S
                     enabled = name.isNotBlank(), modifier = Modifier.weight(1f))
             }
         } else {
-            Row(verticalAlignment = Alignment.Top) {
-                BubbleLogo(bubble.id, bubble.name, bubble.logo, size = 64.dp, modifier = Modifier.testTag("bubble-logo"))
-                Column(Modifier.weight(1f).padding(start = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(bubble.name, style = Type.title2, color = c.textPrimary)
+            val details = @Composable { mod: Modifier ->
+                Column(mod, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(bubble.name, style = Type.title2, color = c.textPrimary, modifier = Modifier.semantics { heading() })
                     Text(bubble.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.no_description), style = Type.subheadline, color = c.textSecondary)
                     Text(
                         pluralStringResource(R.plurals.members_of_max, bubble.maxSize, memberCount, bubble.maxSize),
@@ -506,10 +521,27 @@ private fun InfoCard(bubble: Bubble, memberCount: Int, canManage: Boolean, vm: S
                         modifier = Modifier.padding(top = 4.dp).clip(CircleShape).background(Hue.grape.wash).padding(horizontal = 10.dp, vertical = 4.dp),
                     )
                 }
+            }
+            val edit = @Composable {
                 if (canManage) {
                     CircleIconButton(BoolaaIcons.Edit, stringResource(R.string.edit_bubble),
                         onClick = { name = bubble.name; description = bubble.description.orEmpty(); editing = true },
                         size = 40.dp, modifier = Modifier.testTag("edit-bubble"))
+                }
+            }
+            // At large font scales the photo and the edit button sit above the name, which then gets the full width.
+            if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) {
+                Row(verticalAlignment = Alignment.Top) {
+                    BubbleLogo(bubble.id, bubble.name, bubble.logo, size = 64.dp, modifier = Modifier.testTag("bubble-logo"))
+                    Spacer(Modifier.weight(1f))
+                    edit()
+                }
+                details(Modifier.fillMaxWidth())
+            } else {
+                Row(verticalAlignment = Alignment.Top) {
+                    BubbleLogo(bubble.id, bubble.name, bubble.logo, size = 64.dp, modifier = Modifier.testTag("bubble-logo"))
+                    details(Modifier.weight(1f).padding(start = 14.dp))
+                    edit()
                 }
             }
             if (canManage) BubbleLogoControls(bubble, vm)
@@ -550,6 +582,7 @@ private fun BubbleLogoControls(bubble: Bubble, vm: SettingsViewModel) {
 }
 
 /** The invite code as a ticket: grape wash, dashed outline; the copy button morphs to a mint check for 1.5 s. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InviteCard(bubble: Bubble, canManage: Boolean, vm: SettingsViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -581,7 +614,7 @@ private fun InviteCard(bubble: Bubble, canManage: Boolean, vm: SettingsViewModel
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).testTag("invite-code"))
             val copyFill by animateColorAsState(if (copied) Hue.mint.fill else grape.fill.copy(alpha = 0.16f), Motion.fade())
             Box(
-                Modifier.size(44.dp).bounceOn(copied, from = 0.8f, enabled = copied).clip(CircleShape).background(copyFill)
+                Modifier.size(48.dp).bounceOn(copied, from = 0.8f, enabled = copied).clip(CircleShape).background(copyFill)
                     .clickableRipple(scale = 0.88f) {
                         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cm.setPrimaryClip(ClipData.newPlainText(shareTitle, bubble.inviteCode))
@@ -604,7 +637,7 @@ private fun InviteCard(bubble: Bubble, canManage: Boolean, vm: SettingsViewModel
         Text(stringResource(R.string.invite_link).uppercase(LocalConfiguration.current.locales[0]), style = Type.caption.copy(fontWeight = FontWeight.Black),
             color = grape.text, modifier = Modifier.padding(top = 6.dp))
         Text(link, style = Type.subheadline, color = grape.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag("invite-link"))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), itemVerticalAlignment = Alignment.CenterVertically) {
             CircleIconButton(if (linkCopied) BoolaaIcons.Check else BoolaaIcons.Copy, copyLinkLabel, onClick = {
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 cm.setPrimaryClip(ClipData.newPlainText(copyLinkLabel, link))
@@ -617,7 +650,7 @@ private fun InviteCard(bubble: Bubble, canManage: Boolean, vm: SettingsViewModel
             }, size = 44.dp, modifier = Modifier.testTag("share-invite-link"))
             CircleIconButton(BoolaaIcons.QrCode, stringResource(R.string.invite_qr_code), onClick = { showQr = true },
                 size = 44.dp, modifier = Modifier.testTag("show-invite-qr"))
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f, fill = true))
             if (canManage) {
                 TextButton(onClick = { confirmRotate = true }, modifier = Modifier.testTag("rotate-invite")) {
                     Text(stringResource(R.string.rotate_invite_code), style = Type.headline, color = grape.text)

@@ -39,7 +39,7 @@ private struct SecurityCard<Content: View>: View {
                     FeatureBadge(icon: icon, hue: hue, size: 34)
                     Text(title).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
                     Spacer()
-                    Image(systemName: "chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(Theme.inkSecondary)
                         .rotationEffect(.degrees(isOpen ? 180 : 0))
                 }
                 .frame(minHeight: 44)
@@ -310,6 +310,7 @@ private struct DevicesSection: View {
                         .foregroundStyle(Theme.dangerText)
                         .padding(.horizontal, 12).frame(minHeight: 36)
                         .background(Theme.danger.opacity(0.1), in: Capsule())
+                        .minimumHitTarget()
                 }
                 .buttonStyle(.squishIcon)
                 .disabled(busy)

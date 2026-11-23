@@ -38,7 +38,7 @@ struct ReportSheet: View {
                 Text("Why are you reporting this?").font(.rounded(.title3))
                 Text("Your report is private. \(target.authorName) won't know who sent it.",
                      comment: "Report sheet intro; the argument is the reported person's name")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Theme.inkSecondary)
 
                 VStack(spacing: 0) {
                     ForEach(ReportReason.allCases) { r in
@@ -48,7 +48,7 @@ struct ReportSheet: View {
                                 Spacer()
                                 Image(systemName: reason == r ? "checkmark.circle.fill" : "circle")
                                     .font(.title3)
-                                    .foregroundStyle(reason == r ? Theme.brandText : Color.secondary)
+                                    .foregroundStyle(reason == r ? Theme.brandText : Theme.inkSecondary)
                             }
                             .frame(minHeight: 50)
                             .padding(.horizontal, 16)
@@ -63,7 +63,7 @@ struct ReportSheet: View {
                 .card(padding: 0)
                 .sensoryFeedback(.selection, trigger: reason)
 
-                Text("Details (optional)").font(.rounded(.caption)).foregroundStyle(.secondary).padding(.leading, 4)
+                Text("Details (optional)").font(.rounded(.caption)).foregroundStyle(Theme.inkSecondary).padding(.leading, 4)
                 TextField("Tell us what happened", text: $details, axis: .vertical)
                     .lineLimit(3...8)
                     .padding(.vertical, 12)
@@ -94,14 +94,14 @@ struct ReportSheet: View {
                     .padding(.top, 32)
                 Text("Thanks for letting us know").font(.rounded(.title3)).multilineTextAlignment(.center)
                 Text("We'll review your report and take action if it breaks the rules.")
-                    .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    .font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
 
                 if !safety.isBlocked(target.authorID) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Also block \(target.authorName)?", comment: "Offered after a report; the argument is a person's name")
                             .font(.headline)
                         Text("You won't see each other's messages, events, posts or links. You can unblock them in your profile.")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .card()

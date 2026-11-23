@@ -194,22 +194,22 @@ function EventCard({
   const [burst, setBurst] = useState(0);
   return (
     <li
-      className={cx("card anim-rise flex flex-col gap-3 p-4", past && "opacity-70")}
+      className={cx("card anim-rise flex flex-col gap-3 p-4", past && "bg-card/70")}
       style={{ "--i": index } as CSSProperties}
       data-testid="event-card"
       data-item-id={ev.id}
       data-past={past}
     >
       <div className="flex gap-3.5">
-        {/* Date tile, tilted (6.3) */}
-        <div className="hue-coral flex h-16 w-14 shrink-0 -rotate-4 flex-col overflow-hidden rounded-field bg-hue-wash shadow-soft">
+        {/* Date tile, tilted (6.3). The date is read from the line below; past events dim only the tile, so text keeps its contrast. */}
+        <div aria-hidden className={cx("hue-coral flex h-16 w-14 shrink-0 -rotate-4 flex-col overflow-hidden rounded-field bg-hue-wash shadow-soft", past && "opacity-50 grayscale")}>
           <span className="bg-hue-grad py-0.5 text-center font-display text-[11px] font-black uppercase text-onfill">{fmt.month(ev.datetime)}</span>
           <span className="flex flex-1 items-center justify-center font-display text-[22px] font-black leading-none text-hue-ink">{fmt.day(ev.datetime)}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[17px] font-extrabold">{ev.title}</h3>
+          <h3 className="text-[17px] font-extrabold [overflow-wrap:anywhere]">{ev.title}</h3>
           <p className="flex items-center gap-1.5 text-[15px] text-muted">
-            <Clock size={14} strokeWidth={2.6} className="shrink-0" /> {fmt.dateTime(ev.datetime)}
+            <Clock size={14} strokeWidth={2.6} className="shrink-0" aria-hidden /> {fmt.dateTime(ev.datetime)}
           </p>
           {ev.location && (
             <p className="flex items-center gap-1.5 text-[15px] text-muted">
@@ -232,7 +232,7 @@ function EventCard({
       {ev.description && <p className="text-[15px]">{ev.description}</p>}
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
-          <Avatar name={ev.creator?.name} id={ev.creator_id} src={ev.creator?.avatar} size={24} />
+          <Avatar name={ev.creator?.name} id={ev.creator_id} src={ev.creator?.avatar} size={24} decorative />
           <span className="truncate">{ev.creator?.name ?? tc("someone")}</span>
         </span>
         <span className="ml-auto flex items-center gap-3">

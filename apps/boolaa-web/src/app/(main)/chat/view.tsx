@@ -254,6 +254,21 @@ export default function ChatPage() {
   );
   const divider = marker === undefined ? -1 : dividerIndex(rendered, marker, userId);
 
+  // Screen readers hear new messages from others once, politely (the list itself is not live: loading
+  // older pages or reactions would be read out too).
+  const ta = useTranslations("a11y");
+  const [announcement, setAnnouncement] = useState("");
+  const announced = useRef<string | null>(null);
+  const newest = rendered[rendered.length - 1];
+  useEffect(() => {
+    if (!newest || initialIds === null || initialIds.has(newest.id)) return;
+    if (newest.sender_id === userId || newest.deleted_at || announced.current === newest.id) return;
+    announced.current = newest.id;
+    const from = ta("newMessageFrom", { name: newest.sender?.name ?? tc("someone") });
+    const body = newest.content || (newest.image_path ? t("photo") : "");
+    setAnnouncement(body ? `${from}: ${body}` : from);
+  }, [newest, initialIds, userId, ta, tc, t]);
+
   useEffect(() => {
     if (!jumpTo) return;
     const el = listRef.current?.querySelector<HTMLElement>(`[data-testid="chat-message"][data-id="${CSS.escape(jumpTo)}"]`);
@@ -332,6 +347,10 @@ export default function ChatPage() {
         onScroll={onScroll}
         className="scrollbar-none min-h-0 flex-1 overflow-y-auto rounded-hero bg-card/50 p-4 shadow-soft backdrop-blur-xl"
         data-testid="chat-list"
+        role="log"
+        aria-live="off"
+        aria-label={bubble.name}
+        tabIndex={0}
       >
         {messages === null ? (
           <PageLoader />
@@ -365,6 +384,14 @@ export default function ChatPage() {
                       </div>
                     )}
                     <div
+                      role="group"
+                      aria-label={[
+                        mine ? tc("you") : (m.sender?.name ?? tc("someone")),
+                        fmt.time(m.created_at),
+                        deleted ? t("deleted") : null,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
                       data-testid="chat-message"
                       data-deleted={deleted}
                       data-id={m.id}
@@ -372,12 +399,12 @@ export default function ChatPage() {
                     >
                       {!mine && (
                         <div className="w-[30px] shrink-0">
-                          {!grouped && <Avatar name={m.sender?.name} id={m.sender_id} src={m.sender?.avatar} size={30} />}
+                          {!grouped && <Avatar name={m.sender?.name} id={m.sender_id} src={m.sender?.avatar} size={30} decorative />}
                         </div>
                       )}
                       <div className={cx("flex max-w-[78%] flex-col", mine ? "items-end" : "items-start")}>
                         {!grouped && (
-                          <span className={cx("mb-0.5 px-1 font-display text-xs font-extrabold", mine ? "text-muted" : "text-hue-ink")}>
+                          <span aria-hidden className={cx("mb-0.5 px-1 font-display text-xs font-extrabold", mine ? "text-muted" : "text-hue-ink")}>
                             {mine ? tc("you") : (m.sender?.name ?? tc("someone"))}
                           </span>
                         )}
@@ -402,7 +429,7 @@ export default function ChatPage() {
                             {m.image_path && (
                               <ChatPhoto
                                 path={m.image_path}
-                                label={t("photo")}
+                                label={ta("photoFrom", { name: mine ? tc("you") : (m.sender?.name ?? tc("someone")) })}
                                 // A photo is taller than its placeholder: stay at the bottom if we were there.
                                 onLoad={() => {
                                   const el = listRef.current;
@@ -419,7 +446,7 @@ export default function ChatPage() {
                         )}
                         {!deleted && <ReactionChips state={reactions} targetId={m.id} className={cx("hue-grape mt-1", mine && "justify-end")} />}
                         <span className={cx("mt-0.5 flex items-center gap-1 px-1 text-[11px] text-muted", mine && "flex-row-reverse")}>
-                          {fmt.time(m.created_at)}
+                          <span aria-hidden>{fmt.time(m.created_at)}</span>
                           {!deleted && (
                             <ReactionPicker
                               compact
@@ -439,7 +466,7 @@ export default function ChatPage() {
                               aria-label={t("deleteMessage")}
                               title={t("deleteMessage")}
                               data-testid="chat-delete"
-                              className="press-round rounded-full p-1 text-muted hover:bg-field hover:text-fg"
+                              className="press-round flex h-6 w-6 items-center justify-center rounded-full text-muted hover:bg-field hover:text-fg"
                             >
                               <Trash2 size={13} strokeWidth={2.4} />
                             </button>
@@ -454,6 +481,9 @@ export default function ChatPage() {
           </>
         )}
       </div>
+      <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="chat-announcer">
+        {announcement}
+      </p>
       <ErrorText>{error ?? (loadError ? errorText(loadError) : null)}</ErrorText>
       {photo && (
         <div className="mt-3 flex items-center gap-2 px-1" data-testid="chat-photo-preview">
@@ -536,8 +566,9 @@ export default function ChatPage() {
  */
 function ChatPhoto({ path, label, onLoad }: { path: string; label: string; onLoad: () => void }) {
   const { url, onError } = useSignedUrl(storageUrlOf(CHAT_BUCKET, path));
+  const ta = useTranslations("a11y");
   return (
-    <a href={url} target="_blank" rel="noreferrer" className="block" aria-label={label}>
+    <a href={url} target="_blank" rel="noreferrer" className="block" aria-label={`${label} (${ta("opensInNewTab")})`}>
       {url ? (
         /* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL */
         <img src={url} alt={label} loading="lazy" data-testid="chat-photo" onLoad={onLoad} onError={onError} className="max-h-80 w-full min-w-48 object-cover" />
@@ -552,6 +583,7 @@ function ChatPhoto({ path, label, onLoad }: { path: string; label: string; onLoa
 
 /** Message text with http(s) and www. links made clickable (opened in a new tab, no preview). */
 function LinkifiedText({ text, mine }: { text: string; mine: boolean }) {
+  const ta = useTranslations("a11y");
   const parts = useMemo(() => splitLinks(text), [text]);
   return (
     <>
@@ -562,6 +594,7 @@ function LinkifiedText({ text, mine }: { text: string; mine: boolean }) {
             href={p.href}
             target="_blank"
             rel="noopener noreferrer nofollow"
+            aria-label={`${p.text} (${ta("opensInNewTab")})`}
             data-testid="chat-link"
             className={cx("font-semibold underline underline-offset-2", mine ? "text-white decoration-white/70" : "text-hue-ink decoration-hue/60")}
             onClick={(e) => e.stopPropagation()}

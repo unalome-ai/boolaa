@@ -29,7 +29,7 @@ data class MenuExtra(val title: String, val tag: String, val onClick: () -> Unit
 fun ItemMenu(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, onReport: (() -> Unit)?, modifier: Modifier = Modifier, extra: List<MenuExtra> = emptyList()) {
     val c = BoolaaTheme.colors
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, modifier = modifier.size(44.dp).testTag(if (onReport != null) "item-menu" else "owner-menu")) {
+    IconButton(onClick = { open = true }, modifier = modifier.size(48.dp).testTag(if (onReport != null) "item-menu" else "owner-menu")) {
         Icon(BoolaaIcons.More, contentDescription = stringResource(R.string.more_actions), tint = c.textSecondary)
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }, shape = RoundedCornerShape(Radius.field), containerColor = c.card) {

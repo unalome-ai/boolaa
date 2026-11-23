@@ -34,12 +34,15 @@ final class BoolaaUITests: XCTestCase {
         app.buttons["chat-fab"].tap()
         let input = app.textFields["chat-input"]
         XCTAssertTrue(input.waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Who took the last oat milk? 🥛"].waitForExistence(timeout: 10))
+        // Each message is one VoiceOver element: "<sender>, <text>, <time>…".
+        XCTAssertTrue(chatMessage(app, containing: "Who took the last oat milk? 🥛").waitForExistence(timeout: 10))
         let text = "Hello from UI test \(Int.random(in: 1000...9999))"
         focus(input)
         input.typeText(text)
         app.buttons["chat-send"].tap()
-        XCTAssertTrue(app.staticTexts[text].waitForExistence(timeout: 10))
+        let sent = chatMessage(app, containing: text)
+        XCTAssertTrue(sent.waitForExistence(timeout: 10))
+        XCTAssertTrue(sent.label.hasPrefix("You, \(text), "), sent.label)
         attach(app, "chat")
         app.buttons["chat-back"].tap()
 
@@ -56,6 +59,13 @@ final class BoolaaUITests: XCTestCase {
 
         // Restore Flatmates as the current bubble for later runs.
         flatChip.tap()
+    }
+
+    /// A chat message row (one accessibility element) whose label contains `text`.
+    @MainActor
+    private func chatMessage(_ app: XCUIApplication, containing text: String) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'message-' AND label CONTAINS %@", text)).firstMatch
     }
 
     /// iOS offers to save the password a few seconds after login; its sheet blocks taps until dismissed.

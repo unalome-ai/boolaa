@@ -39,7 +39,7 @@ struct NotificationsView: View {
                         Text("When off, notifications only say \"New message in \(session.currentBubble?.name ?? "Boolaa")\", without names or text.",
                              comment: "Hint under the message-preview notification setting; the argument is the current bubble's name")
                             .accessibilityIdentifier("notifications-preview-hint")
-                            .font(.footnote).foregroundStyle(.secondary)
+                            .font(.footnote).foregroundStyle(Theme.inkSecondary)
                     }
                     .card(padding: 14)
                     .disabled(!prefs.enabled)
@@ -103,24 +103,27 @@ struct PushPermissionCard: View {
     /// "blocked" banner too.
     var showsDismiss: Bool
     @State private var asking = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         switch push.permission {
         case .notDetermined where !(showsDismiss && push.promptDismissed):
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 12) {
-                    FeatureBadge(icon: "bell.badge.fill", hue: .grape, size: 38)
+                    // Decorative; dropped at the accessibility text sizes so the title keeps the width.
+                    if !typeSize.isAccessibilitySize { FeatureBadge(icon: "bell.badge.fill", hue: .grape, size: 38) }
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Turn on notifications", comment: "Card title / button that asks for notification permission")
                             .font(.rounded(.headline))
+                            .accessibilityAddTraits(.isHeader)
                         Text("Get a ping when your bubbles talk to you.", comment: "Why to turn on notifications")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     }
                     Spacer(minLength: 0)
                     if showsDismiss {
                         Button { withAnimation(Motion.gentle) { push.promptDismissed = true } } label: {
-                            Image(systemName: "xmark").font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
-                                .frame(width: 32, height: 32)
+                            Image(systemName: "xmark").font(.subheadline.weight(.bold)).foregroundStyle(Theme.inkSecondary)
+                                .frame(width: 44, height: 44)
                         }
                         .accessibilityLabel(Text("Not now"))
                         .accessibilityIdentifier("push-prompt-dismiss")
@@ -189,7 +192,7 @@ struct BubbleMuteCard: View {
                             Text(MuteDuration.forever.title)
                         }
                     }
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     .accessibilityIdentifier("mute-status")
                 }
             }
@@ -210,7 +213,7 @@ struct BubbleMuteCard: View {
                             .accessibilityIdentifier("mute-\(duration.rawValue)")
                     }
                 } label: {
-                    Image(systemName: "chevron.up.chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.up.chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(Theme.inkSecondary)
                         .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel(Text("Mute this bubble", comment: "Bubble settings: mute notifications from this bubble"))

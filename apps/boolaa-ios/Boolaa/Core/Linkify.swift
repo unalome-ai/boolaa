@@ -58,6 +58,12 @@ enum Linkify {
         return parts
     }
 
+    /// The links in a message, in order (VoiceOver actions on the message).
+    static func urls(in text: String) -> [URL] {
+        var seen = Set<URL>()
+        return split(text).compactMap(\.url).filter { seen.insert($0).inserted }
+    }
+
     /// The message text with every link carrying `.link` (SwiftUI opens it with `openURL`, in the browser)
     /// and an underline; link colour comes from the Text's tint.
     static func attributed(_ text: String) -> AttributedString {

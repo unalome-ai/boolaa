@@ -80,7 +80,9 @@ struct ChipView: View {
                 Capsule().fill(Theme.chipInactive)
             }
         }
-        .contentShape(Capsule())
+        // 38 pt chip, 44 pt touch target.
+        .minimumHitTarget()
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }
 
@@ -111,10 +113,13 @@ struct SectionHeader: View {
     var title: LocalizedStringResource
     var count: Int? = nil
     var hue: Hue = .grape
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         HStack(spacing: 8) {
-            Text(title).font(.rounded(.title3, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.8)
+            // The heading carries the count as its value ("My events, heading, 3"); the badge itself is hidden.
+            Text(title).font(.rounded(.title3, weight: .heavy)).lineLimit(3)
                 .accessibilityAddTraits(.isHeader)
+                .accessibilityValue(count.map { Text($0, format: .number) } ?? Text(verbatim: ""))
             if let count {
                 Text(count, format: .number)
                     .font(.rounded(.footnote))
@@ -123,7 +128,8 @@ struct SectionHeader: View {
                     .foregroundStyle(hue.text)
                     .padding(.horizontal, 9).padding(.vertical, 3)
                     .background(hue.wash, in: Capsule())
-                    .animation(Motion.snappy, value: count)
+                    .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: count)
+                    .accessibilityHidden(true)
             }
             Spacer()
         }
@@ -164,7 +170,7 @@ struct EmptyStateView: View {
             BubbleCluster(icon: icon, hue: hue, size: 84)
                 .padding(.bottom, 8)
             Text(title).font(.rounded(.headline)).multilineTextAlignment(.center)
-            Text(message).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            Text(message).font(.subheadline).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
@@ -190,13 +196,13 @@ struct AddButton: View {
             taps += 1
             action()
         } label: {
-            Label { Text(label).lineLimit(1) } icon: {
+            Label { Text(label).lineLimit(2) } icon: {
                 Image(systemName: "plus").fontWeight(.heavy).symbolEffect(.bounce, value: taps)
             }
             .font(.rounded(.subheadline))
             .foregroundStyle(hue.onFill)
             .padding(.horizontal, 16)
-            .frame(minHeight: 40)
+            .frame(minHeight: 44)
             .background(hue.gradient, in: Capsule())
             .shadow(color: hue.fill.opacity(0.35), radius: 8, y: 4)
         }

@@ -305,7 +305,6 @@
     "leaveConfirm": "Părăsește",
     "waitingForSpot": "Aprobată, așteaptă un loc liber",
     "removeMember": "Elimină membrul",
-    "removeMemberNamed": "Elimină membrul {name}",
     "removeTitle": "Elimini membrul?",
     "removeBody": "<strong>{name}</strong> nu va mai avea acces la {bubble}. Pentru a reveni va avea nevoie de codul de invitație și de aprobarea membrilor.",
     "removed": "{name} nu mai face parte din bulă",
@@ -619,5 +618,12 @@
     "themeLight": "Luminos",
     "themeDark": "Întunecat",
     "hint": "Sistem urmează setarea luminos sau întunecat a dispozitivului tău."
+  },
+  "a11y": {
+    "skipToContent": "Sari la conținut",
+    "photoFrom": "Fotografie de la {name}",
+    "newMessageFrom": "Mesaj nou de la {name}",
+    "opensInNewTab": "se deschide într-o filă nouă",
+    "dismiss": "Închide"
   }
 }

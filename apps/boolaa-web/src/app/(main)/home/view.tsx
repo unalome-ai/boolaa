@@ -211,7 +211,7 @@ export default function HomePage() {
                   {item.body}
                   {item.author && (
                     <div className="mt-2 flex items-center gap-2 text-sm text-muted">
-                      <Avatar name={item.author.name} id={item.author.id} src={item.author.avatar} size={22} />
+                      <Avatar name={item.author.name} id={item.author.id} src={item.author.avatar} size={22} decorative />
                       {item.author.name}
                     </div>
                   )}

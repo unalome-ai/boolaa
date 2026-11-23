@@ -125,6 +125,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.collapse
+import androidx.compose.ui.semantics.expand
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -336,7 +339,8 @@ private fun DateTile(instant: Instant, locale: java.util.Locale) {
     val date = instant.atZone(ZoneId.systemDefault())
     val scale = LocalDensity.current.fontScale.coerceIn(1f, 1.5f)
     Column(
-        Modifier.size(56.dp * scale, 64.dp * scale).rotate(-4f).clip(RoundedCornerShape(Radius.field)).background(hue.wash),
+        Modifier.size(56.dp * scale, 64.dp * scale).rotate(-4f).clip(RoundedCornerShape(Radius.field)).background(hue.wash)
+            .clearAndSetSemantics { },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(Modifier.fillMaxWidth().background(hue.gradient).padding(vertical = 3.dp), contentAlignment = Alignment.Center) {
@@ -364,19 +368,34 @@ fun EventCard(
     val c = BoolaaTheme.colors
     val going = me in event.rsvpList
     val picker = com.boolaa.app.ui.components.rememberReactionPicker()
+    // At large font scales the date tile sits above the details so the text keeps the card's full width.
+    val stacked = LocalDensity.current.fontScale >= 1.5f
     Column(modifier.boolaaCard().testTag("event-${event.id}"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.Top) {
-            // The date is already in the time row below, so the tile is decoration for screen readers.
-            DateTile(event.datetime, locale)
-            // Long press on the details opens the reaction picker.
-            Column(Modifier.weight(1f).then(if (onReact != null) Modifier.longPressToReact(picker) else Modifier).padding(start = 14.dp),
+        val details = @Composable { m: Modifier ->
+            // Long press on the details opens the reaction picker; TalkBack reads them as one stop.
+            Column(m.then(if (onReact != null) Modifier.longPressToReact(picker) else Modifier).semantics(mergeDescendants = true) { },
                 verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(event.title, style = Type.headline, color = c.textPrimary)
+                Text(event.title, style = Type.headline, color = c.textPrimary, modifier = Modifier.semantics { heading() })
                 IconLine(BoolaaIcons.Time, Formats.dateTime(event.datetime, locale))
                 event.location?.takeIf { it.isNotBlank() }?.let { IconLine(BoolaaIcons.Place, it) }
                 event.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = Type.subheadline, color = c.textPrimary) }
             }
-            if (onDelete != null || onReport != null) ItemMenu(onEdit = onEdit, onDelete = onDelete, onReport = onReport)
+        }
+        if (stacked) {
+            Row(verticalAlignment = Alignment.Top) {
+                // The date is already in the time row below, so the tile is decoration for screen readers.
+                DateTile(event.datetime, locale)
+                Spacer(Modifier.weight(1f))
+                if (onDelete != null || onReport != null) ItemMenu(onEdit = onEdit, onDelete = onDelete, onReport = onReport)
+            }
+            details(Modifier.fillMaxWidth())
+        } else {
+            Row(verticalAlignment = Alignment.Top) {
+                // The date is already in the time row below, so the tile is decoration for screen readers.
+                DateTile(event.datetime, locale)
+                details(Modifier.weight(1f).padding(start = 14.dp))
+                if (onDelete != null || onReport != null) ItemMenu(onEdit = onEdit, onDelete = onDelete, onReport = onReport)
+            }
         }
         // The RSVP pill drops onto its own row when it does not fit (large text, long translations).
         FlowRow(
@@ -442,7 +461,7 @@ private fun RsvpPill(going: Boolean, onClick: () -> Unit, confetti: ConfettiStat
     }
     Row(
         modifier
-            .heightIn(min = 44.dp).padding(vertical = 3.dp)
+            .heightIn(min = 48.dp).padding(vertical = 2.dp)
             .onGloballyPositioned { centre = it.boundsInRoot().center }
             .bounceOn(going, from = 0.9f)
             .then(if (going) Modifier.glow(mint.fill.copy(alpha = 0.4f), 10.dp, 5.dp) else Modifier)
@@ -464,7 +483,7 @@ private fun RsvpPill(going: Boolean, onClick: () -> Unit, confetti: ConfettiStat
 private fun EndedChip(going: Boolean, modifier: Modifier = Modifier) {
     val c = BoolaaTheme.colors
     Row(
-        modifier.heightIn(min = 44.dp).padding(vertical = 3.dp).clip(CircleShape).background(c.field)
+        modifier.heightIn(min = 48.dp).padding(vertical = 3.dp).clip(CircleShape).background(c.field)
             .padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -480,7 +499,11 @@ private fun PastHeader(count: Int, expanded: Boolean, onToggle: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(top = 12.dp).clip(RoundedCornerShape(14.dp))
             .clickableRipple(role = Role.Button) { onToggle() }
-            .semantics { heading(); selected = expanded }
+            .semantics {
+                heading()
+                // TalkBack: "Past events, 3, collapsed" / "expanded".
+                if (expanded) collapse { onToggle(); true } else expand { onToggle(); true }
+            }
             .testTag("past-events")
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),

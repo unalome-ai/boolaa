@@ -92,6 +92,7 @@ struct SettingsView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
     @State private var photoBusy = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     /// My role, read from the live members list (roles change on transfer, promotion and hand-over),
     /// falling back to my membership row. docs/boolaa-spec.md, "Roles"; the server enforces the same rules.
@@ -137,7 +138,7 @@ struct SettingsView: View {
                             FeatureBadge(icon: Feature.links.icon, hue: Feature.links.hue, size: 38)
                             Text("Shared links").font(.rounded(.headline)).foregroundStyle(.primary)
                             Spacer()
-                            Image(systemName: "chevron.right").font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.subheadline.weight(.bold)).foregroundStyle(Theme.inkSecondary)
                         }
                         .card(padding: 14)
                     }
@@ -150,14 +151,14 @@ struct SettingsView: View {
                     VStack(spacing: 0) {
                         ForEach(model.members) { member in
                             HStack(spacing: 12) {
-                                AvatarView(user: member.user, size: 40)
-                                Text(verbatim: member.user?.displayName ?? String(localized: "Member", comment: "Placeholder for a member without a name")).font(.body.weight(.medium)).lineLimit(1)
-                                if member.userId == session.userID { Text("(you)", comment: "Suffix after your own name in the member list").foregroundStyle(.secondary).lineLimit(1) }
+                                if !typeSize.isAccessibilitySize { AvatarView(user: member.user, size: 40).accessibilityHidden(true) }
+                                Text(verbatim: member.user?.displayName ?? String(localized: "Member", comment: "Placeholder for a member without a name")).font(.body.weight(.medium)).lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
+                                if member.userId == session.userID { Text("(you)", comment: "Suffix after your own name in the member list").foregroundStyle(Theme.inkSecondary).lineLimit(1) }
                                 Spacer()
                                 if safety.isBlocked(member.userId) {
-                                    Text("Blocked", comment: "Badge on a member you blocked").font(.caption.weight(.bold)).foregroundStyle(.secondary).lineLimit(1)
+                                    Text("Blocked", comment: "Badge on a member you blocked").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSecondary).lineLimit(1)
                                         .padding(.horizontal, 10).padding(.vertical, 4)
-                                        .background(Capsule().stroke(Color.secondary.opacity(0.5)))
+                                        .background(Capsule().stroke(Theme.inkSecondary.opacity(0.5)))
                                 }
                                 if member.role == .owner {
                                     Label { Text("Owner", comment: "Badge for the bubble owner") } icon: { Image(systemName: "crown.fill") }
@@ -178,7 +179,7 @@ struct SettingsView: View {
                                     Menu {
                                         memberActions(member)
                                     } label: {
-                                        Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(.secondary).frame(width: 36, height: 36)
+                                        Image(systemName: "ellipsis").font(.body.weight(.bold)).foregroundStyle(Theme.inkSecondary).frame(width: 44, height: 44).contentShape(Rectangle()).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                                     }
                                     .accessibilityLabel(Text("More actions"))
                                     .accessibilityIdentifier("member-menu-\(member.user?.name ?? "")")
@@ -197,10 +198,10 @@ struct SettingsView: View {
                     SectionHeader(title: "Pending join requests", count: model.requests.count).id("requests")
                     if model.loaded && model.requests.isEmpty {
                         Label { Text("No one is waiting to join.") } icon: { Image(systemName: "checkmark.circle.fill").foregroundStyle(Hue.mint.text) }
-                            .font(.subheadline).foregroundStyle(.secondary).card(padding: 14)
+                            .font(.subheadline).foregroundStyle(Theme.inkSecondary).card(padding: 14)
                     }
                     ForEach(model.requests) { request in
-                        requestRow(request).transition(.scale(scale: 0.9).combined(with: .opacity))
+                        requestRow(request).motionTransition(.scale(scale: 0.9).combined(with: .opacity))
                     }
 
                     Button(role: .destructive) { confirmLeave = true } label: {
@@ -310,7 +311,7 @@ struct SettingsView: View {
                 }
             } else {
                 let hue = Hue.forID(bubble.id)
-                HStack(alignment: .top, spacing: 14) {
+                AdaptiveStack(spacing: 14, horizontalAlignment: .top) {
                     BubbleLogo(bubble: bubble, size: 64)
                         .overlay { if photoBusy { ProgressView().tint(.white) } }
                         .shadow(color: hue.fill.opacity(0.4), radius: 8, y: 4)
@@ -318,10 +319,11 @@ struct SettingsView: View {
                         .accessibilityIdentifier("bubble-logo")
                     VStack(alignment: .leading, spacing: 4) {
                         Text(verbatim: bubble.name).font(.rounded(.title2, weight: .heavy))
+                            .accessibilityAddTraits(.isHeader)
                         if let d = bubble.description?.nilIfEmpty {
-                            Text(verbatim: d).font(.subheadline).foregroundStyle(.secondary)
+                            Text(verbatim: d).font(.subheadline).foregroundStyle(Theme.inkSecondary)
                         } else {
-                            Text("No description").font(.subheadline).foregroundStyle(.secondary)
+                            Text("No description").font(.subheadline).foregroundStyle(Theme.inkSecondary)
                         }
                         Text("\(model.members.count) of \(bubble.maxSize) members", comment: "Bubble size: current members of maximum")
                             .font(.rounded(.caption)).monospacedDigit()
@@ -359,7 +361,7 @@ struct SettingsView: View {
     private func photoControls(_ bubble: Bubble) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Bubble photo", comment: "Settings: heading of the bubble photo controls")
-                .font(.rounded(.caption, weight: .heavy)).foregroundStyle(.secondary).textCase(.uppercase)
+                .font(.rounded(.caption, weight: .heavy)).foregroundStyle(Theme.inkSecondary).textCase(.uppercase)
             HStack(spacing: 10) {
                 Button { showPhotoPicker = true } label: {
                     Label {
@@ -379,7 +381,7 @@ struct SettingsView: View {
             }
             .disabled(photoBusy)
             Text("Everyone in the bubble sees it. Square photos look best.", comment: "Settings: hint under the bubble photo buttons")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.inkSecondary)
         }
         .padding(.top, 6)
     }
@@ -402,7 +404,7 @@ struct SettingsView: View {
 
     private func inviteCard(_ bubble: Bubble) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Invite code").font(.rounded(.caption, weight: .heavy)).foregroundStyle(.secondary).textCase(.uppercase)
+            Text("Invite code").font(.rounded(.caption, weight: .heavy)).foregroundStyle(Hue.grape.text).textCase(.uppercase)
             HStack(spacing: 10) {
                 Text(verbatim: bubble.inviteCode)
                     .font(.system(.title, design: .rounded, weight: .heavy))
@@ -414,6 +416,7 @@ struct SettingsView: View {
                 Button {
                     UIPasteboard.general.string = bubble.inviteCode
                     copied = true
+                    A11y.announce(String(localized: "Copied", comment: "VoiceOver announcement after copying the invite code or link"))
                     Task { try? await Task.sleep(for: .seconds(1.5)); copied = false }
                 } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc.fill")
@@ -446,16 +449,20 @@ struct SettingsView: View {
     private func inviteLinkRow(_ bubble: Bubble) -> some View {
         let url = InviteLink.url(for: bubble.inviteCode)
         Divider().padding(.vertical, 2)
-        Text("Invite link").font(.rounded(.caption, weight: .heavy)).foregroundStyle(.secondary).textCase(.uppercase)
+        Text("Invite link").font(.rounded(.caption, weight: .heavy)).foregroundStyle(Hue.grape.text).textCase(.uppercase)
         Text(verbatim: url.absoluteString)
             .font(.footnote.monospaced()).foregroundStyle(Theme.brandText)
             .lineLimit(1).truncationMode(.middle)
             .textSelection(.enabled)
+            // Read as "Invite link, boolaa.ro/join/CODE" rather than the raw URL spelled out.
+            .accessibilityLabel(Text("Invite link"))
+            .accessibilityValue(Text(verbatim: url.host().map { "\($0)\(url.path())" } ?? url.absoluteString))
             .accessibilityIdentifier("invite-link")
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 8) {
             Button {
                 UIPasteboard.general.url = url
                 linkCopied = true
+                A11y.announce(String(localized: "Copied", comment: "VoiceOver announcement after copying the invite code or link"))
                 Task { try? await Task.sleep(for: .seconds(1.5)); linkCopied = false }
             } label: {
                 Label("Copy link", systemImage: linkCopied ? "checkmark" : "link")
@@ -481,7 +488,7 @@ struct SettingsView: View {
             }
         }
         .font(.rounded(.subheadline, weight: .bold))
-        .lineLimit(1).minimumScaleFactor(0.8)
+        .lineLimit(2)
         .buttonStyle(.bordered)
         .buttonBorderShape(.capsule)
         .tint(Hue.grape.text)
@@ -523,6 +530,7 @@ struct SettingsView: View {
 
     private func show(_ text: String) {
         withAnimation(Motion.gentle) { notice = text }
+        A11y.announce(text)
         Task {
             try? await Task.sleep(for: .seconds(2.5))
             if notice == text { withAnimation(Motion.gentle) { notice = nil } }
@@ -537,17 +545,18 @@ struct SettingsView: View {
             approvals: approvals, memberCount: memberCount, maxSize: session.currentBubble?.maxSize ?? .max)
         let alreadyApproved = session.userID.map(request.approverIds.contains) ?? false
         return HStack(spacing: 12) {
-            AvatarView(user: request.user, size: 40)
+            if !typeSize.isAccessibilitySize { AvatarView(user: request.user, size: 40).accessibilityHidden(true) }
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: request.user?.displayName ?? String(localized: "Someone")).font(.rounded(.headline)).lineLimit(1)
+                Text(verbatim: request.user?.displayName ?? String(localized: "Someone")).font(.rounded(.headline)).lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                 if waitingForSeat {
                     Text("Approved, waiting for a free spot", comment: "Join request has a majority but the bubble is full")
                         .font(.subheadline).foregroundStyle(Theme.brandText).lineLimit(2)
                 } else {
                     Text("\(approvals) of \(needed) approvals", comment: "Join request progress: approvals so far of approvals needed")
-                        .font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                        .font(.subheadline).foregroundStyle(Theme.inkSecondary).lineLimit(typeSize.isAccessibilitySize ? 4 : 2)
                 }
             }
+            .accessibilityElement(children: .combine)
             Spacer()
             if !alreadyApproved {
                 Button {
@@ -577,7 +586,7 @@ struct SettingsView: View {
                 }
             } label: {
                 Image(systemName: "xmark").font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.dangerText)
-                    .frame(width: 42, height: 42).background(Circle().fill(Theme.danger.opacity(0.12)))
+                    .frame(width: 42, height: 42).background(Circle().fill(Theme.danger.opacity(0.12))).minimumHitTarget()
             }
             .buttonStyle(.squishIcon)
             .accessibilityLabel("Reject")

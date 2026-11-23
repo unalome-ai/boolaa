@@ -71,12 +71,12 @@ export default function FoodPage() {
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((p, i) => (
           <li key={p.id} className="card anim-rise overflow-hidden" style={{ "--i": i } as CSSProperties} data-testid="food-card" data-item-id={p.id}>
-            <Img src={p.image} alt={p.description || t("food.imageAlt")} className="h-[210px] w-full object-cover" />
+            <Img src={p.image} alt={t("a11y.photoFrom", { name: p.user?.name ?? t("common.someone") })} className="h-[210px] w-full object-cover" />
             <div className="space-y-2 p-4">
               {p.description && <p className="text-[15px]">{p.description}</p>}
               <div className="flex items-center justify-between">
                 <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
-                  <Avatar name={p.user?.name} id={p.user_id} src={p.user?.avatar} size={24} />
+                  <Avatar name={p.user?.name} id={p.user_id} src={p.user?.avatar} size={24} decorative />
                   <span className="truncate">
                     {p.user?.name ?? t("common.someone")} · {fmt.relative(p.created_at)}
                   </span>

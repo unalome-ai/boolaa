@@ -36,9 +36,9 @@ struct DeleteAccountSheet: View {
                     Text("Delete your account?").font(.rounded(.title2)).frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                     Text("This can't be undone. Your profile, photos, messages, events, food posts, items and links will be permanently deleted, and you'll leave all your bubbles.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.inkSecondary)
                     Text("Bubbles you own pass to the longest-standing member. Bubbles with no one left are deleted.")
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                     if step == .warn {
                         Text("To confirm, type \(Self.confirmWord) below.", comment: "The argument is the confirmation word, e.g. DELETE")
                             .font(.subheadline.weight(.semibold))
@@ -49,7 +49,7 @@ struct DeleteAccountSheet: View {
                             .boolaaField()
                             .accessibilityIdentifier("delete-confirm-field")
                         Text("To make sure it's you, we'll email you a 6-digit code first.")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(Theme.inkSecondary)
                         if let error { FormMessage(text: error) }
                         Button(role: .destructive) {
                             Task { await sendCode() }

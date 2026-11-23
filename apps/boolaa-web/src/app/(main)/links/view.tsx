@@ -5,7 +5,7 @@ import { ExternalLink, Link2, Plus, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
-import { Avatar, EmptyState, ErrorText, Modal, PageLoader } from "@/components/ui";
+import { Avatar, EmptyState, ErrorText, Modal, NewTabHint, PageLoader } from "@/components/ui";
 import { AUTHOR, type SharedLink } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
@@ -119,16 +119,17 @@ export default function LinksPage() {
               <div className="min-w-0 flex-1">
                 <a href={l.url} target="_blank" rel="noopener noreferrer" className="block truncate font-semibold hover:text-brand-ink">
                   {l.title || hostOf(l.url)}
+                  <NewTabHint />
                 </a>
                 <p className="truncate text-sm text-muted">{hostOf(l.url)}</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                   {l.tags.map((tg) => (
-                    <button key={tg} type="button" onClick={() => setTag(tg)} className="hue-sky press rounded-full bg-hue-wash px-2 py-0.5 font-display text-xs font-bold text-hue-ink">
+                    <button key={tg} type="button" onClick={() => setTag(tg)} className="hue-sky press inline-flex min-h-7 items-center rounded-full bg-hue-wash px-2.5 font-display text-xs font-bold text-hue-ink">
                       #{tg}
                     </button>
                   ))}
                   <span className="flex items-center gap-1 text-xs text-muted">
-                    <Avatar name={l.user?.name} id={l.user_id} src={l.user?.avatar} size={20} /> {l.user?.name} · {fmt.relative(l.created_at)}
+                    <Avatar name={l.user?.name} id={l.user_id} src={l.user?.avatar} size={20} decorative /> {l.user?.name} · {fmt.relative(l.created_at)}
                   </span>
                 </div>
               </div>
@@ -136,10 +137,11 @@ export default function LinksPage() {
                 href={l.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={t("openLink")}
                 className="hue-sky press-round flex h-[38px] w-[38px] items-center justify-center rounded-full bg-hue-wash text-hue-ink"
               >
-                <ExternalLink size={18} />
+                <ExternalLink size={18} aria-hidden />
+                <span className="sr-only">{t("openLink")}</span>
+                <NewTabHint />
               </a>
               {l.user_id !== userId && <SafetyMenu type="shared_link" id={l.id} author={{ id: l.user_id, name: l.user?.name }} />}
               {l.user_id === userId && (
@@ -208,6 +210,7 @@ function PreviewCard({ link }: { link: SharedLink }) {
           {host}
           {link.preview_site_name && link.preview_site_name.toLowerCase() !== host.toLowerCase() ? ` · ${link.preview_site_name}` : ""}
         </p>
+        <NewTabHint />
       </div>
     </a>
   );

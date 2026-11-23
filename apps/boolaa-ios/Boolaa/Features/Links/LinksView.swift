@@ -108,7 +108,7 @@ struct LinksView: View {
                             onDelete: { Task { await delete(link) } })
                         .safetyContextMenu(.link(link), react: { react(link, $0) })
                         .pushHighlightTarget(link.id)
-                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                        .motionTransition(.scale(scale: 0.9).combined(with: .opacity))
                         .popIn(index)
                 }
             }
@@ -173,21 +173,24 @@ struct LinkRow: View {
     var onOpen: () -> Void
     var onDelete: () -> Void
     @State private var confirmDelete = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let hue = Feature.links.hue
+        let large = typeSize.isAccessibilitySize
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
-                FeatureBadge(icon: Feature.links.icon, hue: hue)
+                if !large { FeatureBadge(icon: Feature.links.icon, hue: hue) }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(verbatim: link.title?.nilIfEmpty ?? link.url).font(.rounded(.headline)).lineLimit(2)
-                    Text(verbatim: URL(string: link.url)?.host() ?? link.url).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(verbatim: link.title?.nilIfEmpty ?? link.url).font(.rounded(.headline)).lineLimit(large ? 5 : 2)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(verbatim: URL(string: link.url)?.host() ?? link.url).font(.caption).foregroundStyle(Theme.inkSecondary).lineLimit(large ? 3 : 1)
                     if !link.tags.isEmpty {
                         Text(verbatim: link.tags.map { "#" + $0 }.joined(separator: " ")).font(.rounded(.caption)).foregroundStyle(hue.text)
                     }
                     HStack(spacing: 6) {
-                        AvatarView(user: link.user, size: 20)
-                        Text(verbatim: link.user?.displayName ?? "").font(.caption).foregroundStyle(.secondary)
+                        AvatarView(user: link.user, size: 20).accessibilityHidden(true)
+                        Text(verbatim: link.user?.displayName ?? "").font(.caption).foregroundStyle(Theme.inkSecondary)
                     }
                     .padding(.top, 2)
                 }
@@ -198,7 +201,7 @@ struct LinkRow: View {
                     if isMine {
                         Button { confirmDelete = true } label: {
                             Image(systemName: "trash.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.dangerText)
-                                .frame(width: 38, height: 38).background(Circle().fill(Theme.danger.opacity(0.12)))
+                                .frame(width: 38, height: 38).background(Circle().fill(Theme.danger.opacity(0.12))).minimumHitTarget()
                         }
                         .accessibilityLabel("Delete link")
                     }
@@ -213,7 +216,7 @@ struct LinkRow: View {
                     ProgressView().controlSize(.small)
                     Text("Loading preview…", comment: "Shown while the server fetches a shared link's preview")
                 }
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Theme.inkSecondary)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("link-preview-loading")
             case .none:
@@ -257,7 +260,7 @@ struct LinkPreviewCard: View {
                             .foregroundStyle(Color.primary)
                     }
                     if let description = link.previewDescription?.nilIfEmpty {
-                        Text(verbatim: description).font(.footnote).foregroundStyle(.secondary).lineLimit(2)
+                        Text(verbatim: description).font(.footnote).foregroundStyle(Theme.inkSecondary).lineLimit(2)
                     }
                     let source = [domain, link.previewSiteName?.nilIfEmpty].compactMap { $0 }
                     if !source.isEmpty {

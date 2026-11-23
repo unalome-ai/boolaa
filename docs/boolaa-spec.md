@@ -248,6 +248,20 @@ Local dev: `supabase start` serves the API at `http://127.0.0.1:55321`. `supabas
   - Every client shows a **suspended screen** instead of the app: title, "You can use Boolaa again from <date>" (suspended), the reason (report-reason labels), an appeal link to privacy@boolaa.ro, and sign out. On `user_banned` at sign-in, show it without date or reason. Texts: `suspended.*` in the web's `messages/*.json`.
   - Their posts stay visible to their bubbles; a ban also removes them from every bubble.
 
+### Accessibility (target WCAG 2.2 AA)
+
+Applied on web, iOS and Android; labels in all 5 languages (`docs/i18n-glossary.md`, "Accessibility labels").
+
+- **Labels**: every icon-only control has a spoken label. Decorative images, badges whose meaning is already in the text, and avatars next to a visible name are hidden from screen readers. Posted photos read "Photo from {name}"; the bubble photo "Photo of {name}".
+- **Chat**: each message is one element: sender, text or "Photo from {name}" or "This message was deleted", time, reactions. Its actions (react, open photo, open link, delete own / report others') are custom actions on iOS and Android and real buttons/menus on the web. A new message from someone else in the open chat is announced politely ("New message from {name}"); loading older messages is silent.
+- **State**: tabs, bubble chips, filter chips and segmented controls expose *selected*; reaction chips are toggles ("Love: 3 reactions, You reacted"); the chat button includes the unread count; section titles and screen titles are headings. Errors, "Copied", "Saved" and other notices are announced politely.
+- **Web**: "Skip to content" link, visible `:focus-visible` ring, every control reachable by keyboard; dialogs and sheets move focus in, trap Tab, make the page `inert` and return focus on close; menus and the reaction picker use arrow keys, Home/End and Escape; new-tab links say so.
+- **Text size**: layouts stack instead of clipping at iOS accessibility sizes (AX1+), Android font scale 2.0 with a large display size, and web 200% zoom / 320 CSS px (no horizontal scroll except chip rows): side-by-side cards stack, the marketplace grid drops to one column, titles wrap; the iOS dock offers the Large Content Viewer.
+- **Contrast**: normal text ≥ 4.5:1 and icons, focus rings and control edges ≥ 3:1 in light and dark; use a hue's `text` shade for text, never its fill (token changes in `docs/design-system.md` §2.5).
+- **Motion**: Reduce Motion (iOS), animator or transition scale 0 (Android) and `prefers-reduced-motion` (web) turn every spring into the 200 ms fade and stop ambient motion, staggering, bounces and rolling numbers (design system §5.5). Progress spinners still spin.
+- **Touch targets**: at least 44 pt (iOS) and 48 dp (Android), enlarging the hit area around smaller visuals; web at least 24 px, 44 px for primary controls and menu items.
+- **Tests**: web `tests/a11y.spec.ts` (axe on the main routes in light and dark, fails on serious/critical; skip link, dialog focus, chat live region, 320 px reflow); iOS `AccessibilityTests` (label builders) and `AccessibilityUITests` (key labels, `performAccessibilityAudit()` on the main screens, AX5 layout); Android `AccessibilityComponentsTest` and `ContrastTest` (Robolectric) and `AccessibilityChecksTest` (Accessibility Test Framework on the main screens).
+
 ## Screens and flows
 
 1. **Auth**: login (email and password) and register (name, email, password), with the name passed as sign-up metadata `{ name }`. Register requires the **"I'm 16 or older"** checkbox and links to Terms and Privacy: Boolaa is rated **16+**. Sign out lives in the profile sheet.

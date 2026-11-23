@@ -197,7 +197,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (SearchHit) -> Unit) {
                 leadingIcon = { Icon(BoolaaIcons.Search, contentDescription = null, tint = c.textSecondary) },
                 trailingIcon = if (text.isEmpty()) null else ({
                     Box(
-                        Modifier.size(40.dp).clickableRipple(scale = 0.88f, role = Role.Button) {
+                        Modifier.size(48.dp).clickableRipple(scale = 0.88f, role = Role.Button) {
                             text = ""; vm.onQueryChange(""); runCatching { focus.requestFocus() }
                         }.semantics { contentDescription = clearLabel }.testTag("search-clear"),
                         contentAlignment = Alignment.Center,
@@ -304,9 +304,9 @@ private fun ResultRow(hit: SearchHit, onClick: () -> Unit) {
     Row(
         Modifier.boolaaCard(0.dp)
             .clickableRipple(scale = 0.98f, role = Role.Button, onClick = onClick)
+            .testTag("search-result-${hit.id}")
             .clearAndSetSemantics { contentDescription = description; role = Role.Button; onClick { onClick(); true } }
-            .padding(horizontal = 14.dp, vertical = 12.dp)
-            .testTag("search-result-${hit.id}"),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(Modifier.size(40.dp).background(style.hue.gradient, CircleShape), contentAlignment = Alignment.Center) {

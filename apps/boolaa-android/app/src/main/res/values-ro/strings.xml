@@ -357,4 +357,7 @@
     <string name="market_ask_draft">\@%1$s, mai e disponibil „%2$s”?</string>
     <string name="events_add_to_calendar">Adaugă în calendar</string>
     <string name="events_no_calendar_app">Nu am găsit nicio aplicație de calendar.</string>
+    <!-- Accessibility (docs/i18n-glossary.md "Accessibility labels"); read by TalkBack only. -->
+    <string name="a11y_photo_from">Fotografie de la %1$s</string>
+    <string name="a11y_new_message_from">Mesaj nou de la %1$s</string>
 </resources>

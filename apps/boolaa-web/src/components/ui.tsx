@@ -16,9 +16,12 @@ export function Avatar({
   id,
   size = 40,
   className,
+  decorative,
 }: {
   name?: string | null;
   src?: string | null;
+  /** Hidden from assistive tech when the name is already read next to it. */
+  decorative?: boolean;
   /** User id, for the deterministic colour. Falls back to the name. */
   id?: string | null;
   size?: number;
@@ -32,14 +35,15 @@ export function Avatar({
     <img
       src={photo.url}
       onError={photo.onError}
-      alt={label}
+      alt={decorative ? "" : label}
       style={style}
       className={cx("shrink-0 rounded-full bg-field object-cover", size < 32 ? "ring-[1.5px]" : "ring-2", "ring-card", className)}
     />
   ) : (
     <span
-      role="img"
-      aria-label={label}
+      role={decorative ? undefined : "img"}
+      aria-label={decorative ? undefined : label}
+      aria-hidden={decorative || undefined}
       style={style}
       className={cx(
         "inline-flex shrink-0 select-none items-center justify-center rounded-full bg-hue-grad font-display font-extrabold text-hue-on",
@@ -95,6 +99,12 @@ export function BubblePhoto({
       {initials(bubble?.name)}
     </span>
   );
+}
+
+/** Screen-reader-only "(opens in a new tab)" for links with target="_blank" (WCAG 3.2.5 advisory). */
+export function NewTabHint() {
+  const t = useTranslations("a11y");
+  return <span className="sr-only"> ({t("opensInNewTab")})</span>;
 }
 
 export function Spinner({ className }: { className?: string }) {
@@ -177,13 +187,16 @@ export function SectionTitle({ children, action, count, hue = "grape" }: { child
 export function ErrorText({ children }: { children?: ReactNode }) {
   if (!children) return null;
   return (
-    <p role="alert" className="anim-pop-soft rounded-field bg-danger/10 px-4 py-2.5 text-sm font-medium text-danger-ink">
+    <p role="alert" aria-live="polite" className="anim-pop-soft rounded-field bg-danger/10 px-4 py-2.5 text-sm font-medium text-danger-ink">
       {children}
     </p>
   );
 }
 
-/** Centered dialog on desktop, bottom sheet on mobile. */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+
+/** Centered dialog on desktop, bottom sheet on mobile. Focus is trapped inside and restored on close. */
 export function Modal({
   open,
   onClose,
@@ -197,27 +210,80 @@ export function Modal({
 }) {
   const titleId = useId();
   const t = useTranslations("common");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    // Focus moves into the dialog (first field, else the dialog itself), Tab cycles inside it, and on
+    // close focus returns to whatever opened it (WCAG 2.4.3).
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    const focusables = () =>
+      Array.from(dialog?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((el) => el.offsetParent !== null || el === document.activeElement);
+    const firstField = dialog?.querySelector<HTMLElement>("input:not([type=hidden]):not(.sr-only), textarea, select, [data-autofocus]");
+    (firstField ?? dialog)?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // An open popover inside (reaction picker, menu) closes first.
+        if (e.defaultPrevented) return;
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab" || !dialog) return;
+      const items = focusables();
+      if (items.length === 0) {
+        e.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (!dialog.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && (active === first || active === dialog)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Everything outside the dialog is inert (no focus, hidden from screen readers' virtual cursor).
+    const made: HTMLElement[] = [];
+    for (let node = dialog?.parentElement ?? null; node && node !== document.body; node = node.parentElement) {
+      for (const sib of Array.from(node.parentElement?.children ?? [])) {
+        if (sib === node || !(sib instanceof HTMLElement) || sib.inert || sib.tagName === "SCRIPT" || sib.id === "a11y-announcer") continue;
+        sib.inert = true;
+        made.push(sib);
+      }
+    }
     return () => {
+      made.forEach((el) => (el.inert = false));
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center" role="presentation">
-      <div className="anim-fade absolute inset-0 bg-[#140c2e]/45 backdrop-blur-[2px]" onClick={onClose} />
+      <div aria-hidden className="anim-fade absolute inset-0 bg-[#140c2e]/45 backdrop-blur-[2px]" onClick={onClose} />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="anim-route relative max-h-[92dvh] w-full overflow-y-auto rounded-t-hero bg-app p-5 pt-3 shadow-float sm:max-w-lg sm:rounded-hero sm:pt-5"
+        className="anim-route relative max-h-[92dvh] w-full overflow-y-auto outline-none rounded-t-hero bg-app p-5 pt-3 shadow-float sm:max-w-lg sm:rounded-hero sm:pt-5"
       >
         <div aria-hidden className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-muted/40 sm:hidden" />
         <div className="mb-4 flex items-center justify-between">

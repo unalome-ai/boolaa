@@ -215,7 +215,7 @@ fun ExportDataFlow(onDismiss: () -> Unit) {
                 CodeStepBody(vm, submitLabel = stringResource(R.string.profile_export_data), calm = true)
             }
         }
-        TextButton(onClick = close, enabled = !preparing, modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 44.dp)) {
+        TextButton(onClick = close, enabled = !preparing, modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 48.dp)) {
             Text(stringResource(if (file != null) R.string.done else R.string.cancel), style = Type.headline, color = Hue.grape.text)
         }
     }

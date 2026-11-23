@@ -153,13 +153,14 @@ data class BoolaaColors(
     val divider: Color get() = hairline
 }
 
-private val LightColors = BoolaaColors(
+internal val LightColors = BoolaaColors(
     background = Color(0xFFFBF8FF), card = Color.White, field = Color(0xFFF1ECFB), otherBubble = Color.White,
     hairline = Color(0x142A1B5E), textPrimary = Color(0xFF1E1638), textSecondary = Color(0xFF6A6382),
-    dangerText = Color(0xFFD92D3A), cardShadow = Color(0x142A1B5E), floatingShadow = Color(0x382A1B5E),
+    // Danger as text is a shade deeper than the fill so it stays AA on its own 10-14% wash (4.7:1; #D92D3A was 3.9:1).
+    dangerText = Color(0xFFC0272F), cardShadow = Color(0x142A1B5E), floatingShadow = Color(0x382A1B5E),
     backdropTop = Color(0xFFE9E0FF), backdropBottom = Color(0xFFFFEDE3), isDark = false,
 )
-private val DarkColors = BoolaaColors(
+internal val DarkColors = BoolaaColors(
     background = Color(0xFF15111F), card = Color(0xFF221C33), field = Color(0xFF2C2545), otherBubble = Color(0xFF2C2545),
     hairline = Color(0x14FFFFFF), textPrimary = Color(0xFFF5F2FF), textSecondary = Color(0xFFABA4C4),
     dangerText = Color(0xFFFF8A8F), cardShadow = Color(0x47000000), floatingShadow = Color(0x73000000),
@@ -168,7 +169,10 @@ private val DarkColors = BoolaaColors(
 
 val LocalBoolaaColors = staticCompositionLocalOf { LightColors }
 
-/** True when the system animator duration scale is 0 ("Remove animations"): ambient loops stop, nothing bounces. */
+/**
+ * True when animations are turned off: Accessibility "Remove animations" (all scales 0) or the developer options' animator
+ * or transition scale at 0. Ambient loops stop, springs become fades, nothing bounces, slides or shakes.
+ */
 val LocalReduceMotion = staticCompositionLocalOf { false }
 
 object BoolaaTheme {
@@ -267,7 +271,8 @@ fun BoolaaTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable
         )
     }
     val resolver = LocalContext.current.contentResolver
-    fun animationsOff() = Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    fun animationsOff() = Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f ||
+        Settings.Global.getFloat(resolver, Settings.Global.TRANSITION_ANIMATION_SCALE, 1f) == 0f
     var reduceMotion by remember { mutableStateOf(animationsOff()) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { reduceMotion = animationsOff() }
     CompositionLocalProvider(LocalBoolaaColors provides c, LocalReduceMotion provides reduceMotion) {

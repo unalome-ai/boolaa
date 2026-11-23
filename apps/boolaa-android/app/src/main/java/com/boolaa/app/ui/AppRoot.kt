@@ -68,9 +68,11 @@ fun AppRoot(debugHooks: DebugHooks = DebugHooks()) {
 
     Surface(color = BoolaaTheme.colors.background, modifier = Modifier.fillMaxSize()) {
         // Route change: the new screen fades in from scale 0.94 (gentle), the old one fades out.
+        val reduce = BoolaaTheme.reduceMotion
         AnimatedContent(
             targetState = state.route,
             transitionSpec = {
+                if (reduce) return@AnimatedContent fadeIn(Motion.fade()) togetherWith fadeOut(Motion.fade())
                 (fadeIn(Motion.gentle()) + scaleIn(Motion.gentle(), initialScale = 0.94f)) togetherWith fadeOut(Motion.fade())
             },
         ) { route ->

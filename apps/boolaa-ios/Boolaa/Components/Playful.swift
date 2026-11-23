@@ -258,9 +258,13 @@ struct SegmentedPill<Value: Hashable>: View {
     var hue: Hue = .grape
     @Namespace private var namespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: 4) {
+        // At the accessibility text sizes the options stack, so long labels wrap instead of shrinking.
+        let stacked = typeSize.isAccessibilitySize
+        let layout = stacked ? AnyLayout(VStackLayout(spacing: 4)) : AnyLayout(HStackLayout(spacing: 4))
+        layout {
             ForEach(options) { option in
                 let selected = option.value == selection
                 Button {
@@ -268,11 +272,12 @@ struct SegmentedPill<Value: Hashable>: View {
                 } label: {
                     Text(option.label)
                         .font(.rounded(.subheadline))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .lineLimit(stacked ? 3 : 1)
+                        .minimumScaleFactor(stacked ? 1 : 0.7)
                         .foregroundStyle(selected ? hue.onFill : Theme.inkSecondary)
                         .padding(.horizontal, 10)
-                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .padding(.vertical, stacked ? 6 : 0)
+                        .frame(maxWidth: .infinity, minHeight: 44)
                         .background {
                             if selected {
                                 Capsule().fill(hue.gradient)
@@ -287,7 +292,7 @@ struct SegmentedPill<Value: Hashable>: View {
             }
         }
         .padding(4)
-        .background(Theme.field, in: Capsule())
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
         .sensoryFeedback(.selection, trigger: selection)
     }
 }
@@ -323,10 +328,13 @@ private struct ScrollFade: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func body(content: Content) -> some View {
         let reduce = reduceMotion
+        // Only the part of the way out beyond the half: a tall card that is still mostly on screen (being read)
+        // stays at full size and opacity, so its text keeps its contrast.
         content.scrollTransition(.interactive, axis: .vertical) { view, phase in
-            view
-                .scaleEffect(phase.isIdentity || reduce ? 1 : 0.94)
-                .opacity(phase.isIdentity || reduce ? 1 : 0.55)
+            let out = reduce ? 0 : max(0, abs(phase.value) - 0.5) * 2
+            return view
+                .scaleEffect(1 - 0.06 * out)
+                .opacity(1 - 0.45 * out)
         }
     }
 }
@@ -343,7 +351,7 @@ struct CircleIcon: View {
             .foregroundStyle(filled ? hue.onFill : hue.text)
             .frame(width: size, height: size)
             .background(Circle().fill(filled ? AnyShapeStyle(hue.gradient) : AnyShapeStyle(hue.wash)))
-            .contentShape(Circle())
+            .minimumHitTarget()
     }
 }
 

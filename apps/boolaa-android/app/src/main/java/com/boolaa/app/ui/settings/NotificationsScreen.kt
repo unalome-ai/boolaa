@@ -25,6 +25,11 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.boolaa.app.ui.theme.Radius
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -232,10 +237,17 @@ fun NotificationsScreen(onBack: () -> Unit) {
 @Composable
 private fun PrefSwitch(label: String, checked: Boolean, enabled: Boolean, tag: String, strong: Boolean = false, onChange: (Boolean) -> Unit) {
     val c = BoolaaTheme.colors
-    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    // The whole row is the switch, so TalkBack reads "<label>, on, switch" and the label is tappable too.
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(Radius.field))
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
+            .testTag(tag)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(label, style = if (strong) Type.headline else Type.body.copy(fontWeight = FontWeight.Medium),
             color = if (enabled) c.textPrimary else c.textSecondary, modifier = Modifier.weight(1f).padding(end = 12.dp))
-        Switch(checked, onCheckedChange = onChange, enabled = enabled, modifier = Modifier.testTag(tag),
+        Switch(checked, onCheckedChange = null, enabled = enabled,
             colors = SwitchDefaults.colors(checkedTrackColor = Hue.grape.fill, checkedThumbColor = Hue.grape.onFill))
     }
 }
@@ -302,12 +314,20 @@ fun NotificationsAskCard(modifier: Modifier = Modifier) {
             Text(stringResource(R.string.notifications_ask_hint), style = Type.subheadline, color = c.textPrimary,
                 modifier = Modifier.padding(start = 12.dp).weight(1f))
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        val notNow = @Composable { m: Modifier ->
             SecondaryButton(stringResource(R.string.notifications_not_now), onClick = {
                 context.pushPrefs().edit { putBoolean(KEY_CARD_DISMISSED, true) }
                 dismissed = true
-            }, modifier = Modifier.weight(1f).testTag("notifications-not-now"))
-            PrimaryButton(stringResource(R.string.notifications_ask), onClick = ask, modifier = Modifier.weight(1f).testTag("notifications-ask-card-button"))
+            }, modifier = m.testTag("notifications-not-now"))
+        }
+        val turnOn = @Composable { m: Modifier ->
+            PrimaryButton(stringResource(R.string.notifications_ask), onClick = ask, modifier = m.testTag("notifications-ask-card-button"))
+        }
+        // Side by side normally; stacked (main action first) at large font scales so neither label is clipped.
+        if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { turnOn(Modifier.fillMaxWidth()); notNow(Modifier.fillMaxWidth()) }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { notNow(Modifier.weight(1f)); turnOn(Modifier.weight(1f)) }
         }
     }
 }

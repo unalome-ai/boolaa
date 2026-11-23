@@ -192,8 +192,8 @@ struct FormMessage: View {
         .background((kind == .error ? Theme.danger.opacity(0.1) : Hue.mint.wash),
                     in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
         .accessibilityIdentifier(kind == .error ? "form-error" : "form-notice")
-        .onAppear { AccessibilityNotification.Announcement(text).post() }
-        .onChange(of: text) { _, new in AccessibilityNotification.Announcement(new).post() }
+        .onAppear { A11y.announce(text) }
+        .onChange(of: text) { _, new in A11y.announce(new) }
         .transition(.opacity)
     }
 }

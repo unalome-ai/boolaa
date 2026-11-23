@@ -356,4 +356,7 @@
     <string name="market_ask_draft">\@%1$s, is “%2$s” still available?</string>
     <string name="events_add_to_calendar">Add to calendar</string>
     <string name="events_no_calendar_app">No calendar app found.</string>
+    <!-- Accessibility (docs/i18n-glossary.md "Accessibility labels"); read by TalkBack only. -->
+    <string name="a11y_photo_from">Photo from %1$s</string>
+    <string name="a11y_new_message_from">New message from %1$s</string>
 </resources>

@@ -29,6 +29,19 @@ final class ChatModel {
         return message
     }
 
+    /// The signed-in user, so live messages from others can be announced to VoiceOver.
+    private var me: UUID?
+
+    /// A realtime INSERT: merged, and announced politely when it is someone else's new message.
+    func mergeLive(_ message: ChatMessage) {
+        let isNew = !messages.contains { $0.id == message.id }
+        merge(message)
+        if isNew, message.senderId != me, !message.isDeleted {
+            let name = messages.first { $0.id == message.id }?.sender?.displayName ?? String(localized: "Someone")
+            A11y.announce(A11y.join([A11y.newMessageFrom(name), message.content]))
+        }
+    }
+
     /// INSERT (realtime or our own insert, which may both deliver it): add or replace by id.
     func merge(_ message: ChatMessage) {
         messages = ChatTimeline.upsert(messages, withAuthor(message))
@@ -61,6 +74,7 @@ final class ChatModel {
     func load(api: BoolaaAPI, bubbleID: UUID, me: UUID?, lastReadAt: @MainActor () async -> Date?) async {
         self.api = api
         self.bubbleID = bubbleID
+        self.me = me
         do {
             async let page = api.chatPage(bubbleID: bubbleID, beforeID: nil)
             async let members = api.members(bubbleID: bubbleID)
@@ -139,7 +153,7 @@ final class ChatModel {
             group.addTask { [weak self] in
                 for await action in inserts {
                     if let message = try? action.decodeRecord(as: ChatMessage.self, decoder: BoolaaJSON.decoder) {
-                        await self?.merge(message)
+                        await self?.mergeLive(message)
                     }
                 }
             }
@@ -257,8 +271,18 @@ struct ChatView: View {
                                            showAuthor: previous?.senderId != message.senderId || message.id == model.dividerID,
                                            endsGroup: next?.senderId != message.senderId,
                                            photoURL: model.images.url(for: message.imagePath),
-                                           onPhotoTap: { url in viewing = ViewedPhoto(url: url) })
+                                           onPhotoTap: { url in viewing = ViewedPhoto(url: url) },
+                                           reactions: message.isDeleted ? [] : model.reactions.summary(for: message.id, me: session.userID))
                                     .reactionAccessibilityActions(enabled: !message.isDeleted) { react(message, $0) }
+                                    .accessibilityActions {
+                                        if !message.isDeleted {
+                                            if isMine {
+                                                Button { pendingDelete = message } label: { Text("Delete message") }
+                                            } else {
+                                                Button { safety.reportTarget = .message(message) } label: { Text(ReportTarget.message(message).type.reportTitle) }
+                                            }
+                                        }
+                                    }
                                     .modifier(ChatMessageMenu(message: message, isMine: isMine,
                                                               onReact: { react(message, $0) }) { pendingDelete = message })
                                     .modifier(MessagePop(enabled: initialIDs.map { !$0.contains(message.id) } ?? false,
@@ -404,12 +428,12 @@ struct ChatView: View {
                 ProgressView()
                 Text("Loading older messages…")
             }
-            .font(.footnote).foregroundStyle(.secondary)
+            .font(.footnote).foregroundStyle(Theme.inkSecondary)
             .padding(.vertical, 10)
             .accessibilityIdentifier("chat-loading-older")
         } else if model.reachedStart && !model.messages.isEmpty {
             Text("That's the start of the chat")
-                .font(.rounded(.footnote)).foregroundStyle(.secondary)
+                .font(.rounded(.footnote)).foregroundStyle(Theme.inkSecondary)
                 .padding(.horizontal, 14).padding(.vertical, 6)
                 .background(Theme.card.opacity(0.7), in: Capsule())
                 .padding(.vertical, 10)
@@ -494,7 +518,7 @@ struct ChatView: View {
             .accessibilityIdentifier("chat-photo-remove")
             Spacer()
         }
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .motionTransition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     private var canSend: Bool {
@@ -661,6 +685,17 @@ struct MessageRow: View {
     /// Signed URL of the photo (nil while it is being signed).
     var photoURL: URL? = nil
     var onPhotoTap: (URL) -> Void = { _ in }
+    /// Reaction chips under the message, read as part of the message.
+    var reactions: [ReactionSummary] = []
+    @Environment(\.openURL) private var openURL
+    @ScaledMetric(relativeTo: .body) private var photoSide: CGFloat = 220
+
+    /// What VoiceOver reads for the whole row (sender, text or photo, time, reactions).
+    var accessibilityText: String {
+        A11y.chatMessage(sender: message.sender?.displayName ?? String(localized: "Someone"), isMine: isMine,
+                         text: message.content, hasPhoto: message.imagePath != nil, deleted: message.isDeleted,
+                         time: message.createdAt.formatted(date: .omitted, time: .shortened), reactions: reactions)
+    }
 
     var body: some View {
         let hue = Hue.forID(message.senderId)
@@ -679,7 +714,7 @@ struct MessageRow: View {
                 if message.isDeleted {
                     Label("This message was deleted", systemImage: "nosign")
                         .font(.subheadline.italic())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.inkSecondary)
                         .padding(.horizontal, 15)
                         .padding(.vertical, 10)
                         .overlay(bubbleShape.strokeBorder(Theme.hairline, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
@@ -704,14 +739,24 @@ struct MessageRow: View {
                 }
                 if endsGroup {
                     Text(message.createdAt.formatted(date: .omitted, time: .shortened))
-                        .font(.caption2).foregroundStyle(.secondary)
+                        .font(.caption2).foregroundStyle(Theme.inkSecondary)
                         .padding(.horizontal, 6)
                 }
             }
             if !isMine { Spacer(minLength: 56) }
         }
         .padding(.top, showAuthor ? 8 : 0)
-        .accessibilityElement(children: .combine)
+        // One element per message; the photo and the links inside stay reachable as actions.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: accessibilityText))
+        .accessibilityActions {
+            if let photoURL, !message.isDeleted {
+                Button { onPhotoTap(photoURL) } label: { Text("Open photo", comment: "VoiceOver action on a chat message with a photo") }
+            }
+            ForEach(message.isDeleted ? [] : Linkify.urls(in: message.content), id: \.self) { url in
+                Button { openURL(url) } label: { Text(verbatim: url.host() ?? url.absoluteString) }
+            }
+        }
         .accessibilityIdentifier("message-\(message.id.uuidString)")
     }
 
@@ -726,12 +771,12 @@ struct MessageRow: View {
             if let photoURL { onPhotoTap(photoURL) }
         } label: {
             RemoteImage(url: photoURL?.absoluteString, hue: isMine ? .grape : Hue.forID(message.senderId))
-                .frame(width: 220, height: 220)
+                .frame(width: min(photoSide, 300), height: min(photoSide, 300))
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         }
         .buttonStyle(.squish)
-        .accessibilityLabel(Text("Photo"))
+        .accessibilityLabel(isMine ? Text("Photo") : Text(verbatim: A11y.photoFrom(message.sender?.displayName ?? "")))
         .accessibilityIdentifier("chat-photo-\(message.id.uuidString)")
     }
 }

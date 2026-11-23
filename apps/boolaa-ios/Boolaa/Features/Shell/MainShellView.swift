@@ -163,13 +163,14 @@ struct ShellBackground: View {
         let dark = colorScheme == .dark
         ZStack {
             Theme.background
-            RadialGradient(colors: [hue.fill.opacity(dark ? 0.20 : 0.30), hue.fill.opacity(0)],
+            // Light-mode glow 30 % -> 22 % (and 22 % -> 16 % below): secondary text over it stays ≥ 4.5:1 in every hue.
+            RadialGradient(colors: [hue.fill.opacity(dark ? 0.20 : 0.22), hue.fill.opacity(0)],
                            center: UnitPoint(x: 0.95, y: 0), startRadius: 0, endRadius: 340)
-            RadialGradient(colors: [hue.glow.opacity(dark ? 0.12 : 0.22), hue.glow.opacity(0)],
+            RadialGradient(colors: [hue.glow.opacity(dark ? 0.12 : 0.16), hue.glow.opacity(0)],
                            center: UnitPoint(x: 0, y: 0.08), startRadius: 0, endRadius: 220)
         }
         .ignoresSafeArea()
-        .animation(Motion.gentle, value: hue)
+        .animation(.easeOut(duration: 0.3), value: hue)
     }
 }
 
@@ -241,8 +242,10 @@ struct ShellHeader: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 6)
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(Text("Your bubbles", comment: "Accessibility label of the bubble switcher chip row"))
                 .onChange(of: session.currentBubble?.id) { _, id in
-                    if let id { withAnimation { proxy.scrollTo(id, anchor: .center) } }
+                    if let id { withAnimation(Motion.resolve(Motion.gentle, reduceMotion: reduceMotion)) { proxy.scrollTo(id, anchor: .center) } }
                 }
             }
         }
@@ -285,7 +288,7 @@ struct BubbleChip: View {
                 Capsule().fill(Theme.card).overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
             }
         }
-        .contentShape(Capsule())
+        .minimumHitTarget()
     }
 }
 
@@ -345,8 +348,15 @@ struct PillTabBar: View {
                 .accessibilityLabel(Text(tab.title))
                 .accessibilityIdentifier("tab-\(tab.rawValue)")
                 .accessibilityAddTraits(active ? .isSelected : [])
+                // The dock's icons don't grow with Dynamic Type; a long press shows the large label instead.
+                .accessibilityShowsLargeContentViewer {
+                    Image(systemName: tab.activeIcon)
+                    Text(tab.title)
+                }
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Main navigation", comment: "Accessibility label of the tab bar"))
         .padding(6)
         .background(.regularMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
@@ -391,6 +401,10 @@ struct ChatFAB: View {
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .accessibilityLabel("Open chat")
         .accessibilityValue(unread > 0 ? Text(UnreadBadge.label(unread)) : Text(verbatim: ""))
+        .accessibilityShowsLargeContentViewer {
+            Image(systemName: Feature.chat.icon)
+            Text("Open chat")
+        }
         .accessibilityIdentifier("chat-fab")
     }
 }
@@ -401,6 +415,7 @@ struct UnreadBadge: View {
     /// On a filled (active) chip: white badge with coloured text.
     var inverted = false
     var bordered = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static func label(_ count: Int) -> String {
         String(localized: "\(count) unread messages", comment: "Accessibility label of the unread badge; the argument is the count (99+ shown above 99)")
@@ -416,11 +431,11 @@ struct UnreadBadge: View {
                 .frame(minWidth: 20, minHeight: 20)
                 .background(inverted ? AnyShapeStyle(Color.white) : AnyShapeStyle(Hue.coral.gradient), in: Capsule())
                 .overlay { if bordered { Capsule().strokeBorder(Theme.background, lineWidth: 2) } }
-                .contentTransition(.numericText(value: Double(count)))
-                .animation(Motion.snappy, value: count)
+                .contentTransition(reduceMotion ? .opacity : .numericText(value: Double(count)))
+                .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: count)
                 .accessibilityLabel(Text(Self.label(count)))
                 .accessibilityIdentifier("unread-badge")
-                .transition(.scale.combined(with: .opacity))
+                .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
         }
     }
 }
@@ -428,6 +443,7 @@ struct UnreadBadge: View {
 /// "+ New" chip: create another bubble or join one.
 struct AddBubbleSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(SessionStore.self) private var session
     @State private var mode: OnboardingView.Mode = .join
     @State private var requested: JoinRequest?
@@ -448,9 +464,12 @@ struct AddBubbleSheet: View {
                                 .padding(14)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Hue.mint.wash, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
-                                .transition(.scale(scale: 0.9).combined(with: .opacity))
+                                .transition(reduceMotion ? .opacity : .scale(scale: 0.9).combined(with: .opacity))
                         }
-                        JoinBubbleForm { request in withAnimation(Motion.bouncy) { requested = request } }
+                        JoinBubbleForm { request in
+                            withAnimation(Motion.resolve(Motion.bouncy, reduceMotion: reduceMotion)) { requested = request }
+                            A11y.announce(String(localized: "Request sent. The members of the bubble will vote on it."))
+                        }
                     } else {
                         CreateBubbleForm { dismiss() }
                     }

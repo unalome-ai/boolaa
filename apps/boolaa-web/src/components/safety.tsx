@@ -7,6 +7,7 @@ import { useBoolaa } from "@/components/boolaa-provider";
 import { ErrorText, Modal } from "@/components/ui";
 import { useErrorText } from "@/i18n/errors";
 import { cx } from "@/lib/utils";
+import { useMenuKeys } from "@/lib/a11y";
 
 export type ReportTarget = "user" | "chat_message" | "event" | "food_post" | "market_item" | "shared_link";
 export const REPORT_REASONS = ["spam", "harassment", "hate", "sexual", "violence", "self_harm", "other"] as const;
@@ -40,18 +41,16 @@ export function SafetyMenu({
   const [blocking, setBlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
+  useMenuKeys(open, () => setOpen(false), menuRef, trigger);
 
   if (!author || author.id === userId) return null;
   const name = author.name ?? tc("someone");
@@ -60,6 +59,7 @@ export function SafetyMenu({
   return (
     <div ref={ref} className={cx("relative", className)}>
       <button
+        ref={trigger}
         type="button"
         aria-label={t("moreActions")}
         aria-haspopup="menu"
@@ -75,7 +75,9 @@ export function SafetyMenu({
       </button>
       {open && (
         <div
+          ref={menuRef}
           role="menu"
+          aria-label={t("moreActions")}
           className={cx(
             "absolute top-full z-[250] mt-1 min-w-48 overflow-hidden rounded-field border border-line bg-card py-1 shadow-float",
             compact ? "left-0" : "right-0",
@@ -88,7 +90,7 @@ export function SafetyMenu({
               setOpen(false);
               setReporting(true);
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field"
+            className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field"
             data-testid="report"
           >
             <Flag size={16} /> {t("report")}
@@ -98,10 +100,11 @@ export function SafetyMenu({
               type="button"
               role="menuitem"
               onClick={async () => {
+                trigger.current?.focus();
                 setOpen(false);
                 await unblock(author.id).catch((e) => setError(errorText(e)));
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field"
+              className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-field"
               data-testid="unblock"
             >
               <Undo2 size={16} /> {t("unblockNamed", { name })}
@@ -111,10 +114,11 @@ export function SafetyMenu({
               type="button"
               role="menuitem"
               onClick={() => {
+                trigger.current?.focus();
                 setOpen(false);
                 setBlocking(true);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger-ink hover:bg-field"
+              className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger-ink hover:bg-field"
               data-testid="block"
             >
               <Ban size={16} /> {t("blockNamed", { name })}

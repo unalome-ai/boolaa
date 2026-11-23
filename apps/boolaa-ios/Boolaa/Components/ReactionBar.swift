@@ -10,6 +10,7 @@ struct ReactionBar: View {
     var showsAdd = true
     var addOnlyWithChips = false
     var onToggle: (ReactionKind) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let add = showsAdd && (!addOnlyWithChips || !summaries.isEmpty)
@@ -20,7 +21,7 @@ struct ReactionBar: View {
                 }
                 if add { AddReactionButton(hue: hue, onPick: onToggle) }
             }
-            .animation(Motion.snappy, value: summaries)
+            .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: summaries)
             .sensoryFeedback(.selection, trigger: summaries)
         }
     }
@@ -49,7 +50,9 @@ struct ReactionChip: View {
                     Capsule().fill(Theme.chipInactive)
                 }
             }
-            .contentShape(Capsule())
+            // 32 pt chip, 44 pt touch target.
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.squish)
         .accessibilityLabel(Text(verbatim: summary.kind.chipLabel(count: summary.count)))
@@ -76,6 +79,7 @@ struct AddReactionButton: View {
                 .overlay(alignment: .topTrailing) {
                     Image(systemName: "plus").font(.system(size: 8, weight: .black)).foregroundStyle(hue.text).offset(x: -5, y: 4)
                 }
+                .minimumHitTarget()
         }
         .accessibilityLabel(Text("Add a reaction", comment: "Button opening the reaction picker"))
         .accessibilityIdentifier("add-reaction")

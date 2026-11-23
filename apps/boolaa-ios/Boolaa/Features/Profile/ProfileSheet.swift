@@ -26,10 +26,10 @@ struct ProfileSheet: View {
                     .padding(.top, 12)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Name").font(.rounded(.caption)).foregroundStyle(.secondary).padding(.leading, 4)
+                        Text("Name").font(.rounded(.caption)).foregroundStyle(Theme.inkSecondary).padding(.leading, 4)
                         TextField("Your name", text: $name).boolaaField().accessibilityIdentifier("profile-name")
-                        Text("Email").font(.rounded(.caption)).foregroundStyle(.secondary).padding(.top, 6).padding(.leading, 4)
-                        Text(verbatim: session.email ?? "").foregroundStyle(.secondary)
+                        Text("Email").font(.rounded(.caption)).foregroundStyle(Theme.inkSecondary).padding(.top, 6).padding(.leading, 4)
+                        Text(verbatim: session.email ?? "").foregroundStyle(Theme.inkSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading).boolaaField()
                     }
 
@@ -139,6 +139,9 @@ struct ProfileSheet: View {
     private var avatarPicker: some View {
         Button { showPicker = true } label: { avatarLabel }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Change profile photo", comment: "Accessibility label of the avatar button in the profile sheet"))
+            .accessibilityAddTraits(.isButton)
             .photosPicker(isPresented: $showPicker, selection: $photo, matching: .images)
     }
 
@@ -183,7 +186,7 @@ struct ProfileRow: View {
             FeatureBadge(icon: icon, hue: hue, size: 34)
             Text(title).foregroundStyle(.primary)
             Spacer()
-            Image(systemName: trailing).font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+            Image(systemName: trailing).font(.subheadline.weight(.bold)).foregroundStyle(Theme.inkSecondary)
         }
         .font(.body.weight(.medium))
         .padding(.horizontal, 12)
@@ -207,8 +210,8 @@ struct LanguageRow: View {
                 FeatureBadge(icon: "globe", hue: .sky, size: 34)
                 Text("Language").foregroundStyle(.primary)
                 Spacer()
-                Text(verbatim: AppLanguage.current.nativeName).foregroundStyle(.secondary)
-                Image(systemName: "arrow.up.forward").font(.subheadline.weight(.bold)).foregroundStyle(.secondary)
+                Text(verbatim: AppLanguage.current.nativeName).foregroundStyle(Theme.inkSecondary)
+                Image(systemName: "arrow.up.forward").font(.subheadline.weight(.bold)).foregroundStyle(Theme.inkSecondary)
             }
             .font(.body.weight(.medium))
             .padding(.horizontal, 12)

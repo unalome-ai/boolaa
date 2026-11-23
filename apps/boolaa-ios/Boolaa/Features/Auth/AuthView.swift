@@ -93,6 +93,7 @@ struct AuthView: View {
                             .padding(12)
                             .frame(maxWidth: .infinity)
                             .background(Hue.mint.wash, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
+                            .onAppear { A11y.announce(info) }
                     }
 
                     Button {
@@ -141,7 +142,7 @@ struct AuthView: View {
             .accessibilityIdentifier("auth-age")
             Text("By creating an account you agree to the [Terms](boolaa-legal://terms) and [Privacy Policy](boolaa-legal://privacy).",
                  comment: "Keep the two Markdown links and their boolaa-legal:// URLs unchanged; translate only the link text")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundStyle(Theme.inkSecondary)
                 .tint(Theme.brandText)
                 .environment(\.openURL, OpenURLAction { url in
                     if let page = LegalPage(link: url) { legalPage = page; return .handled }

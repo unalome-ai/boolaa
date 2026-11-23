@@ -211,7 +211,7 @@ fun BubbleHero(bubble: Bubble, firstName: String?, onLinks: () -> Unit, modifier
             Text(it, style = Type.body, color = on, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
         Row(
-            Modifier.padding(top = 8.dp).heightIn(min = 44.dp).padding(vertical = 4.dp).clip(CircleShape)
+            Modifier.padding(top = 8.dp).heightIn(min = 48.dp).padding(vertical = 4.dp).clip(CircleShape)
                 .background(on.copy(alpha = 0.16f)).border(1.dp, on.copy(alpha = 0.25f), CircleShape)
                 .clickableRipple(role = Role.Button, onClick = onLinks).testTag("home-links")
                 .padding(horizontal = 14.dp, vertical = 7.dp),

@@ -187,3 +187,20 @@ Web keys `events.pastEvents`, `events.ended`, `events.wentCount`, `errors.eventE
 | exportRateLimitedUntil | You can download your data once an hour. Try again after {time}. | Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}. | Tu peux télécharger tes données une fois par heure. Réessaie après {time}. | Puedes descargar tus datos una vez por hora. Inténtalo de nuevo a partir de las {time}. | Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}. |
 | previewHint (CHANGED: was the seeded "Flatmates") | When off, notifications only say "New message in {bubble}", without names or text. | Când e oprită, notificările spun doar „Mesaj nou în {bubble}”, fără nume sau text. | Désactivé, les notifications disent seulement « Nouveau message dans {bubble} », sans nom ni texte. | Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en {bubble}», sin nombres ni texto. | Se disattivata, le notifiche dicono solo «Nuovo messaggio in {bubble}», senza nomi né testo. |
 | goToBoolaa (invalid invite link, web) | Go to Boolaa | Mergi la Boolaa | Aller sur Boolaa | Ir a Boolaa | Vai su Boolaa |
+
+## Accessibility labels (docs/boolaa-spec.md, "Accessibility")
+
+Read by VoiceOver, TalkBack and screen readers on the web; never shown as visible text unless noted. Web keys under `a11y.*`; Android `a11y_*`; iOS the same English texts as keys. Labels are composed with commas (", ") so each platform reads them with a short pause; the existing strings (`avatarOf`, `bubblePhotoOf`, `chat.unread`, reaction `chip`, `reactedByYou`, `deleted`, `available` / `reserved` / `taken`) are reused, not duplicated.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| `skipToContent` (web, visible on focus) | Skip to content | Sari la conținut | Aller au contenu | Saltar al contenido | Vai al contenuto |
+| `photoFrom` (a post or chat photo) | Photo from {name} | Fotografie de la {name} | Photo de {name} | Foto de {name} | Foto di {name} |
+| `newMessageFrom` (live announcement) | New message from {name} | Mesaj nou de la {name} | Nouveau message de {name} | Nuevo mensaje de {name} | Nuovo messaggio da {name} |
+| `codeDigit` (code-entry box) | Digit {index} of {count} | Cifra {index} din {count} | Chiffre {index} sur {count} | Dígito {index} de {count} | Cifra {index} di {count} |
+| `opensInNewTab` (web, appended to external links) | opens in a new tab | se deschide într-o filă nouă | s'ouvre dans un nouvel onglet | se abre en una pestaña nueva | si apre in una nuova scheda |
+| `mainNavigation` (tab bar / dock) | Main navigation | Navigare principală | Navigation principale | Navegación principal | Navigazione principale |
+| `bubbleSwitcher` (switcher chip row) | Your bubbles | Bulele tale | Tes bulles | Tus burbujas | Le tue bolle |
+| `currentBubble` (chip state) | Current bubble | Bula curentă | Bulle actuelle | Burbuja actual | Bolla attuale |
+| `dismiss` (toast / banner) | Dismiss | Închide | Fermer | Cerrar | Chiudi |
+| `openPhoto` (iOS VoiceOver action / Android custom action on a chat photo) | Open photo | Deschide fotografia | Ouvrir la photo | Abrir la foto | Apri la foto |

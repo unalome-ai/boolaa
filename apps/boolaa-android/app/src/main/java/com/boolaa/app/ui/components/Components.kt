@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -91,9 +92,10 @@ private val RainbowRing = Brush.sweepGradient(listOf(Hue.grape.fill, Hue.pink.fi
 /**
  * Circle avatar with a ring in the card colour. With a photo: the photo. Without: initials on the gradient of
  * the person's own hue (derived from their id, like bubble colours). [rainbow] adds the profile sheet's ring.
+ * Decorative by default (the person's name is always next to it); pass [label] when the avatar stands alone.
  */
 @Composable
-fun Avatar(user: UserProfile?, size: Dp, modifier: Modifier = Modifier, rainbow: Boolean = false) {
+fun Avatar(user: UserProfile?, size: Dp, modifier: Modifier = Modifier, rainbow: Boolean = false, label: String? = null) {
     val name = user?.name.orEmpty()
     val hue = Hue.forId(user?.id)
     val ring = if (size < 32.dp) 1.5.dp else 2.dp
@@ -105,12 +107,13 @@ fun Avatar(user: UserProfile?, size: Dp, modifier: Modifier = Modifier, rainbow:
             .background(BoolaaTheme.colors.card)
             .padding(ring)
             .clip(CircleShape)
-            .background(hue.gradient),
+            .background(hue.gradient)
+            .then(if (label != null) Modifier.semantics { contentDescription = label } else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         val avatar = user?.avatar
         if (!avatar.isNullOrBlank()) {
-            AsyncImage(model = avatar, contentDescription = name, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize().clip(CircleShape))
+            AsyncImage(model = avatar, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize().clip(CircleShape))
         } else {
             // Fixed to the circle, not the font scale: the initials must always fit their badge.
             Text(
@@ -164,18 +167,23 @@ fun BoolaaChip(title: String, active: Boolean, onClick: () -> Unit, modifier: Mo
     val view = LocalView.current
     val fill by animateFloatAsState(if (active) 1f else 0f, Motion.snappy())
     val textColor by animateColorAsState(if (active) hue.onFill else c.textSecondary, Motion.fade())
+    val source = remember { MutableInteractionSource() }
+    // 48dp touch target around the 38dp chip; selection is announced ("Selected") with the tab role.
     Box(
         modifier
-            .heightIn(min = 38.dp)
-            .then(if (active) Modifier.glow(hue.fill.copy(alpha = 0.35f), 8.dp, 4.dp) else Modifier)
-            .clip(CircleShape)
-            .background(c.field)
-            .drawBehind { drawRect(hue.gradient, alpha = fill.coerceIn(0f, 1f)) }
-            .clickableRipple(role = Role.Tab) { Haptics.selection(view); onClick() }
-            .semantics { selected = active }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .tapArea(source, role = Role.Tab) { Haptics.selection(view); onClick() }
+            .semantics { selected = active },
         contentAlignment = Alignment.Center,
-    ) { Text(title, color = textColor, style = Type.chip, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    ) {
+        Box(
+            Modifier
+                .heightIn(min = 38.dp)
+                .then(if (active) Modifier.glow(hue.fill.copy(alpha = 0.35f), 8.dp, 4.dp) else Modifier)
+                .tapVisual(source, CircleShape, Modifier.background(c.field).drawBehind { drawRect(hue.gradient, alpha = fill.coerceIn(0f, 1f)) })
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) { Text(title, color = textColor, style = Type.chip, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center) }
+    }
 }
 
 /** Section title with a rolling counter badge and an optional action that wraps below when translations run long. */
@@ -205,19 +213,22 @@ fun SectionHeader(title: String, count: Int? = null, modifier: Modifier = Modifi
 fun AddButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, hue: Hue = Hue.grape) {
     val view = LocalView.current
     var taps by remember { mutableIntStateOf(0) }
-    Row(
-        modifier
-            .heightIn(min = 40.dp)
-            .glow(hue.fill.copy(alpha = 0.4f), 10.dp, 5.dp)
-            .clip(CircleShape)
-            .background(hue.gradient)
-            .clickableRipple(role = Role.Button) { taps++; Haptics.light(view); onClick() }
-            .testTag("add-button")
-            .padding(start = 14.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+    val source = remember { MutableInteractionSource() }
+    Box(
+        modifier.tapArea(source, role = Role.Button) { taps++; Haptics.light(view); onClick() }.testTag("add-button"),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Rounded.Add, contentDescription = null, tint = hue.onFill, modifier = Modifier.size(20.dp).bounceOn(taps))
-        Text(label, color = hue.onFill, style = Type.chip, maxLines = 1)
+        Row(
+            Modifier
+                .heightIn(min = 40.dp)
+                .glow(hue.fill.copy(alpha = 0.4f), 10.dp, 5.dp)
+                .tapVisual(source, CircleShape, Modifier.background(hue.gradient))
+                .padding(start = 14.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(Icons.Rounded.Add, contentDescription = null, tint = hue.onFill, modifier = Modifier.size(20.dp).bounceOn(taps))
+            Text(label, color = hue.onFill, style = Type.chip)
+        }
     }
 }
 
@@ -395,9 +406,13 @@ fun StatusBadge(text: String, modifier: Modifier = Modifier, hue: Hue = Hue.grap
 /** Icon that morphs to another (copy → check, plus → check) with a small pop. */
 @Composable
 fun MorphIcon(icon: ImageVector, tint: Color, modifier: Modifier = Modifier, contentDescription: String? = null) {
+    val reduce = BoolaaTheme.reduceMotion
     AnimatedContent(
         icon, modifier = modifier, contentAlignment = Alignment.Center,
-        transitionSpec = { (scaleIn(Motion.bouncy(), initialScale = 0.4f) + fadeIn(Motion.fade())) togetherWith (scaleOut(targetScale = 0.4f) + fadeOut(Motion.fade())) },
+        transitionSpec = {
+            if (reduce) return@AnimatedContent fadeIn(Motion.fade()) togetherWith fadeOut(Motion.fade())
+            (scaleIn(Motion.bouncy(), initialScale = 0.4f) + fadeIn(Motion.fade())) togetherWith (scaleOut(targetScale = 0.4f) + fadeOut(Motion.fade()))
+        },
     ) { Icon(it, contentDescription = contentDescription, tint = tint, modifier = Modifier.fillMaxWidth()) }
 }
 

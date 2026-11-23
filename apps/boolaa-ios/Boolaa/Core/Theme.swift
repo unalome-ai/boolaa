@@ -36,7 +36,8 @@ struct Hue: Hashable, Sendable {
         self.text = Color(light: Color(hex: textLight), dark: Color(hex: textDark))
     }
 
-    static let grape = Hue("grape", fill: 0x7357F6, glow: 0x9B86FF, deep: 0x5B3FD9, whiteOnFill: true, textLight: 0x5B3FD9, textDark: 0xB7A6FF)
+    // Light text 0x5B3FD9 -> 0x5135CF: grape text on a grape wash inside a grape-wash card was 4.43:1, now 5.07 (same as web).
+    static let grape = Hue("grape", fill: 0x7357F6, glow: 0x9B86FF, deep: 0x5B3FD9, whiteOnFill: true, textLight: 0x5135CF, textDark: 0xB7A6FF)
     static let coral = Hue("coral", fill: 0xFF6B5C, glow: 0xFF9A82, deep: 0xE8503F, whiteOnFill: false, textLight: 0xC0392B, textDark: 0xFF9A8F)
     static let mint = Hue("mint", fill: 0x1EC8A0, glow: 0x6BE6C6, deep: 0x12A683, whiteOnFill: false, textLight: 0x0B7A60, textDark: 0x5FE3C2)
     static let sunny = Hue("sunny", fill: 0xFFC93C, glow: 0xFFE07A, deep: 0xF2B21B, whiteOnFill: false, textLight: 0x8A6400, textDark: 0xFFD466)
@@ -117,10 +118,14 @@ enum Theme {
     /// Dark ink used on bright fills in both modes.
     static let inkOnColor = Color(hex: 0x1E1638)
     static let ink = Color(light: Color(hex: 0x1E1638), dark: Color(hex: 0xF5F2FF))
-    static let inkSecondary = Color(light: Color(hex: 0x6A6382), dark: Color(hex: 0xABA4C4))
+    /// Light 0x6A6382 -> 0x5C5574: 6.98:1 on cards (was 5.65), and still ≥ 4.5 over the header glow and on washes
+    /// layered on washes (was 3.76–4.4 there). Dark unchanged (6.06–7.81).
+    static let inkSecondary = Color(light: Color(hex: 0x5C5574), dark: Color(hex: 0xABA4C4))
     /// Calm red for destructive actions (white text on it passes AA).
     static let danger = Color(hex: 0xD92D3A)
-    static let dangerText = Color(light: Color(hex: 0xD92D3A), dark: Color(hex: 0xFF8A8F))
+    /// Red text and icons. Light is a shade deeper than the fill (#D92D3A) so it stays above 4.5:1 on the
+    /// danger wash (10–12 %) behind error messages and remove buttons (4.78 instead of 3.93; same token as Android/web).
+    static let dangerText = Color(light: Color(hex: 0xC0272F), dark: Color(hex: 0xFF8A8F))
 
     // Shape
     enum Radius {
@@ -173,23 +178,27 @@ extension Font {
 
 // MARK: - Motion
 
-/// Motion tokens (design-system.md "Motion").
+/// Motion tokens (design-system.md "Motion"). Every spring reads the system Reduce Motion setting when it
+/// is used and becomes the 200 ms `fade` while it is on, so call sites that don't pass the environment
+/// value through `resolve` still honour it.
+@MainActor
 enum Motion {
+    private static var reduced: Bool { UIAccessibility.isReduceMotionEnabled }
     /// Press and release of anything tappable.
-    static let press = Animation.spring(response: 0.25, dampingFraction: 0.6)
+    static var press: Animation { reduced ? fade : .spring(response: 0.25, dampingFraction: 0.6) }
     /// Selection changes: tabs, chips, segmented pills.
-    static let snappy = Animation.spring(response: 0.32, dampingFraction: 0.78)
+    static var snappy: Animation { reduced ? fade : .spring(response: 0.32, dampingFraction: 0.78) }
     /// Things that pop into existence: messages, badges, staggered cards.
-    static let bouncy = Animation.spring(response: 0.45, dampingFraction: 0.62)
+    static var bouncy: Animation { reduced ? fade : .spring(response: 0.45, dampingFraction: 0.62) }
     /// Layout and screen changes.
-    static let gentle = Animation.spring(response: 0.55, dampingFraction: 0.86)
+    static var gentle: Animation { reduced ? fade : .spring(response: 0.55, dampingFraction: 0.86) }
     /// Reduced-motion replacement for every spring.
-    static let fade = Animation.easeOut(duration: 0.2)
+    nonisolated static let fade = Animation.easeOut(duration: 0.2)
     /// Delay between staggered siblings; only the first `staggerLimit` are delayed.
-    static let stagger: Double = 0.045
-    static let staggerLimit = 8
+    nonisolated static let stagger: Double = 0.045
+    nonisolated static let staggerLimit = 8
 
-    static func resolve(_ animation: Animation, reduceMotion: Bool) -> Animation { reduceMotion ? fade : animation }
+    nonisolated static func resolve(_ animation: Animation, reduceMotion: Bool) -> Animation { reduceMotion ? fade : animation }
 }
 
 /// Press "squish": scales down with a springy release. Falls back to a dim under Reduce Motion.
