@@ -5712,34 +5712,6 @@
         }
       }
     },
-    "List item" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Publicar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Proposer"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pubblica"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adaugă"
-          }
-        }
-      }
-    },
     "Live updates are unavailable right now. Reopen the chat to see new messages." : {
       "localizations" : {
         "es" : {
@@ -6565,6 +6537,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Postare nouă cu mâncare"
+          }
+        }
+      }
+    },
+    "New item" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo artículo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel objet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuovo oggetto"
+          }
+        },
+        "ro" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anunț nou"
           }
         }
       }

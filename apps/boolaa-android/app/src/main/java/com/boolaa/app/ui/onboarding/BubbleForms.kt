@@ -38,6 +38,7 @@ import com.boolaa.app.model.JoinRequest
 import com.boolaa.app.ui.BaseViewModel
 import com.boolaa.app.ui.components.BoolaaIcons
 import com.boolaa.app.ui.components.BoolaaTextField
+import com.boolaa.app.ui.components.fieldShell
 import com.boolaa.app.ui.components.BubbleOrb
 import com.boolaa.app.ui.components.BubbleLogo
 import com.boolaa.app.ui.components.PrimaryButton
@@ -123,7 +124,7 @@ fun CreateBubbleForm(vm: BubbleFormsViewModel) {
         BoolaaTextField(name, { name = it.take(60) }, stringResource(R.string.bubble_name), Modifier.testTag("bubble-name-input"))
         BoolaaTextField(description, { description = it }, stringResource(R.string.description), singleLine = false, minLines = 2)
         // Stepper-style shell (field fill, radius 16) around the platform slider; the value rolls in grape.
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.field)).background(c.field).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)) {
+        Column(Modifier.fillMaxWidth().fieldShell(c).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.max_size), style = Type.body, color = c.textPrimary)
                 Spacer(Modifier.weight(1f))

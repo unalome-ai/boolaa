@@ -30,8 +30,7 @@ struct CreateBubbleForm: View {
                         .animation(Motion.snappy, value: maxSize)
                 }
             }
-            .padding(.horizontal, 16).frame(minHeight: 52)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
+            .fieldShell()
             .sensoryFeedback(.selection, trigger: maxSize)
 
             Button {

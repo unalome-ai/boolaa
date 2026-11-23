@@ -74,7 +74,7 @@ export function CreateBubbleForm({ onCreated }: { onCreated: (b: Bubble) => void
         />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy || !name.trim()}>
+      <button type="submit" className="btn-primary min-h-[54px] w-full text-[17px]" disabled={busy || !name.trim()}>
         {busy ? t("createJoin.creating") : t("createJoin.create")}
       </button>
     </form>
@@ -117,7 +117,7 @@ export function JoinBubbleForm({ onRequested }: { onRequested: () => void }) {
       </div>
       <p className="text-sm text-muted">{t("joinHint")}</p>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary w-full" disabled={busy || !code.trim()}>
+      <button type="submit" className="btn-primary min-h-[54px] w-full text-[17px]" disabled={busy || !code.trim()}>
         {busy ? t("sending") : t("requestJoin")}
       </button>
     </form>

@@ -359,18 +359,17 @@ fun MarketBadge(status: MarketStatus, modifier: Modifier = Modifier) {
 /** Shown only for Reserved (sunny) and Taken (muted grey); Available needs no badge. */
 @Composable
 fun AvailabilityBadge(availability: MarketAvailability, modifier: Modifier = Modifier) {
-    val c = BoolaaTheme.colors
     when (availability) {
         MarketAvailability.AVAILABLE -> Unit
         MarketAvailability.RESERVED -> StatusBadge(availabilityLabel(availability), modifier.testTag("availability-reserved"), hue = Hue.tangerine,
             icon = BoolaaIcons.Reserved)
         MarketAvailability.TAKEN -> Row(
-            modifier.clip(CircleShape).background(c.textSecondary.copy(alpha = 0.92f)).padding(horizontal = 10.dp, vertical = 4.dp)
+            modifier.clip(CircleShape).background(Brand.taken).padding(horizontal = 10.dp, vertical = 4.dp)
                 .testTag("availability-taken"),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Icon(BoolaaIcons.Taken, contentDescription = null, tint = c.card, modifier = Modifier.size(13.dp))
-            Text(availabilityLabel(availability).uppercase(), style = Type.caption2.copy(fontWeight = FontWeight.Black), color = c.card, maxLines = 1)
+            Icon(BoolaaIcons.Taken, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+            Text(availabilityLabel(availability).uppercase(), style = Type.caption2.copy(fontWeight = FontWeight.Black), color = Color.White, maxLines = 1)
         }
     }
 }

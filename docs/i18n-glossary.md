@@ -26,6 +26,7 @@ Languages: **en** (source and fallback), **ro**, **fr**, **es**, **it**. Both cl
 | Create account | Create account | Creează cont | Créer un compte | Crear cuenta | Crea account |
 | Profile | Profile | Profil | Profil | Perfil | Profilo |
 | Language | Language | Limbă | Langue | Idioma | Lingua |
+| Add buttons (Events / Food / Market / Links) | New event / Share food / New item / Add link | Eveniment nou / Împarte mâncare / Anunț nou / Adaugă link | Nouvel événement / Partager / Nouvel objet / Ajouter le lien | Nuevo evento / Compartir comida / Nuevo artículo / Añadir enlace | Nuovo evento / Condividi cibo / Nuovo oggetto / Aggiungi link |
 
 Language names in the picker are shown in their own language: English, Română, Français, Español, Italiano.
 

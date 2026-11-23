@@ -114,9 +114,9 @@ export function CodeInput({
             onFocus={(e) => e.target.select()}
             data-testid="code-digit"
             className={cx(
-              "h-14 w-full min-w-0 rounded-field border-[1.5px] bg-field text-center font-display text-[26px] font-extrabold tabular-nums text-fg outline-none transition-colors",
-              "focus:border-grape focus:bg-card focus:ring-4 focus:ring-grape/20",
-              invalid ? "border-danger" : d ? "border-grape/50" : "border-transparent",
+              "h-14 w-full min-w-0 rounded-field border bg-field text-center font-display text-[26px] font-extrabold tabular-nums text-fg outline-none transition-[border-color,box-shadow,background-color]",
+              "focus:border-focus focus:bg-card focus:shadow-[inset_0_0_0_1px_var(--focus-ring)]",
+              invalid ? "border-danger-ink shadow-[inset_0_0_0_1px_var(--danger-ink)]" : "border-field-border",
               disabled && "opacity-60",
             )}
           />

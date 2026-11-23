@@ -308,26 +308,21 @@ fun NotificationsAskCard(modifier: Modifier = Modifier) {
     if (!container.push.available || granted || dismissed) return
     val ask = rememberNotificationPermissionAsk { if (it) dismissed = true }
     val c = BoolaaTheme.colors
+    // Same layout as iOS: badge, title and reason, an ✕ "Not now" at the trailing edge, one full-width primary.
     Column(modifier.boolaaCard().testTag("notifications-ask-card"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            FeatureBadge(Icons.Rounded.Notifications, Hue.grape, size = 34.dp)
-            Text(stringResource(R.string.notifications_ask_hint), style = Type.subheadline, color = c.textPrimary,
-                modifier = Modifier.padding(start = 12.dp).weight(1f))
-        }
-        val notNow = @Composable { m: Modifier ->
-            SecondaryButton(stringResource(R.string.notifications_not_now), onClick = {
+        Row(verticalAlignment = Alignment.Top) {
+            if (androidx.compose.ui.platform.LocalDensity.current.fontScale < 1.5f) FeatureBadge(Icons.Rounded.Notifications, Hue.grape, size = 38.dp)
+            Column(Modifier.padding(start = 12.dp).weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.notifications_ask), style = Type.headline, color = c.textPrimary,
+                    modifier = Modifier.semantics { heading() })
+                Text(stringResource(R.string.notifications_ask_hint), style = Type.subheadline, color = c.textSecondary)
+            }
+            CircleIconButton(BoolaaIcons.Close, stringResource(R.string.notifications_not_now), onClick = {
                 context.pushPrefs().edit { putBoolean(KEY_CARD_DISMISSED, true) }
                 dismissed = true
-            }, modifier = m.testTag("notifications-not-now"))
+            }, modifier = Modifier.testTag("notifications-not-now"), size = 44.dp)
         }
-        val turnOn = @Composable { m: Modifier ->
-            PrimaryButton(stringResource(R.string.notifications_ask), onClick = ask, modifier = m.testTag("notifications-ask-card-button"))
-        }
-        // Side by side normally; stacked (main action first) at large font scales so neither label is clipped.
-        if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.5f) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { turnOn(Modifier.fillMaxWidth()); notNow(Modifier.fillMaxWidth()) }
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { notNow(Modifier.weight(1f)); turnOn(Modifier.weight(1f)) }
-        }
+        PrimaryButton(stringResource(R.string.notifications_ask), onClick = ask,
+            modifier = Modifier.fillMaxWidth().testTag("notifications-ask-card-button"))
     }
 }

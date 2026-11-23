@@ -184,7 +184,7 @@ fun SearchScreen(onBack: () -> Unit, onOpen: (SearchHit) -> Unit) {
             CircleIconButton(BoolaaIcons.Back, stringResource(R.string.back), onBack, Modifier.testTag("search-back"), surface = true, size = 44.dp)
             val source = remember { MutableInteractionSource() }
             val focused by source.collectIsFocusedAsState()
-            val ring by animateColorAsState(if (focused) Hue.grape.fill else c.hairline, Motion.fade())
+            val ring by animateColorAsState(if (focused) c.focusRing else c.fieldBorder, Motion.fade())
             val shape = RoundedCornerShape(24.dp)
             val clearLabel = stringResource(R.string.search_clear)
             TextField(

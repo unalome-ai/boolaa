@@ -170,11 +170,11 @@ struct ShellBackground: View {
         let dark = colorScheme == .dark
         ZStack {
             Theme.background
-            // Light-mode glow 30 % -> 22 % (and 22 % -> 16 % below): secondary text over it stays ≥ 4.5:1 in every hue.
-            RadialGradient(colors: [hue.fill.opacity(dark ? 0.20 : 0.22), hue.fill.opacity(0)],
-                           center: UnitPoint(x: 0.95, y: 0), startRadius: 0, endRadius: 340)
-            RadialGradient(colors: [hue.glow.opacity(dark ? 0.12 : 0.16), hue.glow.opacity(0)],
-                           center: UnitPoint(x: 0, y: 0.08), startRadius: 0, endRadius: 220)
+            // Same strengths on every platform (Theme.Glow): secondary text over it stays ≥ 4.5:1 in every hue.
+            RadialGradient(colors: [hue.fill.opacity(dark ? Theme.Glow.mainDark : Theme.Glow.mainLight), hue.fill.opacity(0)],
+                           center: UnitPoint(x: 0.95, y: 0), startRadius: 0, endRadius: Theme.Glow.mainRadius)
+            RadialGradient(colors: [hue.glow.opacity(dark ? Theme.Glow.sideDark : Theme.Glow.sideLight), hue.glow.opacity(0)],
+                           center: UnitPoint(x: 0, y: 0.08), startRadius: 0, endRadius: Theme.Glow.sideRadius)
         }
         .ignoresSafeArea()
         .animation(.easeOut(duration: 0.3), value: hue)
@@ -419,7 +419,8 @@ struct ChatFAB: View {
 /// Unread chat messages: the number up to 99, "99+" above, nothing at 0.
 struct UnreadBadge: View {
     var count: Int
-    /// On a filled (active) chip: white badge with coloured text.
+    /// On a filled (active) chip: white badge with ink text. Otherwise ink on coral (6.1:1), as on Android and
+    /// the web; white on coral was 2.8:1.
     var inverted = false
     var bordered = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -433,7 +434,7 @@ struct UnreadBadge: View {
             Text(verbatim: text)
                 .font(.system(size: 12, weight: .heavy, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(inverted ? Hue.coral.text : .white)
+                .foregroundStyle(Hue.coral.onFill)
                 .padding(.horizontal, 6)
                 .frame(minWidth: 20, minHeight: 20)
                 .background(inverted ? AnyShapeStyle(Color.white) : AnyShapeStyle(Hue.coral.gradient), in: Capsule())

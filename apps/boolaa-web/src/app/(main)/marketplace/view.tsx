@@ -145,7 +145,7 @@ export default function MarketplacePage() {
                   <label className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-muted">
                     <span className="shrink-0">{t("market.markAs")}</span>
                     <select
-                      className="hue-mint min-h-8 min-w-[7.5rem] flex-1 rounded-full bg-field px-2 text-[13px] font-bold text-fg outline-none focus:ring-2 focus:ring-[var(--h)]"
+                      className="hue-mint min-h-8 min-w-[7.5rem] flex-1 rounded-full border border-field-border bg-field px-2 text-[13px] font-bold text-fg outline-none focus:border-focus focus:shadow-[inset_0_0_0_1px_var(--focus-ring)]"
                       value={availabilityOf(item)}
                       data-testid="availability-select"
                       onChange={(e) => setAvailability(item, e.target.value as Availability)}
@@ -286,7 +286,7 @@ function ItemForm({ item, onDone }: { item: MarketItem | null; onDone: () => voi
         </div>
       )}
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary hue-mint w-full" disabled={busy || !title.trim()}>
+      <button type="submit" className="btn-primary hue-mint min-h-[54px] w-full text-[17px]" disabled={busy || !title.trim()}>
         {busy ? t("common.saving") : item ? t("common.saveChanges") : t("market.addItem")}
       </button>
     </form>
@@ -304,7 +304,7 @@ function AvailabilityBadge({ availability, className }: { availability: Availabi
       data-availability={availability}
       className={cx(
         "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-display text-xs font-black uppercase tracking-wide shadow-glow",
-        reserved ? "hue-tangerine bg-hue-grad text-onfill" : "bg-black/70 text-white",
+        reserved ? "hue-tangerine bg-hue-grad text-onfill" : "bg-taken text-white",
         className,
       )}
     >

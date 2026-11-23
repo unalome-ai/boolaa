@@ -319,8 +319,8 @@ private struct DevicesSection: View {
             }
         }
         .padding(12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(current ? "device-row-current" : "device-row")
     }

@@ -79,7 +79,8 @@ class Hue private constructor(
     val wash: Color @Composable @ReadOnlyComposable get() = wash(LocalBoolaaColors.current.isDark)
 
     companion object {
-        val grape = Hue("grape", Color(0xFF7357F6), Color(0xFF9B86FF), Color(0xFF5B3FD9), true, Color(0xFF5B3FD9), Color(0xFFB7A6FF))
+        // Light text #5B3FD9 -> #5135CF (same as iOS and web): 5.08:1 for grape text on a grape wash over the bubble glow.
+        val grape = Hue("grape", Color(0xFF7357F6), Color(0xFF9B86FF), Color(0xFF5B3FD9), true, Color(0xFF5135CF), Color(0xFFB7A6FF))
         val coral = Hue("coral", Color(0xFFFF6B5C), Color(0xFFFF9A82), Color(0xFFE8503F), false, Color(0xFFC0392B), Color(0xFFFF9A8F))
         val mint = Hue("mint", Color(0xFF1EC8A0), Color(0xFF6BE6C6), Color(0xFF12A683), false, Color(0xFF0B7A60), Color(0xFF5FE3C2))
         val sky = Hue("sky", Color(0xFF3AA8FF), Color(0xFF7CC9FF), Color(0xFF1F8DE6), false, Color(0xFF0B6BBF), Color(0xFF7CC6FF))
@@ -120,15 +121,28 @@ object Brand {
     val hue = Hue.grape
     /** Calm red for destructive actions (white text on it passes AA). */
     val danger = Color(0xFFD92D3A)
+    /** "Taken" badge fill in both modes (white text 5.65:1), same as iOS and web. */
+    val taken = Color(0xFF6A6382)
     /** Bottom inset that keeps scroll content clear of the floating dock. */
     val tabBarClearance = 112.dp
 }
 
 object Radius {
-    val small = 12.dp
-    val field = 16.dp
-    val card = 24.dp
-    val hero = 32.dp
+    val small = 12.dp   // thumbnails, icon badges
+    val field = 16.dp   // inputs, calm buttons, banners
+    val row = 20.dp     // settings and profile rows
+    val card = 24.dp    // cards, empty states
+    val hero = 32.dp    // hero card, sheets, auth panel
+}
+
+/** Header glow behind the shell (design-system.md §2.4), the same on every platform. */
+object Glow {
+    const val MAIN_LIGHT = 0.22f
+    const val MAIN_DARK = 0.20f
+    const val SIDE_LIGHT = 0.16f
+    const val SIDE_DARK = 0.12f
+    val mainRadius = 340.dp
+    val sideRadius = 240.dp
 }
 
 @Immutable
@@ -141,6 +155,10 @@ data class BoolaaColors(
     val textPrimary: Color,
     val textSecondary: Color,
     val dangerText: Color,
+    /** 1 px edge of text fields and field-shaped rows (WCAG 1.4.11, ≥ 3:1 on background and card). */
+    val fieldBorder: Color,
+    /** 2 px ring of a focused field: the grape text shade. */
+    val focusRing: Color,
     /** Elevation 1 shadow (cards). */
     val cardShadow: Color,
     /** Elevation 2 shadow (dock). */
@@ -155,15 +173,21 @@ data class BoolaaColors(
 
 internal val LightColors = BoolaaColors(
     background = Color(0xFFFBF8FF), card = Color.White, field = Color(0xFFF1ECFB), otherBubble = Color.White,
-    hairline = Color(0x142A1B5E), textPrimary = Color(0xFF1E1638), textSecondary = Color(0xFF6A6382),
+    hairline = Color(0x142A1B5E), textPrimary = Color(0xFF1E1638),
+    // #6A6382 -> #5C5574 (same as iOS and web): 6.98:1 on cards, and ≥ 4.5 over the header glow and on nested washes.
+    textSecondary = Color(0xFF5C5574),
     // Danger as text is a shade deeper than the fill so it stays AA on its own 10-14% wash (4.7:1; #D92D3A was 3.9:1).
-    dangerText = Color(0xFFC0272F), cardShadow = Color(0x142A1B5E), floatingShadow = Color(0x382A1B5E),
+    dangerText = Color(0xFFC0272F),
+    // 3.67:1 on background, 3.86 on card; focus ring 7.2:1.
+    fieldBorder = Color(0xFF857DA1), focusRing = Color(0xFF5135CF), cardShadow = Color(0x142A1B5E), floatingShadow = Color(0x382A1B5E),
     backdropTop = Color(0xFFE9E0FF), backdropBottom = Color(0xFFFFEDE3), isDark = false,
 )
 internal val DarkColors = BoolaaColors(
     background = Color(0xFF15111F), card = Color(0xFF221C33), field = Color(0xFF2C2545), otherBubble = Color(0xFF2C2545),
     hairline = Color(0x14FFFFFF), textPrimary = Color(0xFFF5F2FF), textSecondary = Color(0xFFABA4C4),
-    dangerText = Color(0xFFFF8A8F), cardShadow = Color(0x47000000), floatingShadow = Color(0x73000000),
+    dangerText = Color(0xFFFF8A8F),
+    // 4.51:1 on background, 3.98 on card; focus ring 8.8:1.
+    fieldBorder = Color(0xFF80789F), focusRing = Color(0xFFB7A6FF), cardShadow = Color(0x47000000), floatingShadow = Color(0x73000000),
     backdropTop = Color(0xFF241A45), backdropBottom = Color(0xFF1F1430), isDark = true,
 )
 
@@ -198,9 +222,9 @@ object Type {
     val title2 = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 22.sp, lineHeight = 28.sp)
     val sectionTitle = TextStyle(fontFamily = Display, fontWeight = FontWeight.Black, fontSize = 20.sp, lineHeight = 26.sp)
     val headline = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, lineHeight = 22.sp)
-    val body = TextStyle(fontSize = 16.sp, lineHeight = 22.sp)
+    val body = TextStyle(fontSize = 17.sp, lineHeight = 22.sp)
     val bodyStrong = body.copy(fontWeight = FontWeight.SemiBold)
-    val subheadline = TextStyle(fontSize = 14.sp, lineHeight = 20.sp)
+    val subheadline = TextStyle(fontSize = 15.sp, lineHeight = 20.sp)
     val chip = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, lineHeight = 20.sp)
     val caption = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, lineHeight = 16.sp)
     val caption2 = TextStyle(fontSize = 11.sp, lineHeight = 14.sp)

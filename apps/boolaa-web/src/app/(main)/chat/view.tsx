@@ -620,7 +620,7 @@ export default function ChatPage() {
           <ImagePlus size={22} strokeWidth={2.4} />
         </button>
         <input
-          className="min-h-12 w-full flex-1 rounded-[24px] border-2 border-transparent bg-card px-5 text-[16px] text-fg shadow-soft outline-none transition-[border-color] duration-200 placeholder:text-muted focus:border-grape"
+          className="min-h-12 w-full flex-1 rounded-[24px] border border-field-border bg-card px-5 text-base text-fg shadow-soft outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-muted focus:border-focus focus:shadow-[inset_0_0_0_1px_var(--focus-ring)]"
           placeholder={t("placeholder", { bubble: bubble.name })}
           aria-label={t("messageLabel")}
           data-testid="chat-input"

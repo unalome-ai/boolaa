@@ -77,7 +77,7 @@ struct MarketplaceView: View {
                     HStack(spacing: 8) {
                         filterChips
                         Spacer(minLength: 4)
-                        AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }.fixedSize()
+                        AddButton(label: "New item", id: "list-item", hue: hue) { editing = .new }.fixedSize()
                     }
                     VStack(alignment: .leading, spacing: 10) {
                         // Longer translations (ro "Ascunde ce e luat") don't fit one line: scroll the chips
@@ -89,7 +89,7 @@ struct MarketplaceView: View {
                         }
                         .padding(.horizontal, -16)
                         .padding(.vertical, -8)
-                        AddButton(label: "List item", id: "list-item", hue: hue) { editing = .new }
+                        AddButton(label: "New item", id: "list-item", hue: hue) { editing = .new }
                     }
                 }
                 let visible = MarketModel.filter(model.items, by: filter, hideTaken: hideTaken)
@@ -240,7 +240,7 @@ struct AvailabilityBadge: View {
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .background { if reserved { Capsule().fill(Hue.tangerine.gradient) } else { Capsule().fill(Color(hex: 0x6A6382)) } }
+                .background { if reserved { Capsule().fill(Hue.tangerine.gradient) } else { Capsule().fill(Theme.taken) } }
                 .overlay(Capsule().strokeBorder(.white.opacity(0.5), lineWidth: 1))
                 .accessibilityIdentifier("availability-\(availability.rawValue)")
         }

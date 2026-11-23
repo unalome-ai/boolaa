@@ -1,6 +1,14 @@
 # Boolaa design system
 
-Platform-neutral source of truth for how Boolaa looks, moves and speaks. The iOS app (`apps/boolaa-ios`) is the reference implementation: tokens live in `Boolaa/Core/Theme.swift`, playful building blocks in `Boolaa/Components/Playful.swift`. Android (Jetpack Compose) and the web are restyled from this document. Units are points on iOS, dp on Android and CSS px on the web; they map 1:1.
+Platform-neutral **single source of truth** for how Boolaa looks, moves and speaks. Every token below has the same value on all three clients; when one changes, change it here and in all three token files in the same commit:
+
+| Platform | Tokens | Building blocks |
+|---|---|---|
+| iOS | `apps/boolaa-ios/Boolaa/Core/Theme.swift` | `Boolaa/Components/Playful.swift`, `Components.swift` |
+| Android | `apps/boolaa-android/.../ui/theme/Theme.kt` | `ui/components/Playful.kt`, `Components.kt` |
+| Web | `apps/boolaa-web/src/app/globals.css` (CSS variables + `@theme`) | `src/components/ui.tsx`, `orb.tsx` |
+
+Units are points on iOS, dp on Android and CSS px on the web; they map 1:1. Contrast is checked by tests on each platform (`ContrastTest.kt`, axe in `tests/a11y.spec.ts`, the XCUITest audit in `AccessibilityUITests.swift`).
 
 ## 1. Concept and personality
 
@@ -20,7 +28,7 @@ A **hue** is a family of five values. `fill` is the same in light and dark mode;
 
 | Hue | fill | glow (lighter) | deep (darker) | onFill | text, light mode | text, dark mode |
 |---|---|---|---|---|---|---|
-| **grape** (brand) | `#7357F6` | `#9B86FF` | `#5B3FD9` | white | `#5B3FD9` | `#B7A6FF` |
+| **grape** (brand) | `#7357F6` | `#9B86FF` | `#5B3FD9` | white | `#5135CF` | `#B7A6FF` |
 | coral | `#FF6B5C` | `#FF9A82` | `#E8503F` | ink | `#C0392B` | `#FF9A8F` |
 | mint | `#1EC8A0` | `#6BE6C6` | `#12A683` | ink | `#0B7A60` | `#5FE3C2` |
 | sky | `#3AA8FF` | `#7CC9FF` | `#1F8DE6` | ink | `#0B6BBF` | `#7CC6FF` |
@@ -42,7 +50,7 @@ The old brand colours map as follows: `#9D78BD` and `#7B61FF` are both replaced 
 | Primary action, selection, links in text | grape |
 | Success, "Going", approve, confirmation banners | mint |
 | Owner badge, "Trade" badge | sunny |
-| Destructive | danger `#D92D3A` (fill, white text); as text `#D92D3A` light, `#FF8A8F` dark |
+| Destructive | danger `#D92D3A` (fill, white text); as text (`dangerText`) `#C0272F` light, `#FF8A8F` dark |
 
 **Feature colours**
 
@@ -78,50 +86,47 @@ People without a photo get an avatar colour the same way, from their user id. Ch
 | background | `#FBF8FF` | `#15111F` |
 | card | `#FFFFFF` | `#221C33` |
 | field (inputs, inactive chips, skeletons) | `#F1ECFB` | `#2C2545` |
-| hairline (1 px edges) | `#2A1B5E` at 8% | white at 8% |
+| hairline (1 px edges of cards, dividers) | `#2A1B5E` at 8% | white at 8% |
+| fieldBorder (1 px edge of text fields and field-shaped rows) | `#857DA1` | `#80789F` |
+| focusRing (2 px, focused field) | grape text `#5135CF` | grape text `#B7A6FF` |
 | ink (primary text) | `#1E1638` | `#F5F2FF` |
-| inkSecondary | `#6A6382` | `#ABA4C4` |
+| inkSecondary | `#5C5574` | `#ABA4C4` |
+| danger (fill) | `#D92D3A` | `#D92D3A` |
+| dangerText | `#C0272F` | `#FF8A8F` |
 
-iOS uses the system label colours for body text, which are equivalent. Avoid tertiary label colours for text: they fail AA.
+Hue `text` shades are for the background, cards and the hue's own wash, not for the `field` fill (tangerine text is 4.46:1 there); text on `field` is ink or inkSecondary. Use `inkSecondary` for secondary text on every platform, never the system secondary or tertiary label colours (iOS `.secondary` is 3.4:1 on white).
 
-The app background is not flat: behind the header sits a soft radial glow in the current bubble's hue (top-right, radius 340, `fill` at 30% light / 20% dark fading to 0, plus a smaller `glow` wash top-left at 22% / 12%). It cross-fades when the bubble changes.
+The app background is not flat: behind the header sits a soft radial glow in the current bubble's hue (top-right, radius 340, `fill` at **22% light / 20% dark** fading to 0, plus a smaller `glow` wash top-left, radius 240, at **16% / 12%**). It cross-fades when the bubble changes. These strengths keep `inkSecondary` ≥ 4.5:1 over the glow in every hue.
 
-### 2.5 Contrast (WCAG 2.1 AA, verified)
+### 2.5 Contrast (WCAG 2.2 AA, verified)
 
-All text pairs are at least 4.5:1.
+Text pairs are at least 4.5:1; large text and UI parts (field edges, focus rings, icons that carry meaning) at least 3:1. Ratios below are for the shared tokens and hold on all three platforms.
 
-| Pair | Ratio |
-|---|---|
-| white on grape fill / on grape deep | 4.75 / 6.65 |
-| white on indigo fill | 4.55 |
-| ink on coral / mint / sky / sunny / pink / tangerine fill | 6.1 / 8.0 / 6.7 / 11.1 / 5.3 / 8.1 |
-| hue `text` (light) on white card: grape, coral, mint, sky, sunny, pink, tangerine, indigo | 6.7, 5.4, 5.3, 5.4, 5.4, 6.0, 5.2, 6.4 |
-| hue `text` (light) on its own wash: same order | 5.5, 4.7, 4.7, 4.8, 5.0, 5.1, 4.7, 5.4 |
-| hue `text` (dark) on dark card | 7.7 to 11.6 |
+| Pair | Light | Dark |
+|---|---|---|
+| ink on background / card | 16.3 / 17.1 | 16.8 / 14.8 |
+| inkSecondary on background / card / field | 6.6 / 7.0 / 6.0 | 7.8 / 6.9 / 6.1 |
+| inkSecondary over the header glow (worst hue) | ≥ 4.5 | ≥ 4.5 |
+| white on grape fill / grape deep | 4.75 / 6.65 | same |
+| white on indigo fill | 4.55 | same |
+| ink on coral / mint / sky / sunny / pink / tangerine fill | 6.1 / 8.0 / 6.7 / 11.1 / 5.3 / 8.1 | same |
+| hue `text` on card: grape, coral, mint, sky, sunny, pink, tangerine, indigo | 7.6, 5.4, 5.3, 5.4, 5.4, 6.0, 5.2, 6.4 | 7.7 to 11.6 |
+| hue `text` on its own wash (over card) | 6.3 (grape), 4.7 to 5.4 | 5.5 to 6.6 |
+| grape text on a grape wash over the bubble glow | 5.08 | ≥ 5.9 |
+| white on danger fill | 4.8 | 4.8 |
+| dangerText on background / on its soft wash (10% light, 16% dark) | 5.6 / 4.8 | 8.2 / 6.3 |
+| **fieldBorder** on background / card / field fill (UI, 3:1) | 3.67 / 3.86 / 3.33 | 4.51 / 3.98 / 3.50 |
+| **focusRing** on background / card (UI, 3:1) | 7.2 / 7.6 | 8.8 / 7.7 |
+| white on the "Taken" badge (`taken` `#6A6382`, both modes) | 5.65 | same |
+| ink on coral (unread badge; on an active chip: ink on white) | 6.1 | same |
 
-**Accessibility pass (2026-11-23), light mode only, dark unchanged.** Measured in place (axe on the web, token checks on the apps), these pairs failed and were fixed by darkening the *text* shade only; fills are unchanged:
-
-| Token | Old → new | Ratio old → new | Platforms |
-|---|---|---|---|
-| danger text | `#D92D3A` → `#C0272F` | 3.93 → 4.8 on its 10% wash; 4.55 → 5.6 on background | web, iOS, Android |
-| grape text | `#5B3FD9` → `#5135CF` | 4.43 → 5.08 (grape text on a 15% grape wash over the bubble glow); 7.6 on white | web, iOS (Android has no such pair and keeps `#5B3FD9`) |
-| inkSecondary | `#6A6382` → `#5C5574` | 3.8–4.4 → ≥ 4.5 on nested washes and over the header glow; 6.98 on cards | iOS (also replaces the system `.secondary` label colour, 3.44 on white, in 81 places) |
-| header glow | fill 30% / glow 22% → 22% / 16% | secondary text over it ≥ 4.5 in every bubble hue | iOS |
-| "Taken" badge fill | system gray `#8E8E93` → `#6A6382` | white text 3.26 → 5.65 | iOS |
-| web unread badge | white on coral → ink on coral | 2.80 → 6.1 | web |
-
-Text fields are identified by their label and placeholder; their fill against the background is 1.10:1 (no border), a known gap against WCAG 1.4.11 kept for the look.
-| hue `text` (dark) on its own wash | 5.5 to 6.6 |
-| ink on background (light) / ink on background (dark) | 16.3 / 16.8 |
-| inkSecondary on background, card, field (light) | 5.4, 5.7, 4.9 |
-| inkSecondary on card, field (dark) | 6.9, 6.1 |
-| white on danger / danger text on dark card | 4.8 / 7.2 |
+History: the accessibility pass (2026-11-23) darkened danger text (`#D92D3A` → `#C0272F`), grape text (`#5B3FD9` → `#5135CF`), inkSecondary (`#6A6382` → `#5C5574`) and the light header glow (30/22% → 22/16%), first on iOS and partly on the web; the visual polish pass (2026-11-23) made all three platforms use these values, and added `fieldBorder` and `focusRing` so text fields meet WCAG 1.4.11 (their fill alone was 1.10:1 against the background).
 
 Disabled controls are exempt from contrast rules but must stay legible: a disabled primary button is its fill at 38% with onFill at 85%.
 
 ## 3. Typography
 
-Two families, both system fonts. No bundled fonts.
+Two families. No bundled fonts except Nunito on Android.
 
 | Role | iOS | Android | Web |
 |---|---|---|---|
@@ -141,6 +146,8 @@ Two families, both system fonts. No bundled fonts.
 | caption | 12 bold | display | feed "kind" labels (uppercase), badges, sender names |
 | caption2 | 11 | text | timestamps |
 
+The sizes are the same on every platform: iOS text styles at the default Dynamic Type size, Android `Type.*` in `sp`, and on the web Tailwind's `text-xs` / `text-sm` / `text-base` are remapped to caption 12 / subheadline 15 / body 17 (in `rem`), with the larger styles as explicit sizes. Text inputs use body (17).
+
 Rules: sizes follow the platform's dynamic type scale (iOS text styles, Android `sp`, web `rem`); never fix a text size except the wordmark and symbols inside fixed-size badges. Titles are limited to 1 or 2 lines with a minimum scale factor of 0.6 to 0.75 so long translations shrink before they truncate. Numbers that change use tabular (monospaced) digits.
 
 ## 4. Layout
@@ -153,8 +160,9 @@ Rules: sizes follow the platform's dynamic type scale (iOS text styles, Android 
 
 | Token | Value | Used for |
 |---|---|---|
-| small | 12 to 14 | thumbnails, icon badges (32% of badge size) |
-| field | 16 | inputs, calm (safety) buttons, banners, date tile |
+| small | 12 | thumbnails, icon badges (badges use 32% of their size) |
+| field | 16 | inputs, code boxes, calm (safety) buttons, banners, date tile |
+| row | 20 | settings and profile rows |
 | card | 24 | cards, empty states, grid tiles |
 | hero | 32 | Home hero card, auth panel, sheets, big images |
 | pill | height / 2 | buttons, chips, dock, segmented control, message composer |
@@ -169,7 +177,7 @@ Rules: sizes follow the platform's dynamic type scale (iOS text styles, Android 
 | 2 floating | shadow `#2A1B5E` 22%, blur 18, y 10 | black 45%, blur 18, y 10 | dock, chat button |
 | glow | shadow in the element's own `fill`, 35 to 45%, blur 8 to 16, y 4 to 10 | same | filled buttons, active chips, hero card |
 
-Shadows are tinted purple, never neutral grey.
+Shadows are tinted purple, never neutral grey. Web equivalents: `--shadow-soft` = `0 8px 24px -6px` tint + 1 px hairline ring (level 1), `--shadow-float` = `0 10px 30px -6px` (level 2), `--h-glow-shadow` = `0 6px 16px -2px` fill at 42% (glow); CSS blur radii are about twice the SwiftUI shadow radius for the same look.
 
 ### 4.4 Icons
 
@@ -315,13 +323,13 @@ Base card: card colour, radius 24, padding 16, elevation 1.
 - **Link row**: 44 sky badge · title (headline, 2 lines), host, tags in sky text, author · round "open" button (38, sky wash) and, for your own, a round delete button (danger at 12% fill).
 - **Invite code** ("ticket"): grape wash, radius 24, dashed 1.5 outline (dash 7, gap 6) in grape text at 45%. Label (caption heavy, uppercase), the code in title heavy display with 3 tracking in grape text, a 44 copy button (grape 16% fill; turns mint with a check when copied) and a 44 share button (grape gradient).
 - **Settings rows / profile rows**: height 56, radius 20, card fill, hairline, a 34 badge in a hue, label (body medium), trailing chevron or arrow in secondary.
-- **Section header**: sectionTitle text plus a counter badge (caption bold in the feature text colour on its wash, capsule). An optional add button sits at the trailing edge and wraps below the title when the translation is long.
+- **Section header**: sectionTitle text plus a counter badge (caption bold in the feature text colour on its wash, capsule). An optional add button sits at the trailing edge and wraps below the title when the translation is long. Events and Food Circle use the same layout on every platform: the Add button on the first section ("My events" / "My posts"), a counter on both sections, an empty state per empty section.
 
 ### 6.4 Buttons
 
 | Button | Spec |
 |---|---|
-| **Primary** | Full width, minimum height 54, radius 27 (pill), hue gradient (grape by default; a feature hue inside that feature), 1 px white 22% inner edge, glow shadow, label headline in onFill. Disabled: fill at 38%, no shadow. Busy: spinner in onFill replaces the label. |
+| **Primary** | One per screen or sheet (the main action; everything else is secondary, ghost or a section Add button). Full width, minimum height 54, radius 27 (pill), hue gradient (grape by default; a feature hue inside that feature), 1 px white 22% inner edge, glow shadow, label headline in onFill. Disabled: fill at 38%, no shadow. Busy: spinner in onFill replaces the label. |
 | **Secondary** | Same size and shape, hue wash, label in hue text. |
 | **Add (section action)** | Capsule, minimum height 40, padding 16, feature gradient, plus symbol (heavy) + label (subheadline bold) in onFill, glow shadow. The plus bounces on tap. |
 | **Round icon** | 38 to 44 circle: hue wash with hue text symbol, or hue gradient with onFill symbol (filled variant). |
@@ -330,8 +338,9 @@ Base card: card colour, radius 24, padding 16, elevation 1.
 
 ### 6.5 Inputs
 
-- **Text field**: minimum height 52, radius 16, `field` fill, horizontal padding 16, no border. Focused: 2 px grape (`fill`) border, 200 ms fade. Multi-line fields add 12 vertical padding. Placeholder in the platform's placeholder colour.
-- **Chat composer**: field with radius 24 on the card colour and a hairline (2 px grape when focused), 1 to 5 lines, plus a 48 round send button (grape gradient with glow when it can send; `field` fill and secondary arrow when it cannot). The composer bar has a blurred background.
+- **Text field**: minimum height 52, radius 16, `field` fill, horizontal padding 16, text in body (17), a **1 px `fieldBorder` edge** (≥ 3:1 against background and card, WCAG 1.4.11). Focused: the edge becomes a **2 px `focusRing`** (grape text shade), 200 ms fade; on the web the second pixel is an inset shadow so the text doesn't move. Errors use `dangerText` at 2 px. Multi-line fields add 12 vertical padding. Placeholder in `inkSecondary` (web) or the platform's placeholder colour.
+- **Field-shaped rows** (date, stepper) and **code boxes** use the same shell: `field` fill, radius 16, 1 px `fieldBorder` (code boxes: 2 px `focusRing` on the active box).
+- **Chat composer** and **search field**: radius 24 on the card colour with the 1 px `fieldBorder` (2 px `focusRing` when focused), composer 1 to 5 lines, plus a 48 round send button (grape gradient with glow when it can send; `field` fill and secondary arrow when it cannot). The composer bar has a blurred background.
 - **Segmented pill**: capsule track in `field`, padding 4; segments minimum height 40, label subheadline bold, shrinks to 70%; the selected segment is a capsule in the hue gradient with onFill text that slides between positions.
 - **Filter / tag chip**: height 38, padding 16, `field` fill and secondary text when inactive; hue gradient, onFill text and glow when active.
 - **Stepper row, date row**: same shell as a text field (52, radius 16, `field`); the value in grape text, display heavy.

@@ -11,6 +11,7 @@ import { AUTH_NEXT_COOKIE } from "@/lib/auth-next";
 import { RESEND_COOLDOWN_S } from "@/lib/device";
 import { getSupabase } from "@/lib/supabase/client";
 import { cx, hardNavigate, writeCookie } from "@/lib/utils";
+import { domValue, useAdoptTypedValues, useFieldRef } from "@/lib/form";
 
 type Step = "email" | "code" | "password";
 
@@ -27,6 +28,9 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
+  const emailRef = useFieldRef();
+  const passwordRef = useFieldRef();
+  useAdoptTypedValues([[emailRef, setEmail]]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -65,7 +69,10 @@ export default function ForgotPasswordPage() {
     setNotice(null);
     // If the link in the email is used instead of the code, come back to the password step.
     writeCookie(AUTH_NEXT_COOKIE, "/forgot-password?step=password", 1);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    // The DOM value when the email form is on screen: text typed before hydration (lib/form.ts).
+    const address = domValue(emailRef, email).trim();
+    if (address !== email) setEmail(address);
+    const { error } = await supabase.auth.resetPasswordForEmail(address, {
       redirectTo: `${window.location.origin}/auth/callback`,
     });
     if (error) return fail(error);
@@ -96,7 +103,7 @@ export default function ForgotPasswordPage() {
     setBusy(true);
     setError(null);
     // A fresh recovery session doesn't need a reauthentication nonce.
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.updateUser({ password: domValue(passwordRef, password) });
     if (error) return fail(error);
     hardNavigate("/verify?next=%2Fhome");
   }
@@ -153,6 +160,7 @@ export default function ForgotPasswordPage() {
             </label>
             <input
               id="new-password"
+            ref={passwordRef}
               type="password"
               autoComplete="new-password"
               className="input"
@@ -181,6 +189,7 @@ export default function ForgotPasswordPage() {
           </label>
           <input
             id="email"
+            ref={emailRef}
             type="email"
             autoComplete="email"
             className="input"

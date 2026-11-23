@@ -120,7 +120,7 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
       <LocalePicker />
       <ErrorText>{error}</ErrorText>
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button type="submit" className="btn-primary flex-1" disabled={busy || !name.trim()}>
+        <button type="submit" className="btn-primary min-h-[54px] flex-1 text-[17px]" disabled={busy || !name.trim()}>
           {t("common.save")}
         </button>
         <button type="button" onClick={signOut} className="btn-danger flex-1">

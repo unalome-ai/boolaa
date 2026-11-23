@@ -99,7 +99,7 @@ struct SearchView: View {
                 .accessibilityIdentifier("search-clear")
             }
         }
-        .boolaaField()
+        .fieldShell(focused: focused)
     }
 
     @ViewBuilder private var content: some View {

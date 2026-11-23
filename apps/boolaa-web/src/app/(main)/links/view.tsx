@@ -271,7 +271,7 @@ function LinkForm({ onDone }: { onDone: () => void }) {
         <input id="link-tags" className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder={t("links.tagsPlaceholder")} />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary hue-sky w-full" disabled={busy || !url.trim()}>
+      <button type="submit" className="btn-primary hue-sky min-h-[54px] w-full text-[17px]" disabled={busy || !url.trim()}>
         {busy ? t("common.saving") : t("links.addLink")}
       </button>
     </form>

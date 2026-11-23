@@ -191,8 +191,8 @@ struct ProfileRow: View {
         .font(.body.weight(.medium))
         .padding(.horizontal, 12)
         .frame(minHeight: 56)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         .contentShape(Rectangle())
     }
 }
@@ -216,8 +216,8 @@ struct LanguageRow: View {
             .font(.body.weight(.medium))
             .padding(.horizontal, 12)
             .frame(minHeight: 56)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.field + 4, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.squish)

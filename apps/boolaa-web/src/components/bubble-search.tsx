@@ -222,7 +222,7 @@ export function BubbleSearch({ open, onClose }: { open: boolean; onClose: () => 
           autoComplete="off"
           spellCheck={false}
           data-testid="search-input"
-          className="min-h-12 w-full rounded-[24px] border-2 border-transparent bg-card pl-11 pr-12 text-[16px] text-fg shadow-soft outline-none transition-[border-color] duration-200 placeholder:text-muted focus:border-grape [&::-webkit-search-cancel-button]:hidden"
+          className="min-h-12 w-full rounded-[24px] border border-field-border bg-card pl-11 pr-12 text-base text-fg shadow-soft outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-muted focus:border-focus focus:shadow-[inset_0_0_0_1px_var(--focus-ring)] [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button

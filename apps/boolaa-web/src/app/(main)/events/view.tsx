@@ -341,7 +341,7 @@ function EventForm({ event, onDone }: { event: BoolaaEvent | null; onDone: () =>
         <textarea id="ev-desc" className="input min-h-20" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary hue-coral w-full" disabled={busy || !title.trim() || !when}>
+      <button type="submit" className="btn-primary hue-coral min-h-[54px] w-full text-[17px]" disabled={busy || !title.trim() || !when}>
         {busy ? t("common.saving") : event ? t("common.saveChanges") : t("events.create")}
       </button>
     </form>

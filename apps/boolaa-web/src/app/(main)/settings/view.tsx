@@ -635,7 +635,7 @@ function BubbleDetails({ canEdit }: { canEdit: boolean }) {
         <textarea id="bubble-desc-edit" className="input min-h-16" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
       <ErrorText>{error}</ErrorText>
-      <button type="submit" className="btn-primary" disabled={busy || !dirty || !name.trim()}>
+      <button type="submit" className="btn-primary min-h-[54px] w-full text-[17px]" disabled={busy || !dirty || !name.trim()}>
         {saved ? <Check size={16} /> : null}
         {saved ? tc("saved") : busy ? tc("saving") : tc("save")}
       </button>

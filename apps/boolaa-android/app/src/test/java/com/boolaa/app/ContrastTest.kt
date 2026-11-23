@@ -62,4 +62,16 @@ class ContrastTest {
         check("grape focus ring on field", Hue.grape.fill, c.field, 3.0)
         check("grape focus ring on card", Hue.grape.fill, c.card, 3.0)
     }
+
+    @Test fun text_field_edges_meet_non_text_contrast() = both { c ->
+        val mode = if (c.isDark) "dark" else "light"
+        for ((s, bg) in listOf("background" to c.background, "card" to c.card, "field" to c.field)) {
+            check("$mode fieldBorder on $s", c.fieldBorder, bg, 3.0)
+            check("$mode focusRing on $s", c.focusRing, bg, 3.0)
+        }
+    }
+
+    @Test fun taken_badge_text() {
+        check("white on taken", Color.White, Brand.taken, 4.5)
+    }
 }

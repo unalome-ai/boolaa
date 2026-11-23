@@ -148,16 +148,15 @@ fun CodeField(
 @Composable
 private fun CodeBox(digit: Char?, active: Boolean, isError: Boolean, modifier: Modifier) {
     val c = BoolaaTheme.colors
-    val shape = RoundedCornerShape(Radius.small)
+    val shape = RoundedCornerShape(Radius.field)
     val target = when {
         isError -> c.dangerText
-        active -> Hue.grape.fill
-        digit != null -> Hue.grape.fill.copy(alpha = 0.35f)
-        else -> Color.Transparent
+        active -> c.focusRing
+        else -> c.fieldBorder
     }
     val ring by animateColorAsState(target, Motion.fade(), label = "codeBoxRing")
     Box(
-        modifier.heightIn(min = 56.dp).background(c.field, shape).border(2.dp, ring, shape).padding(vertical = 8.dp),
+        modifier.heightIn(min = 56.dp).background(c.field, shape).border(if (active || isError) 2.dp else 1.dp, ring, shape).padding(vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

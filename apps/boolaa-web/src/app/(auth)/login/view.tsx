@@ -11,6 +11,7 @@ import { hardNavigate } from "@/lib/utils";
 import { OAuthButtons, OrDivider } from "@/components/oauth-buttons";
 import { safeNext } from "@/lib/auth-next";
 import { withNext } from "@/lib/invite";
+import { domValue, useAdoptTypedValues, useFieldRef } from "@/lib/form";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -22,6 +23,9 @@ export default function LoginPage() {
   const [shake, setShake] = useState(0);
   // `?next=/join/CODE` (invite links): continue there after the device gate instead of /home.
   const [next, setNext] = useState<string | null>(null);
+  const emailRef = useFieldRef();
+  const passwordRef = useFieldRef();
+  useAdoptTypedValues([[emailRef, setEmail], [passwordRef, setPassword]]);
 
   // Back from /auth/callback after a failed or cancelled Google / Apple sign-in, and `?next=`.
   // One-off read of the URL on mount.
@@ -36,7 +40,11 @@ export default function LoginPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await getSupabase().auth.signInWithPassword({ email: email.trim(), password });
+    // The DOM value, not only state: text typed before hydration (lib/form.ts).
+    const { error } = await getSupabase().auth.signInWithPassword({
+      email: domValue(emailRef, email).trim(),
+      password: domValue(passwordRef, password),
+    });
     if (error) {
       // Suspended or banned (auth.users.banned_until, docs/moderation.md): explain instead of an error.
       if (error.code === "user_banned") return hardNavigate("/suspended");
@@ -61,6 +69,7 @@ export default function LoginPage() {
           </label>
           <input
             id="email"
+            ref={emailRef}
             type="email"
             autoComplete="email"
             className="input"
@@ -81,6 +90,7 @@ export default function LoginPage() {
           </div>
           <input
             id="password"
+            ref={passwordRef}
             type="password"
             autoComplete="current-password"
             className="input"

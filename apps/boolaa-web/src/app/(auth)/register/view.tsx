@@ -13,6 +13,7 @@ import { TERMS_VERSION } from "@/lib/device";
 import { useLocale } from "next-intl";
 import { safeNext } from "@/lib/auth-next";
 import { withNext } from "@/lib/invite";
+import { domValue, useAdoptChecked, useAdoptTypedValues, useFieldRef } from "@/lib/form";
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
@@ -28,6 +29,12 @@ export default function RegisterPage() {
   const [checkEmail, setCheckEmail] = useState(false);
   // `?next=/join/CODE` (invite links): continue there after the device gate instead of onboarding.
   const [next, setNext] = useState<string | null>(null);
+  const nameRef = useFieldRef();
+  const emailRef = useFieldRef();
+  const passwordRef = useFieldRef();
+  const adultRef = useFieldRef();
+  useAdoptTypedValues([[nameRef, setName], [emailRef, setEmail], [passwordRef, setPassword]]);
+  useAdoptChecked(adultRef, setAdult);
 
   useEffect(() => {
     const value = new URLSearchParams(window.location.search).get("next");
@@ -40,12 +47,13 @@ export default function RegisterPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    // DOM values, not only state: text typed before hydration (lib/form.ts).
     const { data, error } = await getSupabase().auth.signUp({
-      email: email.trim(),
-      password,
+      email: domValue(emailRef, email).trim(),
+      password: domValue(passwordRef, password),
       // The sign-up trigger stores age_confirmed_at and the terms version (docs/auth-security.md §6);
       // locale picks the language of every auth email.
-      options: { data: { name: name.trim(), locale, age_confirmed: true, terms_version: TERMS_VERSION } },
+      options: { data: { name: domValue(nameRef, name).trim(), locale, age_confirmed: true, terms_version: TERMS_VERSION } },
     });
     if (error) {
       setBusy(false);
@@ -65,7 +73,7 @@ export default function RegisterPage() {
   if (checkEmail) {
     return (
       <AuthCard title={t("checkInboxTitle")} subtitle={t("checkInboxSubtitle", { email })}>
-        <Link href={withNext("/login", next)} className="btn-primary w-full">
+        <Link href={withNext("/login", next)} className="btn-primary min-h-[54px] w-full text-[17px]">
           {t("backToSignIn")}
         </Link>
       </AuthCard>
@@ -83,6 +91,7 @@ export default function RegisterPage() {
           </label>
           <input
             id="name"
+            ref={nameRef}
             autoComplete="name"
             className="input"
             required
@@ -97,6 +106,7 @@ export default function RegisterPage() {
           </label>
           <input
             id="email"
+            ref={emailRef}
             type="email"
             autoComplete="email"
             className="input"
@@ -112,6 +122,7 @@ export default function RegisterPage() {
           </label>
           <input
             id="password"
+            ref={passwordRef}
             type="password"
             autoComplete="new-password"
             className="input"
@@ -124,6 +135,7 @@ export default function RegisterPage() {
         <label className="flex cursor-pointer items-start gap-3 text-sm">
           <input
             id="age-confirm"
+            ref={adultRef}
             type="checkbox"
             required
             checked={adult}

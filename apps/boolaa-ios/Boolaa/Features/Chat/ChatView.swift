@@ -547,7 +547,7 @@ struct ChatView: View {
                     .padding(.vertical, 13)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .strokeBorder(composerFocused ? Theme.brand : Theme.hairline, lineWidth: composerFocused ? 2 : 1))
+                        .strokeBorder(composerFocused ? Theme.focusRing : Theme.fieldBorder, lineWidth: composerFocused ? 2 : 1))
                     .animation(Motion.fade, value: composerFocused)
                     .accessibilityIdentifier("chat-input")
                 Button {
@@ -768,6 +768,22 @@ struct MessagePop: ViewModifier {
     }
 }
 
+/// Tap and VoiceOver activation that only exist while `enabled`, so the element has the button trait only then.
+private struct RetryOnTap: ViewModifier {
+    var enabled: Bool
+    var action: () -> Void
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .onTapGesture(perform: action)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(.default, action)
+        } else {
+            content.accessibilityRemoveTraits(.isButton)
+        }
+    }
+}
+
 /// A message the server hasn't confirmed: dimmed own bubble with "Sending…", or "Not sent — tap to retry"
 /// (tap retries; long press offers Try again / Don't send).
 struct PendingMessageRow: View {
@@ -804,7 +820,6 @@ struct PendingMessageRow: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { if failed { onRetry() } }
         .contextMenu {
             if failed {
                 Button(action: onRetry) { Label { Text("Try again") } icon: { Image(systemName: "arrow.clockwise") } }
@@ -814,9 +829,9 @@ struct PendingMessageRow: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(failed ? .isButton : [])
-        // VoiceOver: double tap retries a failed message; "Try again" / "Don't send" are in the actions rotor.
-        .accessibilityAction { if failed { onRetry() } }
+        // Only a failed message is a button (tap or VoiceOver double tap retries); "Sending…" is plain text.
+        // "Try again" / "Don't send" are in the actions rotor.
+        .modifier(RetryOnTap(enabled: failed, action: onRetry))
         .accessibilityActions {
             if failed { Button(action: onRetry) { Text("Try again") } }
             Button(action: onDiscard) { Text("Don't send", comment: "Discards a chat message that wasn't sent") }

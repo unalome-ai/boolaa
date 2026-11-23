@@ -113,6 +113,11 @@ enum Theme {
     static let chipInactive = field
     static let otherBubble = Color(light: .white, dark: Color(hex: 0x2C2545))
     static let hairline = Color(light: Color(hex: 0x2A1B5E, opacity: 0.08), dark: Color.white.opacity(0.08))
+    /// 1 px edge of text fields and field-shaped rows (WCAG 1.4.11): light 3.67:1 on background, 3.86 on cards;
+    /// dark 4.51 on background, 3.98 on cards.
+    static let fieldBorder = Color(light: Color(hex: 0x857DA1), dark: Color(hex: 0x80789F))
+    /// 2 px ring of a focused field: the grape text shade (7.2:1 light, 8.8:1 dark on the background).
+    static let focusRing = Hue.grape.text
 
     // Text
     /// Dark ink used on bright fills in both modes.
@@ -121,6 +126,8 @@ enum Theme {
     /// Light 0x6A6382 -> 0x5C5574: 6.98:1 on cards (was 5.65), and still ≥ 4.5 over the header glow and on washes
     /// layered on washes (was 3.76–4.4 there). Dark unchanged (6.06–7.81).
     static let inkSecondary = Color(light: Color(hex: 0x5C5574), dark: Color(hex: 0xABA4C4))
+    /// "Taken" badge fill in both modes (white text 5.65:1), same on Android and web.
+    static let taken = Color(hex: 0x6A6382)
     /// Calm red for destructive actions (white text on it passes AA).
     static let danger = Color(hex: 0xD92D3A)
     /// Red text and icons. Light is a shade deeper than the fill (#D92D3A) so it stays above 4.5:1 on the
@@ -130,9 +137,17 @@ enum Theme {
     // Shape
     enum Radius {
         static let small: CGFloat = 12   // thumbnails, icon badges
-        static let field: CGFloat = 16   // inputs, calm buttons
-        static let card: CGFloat = 24    // cards
+        static let field: CGFloat = 16   // inputs, calm buttons, banners
+        static let row: CGFloat = 20     // settings and profile rows
+        static let card: CGFloat = 24    // cards, empty states
         static let hero: CGFloat = 32    // hero cards, sheets, auth panel
+    }
+
+    /// Header glow behind the shell (design-system.md §2.4): main `fill` and side `glow` opacity per mode.
+    enum Glow {
+        static let mainLight = 0.22, mainDark = 0.20
+        static let sideLight = 0.16, sideDark = 0.12
+        static let mainRadius: CGFloat = 340, sideRadius: CGFloat = 240
     }
     static let cornerRadius = Radius.card
 
@@ -308,22 +323,27 @@ struct SecondaryButtonStyle: ButtonStyle {
 
 // MARK: - Inputs
 
-/// Text field styling used across forms: soft fill, and a brand ring while focused.
+/// Text field styling used across forms: soft fill, a 1 px mid-tone edge (≥ 3:1) and a 2 px grape ring while focused.
 struct BoolaaFieldModifier: ViewModifier {
     @FocusState private var focused: Bool
     func body(content: Content) -> some View {
         content
             .focused($focused)
-            .padding(.horizontal, 16)
-            .frame(minHeight: 52)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
-                .strokeBorder(Theme.brand, lineWidth: 2)
-                .opacity(focused ? 1 : 0))
-            .animation(Motion.fade, value: focused)
+            .fieldShell(focused: focused)
     }
 }
 
 extension View {
     func boolaaField() -> some View { modifier(BoolaaFieldModifier()) }
+
+    /// The shell of a text field without its own focus state: date and stepper rows, or fields that track focus themselves.
+    func fieldShell(focused: Bool = false, radius: CGFloat = Theme.Radius.field) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return self
+            .padding(.horizontal, 16)
+            .frame(minHeight: 52)
+            .background(Theme.field, in: shape)
+            .overlay(shape.strokeBorder(focused ? Theme.focusRing : Theme.fieldBorder, lineWidth: focused ? 2 : 1))
+            .animation(Motion.fade, value: focused)
+    }
 }

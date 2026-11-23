@@ -79,6 +79,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.boolaa.app.R
 import com.boolaa.app.model.UserProfile
+import com.boolaa.app.ui.theme.BoolaaColors
 import com.boolaa.app.ui.theme.BoolaaTheme
 import com.boolaa.app.ui.theme.Brand
 import com.boolaa.app.ui.theme.Display
@@ -307,7 +308,8 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
     ) { Text(text, color = if (danger) c.dangerText else hue.text, style = Type.headline, textAlign = TextAlign.Center) }
 }
 
-/** Text field: soft fill, radius 16 and a 2dp grape ring while focused. The floating label is the Material idiom. */
+/** Text field: soft fill, radius 16, a 1dp mid-tone edge (≥ 3:1, WCAG 1.4.11) and a 2dp grape ring while focused.
+ *  The floating label is the Material idiom. */
 @Composable
 fun BoolaaTextField(
     value: String,
@@ -323,7 +325,7 @@ fun BoolaaTextField(
     val c = BoolaaTheme.colors
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
-    val ring by animateColorAsState(if (focused) Hue.grape.fill else Color.Transparent, Motion.fade())
+    val ring by animateColorAsState(if (focused) c.focusRing else c.fieldBorder, Motion.fade())
     val shape = RoundedCornerShape(Radius.field)
     TextField(
         value = value,
@@ -344,8 +346,14 @@ fun BoolaaTextField(
             disabledLabelColor = c.textSecondary, disabledTextColor = c.textSecondary, cursorColor = Hue.grape.fill,
             focusedTextColor = c.textPrimary, unfocusedTextColor = c.textPrimary,
         ),
-        modifier = modifier.fillMaxWidth().border(2.dp, ring, shape),
+        modifier = modifier.fillMaxWidth().border(if (focused) 2.dp else 1.dp, ring, shape),
     )
+}
+
+/** The shell of a text field for rows that aren't text fields (date, stepper): field fill, radius 16, 1dp edge. */
+fun Modifier.fieldShell(c: BoolaaColors, focused: Boolean = false): Modifier {
+    val shape = RoundedCornerShape(Radius.field)
+    return this.clip(shape).background(c.field).border(if (focused) 2.dp else 1.dp, if (focused) c.focusRing else c.fieldBorder, shape)
 }
 
 /** Translated error dialog; [message] is already user-facing. */

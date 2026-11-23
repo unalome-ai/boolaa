@@ -118,7 +118,7 @@ struct CodeInput: View {
         let digit = index < chars.count ? String(chars[index]) : ""
         let active = focused && index == min(chars.count, Self.length - 1)
         let shape = RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous)
-        let border: Color = isInvalid ? Theme.danger : active ? Theme.brand : digit.isEmpty ? .clear : Theme.brand.opacity(0.45)
+        let border: Color = isInvalid ? Theme.dangerText : active ? Theme.focusRing : Theme.fieldBorder
         return Text(verbatim: digit)
             .font(.rounded(.title, weight: .heavy))
             .monospacedDigit()
@@ -127,7 +127,7 @@ struct CodeInput: View {
             .foregroundStyle(Theme.ink)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(active ? Theme.card : Theme.field, in: shape)
-            .overlay(shape.strokeBorder(border, lineWidth: active ? 2 : 1.5))
+            .overlay(shape.strokeBorder(border, lineWidth: active || isInvalid ? 2 : 1))
             .opacity(isDisabled ? 0.6 : 1)
             .animation(Motion.resolve(Motion.snappy, reduceMotion: reduceMotion), value: digit)
             .animation(Motion.fade, value: active)

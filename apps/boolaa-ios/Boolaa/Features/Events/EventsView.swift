@@ -425,8 +425,7 @@ struct EventEditor: View {
                     TextField("Description", text: $description, axis: .vertical).lineLimit(2...5)
                         .padding(.vertical, 12).boolaaField()
                     DatePicker("Date & time", selection: $date)
-                        .padding(.horizontal, 16).frame(minHeight: 52)
-                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.field, style: .continuous))
+                        .fieldShell()
                     TextField("Location", text: $location).boolaaField()
                 }
                 .padding(20)

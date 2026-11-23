@@ -114,6 +114,7 @@ import com.boolaa.app.ui.market.MarketplaceScreen
 import com.boolaa.app.ui.profile.ProfileSheet
 import com.boolaa.app.ui.settings.SettingsScreen
 import com.boolaa.app.ui.theme.BoolaaTheme
+import com.boolaa.app.ui.theme.Glow
 import com.boolaa.app.ui.theme.Hue
 import com.boolaa.app.ui.theme.Motion
 import com.boolaa.app.ui.theme.Type
@@ -279,12 +280,13 @@ fun MainShell(initialTab: String? = null, initialOpen: String? = null) {
 @Composable
 private fun BubbleGlow(hue: Hue) {
     val dark = BoolaaTheme.colors.isDark
-    val main by animateColorAsState(hue.fill.copy(alpha = if (dark) 0.20f else 0.30f), Motion.gentle())
-    val side by animateColorAsState(hue.glow.copy(alpha = if (dark) 0.12f else 0.22f), Motion.gentle())
+    // Same strengths as iOS and web: secondary text over the glow stays ≥ 4.5:1 in every hue.
+    val main by animateColorAsState(hue.fill.copy(alpha = if (dark) Glow.MAIN_DARK else Glow.MAIN_LIGHT), Motion.gentle())
+    val side by animateColorAsState(hue.glow.copy(alpha = if (dark) Glow.SIDE_DARK else Glow.SIDE_LIGHT), Motion.gentle())
     Box(Modifier.fillMaxWidth().height(380.dp).drawWithCache {
-        val r = 340.dp.toPx()
+        val r = Glow.mainRadius.toPx()
         val mainBrush = Brush.radialGradient(listOf(main, Color.Transparent), center = Offset(size.width, 0f), radius = r)
-        val sideBrush = Brush.radialGradient(listOf(side, Color.Transparent), center = Offset(0f, 20.dp.toPx()), radius = 240.dp.toPx())
+        val sideBrush = Brush.radialGradient(listOf(side, Color.Transparent), center = Offset(0f, 20.dp.toPx()), radius = Glow.sideRadius.toPx())
         onDrawBehind { drawRect(mainBrush); drawRect(sideBrush) }
     })
 }

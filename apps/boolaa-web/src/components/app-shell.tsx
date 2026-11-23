@@ -288,7 +288,7 @@ function BubbleGlow({ hue }: { hue: Hue }) {
             opacity: h === hue ? 1 : 0,
             background:
               "radial-gradient(340px 340px at 100% 0%, color-mix(in srgb, var(--h) var(--glow-a), transparent), transparent)," +
-              "radial-gradient(260px 220px at 0% 0%, color-mix(in srgb, var(--h-glow) var(--glow-b), transparent), transparent)",
+              "radial-gradient(240px 240px at 0% 20px, color-mix(in srgb, var(--h-glow) var(--glow-b), transparent), transparent)",
           }}
         />
       ))}

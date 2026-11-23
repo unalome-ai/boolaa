@@ -99,7 +99,7 @@ export default function JoinPage({ code: rawCode }: { code: string }) {
     return (
       <AuthCard title={t("title")} subtitle={t("signedOutBody")}>
         <div className="space-y-3" data-testid="join-signed-out">
-          <Link href={withNext("/login", here)} className="btn-primary min-h-[50px] w-full" data-testid="join-sign-in">
+          <Link href={withNext("/login", here)} className="btn-primary min-h-[54px] w-full text-[17px]" data-testid="join-sign-in">
             <LogIn size={18} strokeWidth={2.6} /> {ta("signIn")}
           </Link>
           <Link href={withNext("/register", here)} className="btn-ghost min-h-[50px] w-full" data-testid="join-register">
@@ -147,7 +147,7 @@ export default function JoinPage({ code: rawCode }: { code: string }) {
 
       <div className="mt-5 space-y-3">
         {preview.status === "open" && (
-          <button type="button" onClick={requestToJoin} disabled={busy} className="btn-primary min-h-[50px] w-full" data-testid="join-request">
+          <button type="button" onClick={requestToJoin} disabled={busy} className="btn-primary min-h-[54px] w-full text-[17px]" data-testid="join-request">
             {busy ? tc("sending") : tc("requestJoin")}
           </button>
         )}
@@ -168,7 +168,7 @@ export default function JoinPage({ code: rawCode }: { code: string }) {
               {t("member")}
             </p>
             {preview.bubble_id && (
-              <button type="button" onClick={() => openBubble(preview.bubble_id!)} className="btn-primary w-full" data-testid="join-open">
+              <button type="button" onClick={() => openBubble(preview.bubble_id!)} className="btn-primary min-h-[54px] w-full text-[17px]" data-testid="join-open">
                 {t("openBubble")}
               </button>
             )}

@@ -143,6 +143,7 @@ import com.boolaa.app.ui.components.BoolaaIcons
 import com.boolaa.app.ui.components.BoolaaRefreshBox
 import com.boolaa.app.ui.components.BoolaaSheet
 import com.boolaa.app.ui.components.BoolaaTextField
+import com.boolaa.app.ui.components.fieldShell
 import com.boolaa.app.ui.components.BubbleOrb
 import com.boolaa.app.ui.components.CircleIconButton
 import com.boolaa.app.ui.components.ConfettiOverlay
@@ -540,7 +541,7 @@ private fun IconLine(icon: ImageVector, text: String) {
 @Composable
 private fun PickerRow(icon: ImageVector, value: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier.heightIn(min = 52.dp).clip(RoundedCornerShape(Radius.field)).background(BoolaaTheme.colors.field)
+        modifier.heightIn(min = 52.dp).fieldShell(BoolaaTheme.colors)
             .clickableRipple(role = Role.Button, onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
