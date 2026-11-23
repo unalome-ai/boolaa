@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Camera, Download, FileText, LogOut, ShieldCheck, Trash2, Undo2 } from "lucide-react";
 import { useBoolaa } from "@/components/boolaa-provider";
-import { Avatar, ErrorText, Modal, NewTabHint } from "@/components/ui";
+import { Avatar, CameraInput, ErrorText, Modal, NewTabHint, PhotoSourceButtons } from "@/components/ui";
+import { useCanTakePhoto } from "@/lib/camera";
 import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { LocalePicker } from "@/i18n/locale-picker";
@@ -32,6 +33,8 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const canTakePhoto = useCanTakePhoto();
 
   async function changeAvatar(file: File) {
     setBusy(true);
@@ -98,6 +101,17 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
           }}
         />
         <span className="text-sm text-muted">{profile?.avatar ? t("profile.replacePhoto") : t("profile.uploadPhoto")}</span>
+        {canTakePhoto && (
+          <>
+            <PhotoSourceButtons
+              className="justify-center"
+              disabled={busy}
+              onCamera={() => cameraRef.current?.click()}
+              onGallery={() => fileRef.current?.click()}
+            />
+            <CameraInput ref={cameraRef} facing="user" onFile={(f) => void changeAvatar(f)} />
+          </>
+        )}
       </div>
       <div>
         <label className="label" htmlFor="profile-name">

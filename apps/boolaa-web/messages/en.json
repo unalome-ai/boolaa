@@ -21,6 +21,10 @@
     "description": "Description",
     "photo": "Photo",
     "choosePhoto": "Choose a photo",
+    "takePhoto": "Take photo",
+    "chooseFromGallery": "Choose from gallery",
+    "cameraUnavailable": "Camera isn't available on this device.",
+    "cameraDenied": "Allow camera access in Settings to take photos.",
     "selectedPhoto": "Selected photo",
     "avatarOf": "{name}'s avatar",
     "language": "Language",
@@ -250,7 +254,19 @@
     "imageAlt": "Food photo",
     "sharedSomeFood": "Shared some food",
     "emptyMineTitle": "Got leftovers?",
-    "emptyOthersTitle": "Nothing shared yet"
+    "emptyOthersTitle": "Nothing shared yet",
+    "goodUntil": "Good until",
+    "expiryToday": "Today",
+    "expiryTomorrow": "Tomorrow",
+    "expiryIn3Days": "In 3 days",
+    "expiryCustom": "Custom",
+    "expiryHint": "Your post disappears after this.",
+    "expiresInMinutes": "{count, plural, one {Expires in # minute} other {Expires in # minutes}}",
+    "expiresInHours": "{count, plural, one {Expires in # hour} other {Expires in # hours}}",
+    "goodUntilToday": "Good until today {time}",
+    "goodUntilTomorrow": "Good until tomorrow {time}",
+    "goodUntilDay": "Good until {day} {time}",
+    "goodUntilDate": "Good until {date}, {time}"
   },
   "market": {
     "filter": "Filter items",
@@ -405,7 +421,16 @@
     "ownerOnlyAction": "Only the owner can do that.",
     "exportRateLimited": "You can download your data once an hour. Try again later.",
     "eventEnded": "This event has already ended.",
-    "exportRateLimitedUntil": "You can download your data once an hour. Try again after {time}."
+    "exportRateLimitedUntil": "You can download your data once an hour. Try again after {time}.",
+    "itemGone": "This post isn't here any more.",
+    "itemNotAvailable": "It's no longer available.",
+    "alreadyRequested": "You've already asked for this.",
+    "cannotRequestOwn": "This is your own post.",
+    "requestNoteTooLong": "Keep the note under 200 characters.",
+    "requestGone": "That request was withdrawn.",
+    "requestDecided": "This request has already been decided.",
+    "nothingPicked": "Pick someone first.",
+    "invalidExpiry": "Pick a time in the next 14 days."
   },
   "safety": {
     "moreActions": "More actions",
@@ -581,7 +606,9 @@
     "on": "On for this browser",
     "turnOff": "Turn off on this browser",
     "unsupported": "This browser can't receive notifications. On iPhone and iPad, add Boolaa to your Home Screen first.",
-    "allBubbles": "These settings apply to all your bubbles."
+    "allBubbles": "These settings apply to all your bubbles.",
+    "itemRequests": "Requests for my posts",
+    "requestUpdates": "Updates on my requests"
   },
   "mute": {
     "title": "Mute this bubble",
@@ -681,5 +708,37 @@
     "copied": "Copied",
     "iphoneTitle": "On iPhone?",
     "iphoneBody": "Boolaa is coming soon to the App Store. Until then, use it in your browser."
+  },
+  "requests": {
+    "iWantIt": "I want it",
+    "iWantItA11y": "I want it: {title}",
+    "actionA11y": "{action}: {target}",
+    "notePlaceholder": "Add a note (optional)",
+    "send": "Send request",
+    "sentToast": "Request sent. {name} will see it.",
+    "requested": "Requested",
+    "onList": "Reserved · you're on the list",
+    "withdraw": "Withdraw request",
+    "withdrawConfirmTitle": "Withdraw your request?",
+    "withdrawConfirmBody": "{name} will be told you changed your mind.",
+    "reservedForYou": "Reserved for you",
+    "reservedFor": "Reserved for {name}",
+    "youGotIt": "It's yours",
+    "someoneElse": "Someone else got it",
+    "count": "{count, plural, one {# request} other {# requests}}",
+    "button": "Requests · {count}",
+    "title": "Requests",
+    "noneYet": "No requests yet.",
+    "noneYetHint": "Members can tap “I want it” on your post.",
+    "pick": "Pick",
+    "pickInstead": "Pick instead",
+    "yourPick": "Your pick",
+    "undoPick": "Undo pick",
+    "pickedToast": "Reserved for {name}. Sort out the pick-up in the chat.",
+    "handOver": "Mark as handed over",
+    "handOverTitle": "Mark as handed over?",
+    "handOverBodyMarket": "{name} gets “{title}”. Everyone else who asked will hear that someone else got it.",
+    "handOverBodyFood": "{name} gets your food. The post disappears from the Food Circle, and everyone else who asked will hear that someone else got it.",
+    "clearPickConfirm": "This clears your pick ({name}). Their request stays on the list."
   }
 }

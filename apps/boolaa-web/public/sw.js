@@ -15,6 +15,14 @@ self.addEventListener("message", (event) => {
 
 /** Same-origin path the notification opens; falls back to the route table of §5. */
 function targetUrl(d) {
+  const url = baseUrl(d);
+  // Owner-side request pushes also open the Requests sheet on the item (spec "Requests and picking").
+  if ((d.type === "item_request" || d.type === "item_request_withdrawn") && !/[?&]requests=/.test(url))
+    return url + (url.includes("?") ? "&" : "?") + "requests=" + encodeURIComponent(d.target_id || "");
+  return url;
+}
+
+function baseUrl(d) {
   if (typeof d.url === "string" && d.url.startsWith("/") && !d.url.startsWith("//")) return d.url;
   const b = encodeURIComponent(d.bubble_id || "");
   const t = encodeURIComponent(d.target_id || "");
@@ -26,6 +34,11 @@ function targetUrl(d) {
     case "event_reminder": return `/events?bubble=${b}&event=${t}`;
     case "food": return `/food?bubble=${b}&post=${t}`;
     case "market": return `/marketplace?bubble=${b}&item=${t}`;
+    case "item_request":
+    case "item_request_withdrawn":
+    case "item_picked":
+    case "item_missed":
+      return d.item_kind === "food" ? `/food?bubble=${b}&post=${t}` : `/marketplace?bubble=${b}&item=${t}`;
     default: return "/home";
   }
 }

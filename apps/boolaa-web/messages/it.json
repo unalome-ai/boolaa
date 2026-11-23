@@ -21,6 +21,10 @@
     "description": "Descrizione",
     "photo": "Foto",
     "choosePhoto": "Scegli una foto",
+    "takePhoto": "Scatta una foto",
+    "chooseFromGallery": "Scegli dalla galleria",
+    "cameraUnavailable": "La fotocamera non è disponibile su questo dispositivo.",
+    "cameraDenied": "Consenti l’accesso alla fotocamera in Impostazioni per scattare foto.",
     "selectedPhoto": "Foto scelta",
     "avatarOf": "Avatar di {name}",
     "language": "Lingua",
@@ -250,7 +254,19 @@
     "imageAlt": "Foto di cibo",
     "sharedSomeFood": "Ha condiviso del cibo",
     "emptyMineTitle": "Hai avanzi?",
-    "emptyOthersTitle": "Niente di condiviso"
+    "emptyOthersTitle": "Niente di condiviso",
+    "goodUntil": "Buono fino a",
+    "expiryToday": "Oggi",
+    "expiryTomorrow": "Domani",
+    "expiryIn3Days": "Tra 3 giorni",
+    "expiryCustom": "Altro",
+    "expiryHint": "Dopo, il tuo post sparisce.",
+    "expiresInMinutes": "{count, plural, one {Scade tra # minuto} many {Scade tra # di minuti} other {Scade tra # minuti}}",
+    "expiresInHours": "{count, plural, one {Scade tra # ora} many {Scade tra # di ore} other {Scade tra # ore}}",
+    "goodUntilToday": "Buono fino a oggi alle {time}",
+    "goodUntilTomorrow": "Buono fino a domani alle {time}",
+    "goodUntilDay": "Buono fino a {day} alle {time}",
+    "goodUntilDate": "Buono fino al {date}, alle {time}"
   },
   "market": {
     "filter": "Filtra oggetti",
@@ -405,7 +421,16 @@
     "ownerOnlyAction": "Solo il proprietario può farlo.",
     "exportRateLimited": "Puoi scaricare i tuoi dati una volta all'ora. Riprova più tardi.",
     "eventEnded": "Questo evento è già finito.",
-    "exportRateLimitedUntil": "Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}."
+    "exportRateLimitedUntil": "Puoi scaricare i tuoi dati una volta all'ora. Riprova dopo le {time}.",
+    "itemGone": "Questo post non c'è più.",
+    "itemNotAvailable": "Non è più disponibile.",
+    "alreadyRequested": "L'hai già chiesto.",
+    "cannotRequestOwn": "È un tuo post.",
+    "requestNoteTooLong": "La nota può avere al massimo 200 caratteri.",
+    "requestGone": "Quella richiesta è stata ritirata.",
+    "requestDecided": "Questa richiesta è già stata decisa.",
+    "nothingPicked": "Scegli prima qualcuno.",
+    "invalidExpiry": "Scegli un momento entro i prossimi 14 giorni."
   },
   "safety": {
     "moreActions": "Altre azioni",
@@ -581,7 +606,9 @@
     "on": "Attive su questo browser",
     "turnOff": "Disattiva su questo browser",
     "unsupported": "Questo browser non può ricevere notifiche. Su iPhone e iPad, aggiungi prima Boolaa alla schermata Home.",
-    "allBubbles": "Queste impostazioni valgono per tutte le tue bolle."
+    "allBubbles": "Queste impostazioni valgono per tutte le tue bolle.",
+    "itemRequests": "Richieste per i miei post",
+    "requestUpdates": "Aggiornamenti sulle mie richieste"
   },
   "mute": {
     "title": "Silenzia la bolla",
@@ -681,5 +708,37 @@
     "copied": "Copiato",
     "iphoneTitle": "Hai un iPhone?",
     "iphoneBody": "Boolaa arriva presto sull'App Store. Nel frattempo, usala nel browser."
+  },
+  "requests": {
+    "iWantIt": "Mi interessa",
+    "iWantItA11y": "Mi interessa: {title}",
+    "actionA11y": "{action}: {target}",
+    "notePlaceholder": "Aggiungi una nota (facoltativa)",
+    "send": "Invia richiesta",
+    "sentToast": "Richiesta inviata. {name} la vedrà.",
+    "requested": "Richiesto",
+    "onList": "Prenotato · sei in lista",
+    "withdraw": "Ritira la richiesta",
+    "withdrawConfirmTitle": "Vuoi ritirare la richiesta?",
+    "withdrawConfirmBody": "Avviseremo {name} che hai cambiato idea.",
+    "reservedForYou": "Prenotato per te",
+    "reservedFor": "Prenotato per {name}",
+    "youGotIt": "È tuo",
+    "someoneElse": "È andato a qualcun altro",
+    "count": "{count, plural, one {# richiesta} many {# di richieste} other {# richieste}}",
+    "button": "Richieste · {count}",
+    "title": "Richieste",
+    "noneYet": "Ancora nessuna richiesta.",
+    "noneYetHint": "I membri possono toccare «Mi interessa» sul tuo post.",
+    "pick": "Scegli",
+    "pickInstead": "Scegli invece",
+    "yourPick": "La tua scelta",
+    "undoPick": "Annulla la scelta",
+    "pickedToast": "Prenotato per {name}. Accordatevi per il ritiro in chat.",
+    "handOver": "Segna come consegnato",
+    "handOverTitle": "Segnare come consegnato?",
+    "handOverBodyMarket": "«{title}» va a {name}. Avviseremo chi altro l'ha chiesto che è andato a qualcun altro.",
+    "handOverBodyFood": "Il tuo cibo va a {name}. Il post sparisce dal Cerchio del cibo e avviseremo chi altro l'ha chiesto.",
+    "clearPickConfirm": "Così annulli la tua scelta ({name}). La sua richiesta resta in lista."
   }
 }

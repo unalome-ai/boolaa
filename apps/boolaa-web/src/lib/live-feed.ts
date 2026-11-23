@@ -1,4 +1,4 @@
-import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { BoolaaClient } from "@/lib/supabase/client";
 import { liveChannel } from "@/lib/realtime";
@@ -110,3 +110,10 @@ export const byCreatedDesc = (a: { created_at: string; id: string }, b: { create
 
 export const byDatetimeAsc = (a: { datetime: string; id: string }, b: { datetime: string; id: string }) =>
   new Date(a.datetime).getTime() - new Date(b.datetime).getTime() || a.id.localeCompare(b.id);
+
+type Bind = (channel: RealtimeChannel) => RealtimeChannel;
+
+/** Chains several `extend` binders (reactions, requests) into one stable binder for useLiveFeed. */
+export function useChainedBind(first: Bind, second: Bind): Bind {
+  return useCallback((ch: RealtimeChannel) => second(first(ch)), [first, second]);
+}

@@ -51,6 +51,15 @@ type ErrorKey =
   | "tooManyInviteAttempts"
   | "onlyOwnerCanRotate"
   | "exportRateLimited"
+  | "itemGone"
+  | "itemNotAvailable"
+  | "alreadyRequested"
+  | "cannotRequestOwn"
+  | "requestNoteTooLong"
+  | "requestGone"
+  | "requestDecided"
+  | "nothingPicked"
+  | "invalidExpiry"
   | "generic";
 
 /** Messages that take an argument: `codeWrong` shows how many tries are left. */
@@ -126,6 +135,17 @@ export function errorKey(e: unknown): ErrorKey {
 
   // RPC exceptions raised by the migration (exact texts).
   if (msg.includes("invalid invite code")) return "invalidInviteCode";
+  // Requests and food expiry (20261124100000_requests_food_expiry.sql); "not your item" and
+  // "invalid item kind" stay generic.
+  if (msg.includes("item request gone")) return "requestGone";
+  if (msg.includes("item not found")) return "itemGone";
+  if (msg.includes("item not available")) return "itemNotAvailable";
+  if (msg.includes("already requested")) return "alreadyRequested";
+  if (msg.includes("cannot request own item")) return "cannotRequestOwn";
+  if (msg.includes("request note too long")) return "requestNoteTooLong";
+  if (msg.includes("request already decided")) return "requestDecided";
+  if (msg.includes("nothing picked")) return "nothingPicked";
+  if (msg.includes("invalid expiry")) return "invalidExpiry";
   // Invite links (20261123140000_invite_links.sql).
   if (msg.includes("too many attempts")) return "tooManyInviteAttempts";
   if (msg.includes("only the owner can change the invite code")) return "onlyOwnerCanRotate";

@@ -1,12 +1,13 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element -- images come from Supabase storage / Unsplash; plain <img> on purpose */
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeftRight, Gift, ImagePlus, Loader2, X } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
+import { ArrowLeftRight, Camera, Gift, ImagePlus, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Mascot, type Expression } from "@/components/orb";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { useSignedUrl } from "@/lib/storage-url";
+import { useCanTakePhoto, type CameraFacing } from "@/lib/camera";
 import { cx, initials } from "@/lib/utils";
 import { LOADER_DELAY_MS } from "@/lib/offline";
 
@@ -345,6 +346,8 @@ export function ImagePicker({
   const t = useTranslations("common");
   const fieldLabel = label ?? t("photo");
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const canTakePhoto = useCanTakePhoto();
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
   const signed = useSignedUrl(value);
@@ -375,6 +378,80 @@ export function ImagePicker({
         className="sr-only"
         onChange={(e) => onFile(e.target.files?.[0] ?? null)}
       />
+      {canTakePhoto && (
+        <>
+          <PhotoSourceButtons
+            className="mt-2"
+            onCamera={() => cameraRef.current?.click()}
+            onGallery={() => inputRef.current?.click()}
+          />
+          <CameraInput ref={cameraRef} onFile={onFile} />
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The camera side of a photo field (docs/boolaa-spec.md, Images → Camera): a hidden `capture` input that
+ * hands its file to the same handler as the gallery input, so camera photos take the same image pipeline.
+ * Render it only when `useCanTakePhoto()` is true; the visible "Take photo" button is the accessible control.
+ */
+export function CameraInput({
+  ref,
+  onFile,
+  facing = "environment",
+  testId,
+}: {
+  ref: Ref<HTMLInputElement>;
+  onFile: (f: File) => void;
+  facing?: CameraFacing;
+  testId?: string;
+}) {
+  return (
+    <input
+      ref={ref}
+      type="file"
+      accept="image/*"
+      capture={facing}
+      className="hidden"
+      tabIndex={-1}
+      aria-hidden
+      data-testid={testId}
+      onChange={(e) => {
+        const f = e.target.files?.[0];
+        e.target.value = "";
+        if (f) onFile(f);
+      }}
+    />
+  );
+}
+
+/** "Take photo" + "Choose from gallery", shown under a photo slot on touch devices (44 px targets). */
+export function PhotoSourceButtons({
+  onCamera,
+  onGallery,
+  disabled,
+  className,
+  children,
+}: {
+  onCamera: () => void;
+  onGallery: () => void;
+  disabled?: boolean;
+  className?: string;
+  /** Extra buttons after the two (e.g. "Remove photo"). */
+  children?: ReactNode;
+}) {
+  const t = useTranslations("common");
+  return (
+    <div className={cx("flex flex-wrap gap-2", className)}>
+      <button type="button" className="chip min-h-[44px] bg-brand/15 text-brand-ink" disabled={disabled} onClick={onCamera} data-testid="photo-take">
+        <Camera size={16} aria-hidden /> {t("takePhoto")}
+      </button>
+      <button type="button" className="chip min-h-[44px] bg-brand/15 text-brand-ink" disabled={disabled} onClick={onGallery} data-testid="photo-gallery">
+        <ImagePlus size={16} aria-hidden /> {t("chooseFromGallery")}
+      </button>
+      {children}
     </div>
   );
 }

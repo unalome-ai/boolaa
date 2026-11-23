@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowUp, Clock, ImagePlus, Trash2, TriangleAlert, X } from "lucide-react";
+import { ArrowUp, Camera, Clock, ImagePlus, Trash2, TriangleAlert, X } from "lucide-react";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { Orb, companionsFor } from "@/components/orb";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { useChatUnread } from "@/components/chat-unread";
-import { Avatar, EmptyState, ErrorText, Modal, PageLoader, Spinner } from "@/components/ui";
+import { Avatar, CameraInput, EmptyState, ErrorText, Modal, PageLoader, Spinner } from "@/components/ui";
+import { useCanTakePhoto } from "@/lib/camera";
 import { liveChannel } from "@/lib/realtime";
 import { AUTHOR, type Author, type ChatMessage, type Row } from "@/lib/types";
 import { CHAT_BUCKET, CHAT_PAGE, dividerIndex, mergeMessages, removeChatImage } from "@/lib/chat";
@@ -83,6 +84,8 @@ export default function ChatPage() {
   const [initialIds, setInitialIds] = useState<Set<string> | null>(() => (cached ? new Set(cached.messages.map((m) => m.id)) : null));
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const canTakePhoto = useCanTakePhoto();
   const anchor = useRef<{ height: number; top: number } | null>(null);
   const pinned = useRef(true);
   const lastMarked = useRef<string | null>(null);
@@ -617,11 +620,27 @@ export default function ChatPage() {
           data-testid="chat-photo-input"
           onChange={(e) => pickPhoto(e.target.files?.[0])}
         />
+        {canTakePhoto && (
+          <>
+            <CameraInput ref={cameraRef} onFile={pickPhoto} testId="chat-camera-input" />
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              aria-label={tc("takePhoto")}
+              title={tc("takePhoto")}
+              data-testid="chat-take-photo"
+              disabled={sending}
+              className="press-round hue-grape flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card text-hue-ink shadow-soft"
+            >
+              <Camera size={22} strokeWidth={2.4} />
+            </button>
+          </>
+        )}
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          aria-label={t("addPhoto")}
-          title={t("addPhoto")}
+          aria-label={canTakePhoto ? tc("chooseFromGallery") : t("addPhoto")}
+          title={canTakePhoto ? tc("chooseFromGallery") : t("addPhoto")}
           data-testid="chat-add-photo"
           disabled={sending}
           className="press-round hue-grape flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card text-hue-ink shadow-soft"

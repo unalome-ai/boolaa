@@ -10,6 +10,7 @@ import { Avatar, EmptyState, Img, PageLoader, StatusBadge } from "@/components/u
 import { STICKER_TILT } from "@/lib/brand";
 import { useWelcomeCheer } from "@/components/cheer";
 import { AUTHOR, type Author, type Row } from "@/lib/types";
+import { foodVisible } from "@/lib/food-expiry";
 import { useTranslations } from "next-intl";
 import { useFormat } from "@/i18n/format";
 import { PushCard } from "@/components/notification-settings";
@@ -31,7 +32,7 @@ const KIND_HUE: Record<FeedItem["kind"], Hue> = { chat: "grape", food: "tangerin
 
 type FeedData = {
   chat: (Pick<Row<"chat_messages">, "id" | "content" | "image_path" | "created_at"> & { sender: Author | null })[];
-  food: (Pick<Row<"food_posts">, "id" | "image" | "description" | "created_at"> & { user: Author | null })[];
+  food: (Pick<Row<"food_posts">, "id" | "image" | "description" | "created_at" | "expires_at" | "availability"> & { user: Author | null })[];
   market: (Pick<Row<"market_items">, "id" | "image" | "title" | "status" | "created_at"> & { owner: Author | null })[];
   events: (Pick<Row<"events">, "id" | "title" | "datetime" | "location" | "rsvp_list" | "created_at"> & {
     creator: Author | null;
@@ -61,8 +62,11 @@ export default function HomePage() {
         .limit(LIMIT),
       supabase
         .from("food_posts")
-        .select(`id, image, description, created_at, user:users!user_id(${AUTHOR})`)
+        .select(`id, image, description, created_at, expires_at, availability, user:users!user_id(${AUTHOR})`)
         .eq("bubble_id", bubble.id)
+        // Handed-over food is never shown (expired food is hidden by RLS).
+        .neq("availability", "taken")
+        .gt("expires_at", now)
         .order("created_at", { ascending: false })
         .limit(LIMIT),
       supabase
@@ -102,7 +106,7 @@ export default function HomePage() {
       author: m.sender,
       body: <p className="line-clamp-3 font-display text-[17px] font-bold wrap-anywhere">{m.content || (m.image_path ? `📷 ${t("chat.photo")}` : "")}</p>,
     })),
-    ...data.food.map((f) => ({
+    ...data.food.filter((f) => foodVisible(f, fmt.now.getTime())).map((f) => ({
       key: `food-${f.id}`,
       at: f.created_at,
       href: "/food",

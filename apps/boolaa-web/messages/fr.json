@@ -21,6 +21,10 @@
     "description": "Description",
     "photo": "Photo",
     "choosePhoto": "Choisis une photo",
+    "takePhoto": "Prendre une photo",
+    "chooseFromGallery": "Choisir dans la galerie",
+    "cameraUnavailable": "L’appareil photo n’est pas disponible sur cet appareil.",
+    "cameraDenied": "Autorise l’accès à l’appareil photo dans Réglages pour prendre des photos.",
     "selectedPhoto": "Photo choisie",
     "avatarOf": "Avatar de {name}",
     "language": "Langue",
@@ -250,7 +254,19 @@
     "imageAlt": "Photo de nourriture",
     "sharedSomeFood": "A partagé à manger",
     "emptyMineTitle": "Des restes ?",
-    "emptyOthersTitle": "Rien de partagé"
+    "emptyOthersTitle": "Rien de partagé",
+    "goodUntil": "Bon jusqu'à",
+    "expiryToday": "Aujourd'hui",
+    "expiryTomorrow": "Demain",
+    "expiryIn3Days": "Dans 3 jours",
+    "expiryCustom": "Autre",
+    "expiryHint": "Ta publication disparaît ensuite.",
+    "expiresInMinutes": "{count, plural, one {Expire dans # minute} many {Expire dans # de minutes} other {Expire dans # minutes}}",
+    "expiresInHours": "{count, plural, one {Expire dans # heure} many {Expire dans # d'heures} other {Expire dans # heures}}",
+    "goodUntilToday": "Bon jusqu'à aujourd'hui {time}",
+    "goodUntilTomorrow": "Bon jusqu'à demain {time}",
+    "goodUntilDay": "Bon jusqu'à {day} {time}",
+    "goodUntilDate": "Bon jusqu'au {date}, {time}"
   },
   "market": {
     "filter": "Filtrer les objets",
@@ -405,7 +421,16 @@
     "ownerOnlyAction": "Seul le propriétaire peut faire ça.",
     "exportRateLimited": "Tu peux télécharger tes données une fois par heure. Réessaie plus tard.",
     "eventEnded": "Cet événement est déjà terminé.",
-    "exportRateLimitedUntil": "Tu peux télécharger tes données une fois par heure. Réessaie après {time}."
+    "exportRateLimitedUntil": "Tu peux télécharger tes données une fois par heure. Réessaie après {time}.",
+    "itemGone": "Cette publication n'existe plus.",
+    "itemNotAvailable": "Ce n'est plus disponible.",
+    "alreadyRequested": "Tu l'as déjà demandé.",
+    "cannotRequestOwn": "C'est ta propre publication.",
+    "requestNoteTooLong": "Le mot ne doit pas dépasser 200 caractères.",
+    "requestGone": "Cette demande a été retirée.",
+    "requestDecided": "Cette demande a déjà été traitée.",
+    "nothingPicked": "Choisis d'abord quelqu'un.",
+    "invalidExpiry": "Choisis un moment dans les 14 prochains jours."
   },
   "safety": {
     "moreActions": "Plus d'actions",
@@ -581,7 +606,9 @@
     "on": "Activées sur ce navigateur",
     "turnOff": "Désactiver sur ce navigateur",
     "unsupported": "Ce navigateur ne peut pas recevoir de notifications. Sur iPhone et iPad, ajoute d'abord Boolaa à ton écran d'accueil.",
-    "allBubbles": "Ces réglages s'appliquent à toutes tes bulles."
+    "allBubbles": "Ces réglages s'appliquent à toutes tes bulles.",
+    "itemRequests": "Demandes sur mes publications",
+    "requestUpdates": "Suivi de mes demandes"
   },
   "mute": {
     "title": "Mettre la bulle en sourdine",
@@ -681,5 +708,37 @@
     "copied": "Copié",
     "iphoneTitle": "Sur iPhone ?",
     "iphoneBody": "Boolaa arrive bientôt sur l'App Store. En attendant, utilise-la dans ton navigateur."
+  },
+  "requests": {
+    "iWantIt": "Ça m'intéresse",
+    "iWantItA11y": "Ça m'intéresse : {title}",
+    "actionA11y": "{action} : {target}",
+    "notePlaceholder": "Ajoute un mot (facultatif)",
+    "send": "Envoyer la demande",
+    "sentToast": "Demande envoyée. {name} va la voir.",
+    "requested": "Demandé",
+    "onList": "Réservé · tu es sur la liste",
+    "withdraw": "Retirer la demande",
+    "withdrawConfirmTitle": "Retirer ta demande ?",
+    "withdrawConfirmBody": "{name} saura que tu as changé d'avis.",
+    "reservedForYou": "Réservé pour toi",
+    "reservedFor": "Réservé pour {name}",
+    "youGotIt": "C'est pour toi",
+    "someoneElse": "Quelqu'un d'autre l'a eu",
+    "count": "{count, plural, one {# demande} many {# de demandes} other {# demandes}}",
+    "button": "Demandes · {count}",
+    "title": "Demandes",
+    "noneYet": "Pas encore de demande.",
+    "noneYetHint": "Les membres peuvent appuyer sur « Ça m'intéresse » sur ta publication.",
+    "pick": "Choisir",
+    "pickInstead": "Choisir plutôt",
+    "yourPick": "Ton choix",
+    "undoPick": "Annuler le choix",
+    "pickedToast": "Réservé pour {name}. Organisez la remise dans la discussion.",
+    "handOver": "Marquer comme remis",
+    "handOverTitle": "Marquer comme remis ?",
+    "handOverBodyMarket": "« {title} » va à {name}. Les autres personnes qui l'ont demandé seront prévenues.",
+    "handOverBodyFood": "Ton plat va à {name}. La publication disparaît du Cercle gourmand et les autres personnes qui l'ont demandé seront prévenues.",
+    "clearPickConfirm": "Cela annule ton choix ({name}). Sa demande reste dans la liste."
   }
 }

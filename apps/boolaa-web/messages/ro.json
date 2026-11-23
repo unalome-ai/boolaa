@@ -21,6 +21,10 @@
     "description": "Descriere",
     "photo": "Fotografie",
     "choosePhoto": "Alege o fotografie",
+    "takePhoto": "Fă o poză",
+    "chooseFromGallery": "Alege din galerie",
+    "cameraUnavailable": "Camera nu e disponibilă pe acest dispozitiv.",
+    "cameraDenied": "Permite accesul la cameră din Setări ca să faci poze.",
     "selectedPhoto": "Fotografia aleasă",
     "avatarOf": "Avatar: {name}",
     "language": "Limbă",
@@ -250,7 +254,19 @@
     "imageAlt": "Fotografie cu mâncare",
     "sharedSomeFood": "A împărțit niște mâncare",
     "emptyMineTitle": "Ți-a rămas mâncare?",
-    "emptyOthersTitle": "Nimic împărțit încă"
+    "emptyOthersTitle": "Nimic împărțit încă",
+    "goodUntil": "Bun până",
+    "expiryToday": "Azi",
+    "expiryTomorrow": "Mâine",
+    "expiryIn3Days": "În 3 zile",
+    "expiryCustom": "Altă dată",
+    "expiryHint": "Postarea ta dispare după ora asta.",
+    "expiresInMinutes": "{count, plural, one {Expiră într-un minut} few {Expiră în # minute} other {Expiră în # de minute}}",
+    "expiresInHours": "{count, plural, one {Expiră într-o oră} few {Expiră în # ore} other {Expiră în # de ore}}",
+    "goodUntilToday": "Bun până azi la {time}",
+    "goodUntilTomorrow": "Bun până mâine la {time}",
+    "goodUntilDay": "Bun până {day} la {time}",
+    "goodUntilDate": "Bun până pe {date}, la {time}"
   },
   "market": {
     "filter": "Filtrează obiectele",
@@ -405,7 +421,16 @@
     "ownerOnlyAction": "Doar proprietarul poate face asta.",
     "exportRateLimited": "Poți descărca datele o dată pe oră. Încearcă din nou mai târziu.",
     "eventEnded": "Evenimentul s-a încheiat deja.",
-    "exportRateLimitedUntil": "Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}."
+    "exportRateLimitedUntil": "Poți descărca datele o dată pe oră. Încearcă din nou după ora {time}.",
+    "itemGone": "Postarea nu mai există.",
+    "itemNotAvailable": "Nu mai e disponibil.",
+    "alreadyRequested": "Ai cerut deja asta.",
+    "cannotRequestOwn": "E postarea ta.",
+    "requestNoteTooLong": "Mesajul poate avea cel mult 200 de caractere.",
+    "requestGone": "Cererea a fost retrasă.",
+    "requestDecided": "Cererea asta a fost deja decisă.",
+    "nothingPicked": "Alege mai întâi pe cineva.",
+    "invalidExpiry": "Alege o oră din următoarele 14 zile."
   },
   "safety": {
     "moreActions": "Mai multe acțiuni",
@@ -581,7 +606,9 @@
     "on": "Activate în acest browser",
     "turnOff": "Dezactivează în acest browser",
     "unsupported": "Acest browser nu poate primi notificări. Pe iPhone și iPad, adaugă mai întâi Boolaa pe ecranul principal.",
-    "allBubbles": "Aceste setări se aplică tuturor bulelor tale."
+    "allBubbles": "Aceste setări se aplică tuturor bulelor tale.",
+    "itemRequests": "Cereri pentru postările mele",
+    "requestUpdates": "Noutăți despre cererile mele"
   },
   "mute": {
     "title": "Pune bula pe silențios",
@@ -681,5 +708,37 @@
     "copied": "Copiat",
     "iphoneTitle": "Ai iPhone?",
     "iphoneBody": "Boolaa ajunge curând în App Store. Până atunci, folosește-o în browser."
+  },
+  "requests": {
+    "iWantIt": "Vreau asta",
+    "iWantItA11y": "Vreau asta: {title}",
+    "actionA11y": "{action}: {target}",
+    "notePlaceholder": "Adaugă un mesaj (opțional)",
+    "send": "Trimite cererea",
+    "sentToast": "Cererea a fost trimisă. {name} o va vedea.",
+    "requested": "Ai cerut",
+    "onList": "Rezervat · ești pe listă",
+    "withdraw": "Retrage cererea",
+    "withdrawConfirmTitle": "Îți retragi cererea?",
+    "withdrawConfirmBody": "{name} va afla că te-ai răzgândit.",
+    "reservedForYou": "Rezervat pentru tine",
+    "reservedFor": "Rezervat pentru {name}",
+    "youGotIt": "E al tău",
+    "someoneElse": "Altcineva l-a primit",
+    "count": "{count, plural, one {# cerere} few {# cereri} other {# de cereri}}",
+    "button": "Cereri · {count}",
+    "title": "Cereri",
+    "noneYet": "Nicio cerere încă.",
+    "noneYetHint": "Membrii pot apăsa „Vreau asta” la postarea ta.",
+    "pick": "Alege",
+    "pickInstead": "Alege în schimb",
+    "yourPick": "Alegerea ta",
+    "undoPick": "Anulează alegerea",
+    "pickedToast": "Rezervat pentru {name}. Stabiliți predarea în chat.",
+    "handOver": "Marchează ca predat",
+    "handOverTitle": "Marchezi ca predat?",
+    "handOverBodyMarket": "„{title}” ajunge la {name}. Ceilalți care l-au cerut vor afla că a ajuns la altcineva.",
+    "handOverBodyFood": "Mâncarea ajunge la {name}. Postarea dispare din Cercul culinar, iar ceilalți care au cerut-o vor afla că a ajuns la altcineva.",
+    "clearPickConfirm": "Asta anulează alegerea ta ({name}). Cererea rămâne pe listă."
   }
 }

@@ -32,6 +32,8 @@ const LABEL = {
   event_reminders: "eventReminders",
   food: "food",
   market: "market",
+  item_requests: "itemRequests",
+  request_updates: "requestUpdates",
 } as const satisfies Record<PrefKey, string>;
 
 function Toggle({

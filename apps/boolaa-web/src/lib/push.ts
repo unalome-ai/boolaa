@@ -15,8 +15,8 @@ const OPT_OUT_KEY = "boolaa_push_off";
 const APP_VERSION = "web";
 
 export type NotificationPrefs = Database["public"]["Tables"]["notification_prefs"]["Row"];
-export type PrefKey = "chat" | "join_requests" | "approvals" | "new_events" | "event_reminders" | "food" | "market";
-export const PREF_KEYS: PrefKey[] = ["chat", "join_requests", "approvals", "new_events", "event_reminders", "food", "market"];
+export type PrefKey = "chat" | "join_requests" | "approvals" | "new_events" | "event_reminders" | "food" | "market" | "item_requests" | "request_updates";
+export const PREF_KEYS: PrefKey[] = ["chat", "join_requests", "approvals", "new_events", "event_reminders", "food", "market", "item_requests", "request_updates"];
 
 /** Defaults when the row is missing (docs §2): everything on except food and market. */
 export const DEFAULT_PREFS: Omit<NotificationPrefs, "user_id" | "updated_at"> = {

@@ -98,6 +98,9 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
   // Deep link from a notification (docs/push-notifications.md §5): `?bubble=<id>` on first load
   // switches to that bubble if it's still one of mine, otherwise opens Home without switching.
   const deepLinkBubble = useRef<string | null | undefined>(undefined);
+  // The cookie's bubble when the cached shell didn't have it yet (just admitted or created elsewhere):
+  // the cached view falls back to another bubble, but the first fresh list must honour the cookie.
+  const cookieWish = useRef<string | null>(null);
   useEffect(() => {
     current.current = { bubbles, bubbleId };
   }, [bubbles, bubbleId]);
@@ -126,7 +129,9 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       hardNavigate("/home");
       return list;
     }
-    const pick = linked && list.some((b) => b.id === linked) ? linked : null;
+    const wish = cookieWish.current;
+    cookieWish.current = null;
+    const pick = linked && list.some((b) => b.id === linked) ? linked : wish && list.some((b) => b.id === wish) ? wish : null;
     if (linked) {
       // Applied once: drop it from the address bar so the bubble switcher stays in charge.
       const url = new URL(window.location.href);
@@ -170,7 +175,9 @@ export function BoolaaProvider({ children, fallback }: { children: ReactNode; fa
       setOutboxUser(user.id);
       const cached = readCache<ShellCache>("shell");
       if (cached && cached.bubbles.length > 0) {
-        const wanted = readCookie(BUBBLE_COOKIE) ?? cached.bubbleId;
+        const cookie = readCookie(BUBBLE_COOKIE);
+        const wanted = cookie ?? cached.bubbleId;
+        if (cookie && !cached.bubbles.some((b) => b.id === cookie)) cookieWish.current = cookie;
         setBubbles(cached.bubbles);
         setBubbleIdState(cached.bubbles.find((b) => b.id === wanted)?.id ?? cached.bubbles[0]!.id);
         setProfile(cached.profile);

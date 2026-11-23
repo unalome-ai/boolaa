@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Check, ChevronRight, Clock, Copy, Crown, ImagePlus, Link2, LogOut, RefreshCw, Settings2, Share2, Shield, ShieldOff, Trash2, UserMinus, X } from "lucide-react";
+import { Camera, Check, ChevronRight, Clock, Copy, Crown, ImagePlus, Link2, LogOut, RefreshCw, Settings2, Share2, Shield, ShieldOff, Trash2, UserMinus, X } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
-import { Avatar, BubblePhoto, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
-import { removeImage, uploadImage } from "@/lib/utils";
+import { Avatar, BubblePhoto, CameraInput, ErrorText, Modal, PageLoader, SectionTitle, EmptyNote } from "@/components/ui";
+import { cx, removeImage, uploadImage } from "@/lib/utils";
+import { useCanTakePhoto } from "@/lib/camera";
 import { announce, useMenuKeys } from "@/lib/a11y";
 import { FeatureBadge } from "@/components/orb";
 import { liveChannel } from "@/lib/realtime";
@@ -652,8 +653,11 @@ function BubblePhotoEditor() {
   const { supabase, refreshBubbles } = useBoolaa();
   const bubble = useBubble();
   const t = useTranslations("settings");
+  const tc = useTranslations("common");
   const errorText = useErrorText();
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const canTakePhoto = useCanTakePhoto();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -682,11 +686,16 @@ function BubblePhotoEditor() {
       <div className="min-w-0 flex-1 space-y-2">
         <span className="label mb-0">{t("bubblePhoto")}</span>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="chip bg-brand/15 text-brand-ink" disabled={busy} onClick={() => inputRef.current?.click()}>
-            <ImagePlus size={15} /> {bubble.logo ? t("changeBubblePhoto") : t("addBubblePhoto")}
+          {canTakePhoto && (
+            <button type="button" className="chip min-h-[44px] bg-brand/15 text-brand-ink" disabled={busy} onClick={() => cameraRef.current?.click()} data-testid="bubble-photo-take">
+              <Camera size={15} aria-hidden /> {tc("takePhoto")}
+            </button>
+          )}
+          <button type="button" className={cx("chip bg-brand/15 text-brand-ink", canTakePhoto && "min-h-[44px]")} disabled={busy} onClick={() => inputRef.current?.click()}>
+            <ImagePlus size={15} aria-hidden /> {canTakePhoto ? tc("chooseFromGallery") : bubble.logo ? t("changeBubblePhoto") : t("addBubblePhoto")}
           </button>
           {bubble.logo && (
-            <button type="button" className="chip bg-field text-muted hover:text-fg" disabled={busy} onClick={() => setLogo(null)} data-testid="bubble-photo-remove">
+            <button type="button" className={cx("chip bg-field text-muted hover:text-fg", canTakePhoto && "min-h-[44px]")} disabled={busy} onClick={() => setLogo(null)} data-testid="bubble-photo-remove">
               <Trash2 size={15} /> {t("removeBubblePhoto")}
             </button>
           )}
@@ -707,6 +716,7 @@ function BubblePhotoEditor() {
           if (f) void setLogo(f);
         }}
       />
+      {canTakePhoto && <CameraInput ref={cameraRef} onFile={(f) => void setLogo(f)} testId="bubble-photo-camera-input" />}
     </div>
   );
 }
