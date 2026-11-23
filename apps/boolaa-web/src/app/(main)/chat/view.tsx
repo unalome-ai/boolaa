@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ArrowUp, ImagePlus, MessagesSquare, Trash2, X } from "lucide-react";
-import { hueClass, hueFor } from "@/lib/hue";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { ArrowUp, Clock, ImagePlus, Trash2, TriangleAlert, X } from "lucide-react";
+import { hueClass, hueFor, type Hue } from "@/lib/hue";
+import { Orb, companionsFor } from "@/components/orb";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { useChatUnread } from "@/components/chat-unread";
@@ -415,16 +416,20 @@ export default function ChatPage() {
   }
 
   const canSend = !!text.trim() || !!photo;
+  // Your messages wear the bubble's colour (design-system 8.2); everyone else's wear their own.
+  const bubbleHue = hueFor(bubble.id);
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2 flex items-center gap-2 px-1 font-display text-sm font-bold text-muted" data-testid="chat-status" data-live={live}>
         <span className={cx("h-2 w-2 rounded-full transition-colors", live ? "bg-mint" : "bg-muted/50")} />
         {bubble.name} · {live ? t("live") : t("connecting")}
       </div>
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-hero bg-card/50 shadow-soft backdrop-blur-xl">
+      <ChatOrbs hue={bubbleHue} />
       <div
         ref={listRef}
         onScroll={onScroll}
-        className="scrollbar-none min-h-0 flex-1 overflow-y-auto rounded-hero bg-card/50 p-4 shadow-soft backdrop-blur-xl"
+        className="scrollbar-none relative h-full overflow-y-auto p-4"
         data-testid="chat-list"
         role="log"
         aria-live="off"
@@ -439,7 +444,7 @@ export default function ChatPage() {
             <PageLoader />
           )
         ) : rendered.length === 0 && pending.length === 0 ? (
-          <EmptyState icon={<MessagesSquare size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="grape" />
+          <EmptyState title={t("emptyTitle")} hint={t("emptyHint")} hue={bubbleHue} />
         ) : (
           <>
             <div className="flex min-h-8 items-center justify-center pb-3 text-xs font-bold text-muted" data-testid="chat-top">
@@ -502,9 +507,11 @@ export default function ChatPage() {
                               e.preventDefault();
                               setPickerFor(m.id);
                             }}
+                            data-testid="chat-bubble"
+                            data-hue={mine ? bubbleHue : hueFor(m.sender_id)}
                             className={cx(
                               "overflow-hidden whitespace-pre-wrap wrap-anywhere rounded-[21px] text-[16px] leading-snug",
-                              mine ? "hue-grape rounded-br-[6px] bg-hue-grad text-white shadow-glow" : "rounded-bl-[6px] bg-card text-fg shadow-soft",
+                              mine ? cx("msg-mine rounded-br-[6px]", hueClass(bubbleHue), !m.image_path && "msg-gloss") : "msg-other rounded-bl-[6px]",
                               fresh && "anim-pop",
                               !m.image_path && "px-4 py-2.5",
                             )}
@@ -569,6 +576,7 @@ export default function ChatPage() {
             {pending.map((item) => (
               <PendingMessage
                 key={item.id}
+                hue={bubbleHue}
                 item={item}
                 photoLabel={t("photo")}
                 onRetry={() => retryMessage(supabase, item.id)}
@@ -577,6 +585,7 @@ export default function ChatPage() {
             ))}
           </ul>
         )}
+      </div>
       </div>
       <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="chat-announcer">
         {announcement}
@@ -636,7 +645,7 @@ export default function ChatPage() {
           disabled={sending || !canSend}
           className={cx(
             "press-round flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-[background,color,box-shadow] duration-200",
-            canSend ? "hue-grape fill-hue" : "bg-field text-muted",
+            canSend ? cx(hueClass(bubbleHue), "fill-hue") : "bg-field text-muted",
           )}
         >
           {sending ? <Spinner className="h-5 w-5" /> : <ArrowUp key={canSend ? "ready" : "idle"} size={22} strokeWidth={3} className={canSend ? "anim-pop" : undefined} />}
@@ -663,11 +672,13 @@ export default function ChatPage() {
  */
 function PendingMessage({
   item,
+  hue,
   photoLabel,
   onRetry,
   onDiscard,
 }: {
   item: OutboxItem;
+  hue: Hue;
   photoLabel: string;
   onRetry: () => void;
   onDiscard: () => void;
@@ -679,11 +690,15 @@ function PendingMessage({
   const reason = failed && item.error && !isNetworkError(item.error) ? errorText(item.error) : null;
   return (
     <li className="flex flex-col items-end" data-testid="chat-pending" data-id={item.id} data-state={item.state}>
+      {/* Full colours in both states (text keeps its contrast); no glow while sending, a dangerText ring when not sent. */}
       <div
+        data-testid="chat-bubble"
+        data-hue={hue}
         className={cx(
-          "hue-grape max-w-[78%] overflow-hidden whitespace-pre-wrap wrap-anywhere rounded-[21px] rounded-br-[6px] bg-hue-grad text-[16px] leading-snug text-white",
-          !preview && "px-4 py-2.5",
-          failed ? "opacity-80" : "opacity-60",
+          "msg-mine max-w-[78%] overflow-hidden whitespace-pre-wrap wrap-anywhere rounded-[21px] rounded-br-[6px] text-[16px] leading-snug shadow-none!",
+          hueClass(hue),
+          !preview && "msg-gloss px-4 py-2.5",
+          failed && "outline-2 outline-offset-2 outline-danger-ink",
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
@@ -694,7 +709,8 @@ function PendingMessage({
       <span role="status" className="mt-0.5 flex flex-wrap items-center justify-end gap-x-2 px-1 text-[12px]">
         {failed ? (
           <>
-            <span className="font-bold text-danger-ink" data-testid="chat-not-sent">
+            <span className="inline-flex items-center gap-1 font-bold text-danger-ink" data-testid="chat-not-sent">
+              <TriangleAlert size={13} strokeWidth={2.6} aria-hidden />
               {t("notSent")}
               {reason ? ` · ${reason}` : ""}
             </span>
@@ -706,7 +722,8 @@ function PendingMessage({
             </button>
           </>
         ) : (
-          <span className="text-muted" data-testid="chat-sending">
+          <span className="inline-flex items-center gap-1 text-muted" data-testid="chat-sending">
+            <Clock size={12} strokeWidth={2.6} aria-hidden />
             {t("sending")}
           </span>
         )}
@@ -751,7 +768,7 @@ function LinkifiedText({ text, mine }: { text: string; mine: boolean }) {
             rel="noopener noreferrer nofollow"
             aria-label={`${p.text} (${ta("opensInNewTab")})`}
             data-testid="chat-link"
-            className={cx("font-semibold underline underline-offset-2", mine ? "text-white decoration-white/70" : "text-hue-ink decoration-hue/60")}
+            className={cx("font-semibold underline underline-offset-2", mine ? "text-[var(--h-on)] decoration-current/70" : "text-hue-ink decoration-hue/60")}
             onClick={(e) => e.stopPropagation()}
           >
             {p.text}
@@ -761,5 +778,26 @@ function LinkifiedText({ text, mine }: { text: string; mine: boolean }) {
         ),
       )}
     </>
+  );
+}
+
+/**
+ * Three faint orbs behind the thread (8.2): the bubble's hue and its two companions, drifting slowly; still under
+ * reduced motion. Their strength (--chat-orb-a) keeps every text on the panel at 4.5:1 or more.
+ */
+function ChatOrbs({ hue }: { hue: Hue }) {
+  const [a, b] = companionsFor(hue);
+  return (
+    <div aria-hidden data-testid="chat-orbs">
+      <span className="chat-orb anim-bob" style={{ right: "-14%", top: "6%", "--bob-period": "9s", "--bob": "6px" } as CSSProperties}>
+        <Orb hue={hue} size={220} />
+      </span>
+      <span className="chat-orb anim-bob" style={{ left: "-8%", bottom: "14%", "--bob-period": "7s", "--bob": "6px" } as CSSProperties}>
+        <Orb hue={a} size={110} />
+      </span>
+      <span className="chat-orb anim-bob" style={{ right: "18%", bottom: "-4%", "--bob-period": "8s", "--bob": "5px" } as CSSProperties}>
+        <Orb hue={b} size={64} />
+      </span>
+    </div>
   );
 }

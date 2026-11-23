@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { useConnectivity } from "@/lib/connectivity";
 import { MAX_AUTO_RETRIES, backoffDelay, readCache, writeCache } from "@/lib/offline";
 import { cx } from "@/lib/utils";
+import { Mascot } from "@/components/orb";
 
 /** Offline / unreachable pill, and "Back online" for a moment after a reconnect. */
 export function ConnectivityBanner() {
@@ -104,9 +105,11 @@ export function useCachedState<T>(key: string, save: (value: T) => T = (v) => v)
 /** Nothing to show and the load failed: say so, with Try again (never an empty screen). */
 export function LoadError({ onRetry }: { onRetry: () => void }) {
   const t = useTranslations("offline");
+  // Mascot (design-system 8.4): sleepy while there's no connection, worried when the load itself failed.
+  const { status } = useConnectivity();
   return (
     <div className="anim-pop-soft card flex flex-col items-center gap-3 px-6 py-8 text-center" data-testid="load-error" role="alert">
-      <CloudOff size={30} strokeWidth={2.2} className="text-muted" aria-hidden />
+      <Mascot hue="grape" expression={status === "online" ? "worried" : "sleepy"} size={72} />
       <p className="text-[15px] font-medium">{t("loadFailed")}</p>
       <button type="button" className="btn-primary min-h-11 px-4" onClick={onRetry} data-testid="load-retry">
         <RotateCw size={16} strokeWidth={2.6} aria-hidden /> {t("retry")}

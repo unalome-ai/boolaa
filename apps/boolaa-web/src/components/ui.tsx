@@ -4,7 +4,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeftRight, Gift, ImagePlus, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { BubbleCluster } from "@/components/orb";
+import { Mascot, type Expression } from "@/components/orb";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { useSignedUrl } from "@/lib/storage-url";
 import { cx, initials } from "@/lib/utils";
@@ -141,25 +141,36 @@ export function PageLoader() {
   );
 }
 
-/** Feature-coloured empty block with a floating bubble cluster (6.8). */
-export function EmptyState({ icon, title, hint, hue = "grape" }: { icon?: ReactNode; title: string; hint?: string; hue?: Hue }) {
+/** Feature-coloured empty block with the mascot (6.8, 8.4): curious by default. */
+export function EmptyState({
+  title,
+  hint,
+  hue = "grape",
+  expression = "curious",
+  testId,
+}: {
+  title: string;
+  hint?: string;
+  hue?: Hue;
+  expression?: Expression;
+  testId?: string;
+}) {
   return (
     <div
       className={cx(
         "anim-pop-soft flex flex-col items-center gap-1.5 rounded-card border-[1.5px] border-dashed px-6 py-7 text-center",
         hueClass(hue),
       )}
+      data-testid={testId ?? "empty-state"}
       style={{
         background: "color-mix(in srgb, var(--h-wash) 60%, transparent)",
         borderColor: "color-mix(in srgb, var(--h-ink) 25%, transparent)",
       }}
     >
       <div className="mb-2">
-        <BubbleCluster hue={hue} size={84}>
-          {icon}
-        </BubbleCluster>
+        <Mascot hue={hue} expression={expression} size={96} />
       </div>
-      <p className="font-display text-[17px] font-extrabold">{title}</p>
+      <p className="font-display text-[17px] font-black">{title}</p>
       {hint && <p className="text-[15px] text-muted">{hint}</p>}
     </div>
   );
@@ -181,7 +192,7 @@ export function EmptyNote({ hue = "grape", children }: { hue?: Hue; children: Re
 export function SectionTitle({ children, action, count, hue = "grape" }: { children: ReactNode; action?: ReactNode; count?: number; hue?: Hue }) {
   return (
     <div className={cx("mb-3 mt-7 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 first:mt-0", hueClass(hue))}>
-      <h2 className="flex items-center gap-2 text-[20px] font-extrabold">
+      <h2 className="flex items-center gap-2 text-[20px] font-black tracking-[-0.01em]">
         {children}
         {count !== undefined && (
           <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-hue-wash px-2 font-display text-xs font-extrabold tabular-nums text-hue-ink">
@@ -212,11 +223,14 @@ export function Modal({
   onClose,
   title,
   children,
+  calm,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  /** Safety surface (report, block, delete, moderation): still, no mascot (design-system 6.9, 8.4). */
+  calm?: boolean;
 }) {
   const titleId = useId();
   const t = useTranslations("common");
@@ -293,6 +307,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        data-calm={calm || undefined}
         className="anim-route relative max-h-[92dvh] w-full overflow-y-auto outline-none rounded-t-hero bg-app p-5 pt-3 shadow-float sm:max-w-lg sm:rounded-hero sm:pt-5"
       >
         <div aria-hidden className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-muted/40 sm:hidden" />

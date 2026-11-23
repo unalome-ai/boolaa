@@ -148,7 +148,7 @@ function ReportDialog({
 }) {
   const t = useTranslations("safety");
   return (
-    <Modal open={open} onClose={onClose} title={type === "user" ? t("reportMemberTitle") : t("reportTitle")}>
+    <Modal calm open={open} onClose={onClose} title={type === "user" ? t("reportMemberTitle") : t("reportTitle")}>
       {open && <ReportForm onClose={onClose} type={type} id={id} author={author} />}
     </Modal>
   );
@@ -294,7 +294,7 @@ export function BlockDialog({ open, onClose, author }: { open: boolean; onClose:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   return (
-    <Modal open={open} onClose={onClose} title={t("blockTitle", { name: author.name })}>
+    <Modal calm open={open} onClose={onClose} title={t("blockTitle", { name: author.name })}>
       <p className="mb-5 text-muted">{t("blockHint")}</p>
       <ErrorText>{error}</ErrorText>
       <div className="flex gap-3">

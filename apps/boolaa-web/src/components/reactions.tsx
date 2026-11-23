@@ -117,6 +117,8 @@ export function ReactionChips({
   const { userId, blocked } = useBoolaa();
   const t = useTranslations("reactions");
   const summary = summarize(state.rows, targetId, userId, blocked);
+  // Chips that appear after the first render pop in; a changed count pops softly (design-system 8.3).
+  const [initial] = useState(() => new Set<string>(summary.map((s) => s.reaction)));
   if (summary.length === 0 && !children) return null;
   return (
     <div className={cx("flex flex-wrap items-center gap-1.5", className)} data-testid="reactions" data-target={targetId}>
@@ -136,10 +138,13 @@ export function ReactionChips({
             className={cx(
               "press inline-flex h-7 items-center gap-1 rounded-full px-2.5 font-display text-[13px] font-bold transition-[background,color,box-shadow]",
               mine ? "fill-hue" : "bg-field text-fg hover:bg-chip",
+              !initial.has(reaction) && "anim-pop",
             )}
           >
             <span aria-hidden>{REACTION_EMOJI[reaction]}</span>
-            <span aria-hidden>{count}</span>
+            <span aria-hidden key={count} className="anim-pop-soft inline-block tabular-nums">
+              {count}
+            </span>
           </button>
         );
       })}

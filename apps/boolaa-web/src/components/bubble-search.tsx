@@ -158,7 +158,7 @@ export function BubbleSearch({ open, onClose }: { open: boolean; onClose: () => 
   else if (state.hits.length === 0)
     body = (
       <div data-testid="search-empty">
-        <EmptyState icon={<Search size={30} strokeWidth={2.4} />} title={t("noResults", { query: state.query })} hint={t("noResultsHint")} />
+        <EmptyState title={t("noResults", { query: state.query })} hint={t("noResultsHint")} />
       </div>
     );
   else

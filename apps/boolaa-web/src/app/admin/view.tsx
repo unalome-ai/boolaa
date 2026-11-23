@@ -417,7 +417,7 @@ function ReportCard({ r, now, linked, onDone }: { r: Report; now: number; linked
         </div>
       )}
 
-      <Modal open={!!pending} onClose={() => !busy && setPending(null)} title={A.confirm.title}>
+      <Modal calm open={!!pending} onClose={() => !busy && setPending(null)} title={A.confirm.title}>
         {pending && (
           <div className="space-y-4" data-testid="admin-confirm">
             <p className="text-[15px]">{confirmText(pending)}</p>
@@ -662,7 +662,7 @@ function UsersPanel({ onNotice }: { onNotice: (m: string) => void }) {
           <Spinner /> {A.loading}
         </div>
       )}
-      <Modal open={!!pending} onClose={() => !busy && setPending(null)} title={A.confirm.title}>
+      <Modal calm open={!!pending} onClose={() => !busy && setPending(null)} title={A.confirm.title}>
         {pending && (
           <div className="space-y-4" data-testid="admin-confirm">
             <p className="text-[15px]">{A.confirm.unsuspend(pending.name || pending.id)}</p>
@@ -686,7 +686,7 @@ export default function AdminView() {
   const [notice, setNotice] = useState<string | null>(null);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-4xl space-y-5 px-4 py-6 sm:py-8">
+    <main data-calm className="mx-auto min-h-dvh max-w-4xl space-y-5 px-4 py-6 sm:py-8">
       <header className="space-y-1">
         <h1 className="text-2xl font-black tracking-tight">{A.heading}</h1>
         <p className="text-sm text-muted">{A.sla}</p>

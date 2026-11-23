@@ -53,7 +53,7 @@ export default function SuspendedPage() {
 
   if (state.kind === "loading")
     return (
-      <main className="flex min-h-dvh items-center justify-center">
+      <main data-calm className="flex min-h-dvh items-center justify-center">
         <PageLoader />
       </main>
     );
@@ -63,7 +63,7 @@ export default function SuspendedPage() {
   const title = state.kind === "banned" ? t("titleBanned") : state.kind === "active" ? t("activeAgain") : t("titleSuspended");
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-16">
+    <main data-calm className="flex min-h-dvh items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-hero bg-card p-6 shadow-soft sm:p-7" data-testid="suspended" data-state={state.kind}>
         <BubbleLogo size={48} animated={false} />
         <h1 className="mt-4 text-[22px] font-black tracking-tight">{title}</h1>

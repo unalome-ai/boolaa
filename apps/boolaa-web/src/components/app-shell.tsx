@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   CalendarDays,
   ChevronLeft,
@@ -26,7 +26,9 @@ import { DeepLinkTarget } from "@/components/deep-link";
 import { BubbleSearch, SearchButton } from "@/components/bubble-search";
 import { BubbleLogo } from "@/components/orb";
 import { Avatar, Modal } from "@/components/ui";
-import { FEATURE_HUE, HUES, hueClass, hueFor, type Hue } from "@/lib/hue";
+import { FEATURE_HUE, hueClass, hueFor } from "@/lib/hue";
+import { BAND_HUE } from "@/lib/brand";
+import { CheerHost } from "@/components/cheer";
 import { cx } from "@/lib/utils";
 import { useSignedUrl } from "@/lib/storage-url";
 import { scrollBehavior } from "@/lib/a11y";
@@ -143,7 +145,7 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
       <button
         type="button"
         onClick={onNew}
-        className="chip border-[1.5px] border-dashed border-grape-ink/55 text-grape-ink hover:bg-brand/10"
+        className="chip border-[1.5px] border-dashed border-grape-ink/55 bg-card text-grape-ink hover:bg-[color-mix(in_srgb,var(--grape)_10%,var(--app-card))]"
       >
         <Plus size={16} strokeWidth={3} /> {t("newBubble")}
       </button>
@@ -151,53 +153,120 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
   );
 }
 
-/** Mobile dock: pill tab bar with a sliding selection, plus the chat orb (6.1). */
+/**
+ * Mobile dock (6.1, 8.3): a glass pill tab bar and the chat orb. The active tab is a pill with icon + label in the
+ * feature colour that slides and stretches between tabs (snappy spring); the others are icons. When the label
+ * doesn't fit (long translations, 320 px, large text) the pill shrinks to an icon circle and the label lives on
+ * only as the accessible name.
+ */
+const DOCK = { pad: 5, slot: 40, height: 46, pillLead: 14, pillTrail: 16, icon: 20, gap: 6, orb: 60, orbGap: 10 } as const;
+
 function Dock({ pathname, chatLabel }: { pathname: string; chatLabel: string }) {
   const t = useTranslations("nav");
   const index = TABS.findIndex((tab) => pathname.startsWith(tab.href));
-  const activeHue = index >= 0 ? FEATURE_HUE[TABS[index].key as keyof typeof FEATURE_HUE] : "grape";
+  const activeKey = index >= 0 ? TABS[index].key : null;
+  const activeHue = activeKey ? FEATURE_HUE[activeKey as keyof typeof FEATURE_HUE] : "grape";
+  const label = activeKey ? t(activeKey) : "";
+  const rowRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const probeRef = useRef<HTMLSpanElement>(null);
+  const [compact, setCompact] = useState(false);
+  const [pill, setPill] = useState<{ x: number; w: number } | null>(null);
+
+  // Does the label fit? Re-checked when the width, the text size or the label changes.
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    const probe = probeRef.current;
+    if (!row || !probe) return;
+    const check = () => {
+      const styles = getComputedStyle(row);
+      const navMax = row.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight) - DOCK.orb - DOCK.orbGap;
+      const pillWidth = DOCK.pillLead + DOCK.icon + DOCK.gap + Math.ceil(probe.scrollWidth) + DOCK.pillTrail;
+      setCompact(2 * DOCK.pad + 4 * DOCK.slot + pillWidth > navMax);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(row);
+    ro.observe(probe);
+    return () => ro.disconnect();
+  }, [label]);
+
+  // Where the sliding pill sits: measured from the active tab.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !active) return setPill(null);
+    // Icon-only, the pill is a circle centred in its slot; labelled, it is the whole tab.
+    const place = () => {
+      const w = compact ? Math.min(active.offsetWidth, DOCK.height) : active.offsetWidth;
+      setPill({ x: active.offsetLeft + (active.offsetWidth - w) / 2, w });
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(active);
+    return () => ro.disconnect();
+  }, [index, compact, label]);
+
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[100] lg:bottom-8 lg:left-auto lg:right-8"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
     >
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-32 lg:hidden bg-gradient-to-b from-transparent to-[color-mix(in_srgb,var(--app-bg)_92%,transparent)]" />
-      <div className="relative mx-auto flex max-w-md items-center justify-center gap-2.5 px-4 lg:px-0">
+      <div ref={rowRef} className="relative mx-auto flex max-w-md items-center justify-center gap-2.5 px-4 max-[359px]:px-3 lg:px-0">
         <nav
+          ref={navRef}
           aria-label={t("main")}
           data-testid="tab-bar"
-          className="pointer-events-auto relative flex min-w-0 items-center gap-0.5 rounded-full max-lg:flex lg:hidden bg-card/85 p-1.5 shadow-float ring-1 ring-line backdrop-blur-xl"
-          style={{ "--tab": "clamp(40px, calc((100vw - 32px - 70px - 12px - 8px) / 5), 52px)" } as CSSProperties}
+          data-compact={compact}
+          className="dock-glass pointer-events-auto relative flex min-w-0 flex-1 items-center overflow-hidden rounded-full lg:hidden"
+          style={{ padding: DOCK.pad }}
         >
-          {index >= 0 && (
+          {/* Measures the label in the pill's font (hidden). */}
+          <span ref={probeRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap font-display text-[0.875rem] font-extrabold">
+            {label}
+          </span>
+          {pill && (
             <span
               aria-hidden
-              className={cx("slide fill-hue absolute left-1.5 top-1.5 rounded-full", hueClass(activeHue))}
-              style={{
-                width: "var(--tab)",
-                height: "var(--tab)",
-                transform: `translateX(calc(${index} * (var(--tab) + 2px)))`,
-                transition: "transform var(--dur-snappy) var(--ease-snappy), background 200ms ease-out",
-              }}
+              data-testid="tab-indicator"
+              className={cx("dock-indicator fill-hue absolute left-0 rounded-full", hueClass(activeHue))}
+              style={{ top: DOCK.pad, height: DOCK.height, width: pill.w, transform: `translateX(${pill.x}px)` }}
             />
           )}
           {TABS.map(({ href, key, icon: Icon }, i) => {
             const active = i === index;
+            const hue = FEATURE_HUE[key as keyof typeof FEATURE_HUE];
+            const labelled = active && !compact;
             return (
               <Link
                 key={href}
                 href={href}
                 aria-label={t(key)}
-                title={t(key)}
+                title={labelled ? undefined : t(key)}
                 data-testid={`tab-${key}`}
                 aria-current={active ? "page" : undefined}
                 className={cx(
                   "press-round relative flex items-center justify-center rounded-full",
-                  active ? hueClass(FEATURE_HUE[key as keyof typeof FEATURE_HUE]) : "text-muted hover:text-fg",
+                  labelled ? "flex-none" : "flex-1",
+                  active ? hueClass(hue) : "text-muted hover:text-fg",
+                  // Before the pill is measured (first paint), the active tab draws its own fill.
+                  active && !pill && "fill-hue",
                 )}
-                style={{ width: "var(--tab)", height: "var(--tab)", color: active ? "var(--h-on)" : undefined }}
+                style={{
+                  height: DOCK.height,
+                  minWidth: labelled ? undefined : DOCK.slot,
+                  paddingInline: labelled ? `${DOCK.pillLead}px ${DOCK.pillTrail}px` : undefined,
+                  gap: DOCK.gap,
+                  color: active ? "var(--h-on)" : undefined,
+                }}
               >
-                <Icon size={21} strokeWidth={active ? 2.6 : 2.2} key={active ? "on" : "off"} className={active ? "anim-pop" : undefined} />
+                <Icon size={DOCK.icon} strokeWidth={active ? 2.6 : 2.2} key={active ? "on" : "off"} className={cx("shrink-0", active && "anim-pop")} />
+                {labelled && (
+                  <span key={label} data-testid="tab-label" className="dock-label whitespace-nowrap font-display text-[0.875rem] font-extrabold">
+                    {label}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -276,22 +345,16 @@ function Sidebar({ pathname }: { pathname: string }) {
   );
 }
 
-/** Soft radial glow in the current bubble's hue behind the header (2.4); cross-fades on change. */
-function BubbleGlow({ hue }: { hue: Hue }) {
+/**
+ * Feature band (8.1): the screen's colour behind the header, two soft circles and a ring, fading out at the
+ * header's bottom edge. The bubble's colour lives on the chips, the Home hero and your chat messages.
+ */
+function BandDeco() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[520px] overflow-hidden lg:left-64">
-      {HUES.map((h) => (
-        <div
-          key={h}
-          className={cx("absolute inset-0 transition-opacity duration-700", hueClass(h))}
-          style={{
-            opacity: h === hue ? 1 : 0,
-            background:
-              "radial-gradient(340px 340px at 100% 0%, color-mix(in srgb, var(--h) var(--glow-a), transparent), transparent)," +
-              "radial-gradient(240px 240px at 0% 20px, color-mix(in srgb, var(--h-glow) var(--glow-b), transparent), transparent)",
-          }}
-        />
-      ))}
+    <div aria-hidden className="band-deco">
+      <span style={{ width: 220, height: 220, right: -70, top: -110 }} />
+      <span style={{ width: 110, height: 110, right: "26%", top: -62 }} />
+      <span className="band-ring" style={{ width: 30, height: 30, right: "38%", top: 22 }} />
     </div>
   );
 }
@@ -310,6 +373,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isSub = isChat || pathname.startsWith("/links");
 
   const hue = hueFor(bubble?.id);
+  const bandKey = navKey ? BAND_HUE[navKey] : "grape";
+  const bandHue = bandKey === "bubble" ? hue : bandKey;
   return (
     <div className="isolate min-h-dvh lg:pl-64" data-testid="app-shell" data-live={live}>
       <a
@@ -323,71 +388,78 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         {t("a11y.skipToContent")}
       </a>
-      <BubbleGlow hue={hue} />
       <DeepLinkTarget />
       <Sidebar pathname={pathname} />
-      <div className={cx("mx-auto flex max-w-4xl flex-col px-4", isChat ? "h-dvh" : "min-h-dvh")}>
-        <header className="shrink-0 pb-3 pt-6 lg:pt-8">
-          <div className="flex items-center gap-3 px-1">
-            {isSub && (
+      <div className={cx("flex flex-col", isChat ? "h-dvh" : "min-h-dvh")}>
+        <div className="feature-band shrink-0" style={{ "--band": `var(--${bandHue})` } as CSSProperties} data-testid="feature-band" data-hue={bandHue}>
+          <BandDeco />
+          <header className="mx-auto max-w-4xl px-4 pb-4 pt-6 lg:pt-8">
+            <div className="flex items-center gap-3 px-1">
+              {isSub && (
+                <button
+                  type="button"
+                  onClick={() => (window.history.length > 1 ? router.back() : router.push("/home"))}
+                  aria-label={t("common.back")}
+                  className="press-round flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card text-brand-ink shadow-soft lg:hidden"
+                >
+                  <ChevronLeft size={24} strokeWidth={2.6} />
+                </button>
+              )}
+              <div className="min-w-0 flex-1">
+                <h1
+                  key={navKey ?? "app"}
+                  className={cx("anim-fade screen-title line-clamp-2", isSub && "screen-title-sub")}
+                  data-testid="page-title"
+                >
+                  {/* Brand gradient on Home only: its band is the brand colour (8.5). */}
+                  <span className={navKey === "home" ? "text-brand-gradient" : undefined}>{navKey ? t(`nav.${navKey}`) : "Boolaa"}</span>
+                </h1>
+              </div>
+              {bubble && <SearchButton onClick={() => setSearchOpen(true)} />}
               <button
                 type="button"
-                onClick={() => (window.history.length > 1 ? router.back() : router.push("/home"))}
-                aria-label={t("common.back")}
-                className="press-round flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-card text-brand-ink shadow-soft lg:hidden"
+                onClick={() => setProfileOpen(true)}
+                aria-label={t("nav.profile")}
+                data-testid="profile-button"
+                className="press-round shrink-0 rounded-full"
               >
-                <ChevronLeft size={24} strokeWidth={2.6} />
+                <Avatar name={profile?.name} id={profile?.id} src={profile?.avatar} size={44} decorative />
               </button>
-            )}
-            <div className="min-w-0 flex-1">
-              <h1
-                key={navKey ?? "app"}
-                className={cx("anim-fade truncate font-black tracking-tight", isSub ? "text-[28px] lg:text-[34px]" : "text-[34px] lg:text-4xl")}
-                data-testid="page-title"
-              >
-                {navKey ? t(`nav.${navKey}`) : "Boolaa"}
-              </h1>
             </div>
-            {bubble && <SearchButton onClick={() => setSearchOpen(true)} />}
-            <button
-              type="button"
-              onClick={() => setProfileOpen(true)}
-              aria-label={t("nav.profile")}
-              data-testid="profile-button"
-              className="press-round rounded-full"
+            <div className="mt-3">
+              <BubbleSwitcher
+                onNew={() => {
+                  setRequested(false);
+                  setNewOpen(true);
+                }}
+              />
+            </div>
+          </header>
+        </div>
+        <div className={cx("mx-auto flex w-full max-w-4xl flex-1 flex-col px-4", isChat && "min-h-0")}>
+          {lostBubble && (
+            <p
+              role="status"
+              data-testid="lost-bubble"
+              className="hue-sunny anim-pop-soft mb-3 flex items-center gap-2 rounded-field px-4 py-2.5 text-sm font-medium text-hue-ink"
+              style={{ background: "linear-gradient(var(--h-wash), var(--h-wash)), var(--app-card)" }}
             >
-              <Avatar name={profile?.name} id={profile?.id} src={profile?.avatar} size={44} decorative />
-            </button>
-          </div>
-          <div className="mt-3">
-            <BubbleSwitcher
-              onNew={() => {
-                setRequested(false);
-                setNewOpen(true);
-              }}
-            />
-          </div>
-        </header>
-        {lostBubble && (
-          <p
-            role="status"
-            data-testid="lost-bubble"
-            className="hue-sunny anim-pop-soft mb-3 flex items-center gap-2 rounded-field bg-hue-wash px-4 py-2.5 text-sm font-medium text-hue-ink"
-          >
-            <span className="flex-1">{t("shell.lostBubble", { bubble: lostBubble })}</span>
-            <button type="button" onClick={dismissLostBubble} aria-label={t("a11y.dismiss")} className="press-round flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-hue-wash">
-              <X size={16} />
-            </button>
-          </p>
-        )}
-        <ConnectivityBanner />
-        <main id="main" tabIndex={-1} key={`${bubble?.id}:${pathname}`} className={cx("anim-route flex-1 outline-none", isChat ? "min-h-0 pb-4" : "pb-36 lg:pb-16")}>
-          {children}
-        </main>
+              <span className="flex-1">{t("shell.lostBubble", { bubble: lostBubble })}</span>
+              <button type="button" onClick={dismissLostBubble} aria-label={t("a11y.dismiss")} className="press-round flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-hue-wash">
+                <X size={16} />
+              </button>
+            </p>
+          )}
+          <ConnectivityBanner />
+          <main id="main" tabIndex={-1} key={`${bubble?.id}:${pathname}`} className={cx("anim-route flex-1 outline-none", isChat ? "min-h-0 pb-4" : "pb-36 lg:pb-16")}>
+            {children}
+          </main>
+        </div>
       </div>
 
       {!isChat && <Dock pathname={pathname} chatLabel={t("nav.openChat")} />}
 
+      <CheerHost />
       <BubbleSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
       <Modal open={newOpen} onClose={() => setNewOpen(false)} title={t("createJoin.dialogTitle")}>

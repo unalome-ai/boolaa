@@ -320,9 +320,9 @@
     opacity: 0.5;
   }
 }
-/* Soft destructive (leave bubble): pill, danger 10%, danger text. */
+/* Soft destructive (leave bubble): pill, danger 10%, danger text. Destructive never bounces (8.3): a dim, no squish. */
 @utility btn-danger {
-  @apply btn;
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 font-display text-[15px] font-bold transition-opacity duration-200 active:opacity-80 disabled:cursor-not-allowed;
   background: color-mix(in srgb, var(--danger) 10%, transparent);
   color: var(--danger-ink);
   &:hover:not(:disabled) {
@@ -506,10 +506,6 @@
 }
 html { scroll-behavior: smooth; }
 
-/* Header glow strength (2.4) */
-:root { --glow-a: 22%; --glow-b: 16%; }
-:root[data-theme="dark"] { --glow-a: 20%; --glow-b: 12%; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glow-a: 20%; --glow-b: 12%; } }
 
 /* Phone frame for the landing's real screenshots (components/phone.tsx). A plain rounded slab:
    percentages keep the proportions at any width (padding and x-radius follow the width). */
@@ -599,3 +595,204 @@ html { scroll-behavior: smooth; }
   outline-offset: 3px;
   transition: outline-color 0.6s ease;
 }
+
+/* ================================================================================================
+ * 8 Brand redesign (2026-11): feature bands, bubble-hue chat, labelled glass dock, mascot, display type.
+ * docs/design-system.md §8. The strengths below are also in src/lib/brand.ts (tests/contrast.spec.ts
+ * checks both agree and that every text pair passes).
+ * ============================================================================================== */
+@property --band {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+:root {
+  --band-a: 28%;
+  --band-circle: rgb(255 255 255 / 0.2);
+  --chat-orb-a: 0.06;
+  --glass-a: 72%;
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-shadow: 0 16px 36px -12px rgb(42 27 94 / 0.32), 0 2px 6px rgb(42 27 94 / 0.08);
+  /* Brand gradient for large titles: the hue *text* shades (they switch with the theme). */
+  --title-grad: linear-gradient(100deg, var(--grape-ink), var(--pink-ink) 55%, var(--tangerine-ink));
+  --sticker-edge: rgb(255 255 255 / 0.95);
+  --mascot-ink: #1e1638;
+  --mascot-cheek: #ff4f8b;
+}
+:root[data-theme="dark"] {
+  --band-a: 22%;
+  --band-circle: color-mix(in srgb, var(--app-bg) 40%, transparent);
+  --chat-orb-a: 0.1;
+  --glass-a: 80%;
+  --glass-edge: rgb(255 255 255 / 0.14);
+  --glass-shadow: 0 16px 36px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --band-a: 22%;
+    --band-circle: color-mix(in srgb, var(--app-bg) 40%, transparent);
+    --chat-orb-a: 0.1;
+    --glass-a: 80%;
+    --glass-edge: rgb(255 255 255 / 0.14);
+    --glass-shadow: 0 16px 36px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+  }
+}
+
+@layer components {
+/* 8.1 Feature band: the screen's hue behind the header, full strength over the top 45 %, fading to 0 at the
+   header's bottom edge. `--band` is a registered colour, so a tab switch cross-fades it. */
+.feature-band {
+  position: relative;
+  isolation: isolate;
+  transition: --band 400ms ease-out;
+}
+.band-deco {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--band) var(--band-a), transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000 45%, transparent);
+  mask-image: linear-gradient(180deg, #000 45%, transparent);
+}
+.band-deco > span {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--band-circle);
+}
+.band-deco > .band-ring {
+  background: none;
+  border: 2px solid var(--band-circle);
+}
+
+/* 8.2 Chat bubbles. Mine: the bubble's gradient + glossy highlight, onFill text. Others: the sender's wash over
+   the card with a 3 px edge in their fill. */
+.msg-mine {
+  position: relative;
+  background: var(--h-grad);
+  color: var(--h-on);
+  box-shadow: var(--h-glow-shadow);
+}
+.msg-mine.msg-gloss::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 3px;
+  width: 26px;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.45);
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+.msg-other {
+  background: linear-gradient(var(--h-wash), var(--h-wash)), var(--app-card);
+  color: var(--app-fg);
+  box-shadow: inset 3px 0 0 var(--h), 0 8px 24px -6px var(--shadow-tint);
+}
+.chat-orb {
+  position: absolute;
+  opacity: var(--chat-orb-a);
+  pointer-events: none;
+}
+
+/* 8.3 Glass dock */
+.dock-glass {
+  background: color-mix(in srgb, var(--app-card) var(--glass-a), transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--app-line), var(--glass-shadow);
+}
+.dock-indicator {
+  transition:
+    transform var(--dur-snappy) var(--ease-snappy),
+    width var(--dur-snappy) var(--ease-snappy),
+    background 200ms ease-out;
+}
+.dock-label {
+  animation: dock-label 200ms ease-out 60ms both;
+}
+
+/* 8.4 Mascot */
+.mascot-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.2s ease-in-out infinite;
+}
+.mascot-cheer {
+  animation: cheer-hop 600ms var(--ease-bouncy) 3;
+}
+.mascot-breathe {
+  animation: breathe 4.8s ease-in-out infinite;
+}
+
+/* 8.5 Display type */
+.screen-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  /* 26 px at 320 CSS px, 38 px from 400 up (rem, so the text size setting still applies). */
+  font-size: clamp(1.625rem, 15vw - 1.375rem, 2.375rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.screen-title-sub {
+  font-size: clamp(1.5rem, 10vw - 0.5rem, 2rem);
+}
+.text-brand-gradient {
+  background: var(--title-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@media (forced-colors: active) {
+  .text-brand-gradient { background: none; color: CanvasText; }
+}
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.375rem;
+  padding: 0.125rem 0.5rem;
+  margin: 2px;
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: var(--h-grad);
+  color: var(--h-on);
+  box-shadow: 0 0 0 2px var(--sticker-edge), 0 3px 8px -2px color-mix(in srgb, var(--h) 45%, transparent);
+  transform: rotate(var(--tilt, 0deg));
+}
+/* Narrow screens (320 CSS px, 200 % zoom): stickers stand straight so nothing clips. */
+@media (max-width: 359px) {
+  .sticker { transform: none; }
+}
+
+/* Cheer toast (8.4): pops above the dock. */
+.cheer-toast {
+  animation: pop-soft var(--dur-bouncy) var(--ease-bouncy) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-band { transition-duration: 200ms; }
+  .dock-indicator { transition: background 200ms ease-out !important; }
+  .dock-label { animation: fade-in 200ms ease-out both !important; }
+  .mascot-blink, .mascot-cheer, .mascot-breathe { animation: none !important; }
+  .chat-orb, .chat-orb > * { animation: none !important; }
+  .cheer-toast { animation: fade-in 200ms ease-out both !important; }
+}
+}
+@keyframes dock-label { from { opacity: 0; transform: translateX(-4px); } }
+@keyframes blink { 0%, 94%, 98%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes cheer-hop { 50% { transform: translateY(calc(var(--mascot, 80px) * -0.08)); } }
+@keyframes breathe { 50% { transform: scale(1.03); } }
+/* The mascot never appears on safety surfaces (report, block, delete account, suspended, moderation). */
+[data-calm] .mascot { display: none !important; }

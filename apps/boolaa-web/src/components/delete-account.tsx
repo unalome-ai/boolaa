@@ -93,7 +93,7 @@ export function DeleteAccountPanel({ supabase, userId, onCancel }: { supabase: B
   }
 
   return (
-    <div className="space-y-3 rounded-field border border-danger/30 bg-danger/5 p-4" data-testid="delete-panel">
+    <div data-calm className="space-y-3 rounded-field border border-danger/30 bg-danger/5 p-4" data-testid="delete-panel">
       <p className="font-display font-extrabold text-danger-ink">{t("profile.deleteTitle")}</p>
       {step === "warn" ? (
         <>

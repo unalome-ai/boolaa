@@ -183,8 +183,8 @@
   "chat": {
     "live": "live",
     "connecting": "connecting…",
-    "emptyTitle": "No messages yet",
-    "emptyHint": "Say hi to your bubble!",
+    "emptyTitle": "Say hi!",
+    "emptyHint": "Nobody's talked yet. Break the ice.",
     "messageLabel": "Message",
     "placeholder": "Message {bubble}",
     "send": "Send",
@@ -207,10 +207,10 @@
     "deleteEvent": "Delete event",
     "myEvents": "My events",
     "bubbleEvents": "Bubble events",
-    "emptyMine": "You haven't created any events.",
-    "emptyOthers": "Nothing planned by others yet.",
-    "emptyTitle": "No events yet",
-    "emptyHint": "Plan something with your bubble.",
+    "emptyMine": "Dinner, a hike, a film night: start something.",
+    "emptyOthers": "Nobody else has planned anything yet.",
+    "emptyTitle": "Quiet week…",
+    "emptyHint": "Plan the next thing and your bubble can join in.",
     "confirmDelete": "Delete “{title}”?",
     "rsvp": "RSVP",
     "going": "Going",
@@ -221,7 +221,9 @@
     "addToCalendar": "Add to calendar",
     "pastEvents": "Past events",
     "ended": "Ended",
-    "wentCount": "{count, plural, =0 {Nobody went} one {# person went} other {# people went}}"
+    "wentCount": "{count, plural, =0 {Nobody went} one {# person went} other {# people went}}",
+    "emptyMineTitle": "Got a plan?",
+    "emptyOthersTitle": "Quiet week…"
   },
   "food": {
     "share": "Share food",
@@ -229,15 +231,17 @@
     "deletePost": "Delete post",
     "myPosts": "My posts",
     "fromBubble": "From the bubble",
-    "emptyMine": "You haven't shared anything yet.",
-    "emptyOthers": "Nothing from others yet.",
-    "emptyTitle": "No food shared yet",
-    "emptyHint": "Leftovers? Cooked too much? Share it.",
+    "emptyMine": "Share what you've got before it goes off.",
+    "emptyOthers": "When someone shares food, it lands here.",
+    "emptyTitle": "Empty table",
+    "emptyHint": "Leftovers? Cooked too much? Snap it and share it.",
     "confirmDelete": "Delete this post?",
     "descriptionPlaceholder": "What is it, where is it, until when?",
     "post": "Post",
     "imageAlt": "Food photo",
-    "sharedSomeFood": "Shared some food"
+    "sharedSomeFood": "Shared some food",
+    "emptyMineTitle": "Got leftovers?",
+    "emptyOthersTitle": "Nothing shared yet"
   },
   "market": {
     "filter": "Filter items",
@@ -248,8 +252,8 @@
     "addItem": "New item",
     "editItem": "Edit item",
     "deleteItem": "Delete item",
-    "emptyTitle": "Nothing here yet",
-    "emptyHint": "Give away or trade things with your bubble.",
+    "emptyTitle": "Empty stall",
+    "emptyHint": "Got something you don't need? Give it away or trade it.",
     "confirmDelete": "Delete “{title}”?",
     "availability": "Availability",
     "available": "Available",
@@ -266,8 +270,8 @@
     "addLink": "Add link",
     "openLink": "Open link",
     "deleteLink": "Delete link",
-    "emptyTitle": "No links yet",
-    "emptyHint": "Share recipes, articles, playlists…",
+    "emptyTitle": "Nothing saved yet",
+    "emptyHint": "Recipes, playlists, that one article: keep them here.",
     "confirmDelete": "Delete “{title}”?",
     "url": "URL",
     "tags": "Tags (comma-separated)",
@@ -339,8 +343,8 @@
     "market": "Marketplace",
     "event": "Upcoming event",
     "link": "Link",
-    "emptyTitle": "It's quiet in here",
-    "emptyHint": "Start a chat, plan an event or share something.",
+    "emptyTitle": "Nothing new yet",
+    "emptyHint": "Be the first: say hi, plan something or share a snack.",
     "greeting": "Hi, {name}!",
     "whatsNew": "What's new"
   },
@@ -636,5 +640,12 @@
     "sending": "Sending…",
     "notSent": "Not sent",
     "discard": "Don't send"
+  },
+  "cheer": {
+    "going": "You're going!",
+    "firstEvent": "Your first event is up!",
+    "firstPost": "First post shared!",
+    "firstItem": "First item listed!",
+    "joined": "You're in. Say hi to {bubble}!"
   }
 }

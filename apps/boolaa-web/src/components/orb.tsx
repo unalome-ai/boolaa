@@ -43,26 +43,8 @@ const COMPANIONS: Partial<Record<Hue, [Hue, Hue]>> = {
   sky: ["mint", "pink"],
 };
 
-/** Empty-state cluster: a main orb carrying a symbol, plus two companions. */
-export function BubbleCluster({ hue, size = 84, children, animated = true }: { hue: Hue; size?: number; children?: ReactNode; animated?: boolean }) {
-  const [a, b] = COMPANIONS[hue] ?? ["coral", "mint"];
-  return (
-    <span aria-hidden className="relative inline-block" style={{ width: size, height: size }}>
-      <span className={cx("absolute", animated && "anim-bob")} style={{ left: size * 0.1, top: size * 0.1, "--bob-period": "5.2s", "--bob": "4px" } as Vars}>
-        <Orb hue={hue} size={size * 0.8} />
-        <span className={cx("absolute inset-0 flex items-center justify-center", hueClass(hue))} style={{ color: "var(--h-on)" }}>
-          {children}
-        </span>
-      </span>
-      <span className={cx("absolute", animated && "anim-bob")} style={{ right: -size * 0.06, top: -size * 0.02, "--bob-period": "3.8s", "--bob": "5px" } as Vars}>
-        <Orb hue={a} size={size * 0.34} />
-      </span>
-      <span className={cx("absolute", animated && "anim-bob")} style={{ left: 0, bottom: size * 0.02, "--bob-period": "4.6s", "--bob": "3px" } as Vars}>
-        <Orb hue={b} size={size * 0.24} />
-      </span>
-    </span>
-  );
-}
+/** The two companion orbs drawn next to a main orb of `hue` (4.5). */
+export const companionsFor = (hue: Hue): [Hue, Hue] => COMPANIONS[hue] ?? ["coral", "mint"];
 
 // 16 orbs with fixed (deterministic) placement, so server and client render the same markup.
 const AMBIENT: { hue: Hue; x: number; r: number; dur: number; delay: number }[] = [
@@ -115,6 +97,116 @@ export function FeatureBadge({ hue, size = 44, children, className }: { hue: Hue
       style={{ width: size, height: size, borderRadius: size * 0.32, color: "var(--h-on)" }}
     >
       {children}
+    </span>
+  );
+}
+
+/** Mascot expressions (docs/design-system.md §8.4). */
+export type Expression = "curious" | "sleepy" | "cheering" | "worried";
+
+/**
+ * The face, on a 100 × 100 box whose circle is the orb (so every value is a percentage of the orb's diameter).
+ * iOS (Canvas) and Android (DrawScope) draw the same shapes from the same numbers.
+ */
+function Face({ expression, white }: { expression: Expression; white: boolean }) {
+  const ink = white ? "#ffffff" : "var(--mascot-ink)";
+  const shine = white ? "var(--h-deep)" : "#ffffff";
+  const stroke = { stroke: ink, strokeWidth: 3.2, strokeLinecap: "round" as const, fill: "none" };
+  const cheek = (x: number) => (
+    <ellipse cx={x} cy={64} rx={6} ry={3.5} fill="var(--mascot-cheek)" opacity={expression === "cheering" ? 0.65 : 0.45} />
+  );
+  const openEye = (x: number, y: number, rx: number, ry: number) => (
+    <g key={x}>
+      <ellipse cx={x} cy={y} rx={rx} ry={ry} fill={ink} />
+      <circle cx={x + 1.6} cy={y - 2.4} r={2} fill={shine} />
+    </g>
+  );
+  return (
+    <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden>
+      {cheek(25)}
+      {cheek(75)}
+      {expression === "curious" && (
+        <>
+          <g className="mascot-blink">{[openEye(35, 52, 5.8, 7.6), openEye(65, 52, 5.8, 7.6)]}</g>
+          <ellipse cx={50} cy={69} rx={4.4} ry={5} fill={ink} />
+        </>
+      )}
+      {expression === "sleepy" && (
+        <>
+          <path d="M29 54 Q35 59 41 54 M59 54 Q65 59 71 54" {...stroke} />
+          <ellipse cx={50} cy={70} rx={3} ry={2.2} fill={ink} />
+          <circle cx={80} cy={28} r={3} fill="#ffffff" opacity={0.7} />
+          <circle cx={87} cy={18} r={2} fill="#ffffff" opacity={0.55} />
+        </>
+      )}
+      {expression === "cheering" && (
+        <>
+          <path d="M29 56 Q35 48 41 56 M59 56 Q65 48 71 56" {...stroke} />
+          <path d="M38 64 Q50 82 62 64 Z" fill={ink} stroke={ink} strokeWidth={2} strokeLinejoin="round" />
+          <ellipse cx={50} cy={72.5} rx={5} ry={2.6} fill="#ff6b8a" />
+        </>
+      )}
+      {expression === "worried" && (
+        <>
+          <path d="M28 45 L40 40 M60 40 L72 45" {...stroke} strokeWidth={2.6} />
+          <g className="mascot-blink">{[openEye(35, 55, 4.6, 6), openEye(65, 55, 4.6, 6)]}</g>
+          <path d="M42 72 Q50 65 58 72" {...stroke} />
+        </>
+      )}
+    </svg>
+  );
+}
+
+const WHITE_FACE: Hue[] = ["grape", "indigo"];
+
+/**
+ * Boolaa's mascot: the empty-state cluster whose main orb has a face (§8.4). Decorative (hidden from assistive
+ * tech); the text next to it carries the meaning. Never used on safety surfaces: inside `[data-calm]` it is not
+ * drawn at all (globals.css), so a stray use can't reach report, block, delete account or moderation.
+ */
+export function Mascot({
+  expression,
+  hue,
+  size = 96,
+  companions = true,
+  className,
+}: {
+  expression: Expression;
+  hue: Hue;
+  size?: number;
+  companions?: boolean;
+  className?: string;
+}) {
+  const [a, b] = companionsFor(hue);
+  const main = Math.round(size * (companions ? 0.8 : 1));
+  const motion = expression === "cheering" ? "mascot-cheer" : expression === "sleepy" ? "mascot-breathe" : "anim-bob";
+  return (
+    <span
+      aria-hidden
+      data-testid="mascot"
+      data-expression={expression}
+      className={cx("mascot relative inline-block shrink-0", className)}
+      style={{ width: size, height: size, "--mascot": `${main}px` } as Vars}
+    >
+      <span
+        className={cx("absolute", motion)}
+        style={{ left: companions ? size * 0.1 : 0, top: companions ? size * 0.1 : 0, "--bob-period": "5.2s", "--bob": "4px" } as Vars}
+      >
+        <Orb hue={hue} size={main} />
+        <span className={cx("absolute inset-0", hueClass(hue))}>
+          <Face expression={expression} white={WHITE_FACE.includes(hue)} />
+        </span>
+      </span>
+      {companions && (
+        <>
+          <span className="anim-bob absolute" style={{ right: -size * 0.06, top: -size * 0.02, "--bob-period": "3.8s", "--bob": "5px" } as Vars}>
+            <Orb hue={a} size={size * 0.34} />
+          </span>
+          <span className="anim-bob absolute" style={{ left: 0, bottom: size * 0.02, "--bob-period": "4.6s", "--bob": "3px" } as Vars}>
+            <Orb hue={b} size={size * 0.24} />
+          </span>
+        </>
+      )}
     </span>
   );
 }

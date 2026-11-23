@@ -5,6 +5,7 @@ import { ReactionBar } from "@/components/reactions";
 import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { CalendarCheck, CalendarPlus, ChevronDown, CircleCheck, CirclePlus, Clock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { Confetti } from "@/components/confetti";
+import { cheer } from "@/components/cheer";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byDatetimeAsc, useLiveFeed } from "@/lib/live-feed";
@@ -21,6 +22,7 @@ import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/comp
 export default function EventsPage() {
   const { supabase, userId, blocked } = useBoolaa();
   const t = useTranslations("events");
+  const tCheer = useTranslations("cheer");
   const errorText = useErrorText();
   const bubble = useBubble();
   // The last view shows at once (also offline); the load below refreshes it.
@@ -88,9 +90,9 @@ export default function EventsPage() {
   const mine = upcoming.filter((e) => e.creator_id === userId);
   const others = upcoming.filter((e) => e.creator_id !== userId);
 
-  const list = (items: BoolaaEvent[], empty: string) =>
+  const list = (items: BoolaaEvent[], emptyTitle: string, empty: string) =>
     items.length === 0 ? (
-      <EmptyState icon={<CalendarPlus size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={empty} hue="coral" />
+      <EmptyState title={emptyTitle} hint={empty} hue="coral" />
     ) : (
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {items.map((ev, i) => (
@@ -128,14 +130,14 @@ export default function EventsPage() {
       ) : events.length === 0 ? (
         <>
           <SectionTitle hue="coral" action={newButton}>{t("myEvents")}</SectionTitle>
-          <EmptyState icon={<CalendarPlus size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="coral" />
+          <EmptyState title={t("emptyTitle")} hint={t("emptyHint")} hue="coral" />
         </>
       ) : (
         <>
           <SectionTitle hue="coral" count={mine.length} action={newButton}>{t("myEvents")}</SectionTitle>
-          {list(mine, t("emptyMine"))}
+          {list(mine, t("emptyMineTitle"), t("emptyMine"))}
           <SectionTitle hue="coral" count={others.length}>{t("bubbleEvents")}</SectionTitle>
-          {list(others, t("emptyOthers"))}
+          {list(others, t("emptyOthersTitle"), t("emptyOthers"))}
           {past.length > 0 && (
             <details className="group mt-6" data-testid="past-events">
               <summary className="flex cursor-pointer list-none items-center gap-2 rounded-field py-2 text-muted hover:text-fg [&::-webkit-details-marker]:hidden">
@@ -146,7 +148,7 @@ export default function EventsPage() {
                 </span>
                 <ChevronDown size={18} className="ml-auto transition-transform group-open:rotate-180" />
               </summary>
-              <div className="mt-2">{list(past, "")}</div>
+              <div className="mt-2">{list(past, "", "")}</div>
             </details>
           )}
         </>
@@ -156,6 +158,8 @@ export default function EventsPage() {
           <EventForm
             event={editing === "new" ? null : editing}
             onDone={() => {
+              // Your first event: the cheering mascot (design-system 8.4).
+              if (editing === "new" && mine.length === 0) cheer(tCheer("firstEvent"), "coral");
               setEditing(null);
               void load();
             }}
@@ -189,6 +193,7 @@ function EventCard({
 }) {
   const t = useTranslations("events");
   const tc = useTranslations("common");
+  const tCheer = useTranslations("cheer");
   const fmt = useFormat();
   const past = hasEnded(ev.datetime, now);
   const [burst, setBurst] = useState(0);
@@ -259,7 +264,10 @@ function EventCard({
             <button
               type="button"
               onClick={async () => {
-                if ((await onRsvp()) === true) setBurst((n) => n + 1);
+                if ((await onRsvp()) === true) {
+                  setBurst((n) => n + 1);
+                  cheer(tCheer("going"), "mint");
+                }
               }}
               aria-pressed={going}
               data-testid="rsvp-button"

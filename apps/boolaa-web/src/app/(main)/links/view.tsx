@@ -112,7 +112,7 @@ export default function LinksPage() {
           <PageLoader />
         )
       ) : shown.length === 0 ? (
-        <EmptyState icon={<Link2 size={30} strokeWidth={2.4} />} title={t("emptyTitle")} hint={t("emptyHint")} hue="sky" />
+        <EmptyState title={t("emptyTitle")} hint={t("emptyHint")} hue="sky" />
       ) : (
         <ul className="space-y-3">
           {shown.map((l, i) => (

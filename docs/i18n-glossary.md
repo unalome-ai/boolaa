@@ -222,3 +222,35 @@ Web keys under `offline.*`; Android `offline_*`; iOS the English text as key. Ca
 | notSentTapToRetry (apps) | Not sent — tap to retry | Nu s-a trimis — atinge ca să încerci din nou | Non envoyé — touche pour réessayer | No enviado — toca para reintentar | Non inviato — tocca per riprovare |
 | notSent (web) | Not sent | Nu s-a trimis | Non envoyé | No enviado | Non inviato |
 | discard | Don't send | Nu trimite | Ne pas envoyer | No enviar | Non inviare |
+
+## Brand redesign: empty states and cheers (docs/design-system.md §8.4)
+
+**Needs native-speaker review** (drafted by AI, like the first translations). Empty states pair the curious mascot with a short title (up to 3 words) and one warm line that invites an action; cheers go with the cheering mascot and use one exclamation mark at most. Load errors keep their plain wording ("Couldn't load this…"): the mascot changes, the voice doesn't. Keys are the web's `messages/*.json`; iOS and Android use the same texts. `{bubble}` is the bubble's name (user content, never translated).
+
+| Where | key | en | ro | fr | es | it |
+|---|---|---|---|---|---|---|
+| Home feed empty | `home.emptyTitle` | Nothing new yet | Nimic nou încă | Rien de neuf | Nada nuevo aún | Niente di nuovo |
+| Home feed empty | `home.emptyHint` | Be the first: say hi, plan something or share a snack. | Fii primul: salută, plănuiește ceva sau împarte o gustare. | Lance-toi : dis bonjour, organise quelque chose ou partage un snack. | Sé el primero: saluda, planea algo o comparte algo de picar. | Inizia tu: saluta, organizza qualcosa o condividi uno spuntino. |
+| Chat, no messages | `chat.emptyTitle` | Say hi! | Spune salut! | Dis bonjour ! | ¡Saluda! | Saluta! |
+| Chat, no messages | `chat.emptyHint` | Nobody's talked yet. Break the ice. | Nimeni n-a scris încă. Sparge gheața. | Personne n'a encore écrit. Brise la glace. | Nadie ha escrito todavía. Rompe el hielo. | Nessuno ha ancora scritto. Rompi il ghiaccio. |
+| Events, none at all | `events.emptyTitle` | Quiet week… | Săptămână liniștită… | Semaine calme… | Semana tranquila… | Settimana tranquilla… |
+| Events, none at all | `events.emptyHint` | Plan the next thing and your bubble can join in. | Plănuiește următorul lucru și bula ta ți se poate alătura. | Organise la prochaine sortie et ta bulle pourra se joindre à toi. | Planea lo próximo y tu burbuja podrá apuntarse. | Organizza la prossima uscita e la tua bolla potrà unirsi. |
+| Events, “My events” empty | `events.emptyMineTitle` | Got a plan? | Ai un plan? | Une idée ? | ¿Algún plan? | Hai un piano? |
+| Events, “My events” empty | `events.emptyMine` | Dinner, a hike, a film night: start something. | O cină, o drumeție, o seară de film: pornește ceva. | Un dîner, une rando, une soirée film : lance quelque chose. | Una cena, una excursión, una noche de cine: organiza algo. | Una cena, un'escursione, una serata film: organizza qualcosa. |
+| Events, “Bubble events” empty | `events.emptyOthersTitle` | Quiet week… | Săptămână liniștită… | Semaine calme… | Semana tranquila… | Settimana tranquilla… |
+| Events, “Bubble events” empty | `events.emptyOthers` | Nobody else has planned anything yet. | Nimeni altcineva n-a plănuit nimic încă. | Personne d'autre n'a encore rien prévu. | Nadie más ha planeado nada todavía. | Nessun altro ha ancora organizzato nulla. |
+| Food Circle, nothing at all | `food.emptyTitle` | Empty table | Masa e goală | Table vide | Mesa vacía | Tavola vuota |
+| Food Circle, nothing at all | `food.emptyHint` | Leftovers? Cooked too much? Snap it and share it. | Ți-au rămas resturi? Ai gătit prea mult? Fă o poză și împarte. | Des restes ? Tu as trop cuisiné ? Prends une photo et partage. | ¿Te han sobrado cosas? ¿Cocinaste de más? Hazle una foto y compártelo. | Avanzi? Hai cucinato troppo? Scatta una foto e condividilo. |
+| Food, “My posts” empty | `food.emptyMineTitle` | Got leftovers? | Ai resturi? | Des restes ? | ¿Te ha sobrado algo? | Hai avanzi? |
+| Food, “My posts” empty | `food.emptyMine` | Share what you've got before it goes off. | Împarte ce ai înainte să se strice. | Partage ce que tu as avant que ça se perde. | Comparte lo que tienes antes de que se eche a perder. | Condividi quello che hai prima che vada a male. |
+| Food, “From the bubble” empty | `food.emptyOthersTitle` | Nothing shared yet | Nimic împărțit încă | Rien de partagé | Nada compartido aún | Niente di condiviso |
+| Food, “From the bubble” empty | `food.emptyOthers` | When someone shares food, it lands here. | Când cineva împarte mâncare, apare aici. | Quand quelqu'un partage à manger, ça arrive ici. | Cuando alguien comparta comida, aparecerá aquí. | Quando qualcuno condivide del cibo, lo trovi qui. |
+| Marketplace empty | `market.emptyTitle` | Empty stall | Tarabă goală | Stand vide | Puesto vacío | Bancarella vuota |
+| Marketplace empty | `market.emptyHint` | Got something you don't need? Give it away or trade it. | Ai ceva de care nu mai ai nevoie? Dă-l sau schimbă-l. | Un truc dont tu n'as plus besoin ? Donne-le ou échange-le. | ¿Tienes algo que ya no necesitas? Regálalo o intercámbialo. | Hai qualcosa che non ti serve? Regalalo o scambialo. |
+| Links empty | `links.emptyTitle` | Nothing saved yet | Nimic salvat încă | Rien d'enregistré | Nada guardado aún | Niente di salvato |
+| Links empty | `links.emptyHint` | Recipes, playlists, that one article: keep them here. | Rețete, playlisturi, articolul ăla: păstrează-le aici. | Recettes, playlists, cet article-là : garde-les ici. | Recetas, listas de reproducción, ese artículo: guárdalos aquí. | Ricette, playlist, quell'articolo: tienili qui. |
+| RSVP confirmed | `cheer.going` | You're going! | Participi! | Tu participes ! | ¡Vas a ir! | Ci sei! |
+| first event saved | `cheer.firstEvent` | Your first event is up! | Primul tău eveniment e gata! | Ton premier événement est en ligne ! | ¡Tu primer evento ya está! | Il tuo primo evento è online! |
+| first food post saved | `cheer.firstPost` | First post shared! | Prima postare e gata! | Premier post partagé ! | ¡Primera publicación compartida! | Primo post condiviso! |
+| first market item saved | `cheer.firstItem` | First item listed! | Primul anunț e publicat! | Premier objet en ligne ! | ¡Primer artículo publicado! | Primo oggetto pubblicato! |
+| admitted to a bubble (Home, once) | `cheer.joined` | You're in. Say hi to {bubble}! | Ai intrat. Salută-i pe cei din {bubble}! | Tu es dedans. Dis bonjour à {bubble} ! | Ya estás dentro. ¡Saluda a {bubble}! | Sei dentro. Saluta {bubble}! |

@@ -183,8 +183,8 @@
   "chat": {
     "live": "in diretta",
     "connecting": "connessione…",
-    "emptyTitle": "Ancora nessun messaggio",
-    "emptyHint": "Saluta la tua bolla!",
+    "emptyTitle": "Saluta!",
+    "emptyHint": "Nessuno ha ancora scritto. Rompi il ghiaccio.",
     "messageLabel": "Messaggio",
     "placeholder": "Messaggio a {bubble}",
     "send": "Invia",
@@ -207,10 +207,10 @@
     "deleteEvent": "Elimina evento",
     "myEvents": "I miei eventi",
     "bubbleEvents": "Eventi della bolla",
-    "emptyMine": "Non hai ancora creato eventi.",
-    "emptyOthers": "Gli altri non hanno ancora organizzato nulla.",
-    "emptyTitle": "Ancora nessun evento",
-    "emptyHint": "Organizza qualcosa con la tua bolla.",
+    "emptyMine": "Una cena, un'escursione, una serata film: organizza qualcosa.",
+    "emptyOthers": "Nessun altro ha ancora organizzato nulla.",
+    "emptyTitle": "Settimana tranquilla…",
+    "emptyHint": "Organizza la prossima uscita e la tua bolla potrà unirsi.",
     "confirmDelete": "Eliminare «{title}»?",
     "rsvp": "Ci sono",
     "going": "Ci sono",
@@ -221,7 +221,9 @@
     "addToCalendar": "Aggiungi al calendario",
     "pastEvents": "Eventi passati",
     "ended": "Concluso",
-    "wentCount": "{count, plural, =0 {Non c'è andato nessuno} one {C'è andata # persona} other {Ci sono andate # persone}}"
+    "wentCount": "{count, plural, =0 {Non c'è andato nessuno} one {C'è andata # persona} other {Ci sono andate # persone}}",
+    "emptyMineTitle": "Hai un piano?",
+    "emptyOthersTitle": "Settimana tranquilla…"
   },
   "food": {
     "share": "Condividi cibo",
@@ -229,15 +231,17 @@
     "deletePost": "Elimina post",
     "myPosts": "I miei post",
     "fromBubble": "Dalla bolla",
-    "emptyMine": "Non hai ancora condiviso nulla.",
-    "emptyOthers": "Ancora niente dagli altri.",
-    "emptyTitle": "Ancora nessun cibo condiviso",
-    "emptyHint": "Avanzi? Hai cucinato troppo? Condividilo.",
+    "emptyMine": "Condividi quello che hai prima che vada a male.",
+    "emptyOthers": "Quando qualcuno condivide del cibo, lo trovi qui.",
+    "emptyTitle": "Tavola vuota",
+    "emptyHint": "Avanzi? Hai cucinato troppo? Scatta una foto e condividilo.",
     "confirmDelete": "Eliminare questo post?",
     "descriptionPlaceholder": "Cos'è, dov'è, fino a quando?",
     "post": "Pubblica",
     "imageAlt": "Foto di cibo",
-    "sharedSomeFood": "Ha condiviso del cibo"
+    "sharedSomeFood": "Ha condiviso del cibo",
+    "emptyMineTitle": "Hai avanzi?",
+    "emptyOthersTitle": "Niente di condiviso"
   },
   "market": {
     "filter": "Filtra oggetti",
@@ -248,8 +252,8 @@
     "addItem": "Nuovo oggetto",
     "editItem": "Modifica oggetto",
     "deleteItem": "Elimina oggetto",
-    "emptyTitle": "Ancora niente qui",
-    "emptyHint": "Regala o scambia oggetti con la tua bolla.",
+    "emptyTitle": "Bancarella vuota",
+    "emptyHint": "Hai qualcosa che non ti serve? Regalalo o scambialo.",
     "confirmDelete": "Eliminare «{title}»?",
     "availability": "Disponibilità",
     "available": "Disponibile",
@@ -266,8 +270,8 @@
     "addLink": "Aggiungi link",
     "openLink": "Apri link",
     "deleteLink": "Elimina link",
-    "emptyTitle": "Ancora nessun link",
-    "emptyHint": "Condividi ricette, articoli, playlist…",
+    "emptyTitle": "Niente di salvato",
+    "emptyHint": "Ricette, playlist, quell'articolo: tienili qui.",
     "confirmDelete": "Eliminare «{title}»?",
     "url": "URL",
     "tags": "Tag (separati da virgole)",
@@ -339,8 +343,8 @@
     "market": "Mercatino",
     "event": "Prossimo evento",
     "link": "Link",
-    "emptyTitle": "Tutto tranquillo qui",
-    "emptyHint": "Inizia una chat, organizza un evento o condividi qualcosa.",
+    "emptyTitle": "Niente di nuovo",
+    "emptyHint": "Inizia tu: saluta, organizza qualcosa o condividi uno spuntino.",
     "greeting": "Ciao, {name}!",
     "whatsNew": "Novità"
   },
@@ -636,5 +640,12 @@
     "sending": "Invio in corso…",
     "notSent": "Non inviato",
     "discard": "Non inviare"
+  },
+  "cheer": {
+    "going": "Ci sei!",
+    "firstEvent": "Il tuo primo evento è online!",
+    "firstPost": "Primo post condiviso!",
+    "firstItem": "Primo oggetto pubblicato!",
+    "joined": "Sei dentro. Saluta {bubble}!"
   }
 }

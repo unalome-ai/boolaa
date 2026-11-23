@@ -183,8 +183,8 @@
   "chat": {
     "live": "în direct",
     "connecting": "se conectează…",
-    "emptyTitle": "Niciun mesaj deocamdată",
-    "emptyHint": "Salută-ți bula!",
+    "emptyTitle": "Spune salut!",
+    "emptyHint": "Nimeni n-a scris încă. Sparge gheața.",
     "messageLabel": "Mesaj",
     "placeholder": "Mesaj către {bubble}",
     "send": "Trimite",
@@ -207,10 +207,10 @@
     "deleteEvent": "Șterge evenimentul",
     "myEvents": "Evenimentele mele",
     "bubbleEvents": "Evenimentele bulei",
-    "emptyMine": "Nu ai creat niciun eveniment.",
-    "emptyOthers": "Ceilalți n-au plănuit nimic deocamdată.",
-    "emptyTitle": "Niciun eveniment deocamdată",
-    "emptyHint": "Plănuiește ceva cu bula ta.",
+    "emptyMine": "O cină, o drumeție, o seară de film: pornește ceva.",
+    "emptyOthers": "Nimeni altcineva n-a plănuit nimic încă.",
+    "emptyTitle": "Săptămână liniștită…",
+    "emptyHint": "Plănuiește următorul lucru și bula ta ți se poate alătura.",
     "confirmDelete": "Ștergi „{title}”?",
     "rsvp": "Particip",
     "going": "Particip",
@@ -221,7 +221,9 @@
     "addToCalendar": "Adaugă în calendar",
     "pastEvents": "Evenimente trecute",
     "ended": "S-a încheiat",
-    "wentCount": "{count, plural, =0 {N-a participat nimeni} one {A participat # persoană} few {Au participat # persoane} other {Au participat # de persoane}}"
+    "wentCount": "{count, plural, =0 {N-a participat nimeni} one {A participat # persoană} few {Au participat # persoane} other {Au participat # de persoane}}",
+    "emptyMineTitle": "Ai un plan?",
+    "emptyOthersTitle": "Săptămână liniștită…"
   },
   "food": {
     "share": "Împarte mâncare",
@@ -229,15 +231,17 @@
     "deletePost": "Șterge postarea",
     "myPosts": "Postările mele",
     "fromBubble": "Din bulă",
-    "emptyMine": "Nu ai împărțit nimic deocamdată.",
-    "emptyOthers": "Nimic de la ceilalți deocamdată.",
-    "emptyTitle": "Nicio mâncare împărțită deocamdată",
-    "emptyHint": "Ți-au rămas resturi? Ai gătit prea mult? Împarte!",
+    "emptyMine": "Împarte ce ai înainte să se strice.",
+    "emptyOthers": "Când cineva împarte mâncare, apare aici.",
+    "emptyTitle": "Masa e goală",
+    "emptyHint": "Ți-au rămas resturi? Ai gătit prea mult? Fă o poză și împarte.",
     "confirmDelete": "Ștergi postarea asta?",
     "descriptionPlaceholder": "Ce e, unde e, până când?",
     "post": "Publică",
     "imageAlt": "Fotografie cu mâncare",
-    "sharedSomeFood": "A împărțit niște mâncare"
+    "sharedSomeFood": "A împărțit niște mâncare",
+    "emptyMineTitle": "Ai resturi?",
+    "emptyOthersTitle": "Nimic împărțit încă"
   },
   "market": {
     "filter": "Filtrează obiectele",
@@ -248,8 +252,8 @@
     "addItem": "Anunț nou",
     "editItem": "Editează obiectul",
     "deleteItem": "Șterge obiectul",
-    "emptyTitle": "Nimic aici deocamdată",
-    "emptyHint": "Dă sau schimbă lucruri cu bula ta.",
+    "emptyTitle": "Tarabă goală",
+    "emptyHint": "Ai ceva de care nu mai ai nevoie? Dă-l sau schimbă-l.",
     "confirmDelete": "Ștergi „{title}”?",
     "availability": "Disponibilitate",
     "available": "Disponibil",
@@ -266,8 +270,8 @@
     "addLink": "Adaugă un link",
     "openLink": "Deschide linkul",
     "deleteLink": "Șterge linkul",
-    "emptyTitle": "Niciun link deocamdată",
-    "emptyHint": "Împarte rețete, articole, playlisturi…",
+    "emptyTitle": "Nimic salvat încă",
+    "emptyHint": "Rețete, playlisturi, articolul ăla: păstrează-le aici.",
     "confirmDelete": "Ștergi „{title}”?",
     "url": "URL",
     "tags": "Etichete (separate prin virgulă)",
@@ -339,8 +343,8 @@
     "market": "Piață",
     "event": "Eveniment viitor",
     "link": "Link",
-    "emptyTitle": "E liniște aici",
-    "emptyHint": "Începe o discuție, plănuiește un eveniment sau împarte ceva.",
+    "emptyTitle": "Nimic nou încă",
+    "emptyHint": "Fii primul: salută, plănuiește ceva sau împarte o gustare.",
     "greeting": "Salut, {name}!",
     "whatsNew": "Noutăți"
   },
@@ -636,5 +640,12 @@
     "sending": "Se trimite…",
     "notSent": "Nu s-a trimis",
     "discard": "Nu trimite"
+  },
+  "cheer": {
+    "going": "Participi!",
+    "firstEvent": "Primul tău eveniment e gata!",
+    "firstPost": "Prima postare e gata!",
+    "firstItem": "Primul anunț e publicat!",
+    "joined": "Ai intrat. Salută-i pe cei din {bubble}!"
   }
 }

@@ -183,8 +183,8 @@
   "chat": {
     "live": "en direct",
     "connecting": "connexion…",
-    "emptyTitle": "Pas encore de messages",
-    "emptyHint": "Dis bonjour à ta bulle !",
+    "emptyTitle": "Dis bonjour !",
+    "emptyHint": "Personne n'a encore écrit. Brise la glace.",
     "messageLabel": "Message",
     "placeholder": "Message à {bubble}",
     "send": "Envoyer",
@@ -207,10 +207,10 @@
     "deleteEvent": "Supprimer l'événement",
     "myEvents": "Mes événements",
     "bubbleEvents": "Événements de la bulle",
-    "emptyMine": "Tu n'as créé aucun événement.",
-    "emptyOthers": "Les autres n'ont rien prévu pour l'instant.",
-    "emptyTitle": "Pas encore d'événements",
-    "emptyHint": "Organise quelque chose avec ta bulle.",
+    "emptyMine": "Un dîner, une rando, une soirée film : lance quelque chose.",
+    "emptyOthers": "Personne d'autre n'a encore rien prévu.",
+    "emptyTitle": "Semaine calme…",
+    "emptyHint": "Organise la prochaine sortie et ta bulle pourra se joindre à toi.",
     "confirmDelete": "Supprimer « {title} » ?",
     "rsvp": "Je participe",
     "going": "Je participe",
@@ -221,7 +221,9 @@
     "addToCalendar": "Ajouter au calendrier",
     "pastEvents": "Événements passés",
     "ended": "Terminé",
-    "wentCount": "{count, plural, =0 {Personne n'y est allé} one {# personne y est allée} other {# personnes y sont allées}}"
+    "wentCount": "{count, plural, =0 {Personne n'y est allé} one {# personne y est allée} other {# personnes y sont allées}}",
+    "emptyMineTitle": "Une idée ?",
+    "emptyOthersTitle": "Semaine calme…"
   },
   "food": {
     "share": "Partager à manger",
@@ -229,15 +231,17 @@
     "deletePost": "Supprimer la publication",
     "myPosts": "Mes publications",
     "fromBubble": "De la bulle",
-    "emptyMine": "Tu n'as encore rien partagé.",
-    "emptyOthers": "Rien des autres pour l'instant.",
-    "emptyTitle": "Rien à manger partagé pour l'instant",
-    "emptyHint": "Des restes ? Tu as trop cuisiné ? Partage-les.",
+    "emptyMine": "Partage ce que tu as avant que ça se perde.",
+    "emptyOthers": "Quand quelqu'un partage à manger, ça arrive ici.",
+    "emptyTitle": "Table vide",
+    "emptyHint": "Des restes ? Tu as trop cuisiné ? Prends une photo et partage.",
     "confirmDelete": "Supprimer cette publication ?",
     "descriptionPlaceholder": "C'est quoi, c'est où, jusqu'à quand ?",
     "post": "Publier",
     "imageAlt": "Photo de nourriture",
-    "sharedSomeFood": "A partagé à manger"
+    "sharedSomeFood": "A partagé à manger",
+    "emptyMineTitle": "Des restes ?",
+    "emptyOthersTitle": "Rien de partagé"
   },
   "market": {
     "filter": "Filtrer les objets",
@@ -248,8 +252,8 @@
     "addItem": "Nouvel objet",
     "editItem": "Modifier l'objet",
     "deleteItem": "Supprimer l'objet",
-    "emptyTitle": "Rien ici pour l'instant",
-    "emptyHint": "Donne ou échange des objets avec ta bulle.",
+    "emptyTitle": "Stand vide",
+    "emptyHint": "Un truc dont tu n'as plus besoin ? Donne-le ou échange-le.",
     "confirmDelete": "Supprimer « {title} » ?",
     "availability": "Disponibilité",
     "available": "Disponible",
@@ -266,8 +270,8 @@
     "addLink": "Ajouter un lien",
     "openLink": "Ouvrir le lien",
     "deleteLink": "Supprimer le lien",
-    "emptyTitle": "Pas encore de liens",
-    "emptyHint": "Partage des recettes, des articles, des playlists…",
+    "emptyTitle": "Rien d'enregistré",
+    "emptyHint": "Recettes, playlists, cet article-là : garde-les ici.",
     "confirmDelete": "Supprimer « {title} » ?",
     "url": "URL",
     "tags": "Tags (séparés par des virgules)",
@@ -339,8 +343,8 @@
     "market": "Marché",
     "event": "Événement à venir",
     "link": "Lien",
-    "emptyTitle": "C'est calme ici",
-    "emptyHint": "Lance une discussion, organise un événement ou partage quelque chose.",
+    "emptyTitle": "Rien de neuf",
+    "emptyHint": "Lance-toi : dis bonjour, organise quelque chose ou partage un snack.",
     "greeting": "Salut {name} !",
     "whatsNew": "Quoi de neuf ?"
   },
@@ -636,5 +640,12 @@
     "sending": "Envoi en cours…",
     "notSent": "Non envoyé",
     "discard": "Ne pas envoyer"
+  },
+  "cheer": {
+    "going": "Tu participes !",
+    "firstEvent": "Ton premier événement est en ligne !",
+    "firstPost": "Premier post partagé !",
+    "firstItem": "Premier objet en ligne !",
+    "joined": "Tu es dedans. Dis bonjour à {bubble} !"
   }
 }

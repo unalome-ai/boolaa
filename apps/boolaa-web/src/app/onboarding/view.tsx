@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { ArrowLeft, Hourglass, LogOut, RefreshCw } from "lucide-react";
 import { fetchMyBubbles } from "@/components/boolaa-provider";
 import { CreateJoinTabs } from "@/components/create-join";
+import { markWelcome } from "@/components/cheer";
 import { AmbientBackdrop, BubbleLogo, FeatureBadge } from "@/components/orb";
 import { BubblePhoto, ErrorText, PageLoader } from "@/components/ui";
 import { hueFor } from "@/lib/hue";
@@ -59,6 +60,7 @@ export default function OnboardingPage() {
         const admitted = prev && bubbles.find((b) => prev.some((p) => p.bubble?.id === b.id));
         if (admitted) {
           writeCookie(BUBBLE_COOKIE, admitted.id);
+          markWelcome(admitted.id);
           hardNavigate("/home");
         }
         prevPending.current = nextPending;
@@ -108,6 +110,7 @@ export default function OnboardingPage() {
               const row = p.new as { bubble_id?: string; approved?: boolean };
               if (row.approved && row.bubble_id) {
                 writeCookie(BUBBLE_COOKIE, row.bubble_id);
+                markWelcome(row.bubble_id);
                 hardNavigate("/home");
               }
             },

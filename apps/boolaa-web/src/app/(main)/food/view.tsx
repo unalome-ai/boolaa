@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, type CSSProperties, type FormEvent } from "react";
-import { Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
@@ -9,6 +9,7 @@ import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, Sec
 import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 import { AUTHOR, type FoodPost } from "@/lib/types";
 import { useTranslations } from "next-intl";
+import { cheer } from "@/components/cheer";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { removeImage, uploadImage } from "@/lib/utils";
@@ -64,9 +65,9 @@ export default function FoodPage() {
   const mine = posts?.filter((p) => p.user_id === userId) ?? [];
   const others = posts?.filter((p) => p.user_id !== userId && !blocked.has(p.user_id)) ?? [];
 
-  const grid = (items: FoodPost[], empty: string) =>
+  const grid = (items: FoodPost[], emptyTitle: string, empty: string) =>
     items.length === 0 ? (
-      <EmptyState icon={<UtensilsCrossed size={30} strokeWidth={2.4} />} title={t("food.emptyTitle")} hint={empty} hue="tangerine" />
+      <EmptyState title={emptyTitle} hint={empty} hue="tangerine" />
     ) : (
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((p, i) => (
@@ -121,14 +122,14 @@ export default function FoodPage() {
       ) : posts.length === 0 ? (
         <>
           <SectionTitle hue="tangerine" action={shareButton}>{t("food.myPosts")}</SectionTitle>
-          <EmptyState icon={<UtensilsCrossed size={30} strokeWidth={2.4} />} title={t("food.emptyTitle")} hint={t("food.emptyHint")} hue="tangerine" />
+          <EmptyState title={t("food.emptyTitle")} hint={t("food.emptyHint")} hue="tangerine" />
         </>
       ) : (
         <>
           <SectionTitle hue="tangerine" count={mine.length} action={shareButton}>{t("food.myPosts")}</SectionTitle>
-          {grid(mine, t("food.emptyMine"))}
+          {grid(mine, t("food.emptyMineTitle"), t("food.emptyMine"))}
           <SectionTitle hue="tangerine" count={others.length}>{t("food.fromBubble")}</SectionTitle>
-          {grid(others, t("food.emptyOthers"))}
+          {grid(others, t("food.emptyOthersTitle"), t("food.emptyOthers"))}
         </>
       )}
       <Modal open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? t("food.share") : t("food.editPost")}>
@@ -136,6 +137,8 @@ export default function FoodPage() {
           <FoodForm
             post={editing === "new" ? null : editing}
             onDone={() => {
+              // Your first post: the cheering mascot (design-system 8.4).
+              if (editing === "new" && mine.length === 0) cheer(t("cheer.firstPost"), "tangerine");
               setEditing(null);
               void load();
             }}

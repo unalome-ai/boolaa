@@ -4,7 +4,7 @@ import { useReactions } from "@/lib/reactions";
 import { ReactionBar } from "@/components/reactions";
 import { useCallback, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CircleSlash, EyeOff, Hourglass, MessageCircle, Pencil, Plus, Tags, Trash2 } from "lucide-react";
+import { CircleSlash, EyeOff, Hourglass, MessageCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import { SafetyMenu } from "@/components/safety";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { byCreatedDesc, useLiveFeed } from "@/lib/live-feed";
@@ -12,6 +12,7 @@ import { Avatar, EmptyState, ErrorText, ImagePicker, Img, Modal, PageLoader, Sta
 import { LoadError, StaleNotice, useCachedState, useResilientLoad } from "@/components/offline";
 import { AUTHOR, type MarketItem } from "@/lib/types";
 import { useTranslations } from "next-intl";
+import { cheer } from "@/components/cheer";
 import { useErrorText } from "@/i18n/errors";
 import { cx, removeImage, uploadImage } from "@/lib/utils";
 import { AVAILABILITIES, availabilityOf, canAskOwner, visibleItems, type Availability } from "@/lib/market";
@@ -125,7 +126,7 @@ export default function MarketplacePage() {
           <PageLoader />
         )
       ) : shown.length === 0 ? (
-        <EmptyState icon={<Tags size={30} strokeWidth={2.4} />} title={t("market.emptyTitle")} hint={t("market.emptyHint")} hue="mint" />
+        <EmptyState title={t("market.emptyTitle")} hint={t("market.emptyHint")} hue="mint" />
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {shown.map((item, i) => (
@@ -191,6 +192,8 @@ export default function MarketplacePage() {
           <ItemForm
             item={editing === "new" ? null : editing}
             onDone={() => {
+              // Your first item: the cheering mascot (design-system 8.4).
+              if (editing === "new" && !items?.some((i) => i.owner_id === userId)) cheer(t("cheer.firstItem"), "mint");
               setEditing(null);
               void load();
             }}

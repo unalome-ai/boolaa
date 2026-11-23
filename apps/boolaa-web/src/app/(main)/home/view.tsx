@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, type CSSProperties, type ReactNode } from "react";
-import { CalendarDays, Link2, MessagesSquare, Sparkles, Tag, UtensilsCrossed } from "lucide-react";
+import { CalendarDays, Link2, MessagesSquare, Tag, UtensilsCrossed } from "lucide-react";
 import { FeatureBadge } from "@/components/orb";
 import { hueClass, hueFor, type Hue } from "@/lib/hue";
 import { useBoolaa, useBubble } from "@/components/boolaa-provider";
 import { Avatar, EmptyState, Img, PageLoader, StatusBadge } from "@/components/ui";
+import { STICKER_TILT } from "@/lib/brand";
+import { useWelcomeCheer } from "@/components/cheer";
 import { AUTHOR, type Author, type Row } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { useFormat } from "@/i18n/format";
@@ -44,6 +46,8 @@ export default function HomePage() {
   const fmt = useFormat();
   // The last view shows at once (also offline); the load below refreshes it.
   const [data, setData] = useCachedState<FeedData>(`home.${bubble.id}`);
+  // Just admitted to this bubble: the cheering mascot says so once (design-system 8.4).
+  useWelcomeCheer(bubble.id, t("cheer.joined", { bubble: bubble.name }), hueFor(bubble.id));
 
   const load = useCallback(async () => {
     const now = new Date().toISOString();
@@ -96,7 +100,7 @@ export default function HomePage() {
       kind: "chat" as const,
       icon: <MessagesSquare size={22} strokeWidth={2.4} />,
       author: m.sender,
-      body: <p className="line-clamp-3 text-[16px] font-semibold wrap-anywhere">{m.content || (m.image_path ? `📷 ${t("chat.photo")}` : "")}</p>,
+      body: <p className="line-clamp-3 font-display text-[17px] font-bold wrap-anywhere">{m.content || (m.image_path ? `📷 ${t("chat.photo")}` : "")}</p>,
     })),
     ...data.food.map((f) => ({
       key: `food-${f.id}`,
@@ -123,7 +127,7 @@ export default function HomePage() {
         <div className="flex items-center gap-3">
           <Img src={i.image} alt={i.title} className="h-[60px] w-[60px] shrink-0 rounded-small object-cover" />
           <div className="space-y-1.5">
-            <p className="font-semibold">{i.title}</p>
+            <p className="font-display font-bold">{i.title}</p>
             <StatusBadge status={i.status} />
           </div>
         </div>
@@ -138,7 +142,7 @@ export default function HomePage() {
       author: e.creator,
       body: (
         <div>
-          <p className="font-semibold">{e.title}</p>
+          <p className="font-display font-bold">{e.title}</p>
           <p className="text-sm text-muted">
             {fmt.dateTime(e.datetime)}
             {e.location ? ` · ${e.location}` : ""} · {t("events.goingCount", { count: e.rsvp_list.length })}
@@ -155,7 +159,7 @@ export default function HomePage() {
       author: l.user,
       body: (
         <div>
-          <p className="font-semibold">{l.title || l.url}</p>
+          <p className="font-display font-bold">{l.title || l.url}</p>
           <p className="truncate text-sm text-muted">
             {l.tags.map((tg) => `#${tg}`).join(" ")} {l.url}
           </p>
@@ -200,7 +204,7 @@ export default function HomePage() {
           <PageLoader />
         )
       ) : feed.length === 0 ? (
-        <EmptyState icon={<Sparkles size={30} strokeWidth={2.4} />} title={t("home.emptyTitle")} hint={t("home.emptyHint")} hue={hue} />
+        <EmptyState title={t("home.emptyTitle")} hint={t("home.emptyHint")} hue={hue} />
       ) : (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {feed.map((item, i) => (
@@ -208,9 +212,12 @@ export default function HomePage() {
               <Link href={item.href} className="card press flex h-full gap-3 p-4 hover:shadow-float" data-testid="feed-card">
                 <FeatureBadge hue={KIND_HUE[item.kind]}>{item.icon}</FeatureBadge>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2 font-display text-xs font-extrabold uppercase tracking-wide text-hue-ink">
-                    <span className="truncate">{t(`home.${item.kind}`)}</span>
-                    <span className="ml-auto shrink-0 font-sans text-xs font-normal normal-case tracking-normal text-muted">{fmt.relative(item.at)}</span>
+                  {/* Sticker kind label (8.5): the feature gradient, a die-cut edge and a fixed tilt per kind. */}
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <span className="sticker" data-testid="feed-sticker" style={{ "--tilt": `${STICKER_TILT[item.kind]}deg` } as CSSProperties}>
+                      {t(`home.${item.kind}`)}
+                    </span>
+                    <span className="ml-auto shrink-0 text-xs text-muted">{fmt.relative(item.at)}</span>
                   </div>
                   {item.body}
                   {item.author && (
