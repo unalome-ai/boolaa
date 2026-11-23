@@ -39,7 +39,16 @@
     "yourBubbles": "Your bubbles",
     "newBubble": "New",
     "profile": "Profile",
-    "openChat": "Open chat"
+    "openChat": "Open chat",
+    "dock": {
+      "home": "Home",
+      "events": "Events",
+      "food": "Food",
+      "marketplace": "Market",
+      "settings": "Settings",
+      "chat": "Chat",
+      "links": "Links"
+    }
   },
   "shell": {
     "lostBubble": "You're no longer a member of “{bubble}”."

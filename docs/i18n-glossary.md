@@ -254,3 +254,15 @@ Web keys under `offline.*`; Android `offline_*`; iOS the English text as key. Ca
 | first food post saved | `cheer.firstPost` | First post shared! | Prima postare e gata! | Premier post partagé ! | ¡Primera publicación compartida! | Primo post condiviso! |
 | first market item saved | `cheer.firstItem` | First item listed! | Primul anunț e publicat! | Premier objet en ligne ! | ¡Primer artículo publicado! | Primo oggetto pubblicato! |
 | admitted to a bubble (Home, once) | `cheer.joined` | You're in. Say hi to {bubble}! | Ai intrat. Salută-i pe cei din {bubble}! | Tu es dedans. Dis bonjour à {bubble} ! | Ya estás dentro. ¡Saluda a {bubble}! | Sei dentro. Saluta {bubble}! |
+
+### Dock short labels (`nav.dock.*`, all clients)
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| home | Home | Acasă | Accueil | Inicio | Home |
+| events | Events | Agendă | Agenda | Eventos | Eventi |
+| food | Food | Mâncare | Repas | Comida | Cibo |
+| marketplace | Market | Piață | Marché | Mercado | Mercato |
+| settings | Settings | Setări | Réglages | Ajustes | Opzioni |
+
+Short on purpose: they must fit the active dock pill at 390 px. Needs native review with the rest.

@@ -39,7 +39,16 @@
     "yourBubbles": "Le tue bolle",
     "newBubble": "Nuova",
     "profile": "Profilo",
-    "openChat": "Apri la chat"
+    "openChat": "Apri la chat",
+    "dock": {
+      "home": "Home",
+      "events": "Eventi",
+      "food": "Cibo",
+      "marketplace": "Mercato",
+      "settings": "Opzioni",
+      "chat": "Chat",
+      "links": "Link"
+    }
   },
   "shell": {
     "lostBubble": "Non fai più parte di «{bubble}»."

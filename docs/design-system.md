@@ -425,6 +425,8 @@ Dark-mode circles are the background colour, not white, so they only ever *raise
 
 ### 8.3 Labelled glass dock, motion and haptics
 
+**Dock labels are short names** (`nav.dock.*`), not the screen titles, so the active label fits at 390 px in every language with the geometry above (pill padding 12 / 14, icon 20, gap 6, inactive slots 40): en Home · Events · Food · Market · Settings; ro Acasă · Agendă · Mâncare · Piață · Setări; fr Accueil · Agenda · Repas · Marché · Réglages; es Inicio · Eventos · Comida · Mercado · Ajustes; it Home · Eventi · Cibo · Mercato · Opzioni. The same short name is the tab's accessible name (label in name). Screen titles and the desktop sidebar keep the full names. The icon-only fallback stays for 320 px and large text.
+
 **Geometry** (pt / dp / px):
 
 | Part | Value |

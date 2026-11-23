@@ -159,14 +159,15 @@ function BubbleSwitcher({ onNew }: { onNew: () => void }) {
  * doesn't fit (long translations, 320 px, large text) the pill shrinks to an icon circle and the label lives on
  * only as the accessible name.
  */
-const DOCK = { pad: 5, slot: 40, height: 46, pillLead: 14, pillTrail: 16, icon: 20, gap: 6, orb: 60, orbGap: 10 } as const;
+const DOCK = { pad: 5, slot: 40, height: 46, pillLead: 12, pillTrail: 14, icon: 20, gap: 6, orb: 60, orbGap: 10 } as const;
 
 function Dock({ pathname, chatLabel }: { pathname: string; chatLabel: string }) {
   const t = useTranslations("nav");
   const index = TABS.findIndex((tab) => pathname.startsWith(tab.href));
   const activeKey = index >= 0 ? TABS[index].key : null;
   const activeHue = activeKey ? FEATURE_HUE[activeKey as keyof typeof FEATURE_HUE] : "grape";
-  const label = activeKey ? t(activeKey) : "";
+  // Short dock names ("Market", "Agenda") so the active label fits at 390 px in every language (8.3).
+  const label = activeKey ? t(`dock.${activeKey}`) : "";
   const rowRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const probeRef = useRef<HTMLSpanElement>(null);
@@ -242,8 +243,8 @@ function Dock({ pathname, chatLabel }: { pathname: string; chatLabel: string }) 
               <Link
                 key={href}
                 href={href}
-                aria-label={t(key)}
-                title={labelled ? undefined : t(key)}
+                aria-label={t(`dock.${key}`)}
+                title={labelled ? undefined : t(`dock.${key}`)}
                 data-testid={`tab-${key}`}
                 aria-current={active ? "page" : undefined}
                 className={cx(

@@ -126,6 +126,23 @@ test.describe("labelled dock", () => {
     await context.close();
   });
 
+  test("at 390 px the active tab shows its short label on every tab in every language", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await login(page, "alice@boolaa.test");
+    for (const lang of ["en", "ro", "fr", "es", "it"]) {
+      await context.addCookies([{ name: "boolaa_locale", value: lang, url: test.info().project.use.baseURL! }]);
+      for (const key of ["home", "events", "food", "marketplace", "settings"]) {
+        await page.goto(`/${key}`);
+        await expect(main(page)).toBeVisible();
+        const bar = page.getByTestId("tab-bar");
+        await expect(bar, `${lang} ${key}`).toHaveAttribute("data-compact", "false");
+        await expect(page.getByTestId(`tab-${key}`).getByTestId("tab-label"), `${lang} ${key}`).toBeVisible();
+      }
+    }
+    await context.close();
+  });
+
   test("at 320 px in French the label falls back to the accessible name only", async ({ browser }) => {
     const context = await browser.newContext({ viewport: { width: 320, height: 640 } });
     await context.addCookies([{ name: "boolaa_locale", value: "fr", url: test.info().project.use.baseURL! }]);
@@ -138,7 +155,7 @@ test.describe("labelled dock", () => {
     await expect(bar.getByTestId("tab-label")).toHaveCount(0);
     const events = page.getByTestId("tab-events");
     await expect(events).toHaveAttribute("aria-current", "page");
-    await expect(events).toHaveAttribute("aria-label", "Événements");
+    await expect(events).toHaveAttribute("aria-label", "Agenda");
     // Every tab keeps a target of at least 24 × 24 and nothing scrolls sideways.
     for (const box of await bar.getByRole("link").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()))) {
       expect(box.width).toBeGreaterThanOrEqual(24);

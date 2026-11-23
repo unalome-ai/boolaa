@@ -39,7 +39,16 @@
     "yourBubbles": "Bulele tale",
     "newBubble": "Nouă",
     "profile": "Profil",
-    "openChat": "Deschide chatul"
+    "openChat": "Deschide chatul",
+    "dock": {
+      "home": "Acasă",
+      "events": "Agendă",
+      "food": "Mâncare",
+      "marketplace": "Piață",
+      "settings": "Setări",
+      "chat": "Chat",
+      "links": "Linkuri"
+    }
   },
   "shell": {
     "lostBubble": "Nu mai faci parte din „{bubble}”."
