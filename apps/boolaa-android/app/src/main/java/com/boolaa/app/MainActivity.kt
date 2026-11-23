@@ -13,6 +13,7 @@ import com.boolaa.app.core.UserBanned
 import com.boolaa.app.core.UserFacingError
 import com.boolaa.app.ui.AppRoot
 import com.boolaa.app.ui.LocalAppContainer
+import com.boolaa.app.ui.components.UpdatePrompt
 import com.boolaa.app.ui.theme.BoolaaTheme
 import io.github.jan.supabase.auth.handleDeeplinks
 
@@ -34,6 +35,8 @@ class MainActivity : AppCompatActivity() {
             CompositionLocalProvider(LocalAppContainer provides container) {
                 BoolaaTheme {
                     AppRoot(debugHooks = hooks)
+                    // Sideloaded APK: offers a newer version from boolaa.ro/android (release builds only).
+                    UpdatePrompt()
                 }
             }
         }

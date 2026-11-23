@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Three white bubbles. -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Generated: Boolaa app icon (curious mascot, design-system 8.4). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M48,56m-16,0a16,16 0,1 1,32 0a16,16 0,1 1,-32 0" />
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.85" android:pathData="M68,44m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.7" android:pathData="M66,70m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0" />
+    <path android:pathData="M65.00,35.00a8.00,8.00 0 1,0 16.00,0a8.00,8.00 0 1,0 -16.00,0Z"><aapt:attr name="android:fillColor"><gradient android:type="radial" android:centerX="70.60" android:centerY="31.80" android:gradientRadius="12.00"><item android:offset="0" android:color="#FF9A82"/><item android:offset="0.5" android:color="#FF6B5C"/><item android:offset="1" android:color="#E8503F"/></gradient></aapt:attr></path>
+    <group android:rotation="-35" android:pivotX="69.64" android:pivotY="31.16"><path android:fillColor="#FFFFFF" android:fillAlpha="0.55" android:pathData="M67.72,31.16a1.92,1.12 0 1,0 3.84,0a1.92,1.12 0 1,0 -3.84,0Z"/></group>
+    <path android:pathData="M29.00,76.00a5.50,5.50 0 1,0 11.00,0a5.50,5.50 0 1,0 -11.00,0Z"><aapt:attr name="android:fillColor"><gradient android:type="radial" android:centerX="32.85" android:centerY="73.80" android:gradientRadius="8.25"><item android:offset="0" android:color="#6BE6C6"/><item android:offset="0.5" android:color="#1EC8A0"/><item android:offset="1" android:color="#12A683"/></gradient></aapt:attr></path>
+    <path android:pathData="M30.50,57.00a21.50,21.50 0 1,0 43.00,0a21.50,21.50 0 1,0 -43.00,0Z"><aapt:attr name="android:fillColor"><gradient android:type="radial" android:centerX="45.55" android:centerY="48.40" android:gradientRadius="32.25"><item android:offset="0" android:color="#9B86FF"/><item android:offset="0.5" android:color="#7357F6"/><item android:offset="1" android:color="#5B3FD9"/></gradient></aapt:attr></path>
+    <group android:rotation="-35" android:pivotX="42.97" android:pivotY="46.68"><path android:fillColor="#FFFFFF" android:fillAlpha="0.55" android:pathData="M37.81,46.68a5.16,3.01 0 1,0 10.32,0a5.16,3.01 0 1,0 -10.32,0Z"/></group>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="1" android:pathData="M43.06,57.86a2.49,3.27 0 1,0 4.99,0a2.49,3.27 0 1,0 -4.99,0Z"/>
+    <path android:fillColor="#5B3FD9" android:fillAlpha="1" android:pathData="M45.38,56.83a0.86,0.86 0 1,0 1.72,0a0.86,0.86 0 1,0 -1.72,0Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="1" android:pathData="M55.96,57.86a2.49,3.27 0 1,0 4.99,0a2.49,3.27 0 1,0 -4.99,0Z"/>
+    <path android:fillColor="#5B3FD9" android:fillAlpha="1" android:pathData="M58.28,56.83a0.86,0.86 0 1,0 1.72,0a0.86,0.86 0 1,0 -1.72,0Z"/>
+    <path android:fillColor="#FFFFFF" android:fillAlpha="1" android:pathData="M50.11,65.17a1.89,2.15 0 1,0 3.78,0a1.89,2.15 0 1,0 -3.78,0Z"/>
+    <path android:fillColor="#FF4F8B" android:fillAlpha="0.45" android:pathData="M38.67,63.02a2.58,1.50 0 1,0 5.16,0a2.58,1.50 0 1,0 -5.16,0Z"/>
+    <path android:fillColor="#FF4F8B" android:fillAlpha="0.45" android:pathData="M60.17,63.02a2.58,1.50 0 1,0 5.16,0a2.58,1.50 0 1,0 -5.16,0Z"/>
 </vector>

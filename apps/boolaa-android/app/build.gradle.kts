@@ -21,6 +21,18 @@ val localProps = Properties().apply {
 fun localProp(key: String, fallback: String) =
     localProps.getProperty(key) ?: System.getenv(key.uppercase().replace('.', '_')) ?: fallback
 
+// Release builds (the APK on boolaa.ro/android) talk to production. The URLs are public; the anon key comes from
+// local.properties `release.supabase.anonKey` or env RELEASE_SUPABASE_ANONKEY. Signing: scripts/android-release.sh
+// passes the keystore password from the Keychain (`boolaa-android-keystore`) as env, never written to a file.
+val releaseSupabaseUrl = localProp("release.supabase.url", "https://rstugahfcpwllumgxwrm.supabase.co")
+val releaseWebBaseUrl = localProp("release.web.baseUrl", "https://boolaa.ro")
+val releaseAnonKey = localProp("release.supabase.anonKey", "")
+val keystorePath = localProp("boolaa.keystore", "${System.getProperty("user.home")}/.boolaa-signing/boolaa-release.jks")
+val keystorePassword: String? = System.getenv("BOOLAA_KEYSTORE_PASSWORD")
+// versionCode/versionName per release (also in apps/boolaa-web/public/android/latest.json).
+val appVersionCode = localProp("boolaa.versionCode", "1").toInt()
+val appVersionName = localProp("boolaa.versionName", "1.0")
+
 android {
     namespace = "com.boolaa.app"
     compileSdk = 36
@@ -31,8 +43,8 @@ android {
         applicationId = "ro.boolaa.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "SUPABASE_URL", "\"${localProp("supabase.url", "http://127.0.0.1:55321")}\"")
         // Next.js web app serving /privacy and /terms (emulator: adb reverse tcp:3200 tcp:3200).
@@ -54,10 +66,24 @@ android {
         localeFilters += listOf("en", "ro", "fr", "es", "it")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystorePath)
+            storePassword = keystorePassword
+            keyAlias = "boolaa"
+            keyPassword = keystorePassword
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            buildConfigField("String", "SUPABASE_URL", "\"$releaseSupabaseUrl\"")
+            buildConfigField("String", "WEB_BASE_URL", "\"$releaseWebBaseUrl\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"$releaseAnonKey\"")
+            if (keystorePassword != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

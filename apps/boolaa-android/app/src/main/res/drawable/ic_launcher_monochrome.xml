@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated: Boolaa app icon (curious mascot, design-system 8.4). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M30.50,57.00a21.50,21.50 0 1,0 43.00,0a21.50,21.50 0 1,0 -43.00,0ZM43.06,57.86a2.49,3.27 0 1,0 4.99,0a2.49,3.27 0 1,0 -4.99,0ZM55.96,57.86a2.49,3.27 0 1,0 4.99,0a2.49,3.27 0 1,0 -4.99,0ZM50.11,65.17a1.89,2.15 0 1,0 3.78,0a1.89,2.15 0 1,0 -3.78,0Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M65.00,35.00a8.00,8.00 0 1,0 16.00,0a8.00,8.00 0 1,0 -16.00,0Z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M29.00,76.00a5.50,5.50 0 1,0 11.00,0a5.50,5.50 0 1,0 -11.00,0Z"/>
+</vector>

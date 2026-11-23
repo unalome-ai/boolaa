@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-app update prompt for the sideloaded APK (core/AppUpdate.kt). -->
+<resources>
+    <string name="update_title">Nouvelle version disponible</string>
+    <string name="update_body">Boolaa %1$s est sortie. Télécharge-la sur boolaa.ro et installe-la par-dessus celle-ci : ton compte et tes données restent.</string>
+    <string name="update_required_body">Cette version de Boolaa ne fonctionne plus. Télécharge la nouvelle version (%1$s) pour continuer à l’utiliser.</string>
+    <string name="update_download">Télécharger</string>
+    <string name="update_later">Plus tard</string>
+</resources>
