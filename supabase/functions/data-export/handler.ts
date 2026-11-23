@@ -70,7 +70,8 @@ const ORDER = [
   "format", "version", "generated_at", "user_id", "about", "profile", "account", "consent",
   "sign_in_identities", "sessions", "sign_in_history", "devices", "security_codes", "password_reset_grants",
   "bubble_memberships", "join_requests", "join_request_approvals", "chat_messages", "chat_read_markers",
-  "events", "rsvps", "food_posts", "market_items", "shared_links", "reactions", "reports_filed", "blocks",
+  "events", "rsvps", "food_posts", "market_items", "item_requests", "requests_on_my_items", "shared_links",
+  "reactions", "reports_filed", "blocks",
   "notification_preferences", "muted_bubbles", "notifications", "push_tokens", "invite_code_failures",
   "moderator", "previous_exports", "files", "not_included",
 ];

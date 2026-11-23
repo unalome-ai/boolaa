@@ -38,5 +38,30 @@
     "free": "Gratuit",
     "trade": "Schimb",
     "private": "Anunț nou în Piața din {bubble}"
+  },
+  "item_request": {
+    "title": "{name} vrea „{item}”",
+    "titleNoItem": "{name} vrea mâncarea ta",
+    "bodyNote": "„{note}”",
+    "body": "Deschide cererile ca să alegi cine primește.",
+    "private": "Ai o cerere nouă în {bubble}"
+  },
+  "item_request_withdrawn": {
+    "title": "{name} nu mai poate lua „{item}”",
+    "titleNoItem": "{name} nu mai poate lua mâncarea ta",
+    "body": "Poți alege din nou pe altcineva dintre cereri.",
+    "private": "O cerere a fost retrasă în {bubble}"
+  },
+  "item_picked": {
+    "title": "E pentru tine: „{item}”",
+    "titleNoItem": "Mâncarea e pentru tine!",
+    "body": "{name} ți-a ales cererea. Stabiliți în chat când și unde vă vedeți.",
+    "private": "Vești bune despre cererea ta din {bubble}"
+  },
+  "item_missed": {
+    "title": "Altcineva a primit „{item}”",
+    "titleNoItem": "Altcineva a primit mâncarea",
+    "body": "Mersi că ai întrebat. Poate data viitoare!",
+    "private": "Noutăți despre cererea ta din {bubble}"
   }
 }

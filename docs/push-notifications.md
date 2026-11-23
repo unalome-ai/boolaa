@@ -57,7 +57,7 @@ sequenceDiagram
 | Table | What | Client access |
 |---|---|---|
 | `push_tokens` | `id, user_id, platform (ios/android/web), token, endpoint, p256dh, auth, apns_env (ios: sandbox/production), device_hash, session_id, locale, app_version, created_at, last_seen_at`, `unique (platform, token)` | select/delete own rows; writes only through the RPCs below |
-| `notification_prefs` | one row per user: `enabled` (master), `chat`, `join_requests`, `approvals`, `new_events`, `event_reminders`, `food`, `market`, `preview_content`, `updated_at` | select/insert/update own row (a row is created for every user) |
+| `notification_prefs` | one row per user: `enabled` (master), `chat`, `join_requests`, `approvals`, `new_events`, `event_reminders`, `food`, `market`, `item_requests`, `request_updates` (both default on; migration `20261124100000_requests_food_expiry.sql`), `preview_content`, `updated_at` | select/insert/update own row (a row is created for every user) |
 | `bubble_mutes` | `(user_id, bubble_id, until)`, `until` null = until unmuted | select/insert/update/delete own rows; insert only for bubbles you're in |
 | `notification_outbox` | `id, recipient_id, type, bubble_id, actor_id, target_id, payload, collapse_key, dedupe_key, status (pending/sent/failed/skipped), created_at, next_attempt_at, claimed_at, claimed_until, sent_at, attempts, last_error, token_ids` | none (service role) |
 | `push_debug_log` | what `PUSH_DRY_RUN=1` would have sent | none (service role) |
@@ -101,6 +101,12 @@ unregister_push_token(p_token) -> boolean
 | `event_reminder` | pg_cron every 5 min: event starts within the next hour | users in `rsvp_list` (the creator too, if RSVPed) | `event_reminders` | `events` | `EVENT_REMINDER` | `reminder:<event_id>` | event id |
 | `food` | insert `food_posts` | approved members except the author | `food` (off by default) | `bubble` | `FOOD_POST` | `food:<bubble_id>` | post id |
 | `market` | insert `market_items` | approved members except the owner | `market` (off by default) | `bubble` | `MARKET_ITEM` | `market:<bubble_id>` | item id |
+| `item_request` | `request_item` (insert `item_requests`); once per requester and item (`dedupe_key item_request:<item>:<requester>`) | the item's owner | `item_requests` | `bubble` | `ITEM_REQUEST` | `item_request:<item_id>` | item id |
+| `item_request_withdrawn` | the **picked** requester withdraws (`withdraw_item_request`) | the item's owner | `item_requests` | `bubble` | `ITEM_REQUEST_WITHDRAWN` | `item:<item_id>` | item id |
+| `item_picked` | a request becomes `picked` (`pick_item_request`, or market "Mark as reserved" restoring a winner) | the requester | `request_updates` | `bubble` | `ITEM_PICKED` | `item:<item_id>` | item id |
+| `item_missed` | a request becomes `missed` (hand-over or market "Mark as taken"); once per request | the requester | `request_updates` | `bubble` | `ITEM_MISSED` | `item:<item_id>` | item id |
+
+The four request types carry `payload.kind` (`food` / `market`) and `payload.item` (the item title or food description, empty when the food has none); `item_request` also carries `payload.note`. At send time the dispatcher drops a row whose request or item no longer matches (`item_request` needs the request still pending or picked, `item_picked` still picked, `item_missed` still missed, `item_request_withdrawn` an item that's still visible). A `food` push is also dropped once the post expired or was handed over.
 
 ### Recipient rules (`push_should_notify`, checked when queued and again when sent)
 1. **Never the author.** The only exception is a reminder: everyone who RSVPed gets it.
@@ -134,6 +140,12 @@ pg_cron runs `enqueue_event_reminders()` every 5 minutes. It queues a reminder f
 | event_reminder | Flat dinner | Starts in 1 hour · Kitchen |
 | food | Food Circle · Flatmates | Ana: Leftover salad (or "Ana shared something to eat") |
 | market | Marketplace · Flatmates | Ana: Old sofa (Free) |
+| item_request | Ana wants “Old sofa” (food without text: Ana wants your food) | the note in quotes, else "Open the requests to pick who gets it." |
+| item_request_withdrawn | Ana can't take “Old sofa” anymore | It's available again. Pick someone else from the requests. |
+| item_picked | It's yours: “Old sofa” | Dan picked your request. Sort out the pick-up in the chat. |
+| item_missed | Someone else got “Old sofa” | Thanks for asking. Maybe next time! |
+
+With previews off the request types say "You have a new request in Flatmates", "A request was withdrawn in Flatmates", "Good news about your request in Flatmates" and "An update on your request in Flatmates".
 
 No absolute times are shown, because the server doesn't know the user's time zone.
 
@@ -149,6 +161,10 @@ Deep-link data, on every platform: **`{ type, bubble_id, target_id }`** (strings
 | `new_event`, `event_reminder` | switch to `bubble_id`, open Events, scroll to/highlight `target_id` | `/events?bubble=<id>&event=<id>` |
 | `food` | switch to `bubble_id`, open Food Circle, highlight `target_id` | `/food?bubble=<id>&post=<id>` |
 | `market` | switch to `bubble_id`, open Marketplace, highlight `target_id` | `/marketplace?bubble=<id>&item=<id>` |
+| `item_request`, `item_request_withdrawn` | switch to `bubble_id`, open Food Circle (`item_kind` `food`) or Marketplace (`market`), highlight `target_id` and open its Requests sheet | `/food?bubble=<id>&post=<id>` or `/marketplace?bubble=<id>&item=<id>` |
+| `item_picked`, `item_missed` | the same, highlight only | same |
+
+The request types add a fourth data field, **`item_kind`** (`food` / `market`), next to `type`, `bubble_id` and `target_id` (APNs top-level key, FCM `data`, Web Push payload `data`). Ignore it for the other types.
 
 If the bubble isn't in the user's joined list anymore (left, removed), open Home without switching. If the target no longer exists, just show the screen.
 
@@ -283,7 +299,7 @@ No migration was needed: the clients use only the RPCs and tables above. All thr
 
 Settings → **Notifications** (account level):
 - Master switch (`enabled`). When off, grey out the rest.
-- Per type: Chat messages (`chat`), Join requests (`join_requests`), Request approved (`approvals`), New events (`new_events`), Event reminders (`event_reminders`), Food Circle (`food`), Marketplace (`market`).
+- Per type: Chat messages (`chat`), Join requests (`join_requests`), Request approved (`approvals`), New events (`new_events`), Event reminders (`event_reminders`), Food Circle (`food`), Marketplace (`market`), Requests for my posts (`item_requests`), Updates on my requests (`request_updates`).
 - **Show message previews** (`preview_content`), with the hint "Off: only 'New message in Flatmates', no names or text."
 - The OS permission state: if notifications are blocked at the OS/browser level, show a banner with a button to the system settings.
 
@@ -304,6 +320,8 @@ Strings (add to each client's catalog; glossary terms, informal tone):
 | `notifications.eventReminders` | Event reminders (1 hour before) | Mementouri pentru evenimente (cu o oră înainte) | Rappels d'événements (1 heure avant) | Recordatorios de eventos (1 hora antes) | Promemoria degli eventi (1 ora prima) |
 | `notifications.food` | Food Circle | Cercul culinar | Cercle gourmand | Círculo de comida | Cerchio del cibo |
 | `notifications.market` | Marketplace | Piață | Marché | Mercadillo | Mercatino |
+| `notifications.itemRequests` | Requests for my posts | Cereri pentru postările mele | Demandes sur mes publications | Solicitudes de mis publicaciones | Richieste per i miei post |
+| `notifications.requestUpdates` | Updates on my requests | Noutăți despre cererile mele | Suivi de mes demandes | Novedades de mis solicitudes | Aggiornamenti sulle mie richieste |
 | `notifications.preview` | Show message previews | Arată previzualizarea mesajelor | Afficher l'aperçu des messages | Mostrar vista previa de los mensajes | Mostra l'anteprima dei messaggi |
 | `notifications.previewHint` | When off, notifications only say "New message in Flatmates", without names or text. | Când e oprită, notificările spun doar „Mesaj nou în Flatmates”, fără nume sau text. | Désactivé, les notifications disent seulement « Nouveau message dans Flatmates », sans nom ni texte. | Si está desactivada, las notificaciones solo dicen «Nuevo mensaje en Flatmates», sin nombres ni texto. | Se disattivata, le notifiche dicono solo «Nuovo messaggio in Flatmates», senza nomi né testo. |
 | `notifications.blocked` | Notifications are turned off for Boolaa in your settings. | Notificările pentru Boolaa sunt oprite din setări. | Les notifications de Boolaa sont désactivées dans tes réglages. | Las notificaciones de Boolaa están desactivadas en tus ajustes. | Le notifiche di Boolaa sono disattivate nelle impostazioni. |

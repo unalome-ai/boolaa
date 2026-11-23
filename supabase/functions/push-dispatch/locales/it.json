@@ -38,5 +38,30 @@
     "free": "Gratis",
     "trade": "Scambio",
     "private": "Nuovo oggetto nel Mercatino di {bubble}"
+  },
+  "item_request": {
+    "title": "{name} vuole «{item}»",
+    "titleNoItem": "{name} vuole il tuo cibo",
+    "bodyNote": "«{note}»",
+    "body": "Apri le richieste per scegliere a chi darlo.",
+    "private": "Hai una nuova richiesta in {bubble}"
+  },
+  "item_request_withdrawn": {
+    "title": "{name} non può più prendere «{item}»",
+    "titleNoItem": "{name} non può più prendere il tuo cibo",
+    "body": "È di nuovo disponibile. Scegli qualcun altro tra le richieste.",
+    "private": "Una richiesta è stata ritirata in {bubble}"
+  },
+  "item_picked": {
+    "title": "È per te: «{item}»",
+    "titleNoItem": "Il cibo è per te!",
+    "body": "{name} ha scelto la tua richiesta. Mettetevi d'accordo in chat per il ritiro.",
+    "private": "Buone notizie sulla tua richiesta in {bubble}"
+  },
+  "item_missed": {
+    "title": "Qualcun altro ha preso «{item}»",
+    "titleNoItem": "Qualcun altro ha preso il cibo",
+    "body": "Grazie per averlo chiesto. Sarà per la prossima volta!",
+    "private": "Novità sulla tua richiesta in {bubble}"
   }
 }

@@ -13,7 +13,13 @@ export type Locale = (typeof LOCALES)[number];
 // deno-lint-ignore no-explicit-any
 const STRINGS: Record<Locale, any> = { en, ro, fr, es, it };
 
-export const NOTIFICATION_TYPES = ["chat", "join_request", "approval", "new_event", "event_reminder", "food", "market"] as const;
+export const NOTIFICATION_TYPES = [
+  "chat", "join_request", "approval", "new_event", "event_reminder", "food", "market",
+  "item_request", "item_request_withdrawn", "item_picked", "item_missed",
+] as const;
+/** Requests on food posts and market items (20261124100000_requests_food_expiry.sql). */
+export const ITEM_REQUEST_TYPES = ["item_request", "item_request_withdrawn", "item_picked", "item_missed"] as const;
+const isItemType = (t: string) => (ITEM_REQUEST_TYPES as readonly string[]).includes(t);
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /** One claimed outbox row, as claim_push_batch returns it. */
@@ -133,6 +139,17 @@ export function render(item: ClaimedItem, locale: Locale): { title: string; body
           status: d.status === "trade" ? s.market.trade : s.market.free,
         }),
       };
+    case "item_request":
+    case "item_request_withdrawn":
+    case "item_picked":
+    case "item_missed": {
+      // d.item: the market title or the food description (user content; a food post may have none).
+      const k = s[item.type];
+      const label = d.item ? truncate(String(d.item), 60) : "";
+      const title = label ? fill(k.title, { ...vars, item: label }) : fill(k.titleNoItem, vars);
+      if (item.type === "item_request" && d.note) return { title, body: fill(k.bodyNote, { note: truncate(String(d.note)) }) };
+      return { title, body: fill(k.body, vars) };
+    }
   }
 }
 
@@ -144,6 +161,10 @@ const CATEGORY: Record<NotificationType, string> = {
   event_reminder: "EVENT_REMINDER",
   food: "FOOD_POST",
   market: "MARKET_ITEM",
+  item_request: "ITEM_REQUEST",
+  item_request_withdrawn: "ITEM_REQUEST_WITHDRAWN",
+  item_picked: "ITEM_PICKED",
+  item_missed: "ITEM_MISSED",
 };
 
 const CHANNEL: Record<NotificationType, string> = {
@@ -154,10 +175,14 @@ const CHANNEL: Record<NotificationType, string> = {
   event_reminder: "events",
   food: "bubble",
   market: "bubble",
+  item_request: "bubble",
+  item_request_withdrawn: "bubble",
+  item_picked: "bubble",
+  item_missed: "bubble",
 };
 
 /** Web route to open; the web app switches to `bubble` first. */
-export function webUrl(type: NotificationType, bubbleId: string | null, targetId: string | null): string {
+export function webUrl(type: NotificationType, bubbleId: string | null, targetId: string | null, itemKind?: string | null): string {
   const b = encodeURIComponent(bubbleId ?? "");
   const t = encodeURIComponent(targetId ?? "");
   switch (type) {
@@ -168,6 +193,11 @@ export function webUrl(type: NotificationType, bubbleId: string | null, targetId
     case "event_reminder": return `/events?bubble=${b}&event=${t}`;
     case "food": return `/food?bubble=${b}&post=${t}`;
     case "market": return `/marketplace?bubble=${b}&item=${t}`;
+    case "item_request":
+    case "item_request_withdrawn":
+    case "item_picked":
+    case "item_missed":
+      return itemKind === "food" ? `/food?bubble=${b}&post=${t}` : `/marketplace?bubble=${b}&item=${t}`;
   }
 }
 
@@ -179,6 +209,7 @@ export function buildMessage(item: ClaimedItem, token: TokenRow, now = Date.now(
   if (item.type === "event_reminder" && item.data?.starts_at) {
     expiresAt = Math.max(nowS + 60, Math.floor(Date.parse(item.data.starts_at) / 1000));
   }
+  const itemKind = isItemType(item.type) ? (item.data?.kind === "food" ? "food" : "market") : null;
   return {
     locale,
     type: item.type,
@@ -189,7 +220,8 @@ export function buildMessage(item: ClaimedItem, token: TokenRow, now = Date.now(
     collapseKey: item.collapse_key,
     category: CATEGORY[item.type],
     channelId: CHANNEL[item.type],
-    url: webUrl(item.type, item.bubble_id, item.target_id),
+    url: webUrl(item.type, item.bubble_id, item.target_id, itemKind),
     expiresAt,
+    itemKind,
   };
 }

@@ -16,6 +16,8 @@ export interface PushMessage {
   url: string;
   /** Unix seconds after which the provider may drop an undelivered message. */
   expiresAt: number;
+  /** Request types only (item_request, item_picked, ...): which tab target_id is in, `food` | `market`. */
+  itemKind?: string | null;
 }
 
 /** What one provider call means for the token and the outbox row. */
@@ -28,8 +30,10 @@ export type Outcome =
 export type FetchFn = (input: string, init: RequestInit) => Promise<Response>;
 
 /** Deep-link data every platform receives: open the right screen. */
-export function deepLink(m: PushMessage) {
-  return { type: m.type, bubble_id: m.bubbleId ?? "", target_id: m.targetId ?? "" };
+export function deepLink(m: PushMessage): Record<string, string> {
+  const d: Record<string, string> = { type: m.type, bubble_id: m.bubbleId ?? "", target_id: m.targetId ?? "" };
+  if (m.itemKind) d.item_kind = m.itemKind;
+  return d;
 }
 
 export function retryAfterSeconds(h: Headers): number | undefined {

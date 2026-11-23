@@ -311,6 +311,34 @@ Deno.test("render: each type in English", () => {
   assertEq(r("market", { title: "Old sofa", status: "free" }), { title: "Marketplace · Flatmates", body: "Ana: Old sofa (Free)" }, "market");
 });
 
+Deno.test("render: request types (20261124100000_requests_food_expiry.sql) in every language, deep link with item_kind", () => {
+  const r = (type: ClaimedItem["type"], data: Record<string, unknown>, l: "en" | "ro" = "en") => render(item({ type, data }), l);
+  const sofa = { kind: "market", item: "Old sofa" };
+  assertEq(r("item_request", { ...sofa, note: "Can I pick it up Friday?" }), { title: "Ana wants “Old sofa”", body: "“Can I pick it up Friday?”" }, "request with note");
+  assertEq(r("item_request", { ...sofa, note: null }).body, "Open the requests to pick who gets it.", "request without note");
+  assertEq(r("item_request", { kind: "food", item: null }).title, "Ana wants your food", "food without description");
+  assertEq(r("item_picked", sofa), { title: "It's yours: “Old sofa”", body: "Ana picked your request. Sort out the pick-up in the chat." }, "picked");
+  assertEq(r("item_missed", sofa), { title: "Someone else got “Old sofa”", body: "Thanks for asking. Maybe next time!" }, "missed");
+  assertEq(r("item_request_withdrawn", sofa).title, "Ana can't take “Old sofa” anymore", "withdrawn");
+  assertEq(r("item_picked", sofa, "ro").title, "E pentru tine: „Old sofa”", "ro quotes");
+  for (const l of ["en", "ro", "fr", "es", "it"] as const) {
+    for (const type of ["item_request", "item_request_withdrawn", "item_picked", "item_missed"] as const) {
+      for (const data of [{ kind: "market", item: "Lamp", note: "pls" }, { kind: "food", item: null, note: null }]) {
+        for (const preview_content of [true, false]) {
+          const x = render(item({ type, preview_content, data }), l);
+          assert(x.title && x.body && !/[{}#]/.test(x.title + x.body), `${l} ${type} ${preview_content}: ${JSON.stringify(x)}`);
+          if (!preview_content) assert(!/Ana|Lamp|pls/.test(x.title + x.body), `${l} ${type} private leaks content`);
+        }
+      }
+    }
+  }
+  const food = buildMessage(item({ type: "item_picked", target_id: "p-1", data: { kind: "food", item: "Soup" } }), tok(null));
+  assertEq([food.url, food.itemKind, food.channelId, food.category], ["/food?bubble=b-1&post=p-1", "food", "bubble", "ITEM_PICKED"], "food deep link");
+  const market = buildMessage(item({ type: "item_request", data: { kind: "market", item: "Lamp" } }), tok(null));
+  assertEq([market.url, market.itemKind], ["/marketplace?bubble=b-1&item=m-1", "market"], "market deep link");
+  assertEq(buildMessage(item(), tok(null)).itemKind, null, "other types carry no item kind");
+});
+
 Deno.test("render: truncation to ~100 graphemes, names never carry an email", () => {
   const long = "ă".repeat(80) + " " + "🍕".repeat(60);
   const t = truncate(long);

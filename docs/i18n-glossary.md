@@ -122,6 +122,71 @@ Web keys under `market.*` / `events.addToCalendar`; iOS uses the English text as
 "Taken" means given away or traded, not sold (items are free or traded), hence es "Entregado" rather than "Vendido". These were drafted by AI like the rest and are in the native-speaker review.
 
 
+## Requests and food expiry (docs/boolaa-spec.md, "Requests and picking", "Food expiry")
+
+Web keys under `requests.*` (shared by Food and Marketplace), `food.*` for the expiry, `errors.*` and `notifications.*`; Android `requests_*`, `food_*`, `error_*`, `notifications_*` resources (plurals as `<plurals>`); iOS the English text as key (plurals in `Localizable.xcstrings` variations). `{name}` is a member's name and `{title}` an item title (user content, never translated); `{count}` a number; `{time}` a locale-formatted time of day; `{day}` a locale weekday name; `{date}` a locale short date ("3 Dec"). "Request" is the noun everywhere (ro cerere, fr demande, es solicitud, it richiesta); "pick" is the owner's choice (ro alegi, fr choisir, es elegir, it scegliere). Gender-neutral wording only: the requester's and owner's gender is unknown.
+
+| key | en | ro | fr | es | it |
+|---|---|---|---|---|---|
+| `requests.iWantIt` (button) | I want it | Vreau asta | Ça m'intéresse | ¡Me lo pido! | Mi interessa |
+| `requests.iWantItA11y` | I want it: {title} | Vreau asta: {title} | Ça m'intéresse : {title} | Me lo pido: {title} | Mi interessa: {title} |
+| `requests.notePlaceholder` | Add a note (optional) | Adaugă un mesaj (opțional) | Ajoute un mot (facultatif) | Añade una nota (opcional) | Aggiungi una nota (facoltativa) |
+| `requests.send` | Send request | Trimite cererea | Envoyer la demande | Enviar solicitud | Invia richiesta |
+| `requests.sentToast` | Request sent. {name} will see it. | Cererea a fost trimisă. {name} o va vedea. | Demande envoyée. {name} va la voir. | Solicitud enviada. {name} la verá. | Richiesta inviata. {name} la vedrà. |
+| `requests.requested` (chip) | Requested | Ai cerut | Demandé | Solicitado | Richiesto |
+| `requests.onList` (chip, item reserved for someone else) | Reserved · you're on the list | Rezervat · ești pe listă | Réservé · tu es sur la liste | Reservado · estás en la lista | Prenotato · sei in lista |
+| `requests.withdraw` | Withdraw request | Retrage cererea | Retirer la demande | Retirar solicitud | Ritira la richiesta |
+| `requests.withdrawConfirmTitle` (picked only) | Withdraw your request? | Îți retragi cererea? | Retirer ta demande ? | ¿Retirar tu solicitud? | Vuoi ritirare la richiesta? |
+| `requests.withdrawConfirmBody` | {name} will be told you changed your mind. | {name} va afla că te-ai răzgândit. | {name} saura que tu as changé d'avis. | Avisaremos a {name} de que has cambiado de idea. | Avviseremo {name} che hai cambiato idea. |
+| `requests.reservedForYou` (badge) | Reserved for you | Rezervat pentru tine | Réservé pour toi | Reservado para ti | Prenotato per te |
+| `requests.reservedFor` (owner's badge) | Reserved for {name} | Rezervat pentru {name} | Réservé pour {name} | Reservado para {name} | Prenotato per {name} |
+| `requests.youGotIt` (badge) | It's yours | E al tău | C'est pour toi | Es tuyo | È tuo |
+| `requests.someoneElse` | Someone else got it | Altcineva l-a primit | Quelqu'un d'autre l'a eu | Se lo ha llevado otra persona | È andato a qualcun altro |
+| `requests.count` (plural pill) | one: {count} request · other: {count} requests | one: {count} cerere · few: {count} cereri · other: {count} de cereri | one: {count} demande · many: {count} de demandes · other: {count} demandes | one: {count} solicitud · many: {count} de solicitudes · other: {count} solicitudes | one: {count} richiesta · many: {count} di richieste · other: {count} richieste |
+| `requests.button` (owner, `Requests · 3`) | Requests · {count} | Cereri · {count} | Demandes · {count} | Solicitudes · {count} | Richieste · {count} |
+| `requests.title` (sheet) | Requests | Cereri | Demandes | Solicitudes | Richieste |
+| `requests.noneYet` (owner card / sheet title) | No requests yet. | Nicio cerere încă. | Pas encore de demande. | Todavía no hay solicitudes. | Ancora nessuna richiesta. |
+| `requests.noneYetHint` | Members can tap “I want it” on your post. | Membrii pot apăsa „Vreau asta” la postarea ta. | Les membres peuvent appuyer sur « Ça m'intéresse » sur ta publication. | Los miembros pueden tocar «¡Me lo pido!» en tu publicación. | I membri possono toccare «Mi interessa» sul tuo post. |
+| `requests.pick` | Pick | Alege | Choisir | Elegir | Scegli |
+| `requests.pickInstead` | Pick instead | Alege în schimb | Choisir plutôt | Elegir en su lugar | Scegli invece |
+| `requests.yourPick` (badge) | Your pick | Alegerea ta | Ton choix | Tu elección | La tua scelta |
+| `requests.undoPick` | Undo pick | Anulează alegerea | Annuler le choix | Deshacer elección | Annulla la scelta |
+| `requests.pickedToast` | Reserved for {name}. Sort out the pick-up in the chat. | Rezervat pentru {name}. Stabiliți predarea în chat. | Réservé pour {name}. Organisez la remise dans la discussion. | Reservado para {name}. Quedad para la entrega en el chat. | Prenotato per {name}. Accordatevi per il ritiro in chat. |
+| `requests.handOver` | Mark as handed over | Marchează ca predat | Marquer comme remis | Marcar como entregado | Segna come consegnato |
+| `requests.handOverTitle` | Mark as handed over? | Marchezi ca predat? | Marquer comme remis ? | ¿Marcar como entregado? | Segnare come consegnato? |
+| `requests.handOverBodyMarket` | {name} gets “{title}”. Everyone else who asked will hear that someone else got it. | „{title}” ajunge la {name}. Ceilalți care l-au cerut vor afla că a ajuns la altcineva. | « {title} » va à {name}. Les autres personnes qui l'ont demandé seront prévenues. | «{title}» es para {name}. Avisaremos al resto de quienes lo pidieron de que se lo ha llevado otra persona. | «{title}» va a {name}. Avviseremo chi altro l'ha chiesto che è andato a qualcun altro. |
+| `requests.handOverBodyFood` | {name} gets your food. The post disappears from the Food Circle, and everyone else who asked will hear that someone else got it. | Mâncarea ajunge la {name}. Postarea dispare din Cercul culinar, iar ceilalți care au cerut-o vor afla că a ajuns la altcineva. | Ton plat va à {name}. La publication disparaît du Cercle gourmand et les autres personnes qui l'ont demandé seront prévenues. | Tu comida es para {name}. La publicación desaparece del Círculo de comida y avisaremos al resto de quienes la pidieron. | Il tuo cibo va a {name}. Il post sparisce dal Cerchio del cibo e avviseremo chi altro l'ha chiesto. |
+| `requests.clearPickConfirm` (market "Mark as → Available") | This clears your pick ({name}). Their request stays on the list. | Asta anulează alegerea ta ({name}). Cererea rămâne pe listă. | Cela annule ton choix ({name}). Sa demande reste dans la liste. | Esto deshace tu elección ({name}). Su solicitud sigue en la lista. | Così annulli la tua scelta ({name}). La sua richiesta resta in lista. |
+| `food.goodUntil` (form label) | Good until | Bun până | Bon jusqu'à | Bueno hasta | Buono fino a |
+| `food.expiryToday` | Today | Azi | Aujourd'hui | Hoy | Oggi |
+| `food.expiryTomorrow` | Tomorrow | Mâine | Demain | Mañana | Domani |
+| `food.expiryIn3Days` | In 3 days | În 3 zile | Dans 3 jours | En 3 días | Tra 3 giorni |
+| `food.expiryCustom` | Custom | Altă dată | Autre | Otra fecha | Altro |
+| `food.expiryHint` | Your post disappears after this. | Postarea ta dispare după ora asta. | Ta publication disparaît ensuite. | Tu publicación desaparece después. | Dopo, il tuo post sparisce. |
+| `food.expiresInMinutes` (plural) | one: Expires in {count} minute · other: Expires in {count} minutes | one: Expiră într-un minut · few: Expiră în {count} minute · other: Expiră în {count} de minute | one: Expire dans {count} minute · many: Expire dans {count} de minutes · other: Expire dans {count} minutes | one: Caduca en {count} minuto · many: Caduca en {count} de minutos · other: Caduca en {count} minutos | one: Scade tra {count} minuto · many: Scade tra {count} di minuti · other: Scade tra {count} minuti |
+| `food.expiresInHours` (plural) | one: Expires in {count} hour · other: Expires in {count} hours | one: Expiră într-o oră · few: Expiră în {count} ore · other: Expiră în {count} de ore | one: Expire dans {count} heure · many: Expire dans {count} d'heures · other: Expire dans {count} heures | one: Caduca en {count} hora · many: Caduca en {count} de horas · other: Caduca en {count} horas | one: Scade tra {count} ora · many: Scade tra {count} di ore · other: Scade tra {count} ore |
+| `food.goodUntilToday` | Good until today {time} | Bun până azi la {time} | Bon jusqu'à aujourd'hui {time} | Bueno hasta hoy a las {time} | Buono fino a oggi alle {time} |
+| `food.goodUntilTomorrow` | Good until tomorrow {time} | Bun până mâine la {time} | Bon jusqu'à demain {time} | Bueno hasta mañana a las {time} | Buono fino a domani alle {time} |
+| `food.goodUntilDay` (within 7 days) | Good until {day} {time} | Bun până {day} la {time} | Bon jusqu'à {day} {time} | Bueno hasta el {day} a las {time} | Buono fino a {day} alle {time} |
+| `food.goodUntilDate` | Good until {date}, {time} | Bun până pe {date}, la {time} | Bon jusqu'au {date}, {time} | Bueno hasta el {date}, a las {time} | Buono fino al {date}, alle {time} |
+| `errors.itemGone` | This post isn't here any more. | Postarea nu mai există. | Cette publication n'existe plus. | Esta publicación ya no existe. | Questo post non c'è più. |
+| `errors.itemNotAvailable` | It's no longer available. | Nu mai e disponibil. | Ce n'est plus disponible. | Ya no está disponible. | Non è più disponibile. |
+| `errors.alreadyRequested` | You've already asked for this. | Ai cerut deja asta. | Tu l'as déjà demandé. | Ya lo has pedido. | L'hai già chiesto. |
+| `errors.cannotRequestOwn` | This is your own post. | E postarea ta. | C'est ta propre publication. | Es tu propia publicación. | È un tuo post. |
+| `errors.requestNoteTooLong` | Keep the note under 200 characters. | Mesajul poate avea cel mult 200 de caractere. | Le mot ne doit pas dépasser 200 caractères. | La nota no puede superar los 200 caracteres. | La nota può avere al massimo 200 caratteri. |
+| `errors.requestGone` | That request was withdrawn. | Cererea a fost retrasă. | Cette demande a été retirée. | Esa solicitud se ha retirado. | Quella richiesta è stata ritirata. |
+| `errors.requestDecided` | This request has already been decided. | Cererea asta a fost deja decisă. | Cette demande a déjà été traitée. | Esta solicitud ya se ha resuelto. | Questa richiesta è già stata decisa. |
+| `errors.nothingPicked` | Pick someone first. | Alege mai întâi pe cineva. | Choisis d'abord quelqu'un. | Elige a alguien primero. | Scegli prima qualcuno. |
+| `errors.invalidExpiry` | Pick a time in the next 14 days. | Alege o oră din următoarele 14 zile. | Choisis un moment dans les 14 prochains jours. | Elige un momento de los próximos 14 días. | Scegli un momento entro i prossimi 14 giorni. |
+| `notifications.itemRequests` (switch) | Requests for my posts | Cereri pentru postările mele | Demandes sur mes publications | Solicitudes de mis publicaciones | Richieste per i miei post |
+| `notifications.requestUpdates` (switch) | Updates on my requests | Noutăți despre cererile mele | Suivi de mes demandes | Novedades de mis solicitudes | Aggiornamenti sulle mie richieste |
+
+- **Error mapping** (exact backend texts, checked with `includes` before the generic fallback; none contains an older mapped text): `item not found` → `itemGone`, `item not available` → `itemNotAvailable`, `already requested` → `alreadyRequested`, `cannot request own item` → `cannotRequestOwn`, `request note too long` → `requestNoteTooLong`, `item request gone` → `requestGone`, `request already decided` → `requestDecided`, `nothing picked` → `nothingPicked`, `invalid expiry` → `invalidExpiry`; `not your item` and `invalid item kind` → generic.
+- **Push texts** (`item_request`, `item_request_withdrawn`, `item_picked`, `item_missed`, each with `title`, `titleNoItem` for food without a description, `body`, `private`, and `bodyNote` for `item_request`) are in `supabase/functions/push-dispatch/locales/*.json` and listed in `docs/push-notifications.md` §4.
+- **Plurals**: Romanian "de" from 20 (`other`), like the other counts; `few` covers 2–19. In Romanian 1 minute / 1 hour read "într-un minut" / "într-o oră", not "în 1".
+- The quotes in `noneYetHint` and the market hand-over body follow each language's style: „ ” (ro), « » with spaces (fr), «» (es, it).
+- Drafted by AI like the rest; in the native-speaker review.
+
 ## Reactions and link previews (docs/boolaa-spec.md, "Reactions", "Link previews")
 
 Web keys under `reactions.*` and `links.previewLoading`; Android `reaction_*` (plurals `reaction_chip`) and `link_preview_loading`; iOS the same English texts. The reaction names are also the accessibility labels of the emoji. Errors from `toggle_reaction` use the generic error.

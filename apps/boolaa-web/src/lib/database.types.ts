@@ -457,27 +457,39 @@ export type Database = {
       }
       food_posts: {
         Row: {
+          availability: string
           bubble_id: string
           created_at: string
           description: string | null
+          expires_at: string
+          handed_over_at: string | null
           id: string
           image: string
+          request_count: number
           user_id: string
         }
         Insert: {
+          availability?: string
           bubble_id: string
           created_at?: string
           description?: string | null
+          expires_at?: string
+          handed_over_at?: string | null
           id?: string
           image: string
+          request_count?: number
           user_id: string
         }
         Update: {
+          availability?: string
           bubble_id?: string
           created_at?: string
           description?: string | null
+          expires_at?: string
+          handed_over_at?: string | null
           id?: string
           image?: string
+          request_count?: number
           user_id?: string
         }
         Relationships: [
@@ -546,6 +558,87 @@ export type Database = {
           },
         ]
       }
+      item_requests: {
+        Row: {
+          bubble_id: string
+          created_at: string
+          food_post_id: string | null
+          id: string
+          item_id: string | null
+          item_kind: string | null
+          market_item_id: string | null
+          note: string | null
+          owner_id: string
+          requester_id: string
+          status: string
+          status_changed_at: string
+        }
+        Insert: {
+          bubble_id: string
+          created_at?: string
+          food_post_id?: string | null
+          id?: string
+          item_id?: string | null
+          item_kind?: string | null
+          market_item_id?: string | null
+          note?: string | null
+          owner_id: string
+          requester_id: string
+          status?: string
+          status_changed_at?: string
+        }
+        Update: {
+          bubble_id?: string
+          created_at?: string
+          food_post_id?: string | null
+          id?: string
+          item_id?: string | null
+          item_kind?: string | null
+          market_item_id?: string | null
+          note?: string | null
+          owner_id?: string
+          requester_id?: string
+          status?: string
+          status_changed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_requests_bubble_id_fkey"
+            columns: ["bubble_id"]
+            isOneToOne: false
+            referencedRelation: "bubbles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_requests_food_post_id_fkey"
+            columns: ["food_post_id"]
+            isOneToOne: false
+            referencedRelation: "food_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_requests_market_item_id_fkey"
+            columns: ["market_item_id"]
+            isOneToOne: false
+            referencedRelation: "market_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_requests_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       join_requests: {
         Row: {
           approver_ids: string[]
@@ -594,6 +687,7 @@ export type Database = {
           id: string
           image: string
           owner_id: string
+          request_count: number
           status: string
           title: string
         }
@@ -605,6 +699,7 @@ export type Database = {
           id?: string
           image: string
           owner_id: string
+          request_count?: number
           status?: string
           title: string
         }
@@ -616,6 +711,7 @@ export type Database = {
           id?: string
           image?: string
           owner_id?: string
+          request_count?: number
           status?: string
           title?: string
         }
@@ -770,10 +866,12 @@ export type Database = {
           enabled: boolean
           event_reminders: boolean
           food: boolean
+          item_requests: boolean
           join_requests: boolean
           market: boolean
           new_events: boolean
           preview_content: boolean
+          request_updates: boolean
           updated_at: string
           user_id: string
         }
@@ -783,10 +881,12 @@ export type Database = {
           enabled?: boolean
           event_reminders?: boolean
           food?: boolean
+          item_requests?: boolean
           join_requests?: boolean
           market?: boolean
           new_events?: boolean
           preview_content?: boolean
+          request_updates?: boolean
           updated_at?: string
           user_id: string
         }
@@ -796,10 +896,12 @@ export type Database = {
           enabled?: boolean
           event_reminders?: boolean
           food?: boolean
+          item_requests?: boolean
           join_requests?: boolean
           market?: boolean
           new_events?: boolean
           preview_content?: boolean
+          request_updates?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -1397,6 +1499,19 @@ export type Database = {
       enqueue_event_reminders: { Args: never; Returns: number }
       event_has_ended: { Args: { p_datetime: string }; Returns: boolean }
       export_my_data: { Args: never; Returns: Json }
+      export_my_data_core: { Args: never; Returns: Json }
+      food_image_orphans: {
+        Args: { p_grace?: string; p_limit?: number }
+        Returns: string[]
+      }
+      food_posts_due_for_sweep: {
+        Args: {
+          p_expired_grace?: string
+          p_limit?: number
+          p_taken_grace?: string
+        }
+        Returns: string[]
+      }
       generate_invite_code: { Args: never; Returns: string }
       get_invite_preview: {
         Args: { p_code: string }
@@ -1408,6 +1523,29 @@ export type Database = {
           name: string
           status: string
         }[]
+      }
+      hand_over_item: {
+        Args: { p_item_id: string; p_kind: string }
+        Returns: {
+          bubble_id: string
+          created_at: string
+          food_post_id: string | null
+          id: string
+          item_id: string | null
+          item_kind: string | null
+          market_item_id: string | null
+          note: string | null
+          owner_id: string
+          requester_id: string
+          status: string
+          status_changed_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "item_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       has_fresh_sensitive_proof: {
         Args: { p_user_id: string }
@@ -1438,6 +1576,10 @@ export type Database = {
         }
         Returns: Json
       }
+      item_push_data: {
+        Args: { p_item_id: string; p_kind: string; p_live: boolean }
+        Returns: Json
+      }
       link_preview_orphans: {
         Args: { p_grace?: string; p_limit?: number }
         Returns: string[]
@@ -1451,6 +1593,10 @@ export type Database = {
           last_seen_at: string
         }[]
       }
+      lock_request_item: {
+        Args: { p_item_id: string; p_kind: string }
+        Returns: Record<string, unknown>
+      }
       mark_chat_read: {
         Args: { p_bubble_id: string; p_message_id: string }
         Returns: string
@@ -1460,6 +1606,29 @@ export type Database = {
         Returns: undefined
       }
       normalize_invite_code: { Args: { p_code: string }; Returns: string }
+      pick_item_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          bubble_id: string
+          created_at: string
+          food_post_id: string | null
+          id: string
+          item_id: string | null
+          item_kind: string | null
+          market_item_id: string | null
+          note: string | null
+          owner_id: string
+          requester_id: string
+          status: string
+          status_changed_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "item_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       prune_push_outbox: { Args: never; Returns: undefined }
       push_enqueue: {
         Args: {
@@ -1488,6 +1657,10 @@ export type Database = {
       push_type_enabled: {
         Args: { p_type: string; p_user_id: string }
         Returns: boolean
+      }
+      refresh_item_request_count: {
+        Args: { p_item_id: string; p_kind: string }
+        Returns: undefined
       }
       register_push_token: {
         Args: {
@@ -1524,6 +1697,29 @@ export type Database = {
         Args: { p_target_id: string; p_target_type: string }
         Returns: Json
       }
+      request_item: {
+        Args: { p_item_id: string; p_kind: string; p_note?: string }
+        Returns: {
+          bubble_id: string
+          created_at: string
+          food_post_id: string | null
+          id: string
+          item_id: string | null
+          item_kind: string | null
+          market_item_id: string | null
+          note: string | null
+          owner_id: string
+          requester_id: string
+          status: string
+          status_changed_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "item_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       request_to_join: {
         Args: { p_invite_code: string }
         Returns: {
@@ -1547,6 +1743,26 @@ export type Database = {
       revoke_device: { Args: { p_device_hash: string }; Returns: boolean }
       rotate_invite_code: { Args: { p_bubble_id: string }; Returns: string }
       search_bubble: {
+        Args: {
+          p_bubble_id: string
+          p_kinds?: string[]
+          p_limit?: number
+          p_query: string
+        }
+        Returns: {
+          author_id: string
+          author_name: string
+          created_at: string
+          event_at: string
+          id: string
+          kind: string
+          matched_words: string[]
+          rank: number
+          snippet: string
+          title: string
+        }[]
+      }
+      search_bubble_core: {
         Args: {
           p_bubble_id: string
           p_kinds?: string[]
@@ -1591,6 +1807,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_item_availability: {
+        Args: { p_availability: string; p_item_id: string; p_kind: string }
+        Returns: undefined
+      }
       set_member_role: {
         Args: { p_bubble_id: string; p_role: string; p_user_id: string }
         Returns: undefined
@@ -1621,6 +1841,16 @@ export type Database = {
         Args: { p_grace?: string; p_key?: string; p_url?: string }
         Returns: number
       }
+      sweep_food_posts: {
+        Args: {
+          p_expired_grace?: string
+          p_key?: string
+          p_photo_grace?: string
+          p_taken_grace?: string
+          p_url?: string
+        }
+        Returns: Json
+      }
       sweep_link_preview_images: {
         Args: { p_grace?: string; p_key?: string; p_url?: string }
         Returns: number
@@ -1642,8 +1872,16 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: boolean
       }
+      unpick_item: {
+        Args: { p_item_id: string; p_kind: string }
+        Returns: undefined
+      }
       unregister_push_token: { Args: { p_token: string }; Returns: boolean }
       verified_amr_methods: { Args: never; Returns: string[] }
+      withdraw_item_request: {
+        Args: { p_request_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

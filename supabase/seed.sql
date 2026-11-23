@@ -45,13 +45,20 @@ insert into public.events (bubble_id, creator_id, title, description, datetime, 
   ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Flat dinner', 'Potluck, bring a dish', now() + interval '3 days', 'Kitchen', '{11111111-1111-1111-1111-111111111111}'),
   ('aaaaaaaa-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'Bouldering session', null, now() + interval '5 days', 'The Climbing Hangar', '{}');
 
-insert into public.food_posts (bubble_id, user_id, image, description) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
-   'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800', 'Leftover salad in the fridge, help yourselves');
+-- Food expires (20261124100000_requests_food_expiry.sql); a week keeps a long-lived local stack usable.
+insert into public.food_posts (id, bubble_id, user_id, image, description, expires_at) values
+  ('bbbbbbbb-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
+   'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800', 'Leftover salad in the fridge, help yourselves',
+   now() + interval '7 days');
 
 insert into public.market_items (bubble_id, owner_id, image, title, description, status) values
   ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800', 'Old sofa', 'Comfy, needs a new home', 'free');
+
+-- Alice asked Bob for the salad ("I want it"): Bob sees 1 request with her note, Alice sees "Requested".
+insert into public.item_requests (bubble_id, owner_id, requester_id, food_post_id, note) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
+   '11111111-1111-1111-1111-111111111111', 'bbbbbbbb-0000-0000-0000-000000000001', 'Can I have some tonight?');
 
 insert into public.shared_links (bubble_id, user_id, url, title, tags) values
   ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',

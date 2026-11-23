@@ -28,6 +28,8 @@ export const DEFAULT_PREFS: Omit<NotificationPrefs, "user_id" | "updated_at"> = 
   event_reminders: true,
   food: false,
   market: false,
+  item_requests: true, // 20261124100000_requests_food_expiry.sql (toggles: spec "Requests and picking")
+  request_updates: true,
   preview_content: true,
 };
 

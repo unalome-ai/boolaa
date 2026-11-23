@@ -460,4 +460,58 @@ end $$;
 reset role;
 rollback;
 
+\echo '12. requests and food expiry (20261124100000_requests_food_expiry.sql)'
+begin;
+update public.app_settings set device_verification_enforced = false, age_confirmation_required = false;
+set local role authenticated;
+-- Seed: alice asked bob for the salad (bob's food post in Flatmates).
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  assert (select count(*) from item_requests) = 1, 'alice sees her own request';
+  assert (select request_count from food_posts) = 1, 'alice sees the count';
+end $$;
+select set_config('request.jwt.claims', :'bob', true);
+do $$ begin
+  assert (select note from item_requests) = 'Can I have some tonight?', 'owner bob sees the request with its note';
+end $$;
+select set_config('request.jwt.claims', :'carol', true);
+do $$ begin
+  assert (select count(*) from item_requests) = 0, 'pending carol sees no request';
+  begin
+    perform public.request_item('food', 'bbbbbbbb-0000-0000-0000-000000000001', null);
+    assert false, 'carol may not request';
+  exception when raise_exception then
+    assert sqlerrm = 'item not found', sqlerrm;
+  end;
+end $$;
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  begin
+    insert into item_requests (bubble_id, owner_id, requester_id, food_post_id)
+    values ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
+            '11111111-1111-1111-1111-111111111111', 'bbbbbbbb-0000-0000-0000-000000000001');
+    assert false, 'no direct insert';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.lock_request_item('food', 'bbbbbbbb-0000-0000-0000-000000000001');
+    assert false, 'internal helper closed';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);  -- a server-side write (no user): the expiry guard doesn't apply
+update public.food_posts set expires_at = now() - interval '1 second' where id = 'bbbbbbbb-0000-0000-0000-000000000001';
+set local role authenticated;
+select set_config('request.jwt.claims', :'bob', true);
+do $$ begin
+  assert (select count(*) from food_posts) = 0, 'expired post hidden from its owner too';
+end $$;
+select set_config('request.jwt.claims', :'alice', true);
+do $$ begin
+  assert (select count(*) from food_posts) = 0, 'expired post hidden from members';
+end $$;
+reset role;
+rollback;
+
 \echo 'ALL RLS CHECKS PASSED'

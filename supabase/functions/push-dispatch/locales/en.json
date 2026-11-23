@@ -38,5 +38,30 @@
     "free": "Free",
     "trade": "Trade",
     "private": "New item in the Marketplace of {bubble}"
+  },
+  "item_request": {
+    "title": "{name} wants “{item}”",
+    "titleNoItem": "{name} wants your food",
+    "bodyNote": "“{note}”",
+    "body": "Open the requests to pick who gets it.",
+    "private": "You have a new request in {bubble}"
+  },
+  "item_request_withdrawn": {
+    "title": "{name} can't take “{item}” anymore",
+    "titleNoItem": "{name} can't take your food anymore",
+    "body": "It's available again. Pick someone else from the requests.",
+    "private": "A request was withdrawn in {bubble}"
+  },
+  "item_picked": {
+    "title": "It's yours: “{item}”",
+    "titleNoItem": "The food is yours!",
+    "body": "{name} picked your request. Sort out the pick-up in the chat.",
+    "private": "Good news about your request in {bubble}"
+  },
+  "item_missed": {
+    "title": "Someone else got “{item}”",
+    "titleNoItem": "Someone else got the food",
+    "body": "Thanks for asking. Maybe next time!",
+    "private": "An update on your request in {bubble}"
   }
 }
