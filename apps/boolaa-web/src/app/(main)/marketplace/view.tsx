@@ -110,7 +110,12 @@ export default function MarketplacePage() {
 
   /** Opens the bubble chat with an unsent message to the owner (the app has group chat, no DMs). */
   function askOwner(item: MarketItem) {
-    setChatDraft(bubble.id, t("market.askDraft", { name: item.owner?.name ?? t("common.someone"), title: item.title }));
+    // Starts with a real @mention of the owner when they can be mentioned (the chat checks the candidates).
+    setChatDraft(
+      bubble.id,
+      t("market.askDraft", { name: item.owner?.name ?? t("common.someone"), title: item.title }),
+      item.owner?.name ? { userId: item.owner_id, name: item.owner.name } : null,
+    );
     router.push("/chat");
   }
 

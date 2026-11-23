@@ -81,6 +81,8 @@ enum class UserFacingError(@param:StringRes val message: Int) {
     REQUEST_DECIDED(R.string.error_request_decided),
     NOTHING_PICKED(R.string.error_nothing_picked),
     INVALID_EXPIRY(R.string.error_invalid_expiry),
+    // Chat mentions (20261124200000_chat_mentions.sql).
+    TOO_MANY_MENTIONS(R.string.error_too_many_mentions),
     GENERIC(R.string.error_generic);
 
     companion object {
@@ -150,6 +152,9 @@ enum class UserFacingError(@param:StringRes val message: Int) {
             val text = message.lowercase()
             val table = listOf(
                 // Requests and food expiry: checked first; none contains an older mapped text (or the reverse).
+                // Mentions: "invalid mentions" is a client bug (generic).
+                "too many mentions" to TOO_MANY_MENTIONS,
+                "invalid mentions" to GENERIC,
                 "item request gone" to REQUEST_GONE,
                 "item not found" to ITEM_GONE,
                 "item not available" to ITEM_NOT_AVAILABLE,

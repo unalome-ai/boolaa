@@ -199,6 +199,12 @@
     "emptyTitle": "Dis bonjour !",
     "emptyHint": "Personne n'a encore écrit. Brise la glace.",
     "messageLabel": "Message",
+    "mentionListLabel": "Membres à mentionner",
+    "mentionA11y": "Mentionner {name}",
+    "mentionNoMatch": "Aucun membre ne correspond",
+    "mentionCount": "{count, plural, one {# membre} other {# membres}}",
+    "mentionLimit": "Tu peux mentionner jusqu'à 10 personnes par message.",
+    "mentionedYou": "{name} te mentionne",
     "placeholder": "Message à {bubble}",
     "send": "Envoyer",
     "deleted": "Ce message a été supprimé",
@@ -430,7 +436,8 @@
     "requestGone": "Cette demande a été retirée.",
     "requestDecided": "Cette demande a déjà été traitée.",
     "nothingPicked": "Choisis d'abord quelqu'un.",
-    "invalidExpiry": "Choisis un moment dans les 14 prochains jours."
+    "invalidExpiry": "Choisis un moment dans les 14 prochains jours.",
+    "tooManyMentions": "Tu peux mentionner jusqu'à 10 personnes par message."
   },
   "safety": {
     "moreActions": "Plus d'actions",
@@ -591,6 +598,8 @@
     "title": "Notifications",
     "enabled": "Autoriser les notifications",
     "chat": "Messages du chat",
+    "mentions": "Mentions",
+    "mentionsHint": "Quand quelqu'un te @mentionne, même si les messages de discussion sont désactivés.",
     "joinRequests": "Demandes d'adhésion",
     "approvals": "Ma demande a été acceptée",
     "newEvents": "Nouveaux événements",

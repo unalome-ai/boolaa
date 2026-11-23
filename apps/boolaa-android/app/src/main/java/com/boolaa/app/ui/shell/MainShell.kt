@@ -170,7 +170,7 @@ object ShellRoutes {
 /** Navigation actions the tab screens use (deep links from Home cards, Links from Settings). */
 class ShellNavigator(private val nav: NavHostController) {
     /** Text to prefill (not send) in the chat composer, e.g. "Ask in chat" on a market item. Consumed by the chat. */
-    var chatDraft by mutableStateOf<String?>(null)
+    var chatDraft by mutableStateOf<com.boolaa.app.ui.chat.ChatDraft?>(null)
     /** A chat message to open in context (a search hit). Consumed by the chat. */
     var chatJump by mutableStateOf<String?>(null)
 
@@ -179,7 +179,7 @@ class ShellNavigator(private val nav: NavHostController) {
         launchSingleTop = true
         restoreState = true
     }
-    fun openChat(draft: String? = null) {
+    fun openChat(draft: com.boolaa.app.ui.chat.ChatDraft? = null) {
         if (draft != null) chatDraft = draft
         nav.navigate(ShellRoutes.CHAT) { launchSingleTop = true }
     }

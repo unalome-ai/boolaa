@@ -28,6 +28,7 @@ function baseUrl(d) {
   const t = encodeURIComponent(d.target_id || "");
   switch (d.type) {
     case "chat": return `/chat?bubble=${b}`;
+    case "chat_mention": return `/chat?bubble=${b}&message=${t}`;
     case "join_request": return `/settings?bubble=${b}`;
     case "approval": return `/home?bubble=${b}`;
     case "new_event":
@@ -63,7 +64,7 @@ async function bubbleOf(client) {
 
 /** A chat push for the chat that's on screen right now (focused, visible tab) shows no banner. */
 async function chatOnScreen(d) {
-  if (d.type !== "chat" || !d.bubble_id) return false;
+  if ((d.type !== "chat" && d.type !== "chat_mention") || !d.bubble_id) return false;
   const tabs = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
   for (const c of tabs) {
     if (!c.focused || c.visibilityState !== "visible") continue;

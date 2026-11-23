@@ -60,6 +60,7 @@ type ErrorKey =
   | "requestDecided"
   | "nothingPicked"
   | "invalidExpiry"
+  | "tooManyMentions"
   | "generic";
 
 /** Messages that take an argument: `codeWrong` shows how many tries are left. */
@@ -146,6 +147,9 @@ export function errorKey(e: unknown): ErrorKey {
   if (msg.includes("request already decided")) return "requestDecided";
   if (msg.includes("nothing picked")) return "nothingPicked";
   if (msg.includes("invalid expiry")) return "invalidExpiry";
+  if (msg.includes("too many mentions")) return "tooManyMentions";
+  // A client bug, nothing the user can fix (docs/boolaa-spec.md, "Mentions" → Errors).
+  if (msg.includes("invalid mentions")) return "generic";
   // Invite links (20261123140000_invite_links.sql).
   if (msg.includes("too many attempts")) return "tooManyInviteAttempts";
   if (msg.includes("only the owner can change the invite code")) return "onlyOwnerCanRotate";

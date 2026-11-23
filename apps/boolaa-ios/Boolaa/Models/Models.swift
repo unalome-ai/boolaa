@@ -137,9 +137,12 @@ struct ChatMessage: Codable, Identifiable, Hashable, Sendable {
     /// Set when the author deleted the message: text and photo are wiped, a placeholder is shown.
     var deletedAt: Date? = nil
     var sender: UserProfile?
+    /// `chat_messages.mentions` (docs/boolaa-spec.md, "Mentions"): always taken from the server row. nil in rows
+    /// cached before mentions existed.
+    var mentions: [MentionSpan]? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, content, sender
+        case id, content, sender, mentions
         case bubbleId = "bubble_id"
         case senderId = "sender_id"
         case createdAt = "created_at"
@@ -154,6 +157,7 @@ struct ChatMessage: Codable, Identifiable, Hashable, Sendable {
         var copy = self
         copy.content = ""
         copy.imagePath = nil
+        copy.mentions = []
         copy.deletedAt = date
         return copy
     }
@@ -401,8 +405,10 @@ struct NewChatMessage: Encodable, Sendable {
     let senderId: UUID
     let content: String
     var imagePath: String? = nil
+    /// Omitted when there are none (stored as `[]`).
+    var mentions: [MentionSpan]? = nil
     enum CodingKeys: String, CodingKey {
-        case id, content
+        case id, content, mentions
         case bubbleId = "bubble_id"
         case senderId = "sender_id"
         case imagePath = "image_path"

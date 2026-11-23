@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chat @mentions (docs/i18n-glossary.md "Mentions"; docs/boolaa-spec.md "Mentions"). -->
+<resources>
+    <string name="chat_mention_list_label">Membri pe care îi poți menționa</string>
+    <string name="chat_mention_a11y">Menționează: %1$s</string>
+    <string name="chat_mention_no_match">Niciun membru nu se potrivește</string>
+    <string name="chat_mention_limit">Poți menționa cel mult 10 persoane într-un mesaj.</string>
+    <plurals name="chat_mention_count">
+        <item quantity="one">%d membru</item>
+        <item quantity="few">%d membri</item>
+        <item quantity="other">%d de membri</item>
+    </plurals>
+    <string name="chat_mentioned_you">%1$s te-a menționat</string>
+    <string name="error_too_many_mentions">Poți menționa cel mult 10 persoane într-un mesaj.</string>
+    <string name="notifications_mentions">Mențiuni</string>
+    <string name="notifications_mentions_hint">Când cineva te @menționează, chiar dacă mesajele din chat sunt oprite.</string>
+</resources>

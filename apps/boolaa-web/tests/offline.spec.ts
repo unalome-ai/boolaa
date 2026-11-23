@@ -104,6 +104,7 @@ test("outbox: queue, dedupe by id, order, persistence restores as Not sent", () 
     bubble_id: "b1",
     sender_id: "u1",
     content: `msg ${id}`,
+    mentions: [],
     created_at: at,
     state: "sending",
     image_path: null,

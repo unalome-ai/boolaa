@@ -67,7 +67,14 @@ struct NotificationsView: View {
             next[keyPath: key] = value
             Task { await save(next) }
         })) {
-            Text(title).font(.body.weight(.medium))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.body.weight(.medium))
+                if key == \NotificationPrefs.mentions {
+                    Text("When someone @mentions you, even if chat messages are off.",
+                         comment: "Hint under the Mentions notification setting")
+                        .font(.footnote).foregroundStyle(Theme.inkSecondary)
+                }
+            }
         }
         .tint(Hue.grape.fill)
         .frame(minHeight: 44)

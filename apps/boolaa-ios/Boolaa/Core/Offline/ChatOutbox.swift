@@ -15,8 +15,10 @@ struct PendingMessage: Codable, Identifiable, Hashable, Sendable {
     var state: State
     /// The prepared JPEG of a photo message. Kept in memory only (not persisted).
     var photo: Data?
+    /// Code-point spans against `content` exactly as it is sent (persisted and retried unchanged).
+    var mentions: [MentionSpan]? = nil
 
-    enum CodingKeys: String, CodingKey { case id, bubbleId, senderId, content, createdAt, state }
+    enum CodingKeys: String, CodingKey { case id, bubbleId, senderId, content, createdAt, state, mentions }
 
     /// List identity of the pending row, distinct from the server row's `id` it turns into.
     var pendingRowID: String { "pending-" + id.uuidString }
@@ -95,10 +97,10 @@ final class ChatOutbox {
 
     /// Adds a message as `sending`. Online it is delivered at once; offline it waits for `flush()`.
     @discardableResult
-    func enqueue(bubbleID: UUID, senderID: UUID, text: String, photo: Data?, online: Bool,
+    func enqueue(bubbleID: UUID, senderID: UUID, text: String, photo: Data?, mentions: [MentionSpan] = [], online: Bool,
                  id: UUID = UUID(), now: Date = .now) async -> PendingMessage {
         let message = PendingMessage(id: id, bubbleId: bubbleID, senderId: senderID, content: text,
-                                     createdAt: now, state: .sending, photo: photo)
+                                     createdAt: now, state: .sending, photo: photo, mentions: mentions.isEmpty ? nil : mentions)
         items.append(message)
         persist()
         if online { await attempt(message.id) }
@@ -176,7 +178,8 @@ final class ChatOutbox {
                 }
                 do {
                     let row = try await api.sendMessage(id: message.id, bubbleID: message.bubbleId, senderID: message.senderId,
-                                                        content: message.content, imagePath: message.photoPath)
+                                                        content: message.content, imagePath: message.photoPath,
+                                                        mentions: message.mentions ?? [])
                     Connectivity.shared.reportSuccess()
                     return .sent(row)
                 } catch where Self.isDuplicate(error) {

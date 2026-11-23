@@ -169,9 +169,11 @@ struct BoolaaAPI: Sendable {
     /// Text, photo (`imagePath` already uploaded to `chat.images`) or both: `content` may be empty with a photo.
     /// `id` is the outbox's client id (docs/boolaa-spec.md, "Offline and poor network"): inserting the same
     /// id twice fails with 23505 instead of creating a second message.
-    func sendMessage(id: UUID? = nil, bubbleID: UUID, senderID: UUID, content: String, imagePath: String? = nil) async throws -> ChatMessage {
+    func sendMessage(id: UUID? = nil, bubbleID: UUID, senderID: UUID, content: String, imagePath: String? = nil,
+                     mentions: [MentionSpan] = []) async throws -> ChatMessage {
         try await client.from("chat_messages")
-            .insert(NewChatMessage(id: id, bubbleId: bubbleID, senderId: senderID, content: content, imagePath: imagePath))
+            .insert(NewChatMessage(id: id, bubbleId: bubbleID, senderId: senderID, content: content, imagePath: imagePath,
+                                   mentions: mentions.isEmpty ? nil : mentions))
             .select(Self.chatColumns)
             .single().execute().value
     }

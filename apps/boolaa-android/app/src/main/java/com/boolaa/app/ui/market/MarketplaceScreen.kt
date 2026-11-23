@@ -269,7 +269,7 @@ fun availabilityLabel(a: MarketAvailability) = stringResource(when (a) {
 /** Grid with a Free/Trade badge and All/Free/Trade filter chips (spec §9). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
+fun MarketplaceScreen(onAskInChat: (com.boolaa.app.ui.chat.ChatDraft) -> Unit = {}) {
     val container = LocalAppContainer.current
     val state by container.session.state.collectAsStateWithLifecycle()
     val bubble = state.currentBubble ?: return
@@ -380,7 +380,10 @@ fun MarketplaceScreen(onAskInChat: (String) -> Unit = {}) {
                             if (pick != null && (a == MarketAvailability.AVAILABLE || a == MarketAvailability.TAKEN)) markConfirm = item to a
                             else vm.setAvailability(item, a)
                         }) else null,
-                        onAsk = if (MarketRules.canAskOwner(item, me)) ({ onAskInChat(askDraft) }) else null,
+                        // The owner's name becomes a real mention token in the chat when they're a candidate.
+                        onAsk = if (MarketRules.canAskOwner(item, me)) ({
+                            onAskInChat(com.boolaa.app.ui.chat.ChatDraft(askDraft, item.ownerId, item.owner?.name?.takeIf { it.isNotBlank() }))
+                        }) else null,
                         reactions = reactionsByItem[item.id].orEmpty(), onReact = { vm.react(item.id, it) },
                         badge = when {
                             pick != null -> stringResource(R.string.requests_reserved_for, displayName(pick.requester)) to "reserved-for"

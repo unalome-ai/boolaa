@@ -181,7 +181,7 @@ struct MarketplaceView: View {
                          onEdit: { detail = nil; editing = .edit(live) },
                          onDelete: { detail = nil; Task { await model.delete(api: session.api, item: live) } },
                          onAvailability: { setAvailability(live, $0) },
-                         onAskInChat: { draft in detail = nil; router.openChat(draft: draft) },
+                         onAskInChat: { draft in detail = nil; router.openChat(draft: draft, mention: live.owner) },
                          reactions: model.reactions.summary(for: live.id, me: session.userID),
                          onReact: { react(live, $0) },
                          requestTarget: requestTarget(live),

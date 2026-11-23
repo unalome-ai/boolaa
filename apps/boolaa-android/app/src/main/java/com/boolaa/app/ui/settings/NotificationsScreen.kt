@@ -206,6 +206,7 @@ fun NotificationsScreen(onBack: () -> Unit) {
                     val sub = prefs != null && p.enabled
                     listOf(
                         PrefKey.CHAT to R.string.notifications_chat,
+                        PrefKey.MENTIONS to R.string.notifications_mentions,
                         PrefKey.JOIN_REQUESTS to R.string.notifications_join_requests,
                         PrefKey.APPROVALS to R.string.notifications_approvals,
                         PrefKey.NEW_EVENTS to R.string.notifications_new_events,
@@ -215,7 +216,9 @@ fun NotificationsScreen(onBack: () -> Unit) {
                         PrefKey.ITEM_REQUESTS to R.string.notifications_item_requests,
                         PrefKey.REQUEST_UPDATES to R.string.notifications_request_updates,
                     ).forEach { (key, label) ->
-                        PrefSwitch(stringResource(label), key.get(p), enabled = sub, tag = "pref-${key.column}") { vm.set(key, it) }
+                        // Mentions has a hint: it works even with chat messages off.
+                        val hint = if (key == PrefKey.MENTIONS) stringResource(R.string.notifications_mentions_hint) else null
+                        PrefSwitch(stringResource(label), key.get(p), enabled = sub, tag = "pref-${key.column}", hint = hint) { vm.set(key, it) }
                     }
                 }
             }
@@ -237,7 +240,10 @@ fun NotificationsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun PrefSwitch(label: String, checked: Boolean, enabled: Boolean, tag: String, strong: Boolean = false, onChange: (Boolean) -> Unit) {
+private fun PrefSwitch(
+    label: String, checked: Boolean, enabled: Boolean, tag: String, strong: Boolean = false, hint: String? = null,
+    onChange: (Boolean) -> Unit,
+) {
     val c = BoolaaTheme.colors
     val view = androidx.compose.ui.platform.LocalView.current
     // The whole row is the switch, so TalkBack reads "<label>, on, switch" and the label is tappable too.
@@ -250,8 +256,11 @@ private fun PrefSwitch(label: String, checked: Boolean, enabled: Boolean, tag: S
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = if (strong) Type.headline else Type.body.copy(fontWeight = FontWeight.Medium),
-            color = if (enabled) c.textPrimary else c.textSecondary, modifier = Modifier.weight(1f).padding(end = 12.dp))
+        Column(Modifier.weight(1f).padding(end = 12.dp, top = if (hint != null) 8.dp else 0.dp, bottom = if (hint != null) 8.dp else 0.dp)) {
+            Text(label, style = if (strong) Type.headline else Type.body.copy(fontWeight = FontWeight.Medium),
+                color = if (enabled) c.textPrimary else c.textSecondary)
+            if (hint != null) Text(hint, style = Type.caption, color = c.textSecondary)
+        }
         Switch(checked, onCheckedChange = null, enabled = enabled,
             colors = SwitchDefaults.colors(checkedTrackColor = Hue.grape.fill, checkedThumbColor = Hue.grape.onFill))
     }

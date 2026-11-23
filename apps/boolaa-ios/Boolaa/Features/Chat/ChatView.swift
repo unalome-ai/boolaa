@@ -20,6 +20,28 @@ final class ChatModel {
     private var authors: [UUID: UserProfile] = [:]
     private var api: BoolaaAPI?
     private var bubbleID: UUID?
+    /// `mention_candidates`: the composer's list and who renders as a mention (docs/boolaa-spec.md, "Mentions").
+    private(set) var candidates: [MentionCandidate] = []
+    var candidateNames: [UUID: String] { Dictionary(candidates.map { ($0.userID, $0.displayName) }, uniquingKeysWith: { a, _ in a }) }
+    private var candidatesLoadedAt: Date?
+
+    /// Loads the candidates (chat open, bubble switch, reconnect / foreground, block / unblock).
+    func loadCandidates() async {
+        guard let api, let bubbleID else { return }
+        candidatesLoadedAt = .now
+        guard let rows = try? await api.mentionCandidates(bubbleID: bubbleID), self.bubbleID == bubbleID else { return }
+        candidates = rows
+        OfflineCache.shared.save(rows, key: OfflineCache.Key.mentionCandidates(bubbleID))
+    }
+
+    /// A message mentions someone who is neither the reader nor a candidate (they may have just joined):
+    /// reload the candidates, at most once every 30 s.
+    private func noteMentions(of message: ChatMessage) {
+        let unknown = Mentions.unknownUsers(message.mentions ?? [], me: me, known: Set(candidates.map(\.userID)))
+        guard !unknown.isEmpty else { return }
+        if let at = candidatesLoadedAt, Date.now.timeIntervalSince(at) < 30 { return }
+        Task { await loadCandidates() }
+    }
 
     private func withAuthor(_ message: ChatMessage) -> ChatMessage {
         var message = message
@@ -35,6 +57,7 @@ final class ChatModel {
     func mergeLive(_ message: ChatMessage) {
         let isNew = !messages.contains { $0.id == message.id }
         merge(message)
+        noteMentions(of: message)
         if isNew, message.senderId != me, !message.isDeleted {
             let name = messages.first { $0.id == message.id }?.sender?.displayName ?? String(localized: "Someone")
             A11y.announce(A11y.join([A11y.newMessageFrom(name), message.content]))
@@ -87,9 +110,13 @@ final class ChatModel {
             reachedStart = ChatTimeline.reachedStart(pageCount: cached.count)
             loaded = true
         }
+        if candidates.isEmpty, let cached = OfflineCache.shared.read([MentionCandidate].self, key: OfflineCache.Key.mentionCandidates(bubbleID)) {
+            candidates = cached
+        }
         do {
             async let page = api.chatPage(bubbleID: bubbleID, beforeID: nil)
             async let members = api.members(bubbleID: bubbleID)
+            async let mentionable: Void = loadCandidates()
             let marker = await lastReadAt()
             for m in (try? await members) ?? [] { if let u = m.user { authors[u.id] = u } }
             let rows = (try await page).map(withAuthor)
@@ -101,6 +128,7 @@ final class ChatModel {
             Connectivity.shared.reportSuccess()
             OfflineCache.shared.save(rows, key: OfflineCache.Key.chat(bubbleID))
             signPhotos(of: rows)
+            await mentionable
             await loadReactions(of: rows)
         } catch {
             noteFailure(error)
@@ -116,7 +144,9 @@ final class ChatModel {
             return
         }
         do {
+            async let mentionable: Void = loadCandidates()
             let rows = try await api.chatPage(bubbleID: bubbleID, beforeID: nil).map(withAuthor)
+            await mentionable
             let held = Set(messages.map(\.id))
             if rows.count >= BoolaaAPI.chatPageSize, !rows.contains(where: { held.contains($0.id) }) {
                 messages = rows
@@ -275,7 +305,8 @@ struct ChatView: View {
         guard let id = session.currentBubble?.id else { return [] }
         return outbox.pending(in: id, excluding: Set(model.messages.map(\.id)))
     }
-    @State private var draft = ""
+    /// The composer's text with its @mention tokens.
+    @State private var composerModel = MentionComposerModel()
     @State private var sending = false
     @State private var sentCount = 0
     @State private var pickerTaps = 0
@@ -289,7 +320,6 @@ struct ChatView: View {
     @State private var photo: Data?
     @State private var showPicker = false
     @State private var preparingPhoto = false
-    @FocusState private var composerFocused: Bool
     /// The load (bubble + block state) whose first page has landed at the bottom: only then may
     /// scrolling near the top page in older messages.
     @State private var pagingArmedFor: String?
@@ -326,6 +356,9 @@ struct ChatView: View {
                                 if message.id == model.dividerID { NewMessagesDivider() }
                                 MessageRow(message: message,
                                            isMine: isMine,
+                                           me: session.userID,
+                                           meName: session.profile?.displayName,
+                                           mentionNames: mentionNames,
                                            bubbleHue: bubbleHue,
                                            showAuthor: previous?.senderId != message.senderId || message.id == model.dividerID,
                                            endsGroup: next?.senderId != message.senderId,
@@ -370,6 +403,7 @@ struct ChatView: View {
                         // ForEach blocks of one LazyVStack left the stale "Sending…" row on screen.
                         ForEach(pending, id: \.pendingRowID) { message in
                             PendingMessageRow(message: message,
+                                              mentionNames: mentionNames,
                                               hue: bubbleHue,
                                               onRetry: { Task { await outbox.retry(message.id) } },
                                               onDiscard: { discard(message) })
@@ -429,7 +463,7 @@ struct ChatView: View {
                         if model.highlighted == target { withAnimation(Motion.gentle) { model.highlighted = nil } }
                     }
                 }
-                .onChange(of: composerFocused) { _, focused in
+                .onChange(of: composerModel.focused) { _, focused in
                     if focused { withAnimation { proxy.scrollTo(Self.bottomID, anchor: .bottom) } }
                 }
             }
@@ -449,6 +483,7 @@ struct ChatView: View {
                 await model.listen(client: session.api.client, bubbleID: id)
                 return
             }
+            if model.currentBubbleID != id { composerModel.forgetTokens() }
             activeLoadKey = key
             pagingArmedFor = nil
             initialIDs = nil
@@ -464,6 +499,7 @@ struct ChatView: View {
                 await unread.refresh()
                 return unread.lastReadAt[id]
             }
+            composerModel.candidates = model.candidates
             initialIDs = Set(model.messages.map(\.id))
             if let target = router.takeChatJump() {
                 await model.jump(to: target)
@@ -478,11 +514,22 @@ struct ChatView: View {
             await model.listen(client: session.api.client, bubbleID: id)
         }
         .autoRetry(failed: model.failed) { await model.refresh() }
+        .onChange(of: model.candidates) { _, candidates in composerModel.candidates = candidates }
+        // The list appeared or its count changed: a polite announcement while VoiceOver runs.
+        .onChange(of: MentionStrip.announcement(composerModel.list)) { _, text in
+            if let text, UIAccessibility.isVoiceOverRunning { A11y.announce(text) }
+        }
+        // A mention push tapped while this bubble's chat is already open: jump to the message.
+        .onChange(of: router.chatJump) { _, target in
+            guard target != nil, initialIDs != nil, activeLoadKey == loadKey,
+                  model.currentBubbleID == session.currentBubble?.id, let id = router.takeChatJump() else { return }
+            Task { await model.jump(to: id) }
+        }
         .onAppear {
             visible = true
             if let pending = router.takeChatDraft() {
-                draft = draft.isEmpty ? pending : draft + " " + pending
-                composerFocused = true
+                composerModel.append(pending.text, mention: pending.mention)
+                composerModel.focused = true
             }
             Task { await markRead() }
         }
@@ -509,6 +556,9 @@ struct ChatView: View {
         .haptic(.add, trigger: pickerTaps)
         .errorAlert($model.error)
     }
+
+    /// Current names of the people a message may mention (the candidates), for rendering.
+    private var mentionNames: [UUID: String] { model.candidateNames }
 
     /// The bubble's colour: your messages, the send button, the orbs and (Chat only) the header band.
     private var bubbleHue: Hue { Hue.forID(session.currentBubble?.id) }
@@ -546,6 +596,10 @@ struct ChatView: View {
 
     private var composer: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if composerModel.isListOpen {
+                MentionStrip(state: composerModel.list, activeIndex: composerModel.activeIndex) { composerModel.pick($0) }
+                    .motionTransition(.opacity)
+            }
             if photo != nil || preparingPhoto { photoPreview }
             HStack(alignment: .bottom, spacing: 8) {
                 Button { pickerTaps += 1; showPicker = true } label: {
@@ -559,15 +613,18 @@ struct ChatView: View {
                 .disabled(sending || preparingPhoto)
                 .accessibilityLabel(Text("Add a photo"))
                 .accessibilityIdentifier("chat-photo")
-                TextField("Message", text: $draft, axis: .vertical)
-                    .lineLimit(1...5)
-                    .focused($composerFocused)
+                MentionTextView(model: composerModel, placeholder: String(localized: "Message"))
+                    .overlay(alignment: .topLeading) {
+                        if composerModel.text.isEmpty {
+                            Text("Message").foregroundStyle(Theme.inkSecondary).allowsHitTesting(false).accessibilityHidden(true)
+                        }
+                    }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 13)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .strokeBorder(composerFocused ? Theme.focusRing : Theme.fieldBorder, lineWidth: composerFocused ? 2 : 1))
-                    .animation(Motion.fade, value: composerFocused)
+                        .strokeBorder(composerModel.focused ? Theme.focusRing : Theme.fieldBorder, lineWidth: composerModel.focused ? 2 : 1))
+                    .animation(Motion.fade, value: composerModel.focused)
                     .accessibilityIdentifier("chat-input")
                 Button {
                     Task { await send() }
@@ -626,7 +683,7 @@ struct ChatView: View {
     }
 
     private var canSend: Bool {
-        !sending && !preparingPhoto && (photo != nil || !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        !sending && !preparingPhoto && (photo != nil || !composerModel.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 
     private func preparePhoto(_ picked: PickedPhoto) async {
@@ -644,17 +701,18 @@ struct ChatView: View {
     }
 
     private func send() async {
-        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        // The spans are worked out against the exact text sent (trimmed, capped at 4000 characters).
+        let (text, mentions) = composerModel.draft.outgoing()
         let picked = photo
         guard let bubbleID = session.currentBubble?.id, let me = session.userID, !text.isEmpty || picked != nil else { return }
         sending = true
         defer { sending = false }
         // The outbox now holds the message ("Sending…", then sent or "Not sent — tap to retry"), so the
         // composer clears without losing anything. Offline it waits and is sent when the app is back online.
-        draft = ""
+        composerModel.clear()
         photo = nil
         sentCount += 1
-        await outbox.enqueue(bubbleID: bubbleID, senderID: me, text: String(text.prefix(4000)), photo: picked,
+        await outbox.enqueue(bubbleID: bubbleID, senderID: me, text: text, photo: picked, mentions: mentions,
                              online: connectivity.status == .online)
     }
 
@@ -811,6 +869,36 @@ enum ChatBubbleStyle {
 
     /// Message text with its links underlined: onFill at 70 % on your messages, the sender's text shade at 60 %
     /// on others' (both ≥ 4.5:1, §8.6).
+    /// Message text with its mentions (docs/boolaa-spec.md, "Mentions"): you in a filled grape pill with white
+    /// semibold text; a member semibold in the grape text shade on others' messages, or underlined semibold in
+    /// the message colour on yours. Mentions are never links; text between them is linkified on its own.
+    static func text(_ segments: [Mentions.Segment], isMine: Bool, bubbleHue: Hue, senderHue: Hue) -> AttributedString {
+        var out = AttributedString()
+        for segment in segments {
+            switch segment {
+            case .text(let s):
+                out += text(s, isMine: isMine, bubbleHue: bubbleHue, senderHue: senderHue)
+            case .mention(let s, let style):
+                var m = AttributedString(s)
+                m.swiftUI.font = .body.weight(.semibold)
+                switch style {
+                case .me:
+                    m.swiftUI.foregroundColor = .white
+                    m.swiftUI.backgroundColor = Hue.grape.fill
+                case .member:
+                    if isMine {
+                        m.swiftUI.foregroundColor = bubbleHue.onFill
+                        m.swiftUI.underlineStyle = .single
+                    } else {
+                        m.swiftUI.foregroundColor = Hue.grape.text
+                    }
+                }
+                out += m
+            }
+        }
+        return out
+    }
+
     static func text(_ content: String, isMine: Bool, bubbleHue: Hue, senderHue: Hue) -> AttributedString {
         var text = Linkify.attributed(content)
         let link = isMine ? bubbleHue.onFill : senderHue.text
@@ -864,6 +952,7 @@ private struct OtherBubbleBackground: View {
 /// offset 2, a warning triangle + "Not sent — tap to retry" (tap retries; long press offers Try again / Don't send).
 struct PendingMessageRow: View {
     var message: PendingMessage
+    var mentionNames: [UUID: String] = [:]
     var hue: Hue = .grape
     var onRetry: () -> Void
     var onDiscard: () -> Void
@@ -889,7 +978,9 @@ struct PendingMessageRow: View {
                             .accessibilityAddTraits(.isImage)
                     }
                     if !message.content.isEmpty {
-                        Text(ChatBubbleStyle.text(message.content, isMine: true, bubbleHue: hue, senderHue: hue))
+                        Text(ChatBubbleStyle.text(Mentions.segments(message.content, spans: message.mentions ?? [], me: nil, meName: nil,
+                                                                    candidates: mentionNames),
+                                                  isMine: true, bubbleHue: hue, senderHue: hue))
                             .tint(hue.onFill)
                             .foregroundStyle(hue.onFill)
                             .padding(.horizontal, 15).padding(.vertical, 10)
@@ -954,6 +1045,11 @@ struct PendingMessageRow: View {
 struct MessageRow: View {
     var message: ChatMessage
     var isMine: Bool
+    /// The reader and their current name ("mention of you").
+    var me: UUID? = nil
+    var meName: String? = nil
+    /// Current names of the mention candidates; other mentioned people show the text as written.
+    var mentionNames: [UUID: String] = [:]
     /// The current bubble's colour: your own messages wear it (§8.2).
     var bubbleHue: Hue = .grape
     var showAuthor: Bool
@@ -969,10 +1065,20 @@ struct MessageRow: View {
 
     /// What VoiceOver reads for the whole row (sender, text or photo, time, reactions).
     var accessibilityText: String {
-        A11y.chatMessage(sender: message.sender?.displayName ?? String(localized: "Someone"), isMine: isMine,
-                         text: message.content, hasPhoto: message.imagePath != nil, deleted: message.isDeleted,
-                         time: message.createdAt.formatted(date: .omitted, time: .shortened), reactions: reactions)
+        let sender = message.sender?.displayName ?? String(localized: "Someone")
+        let label = A11y.chatMessage(sender: sender, isMine: isMine,
+                                     text: Mentions.displayed(segments), hasPhoto: message.imagePath != nil, deleted: message.isDeleted,
+                                     time: message.createdAt.formatted(date: .omitted, time: .shortened), reactions: reactions)
+        return mentionsMe ? A11y.join([A11y.mentionedYou(sender), label]) : label
     }
+
+    /// The text split into plain runs and mentions.
+    var segments: [Mentions.Segment] {
+        Mentions.segments(message.content, spans: message.mentions ?? [], me: me, meName: meName, candidates: mentionNames)
+    }
+
+    /// Someone else's message that mentions the reader: a grape bar on its leading edge and "… mentioned you".
+    var mentionsMe: Bool { !isMine && !message.isDeleted && Mentions.mentions(message.mentions ?? [], user: me) }
 
     var body: some View {
         let hue = Hue.forID(message.senderId)
@@ -999,6 +1105,12 @@ struct MessageRow: View {
                         .accessibilityIdentifier("chat-deleted")
                 } else if message.imagePath != nil || !message.content.isEmpty {
                     bubble(senderHue: hue)
+                        .overlay(alignment: .leading) {
+                            if mentionsMe {
+                                Capsule().fill(Hue.grape.fill).frame(width: 3).padding(.vertical, 4).offset(x: -7)
+                                    .accessibilityHidden(true)
+                            }
+                        }
                 }
                 if endsGroup {
                     Text(message.createdAt.formatted(date: .omitted, time: .shortened))
@@ -1033,7 +1145,7 @@ struct MessageRow: View {
             if hasPhoto { photo(side: side) }
             if !message.content.isEmpty {
                 // Links are tappable and open in the browser (no previews in chat).
-                Text(ChatBubbleStyle.text(message.content, isMine: isMine, bubbleHue: bubbleHue, senderHue: senderHue))
+                Text(ChatBubbleStyle.text(segments, isMine: isMine, bubbleHue: bubbleHue, senderHue: senderHue))
                     .tint(isMine ? bubbleHue.onFill : senderHue.text)
                     .foregroundStyle(isMine ? bubbleHue.onFill : Theme.ink)
                     .padding(.horizontal, 15)

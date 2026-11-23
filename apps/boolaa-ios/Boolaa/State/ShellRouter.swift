@@ -53,7 +53,7 @@ final class ShellRouter {
     /// A join-request notification: Settings scrolls to the pending requests.
     var scrollToRequests = false
     /// Text the chat composer picks up once when it opens ("Ask in chat" on a market item). Never sent automatically.
-    var chatDraft: String?
+    var chatDraft: ChatDraft?
     /// The search sheet (docs/boolaa-spec.md, "Search").
     var showSearch = false
     /// A chat message opened from search: the chat loads the window around it, scrolls to it and rings it.
@@ -64,8 +64,9 @@ final class ShellRouter {
     }
 
     /// Opens the bubble chat with `draft` in the composer.
-    func openChat(draft: String) {
-        chatDraft = draft
+    /// `mention`: the person named in it as "@Name" (the item's owner), made a token when they are a member.
+    func openChat(draft: String, mention: UserProfile? = nil) {
+        chatDraft = ChatDraft(text: draft, mention: mention)
         open(.chat)
     }
 
@@ -91,8 +92,14 @@ final class ShellRouter {
     }
 
     /// Hands the pending draft to the composer exactly once.
-    func takeChatDraft() -> String? {
+    func takeChatDraft() -> ChatDraft? {
         defer { chatDraft = nil }
         return chatDraft
     }
+}
+
+/// Text the chat composer picks up once, with the person it mentions.
+struct ChatDraft: Equatable, Sendable {
+    var text: String
+    var mention: UserProfile?
 }

@@ -13,6 +13,8 @@ data class PushPayload(val type: PushType, val bubbleId: String, val targetId: S
     /** `chat:<bubble id>` etc.; the tag of the notification, so a newer push replaces the older one. */
     val tag: String get() = when (type) {
         PushType.CHAT -> "chat:$bubbleId"
+        // Never coalesced: each mention is its own notification (a later chat summary doesn't replace it).
+        PushType.CHAT_MENTION -> "mention:${targetId ?: bubbleId}"
         PushType.JOIN_REQUEST -> "join:$bubbleId"
         PushType.APPROVAL -> "approval:$bubbleId"
         PushType.NEW_EVENT -> "event:${targetId ?: bubbleId}"
@@ -48,6 +50,7 @@ data class PushPayload(val type: PushType, val bubbleId: String, val targetId: S
 
 enum class PushType(val wire: String, val channel: PushChannel) {
     CHAT("chat", PushChannel.CHAT),
+    CHAT_MENTION("chat_mention", PushChannel.CHAT),
     JOIN_REQUEST("join_request", PushChannel.BUBBLE),
     APPROVAL("approval", PushChannel.BUBBLE),
     NEW_EVENT("new_event", PushChannel.EVENTS),
@@ -89,6 +92,8 @@ data class PushDestination(
     val reloadFirst: Boolean = false,
     /** `item_request` / `item_request_withdrawn`: open the owner's Requests sheet on [highlightId]. */
     val openRequests: Boolean = false,
+    /** `chat_mention`: the chat message to jump to (`chat_messages_around`, centred and ringed for 4 s). */
+    val chatMessageId: String? = null,
 )
 
 object PushRouting {
@@ -98,6 +103,7 @@ object PushRouting {
         if (!joined) return PushDestination(null, PushScreen.HOME, reloadFirst = p.type == PushType.APPROVAL)
         return when (p.type) {
             PushType.CHAT -> PushDestination(p.bubbleId, PushScreen.CHAT)
+            PushType.CHAT_MENTION -> PushDestination(p.bubbleId, PushScreen.CHAT, chatMessageId = p.targetId)
             PushType.JOIN_REQUEST -> PushDestination(p.bubbleId, PushScreen.SETTINGS)
             PushType.APPROVAL -> PushDestination(p.bubbleId, PushScreen.HOME, reloadFirst = true)
             PushType.NEW_EVENT, PushType.EVENT_REMINDER -> PushDestination(p.bubbleId, PushScreen.EVENTS, p.targetId)
@@ -115,9 +121,9 @@ object PushRouting {
         }
     }
 
-    /** Foreground rule (§8 point 4): no banner for a chat push while that bubble's chat is on screen. */
+    /** Foreground rule (§8 point 4): no banner for a chat (or mention) push while that bubble's chat is on screen. */
     fun shouldShowInForeground(p: PushPayload?, openChatBubbleId: String?): Boolean =
-        !(p != null && p.type == PushType.CHAT && openChatBubbleId != null && p.bubbleId.equals(openChatBubbleId, ignoreCase = true))
+        !(p != null && (p.type == PushType.CHAT || p.type == PushType.CHAT_MENTION) && openChatBubbleId != null && p.bubbleId.equals(openChatBubbleId, ignoreCase = true))
 }
 
 /** Per-bubble mute durations (§9). */
@@ -146,6 +152,8 @@ data class BubbleMute(
 data class NotificationPrefs(
     val enabled: Boolean = true,
     val chat: Boolean = true,
+    /** `chat_mention` pushes; only this (and [enabled]) decide, not [chat]. */
+    val mentions: Boolean = true,
     @SerialName("join_requests") val joinRequests: Boolean = true,
     val approvals: Boolean = true,
     @SerialName("new_events") val newEvents: Boolean = true,
@@ -159,18 +167,18 @@ data class NotificationPrefs(
 
 /** The columns of [NotificationPrefs] the settings screen toggles. */
 enum class PrefKey(val column: String) {
-    ENABLED("enabled"), CHAT("chat"), JOIN_REQUESTS("join_requests"), APPROVALS("approvals"), NEW_EVENTS("new_events"),
+    ENABLED("enabled"), CHAT("chat"), MENTIONS("mentions"), JOIN_REQUESTS("join_requests"), APPROVALS("approvals"), NEW_EVENTS("new_events"),
     EVENT_REMINDERS("event_reminders"), FOOD("food"), MARKET("market"), ITEM_REQUESTS("item_requests"),
     REQUEST_UPDATES("request_updates"), PREVIEW("preview_content");
 
     fun get(p: NotificationPrefs): Boolean = when (this) {
-        ENABLED -> p.enabled; CHAT -> p.chat; JOIN_REQUESTS -> p.joinRequests; APPROVALS -> p.approvals
+        ENABLED -> p.enabled; CHAT -> p.chat; MENTIONS -> p.mentions; JOIN_REQUESTS -> p.joinRequests; APPROVALS -> p.approvals
         NEW_EVENTS -> p.newEvents; EVENT_REMINDERS -> p.eventReminders; FOOD -> p.food; MARKET -> p.market
         ITEM_REQUESTS -> p.itemRequests; REQUEST_UPDATES -> p.requestUpdates; PREVIEW -> p.previewContent
     }
 
     fun set(p: NotificationPrefs, v: Boolean): NotificationPrefs = when (this) {
-        ENABLED -> p.copy(enabled = v); CHAT -> p.copy(chat = v); JOIN_REQUESTS -> p.copy(joinRequests = v)
+        ENABLED -> p.copy(enabled = v); CHAT -> p.copy(chat = v); MENTIONS -> p.copy(mentions = v); JOIN_REQUESTS -> p.copy(joinRequests = v)
         APPROVALS -> p.copy(approvals = v); NEW_EVENTS -> p.copy(newEvents = v); EVENT_REMINDERS -> p.copy(eventReminders = v)
         FOOD -> p.copy(food = v); MARKET -> p.copy(market = v); ITEM_REQUESTS -> p.copy(itemRequests = v)
         REQUEST_UPDATES -> p.copy(requestUpdates = v); PREVIEW -> p.copy(previewContent = v)

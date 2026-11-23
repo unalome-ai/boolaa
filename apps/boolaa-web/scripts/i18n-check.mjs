@@ -19,7 +19,7 @@ const LOCALES = ["en", "ro", "fr", "es", "it"];
 // Values that are legitimately identical to English in a given language.
 const SAME_AS_EN = {
   ro: ["requests.actionA11y", "settings.admin", "reactions.laugh", "landing.copyright", "safety.reasons.spam", "nav.chat", "nav.dock.chat", "home.chat", "home.link", "auth.email", "links.url", "search.kindLink"],
-  fr: ["settings.admin", "reactions.laugh", "landing.copyright", "notifications.title", "landing.navFaq", "safety.reasons.spam", "common.description", "common.photo", "chat.photo", "chat.messageLabel", "nav.sidebar", "links.url", "search.kindMessage"],
+  fr: ["settings.admin", "reactions.laugh", "landing.copyright", "notifications.title", "landing.navFaq", "safety.reasons.spam", "common.description", "common.photo", "chat.photo", "chat.messageLabel", "notifications.mentions", "nav.sidebar", "links.url", "search.kindMessage"],
   es: ["requests.actionA11y", "settings.admin", "landing.copyright", "safety.reasons.spam", "nav.chat", "nav.dock.chat", "home.chat", "links.url"],
   it: ["requests.actionA11y", "settings.admin", "reactions.wow", "landing.copyright", "landing.navFaq", "landing.navPrivacy", "safety.reasons.spam", "nav.home", "nav.chat", "nav.dock.home", "nav.dock.chat", "home.chat", "nav.links", "home.link", "settings.sharedLinks", "auth.email", "auth.password", "links.url", "search.kindLink"],
 };

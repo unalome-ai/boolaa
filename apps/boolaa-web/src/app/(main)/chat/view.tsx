@@ -33,7 +33,10 @@ import { useTranslations } from "next-intl";
 import { useErrorText } from "@/i18n/errors";
 import { useFormat } from "@/i18n/format";
 import { cx } from "@/lib/utils";
-import { useChatDraft } from "@/lib/chat-draft";
+import { useChatDraft, type ChatDraft, type DraftMention } from "@/lib/chat-draft";
+import { MentionComposer } from "@/components/mention-composer";
+import { useMentionCandidates } from "@/lib/mention-candidates";
+import { draftToMessage, mentionsReader, messageParts, parseMentions, type Candidate, type DraftState, type MentionSpan } from "@/lib/mentions";
 import { useReactions } from "@/lib/reactions";
 import { ReactionChips, ReactionPicker } from "@/components/reactions";
 import { HIGHLIGHT_EVENT, aroundWindow, type HighlightDetail } from "@/lib/search";
@@ -66,7 +69,7 @@ export default function ChatPage() {
   const [authors, setAuthors] = useState<Record<string, Author>>(cached?.authors ?? {});
   const [hasMore, setHasMore] = useState((cached?.messages.length ?? 0) >= CHAT_PAGE);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const [text, setText] = useState("");
+  const [draft, setDraft] = useState<DraftState>({ text: "", tokens: [] });
   const [photo, setPhoto] = useState<{ file: File; preview: string } | null>(null);
   // Preparing a photo (resize, re-encode) before it joins the outbox.
   const [sending, setSending] = useState(false);
@@ -89,7 +92,8 @@ export default function ChatPage() {
   const anchor = useRef<{ height: number; top: number } | null>(null);
   const pinned = useRef(true);
   const lastMarked = useRef<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   // Message whose reaction picker is open (button, or right-click on the bubble).
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const liveIds = useMemo(() => (messages ?? []).filter((m) => !m.deleted_at).map((m) => m.id), [messages]);
@@ -102,16 +106,43 @@ export default function ChatPage() {
   const lastJump = useRef<{ id: string; at: number } | null>(null);
 
   // A prefilled message from elsewhere ("Ask in chat" on a market item): put it in the composer, unsent.
-  const onDraft = useCallback((draft: string) => {
-    setText(draft);
+  // It starts with a real mention token of the person asked when they are a mention candidate (checked
+  // once the candidates are known; until then the text is plain).
+  const [draftOwner, setDraftOwner] = useState<DraftMention | null>(null);
+  const onDraft = useCallback((d: ChatDraft) => {
+    setDraft({ text: d.text, tokens: [] });
+    setDraftOwner(d.mention);
     requestAnimationFrame(() => {
       const el = inputRef.current;
       if (!el) return;
       el.focus();
-      el.setSelectionRange(draft.length, draft.length);
+      el.setSelectionRange(d.text.length, d.text.length);
     });
   }, []);
   useChatDraft(bubble.id, onDraft);
+
+  // Mentions: the candidates (composer list + rendering rule), refreshed on reconnect / block changes.
+  const mention = useMentionCandidates({ supabase, bubbleId: bubble.id, generation, blocked });
+  const { candidates, loaded: candidatesLoaded, checkUnknown } = mention;
+  const candidateMap = useMemo(() => new Map<string, Candidate>(candidates.map((c) => [c.user_id, c])), [candidates]);
+  const reader = useMemo(() => ({ id: userId, name: profile?.name ?? null }), [userId, profile?.name]);
+  const spansSeen = useRef<(ids: string[]) => void>(() => {});
+  useEffect(() => {
+    spansSeen.current = (ids) => checkUnknown(ids, userId);
+  }, [checkUnknown, userId]);
+  useEffect(() => {
+    if (!draftOwner || !candidatesLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot: the draft arrived before the candidates
+    setDraftOwner(null);
+    const c = candidateMap.get(draftOwner.userId.toLowerCase());
+    if (!c) return;
+    const token = `@${c.name}`;
+    setDraft((d) =>
+      d.text.startsWith(token) && !d.tokens.some((t) => t.start < token.length)
+        ? { text: d.text, tokens: [{ start: 0, end: token.length, userId: c.user_id }, ...d.tokens] }
+        : d,
+    );
+  }, [draftOwner, candidatesLoaded, candidateMap]);
 
   const page = useCallback(
     (before: string | null) =>
@@ -189,6 +220,7 @@ export default function ChatPage() {
     const onRow = (payload: { new: unknown }) => {
       const row = payload.new as Row<"chat_messages">;
       if (row.deleted_at) dropTarget(row.id); // a deleted message loses its reactions
+      else spansSeen.current(parseMentions(row.mentions).map((m) => m.user_id));
       merge([{ ...row, sender: null }]);
     };
     const unsubscribe = liveChannel(
@@ -370,7 +402,9 @@ export default function ChatPage() {
 
   async function send(e: FormEvent) {
     e.preventDefault();
-    const content = text.trim();
+    if (sending) return;
+    // Spans in code points against the exact text sent (docs/boolaa-spec.md, "Mentions" → Sending).
+    const { content, mentions } = draftToMessage(draft);
     if (!content && !photo) return;
     setError(null);
     let jpeg: Blob | undefined;
@@ -388,8 +422,9 @@ export default function ChatPage() {
     }
     // The outbox shows it at once ("Sending…"), sends it now or after a reconnect, and keeps it as
     // "Not sent" with Try again if that fails, so clearing the composer loses nothing.
-    sendMessage(supabase, { bubbleId: bubble.id, userId, content, jpeg });
-    setText("");
+    sendMessage(supabase, { bubbleId: bubble.id, userId, content, mentions, jpeg });
+    setDraft({ text: "", tokens: [] });
+    setDraftOwner(null);
     clearPhoto();
     pinned.current = true;
   }
@@ -418,7 +453,7 @@ export default function ChatPage() {
     );
   }
 
-  const canSend = !!text.trim() || !!photo;
+  const canSend = !!draft.text.trim() || !!photo;
   // Your messages wear the bubble's colour (design-system 8.2); everyone else's wear their own.
   const bubbleHue = hueFor(bubble.id);
   return (
@@ -466,6 +501,8 @@ export default function ChatPage() {
                 const grouped = prev && prev.sender_id === m.sender_id && i !== divider;
                 const fresh = initialIds !== null && !initialIds.has(m.id);
                 const deleted = !!m.deleted_at;
+                const spans = deleted ? [] : parseMentions(m.mentions);
+                const forMe = !mine && mentionsReader(spans, userId);
                 return (
                   <li key={m.id} className="space-y-3">
                     {i === divider && (
@@ -478,6 +515,7 @@ export default function ChatPage() {
                     <div
                       role="group"
                       aria-label={[
+                        forMe ? t("mentionedYou", { name: m.sender?.name ?? tc("someone") }) : null,
                         mine ? tc("you") : (m.sender?.name ?? tc("someone")),
                         fmt.time(m.created_at),
                         deleted ? t("deleted") : null,
@@ -494,7 +532,9 @@ export default function ChatPage() {
                           {!grouped && <Avatar name={m.sender?.name} id={m.sender_id} src={m.sender?.avatar} size={30} decorative />}
                         </div>
                       )}
-                      <div className={cx("flex max-w-[78%] flex-col", mine ? "items-end" : "items-start")}>
+                      <div className={cx("relative flex max-w-[78%] flex-col", mine ? "items-end" : "items-start")}>
+                        {/* A message that mentions you: a grape bar on its leading edge, findable while scrolling. */}
+                        {forMe && <span aria-hidden data-testid="mention-bar" className="hue-grape absolute inset-y-0 -left-[5px] w-[3px] rounded-full bg-hue" />}
                         {!grouped && (
                           <span aria-hidden className={cx("mb-0.5 px-1 font-display text-xs font-extrabold", mine ? "text-muted" : "text-hue-ink")}>
                             {mine ? tc("you") : (m.sender?.name ?? tc("someone"))}
@@ -533,7 +573,7 @@ export default function ChatPage() {
                             )}
                             {m.content && (
                               <div className={cx(m.image_path && "px-4 py-2.5")}>
-                                <LinkifiedText text={m.content} mine={mine} />
+                                <MessageText text={m.content} spans={spans} mine={mine} reader={reader} candidates={candidateMap} />
                               </div>
                             )}
                           </div>
@@ -581,6 +621,8 @@ export default function ChatPage() {
                 key={item.id}
                 hue={bubbleHue}
                 item={item}
+                reader={reader}
+                candidates={candidateMap}
                 photoLabel={t("photo")}
                 onRetry={() => retryMessage(supabase, item.id)}
                 onDiscard={() => discardMessage(supabase, item.id)}
@@ -611,7 +653,7 @@ export default function ChatPage() {
           </div>
         </div>
       )}
-      <form onSubmit={send} className="mt-3 flex items-end gap-2">
+      <form ref={formRef} onSubmit={send} className="mt-3 flex items-end gap-2">
         <input
           ref={fileRef}
           type="file"
@@ -647,15 +689,15 @@ export default function ChatPage() {
         >
           <ImagePlus size={22} strokeWidth={2.4} />
         </button>
-        <input
-          className="min-h-12 w-full flex-1 rounded-[24px] border border-field-border bg-card px-5 text-base text-fg shadow-soft outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-muted focus:border-focus focus:shadow-[inset_0_0_0_1px_var(--focus-ring)]"
+        <MentionComposer
+          value={draft}
+          onChange={setDraft}
+          candidates={candidates}
+          onSubmit={() => formRef.current?.requestSubmit()}
           placeholder={t("placeholder", { bubble: bubble.name })}
-          aria-label={t("messageLabel")}
-          data-testid="chat-input"
-          ref={inputRef}
-          value={text}
-          maxLength={4000}
-          onChange={(e) => setText(e.target.value)}
+          label={t("messageLabel")}
+          inputRef={inputRef}
+          testId="chat-input"
         />
         <button
           type="submit"
@@ -691,12 +733,16 @@ export default function ChatPage() {
  */
 function PendingMessage({
   item,
+  reader,
+  candidates,
   hue,
   photoLabel,
   onRetry,
   onDiscard,
 }: {
   item: OutboxItem;
+  reader: { id: string; name: string | null };
+  candidates: Map<string, Candidate>;
   hue: Hue;
   photoLabel: string;
   onRetry: () => void;
@@ -722,7 +768,11 @@ function PendingMessage({
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- local object URL */}
         {preview && <img src={preview} alt={photoLabel} className="max-h-80 w-full min-w-48 object-cover" />}
-        {item.content && <div className={cx(preview && "px-4 py-2.5")}>{item.content}</div>}
+        {item.content && (
+          <div className={cx(preview && "px-4 py-2.5")}>
+            <MessageText text={item.content} spans={item.mentions ?? []} mine reader={reader} candidates={candidates} />
+          </div>
+        )}
       </div>
       {/* Polite live region: "Sending…" turning into "Not sent" is announced (spec "Accessibility"). */}
       <span role="status" className="mt-0.5 flex flex-wrap items-center justify-end gap-x-2 px-1 text-[12px]">
@@ -769,6 +819,55 @@ function ChatPhoto({ path, label, onLoad }: { path: string; label: string; onLoa
         </span>
       )}
     </a>
+  );
+}
+
+/**
+ * Message text with its mentions (docs/boolaa-spec.md, "Mentions" → Rendering): you → a filled grape
+ * pill; a member → `@` + their current name, semibold (grape on others' messages, underlined on yours);
+ * anyone else → the text as written. Never links; the text between them is linkified.
+ */
+function MessageText({
+  text,
+  spans,
+  mine,
+  reader,
+  candidates,
+}: {
+  text: string;
+  spans: MentionSpan[];
+  mine: boolean;
+  reader: { id: string; name: string | null };
+  candidates: Map<string, Candidate>;
+}) {
+  const parts = useMemo(() => messageParts(text, spans, reader, candidates), [text, spans, reader, candidates]);
+  if (spans.length === 0) return <LinkifiedText text={text} mine={mine} />;
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.kind === "text" ? (
+          <LinkifiedText key={i} text={p.text} mine={mine} />
+        ) : p.kind === "me" ? (
+          <span key={i} data-testid="mention" data-kind="me" data-user-id={p.userId} className="hue-grape fill-hue rounded-[6px] px-1 font-semibold shadow-none! box-decoration-clone">
+            {p.text}
+          </span>
+        ) : p.kind === "member" ? (
+          <span
+            key={i}
+            data-testid="mention"
+            data-kind="member"
+            data-user-id={p.userId}
+            className={mine ? "font-semibold underline underline-offset-2" : "hue-grape font-semibold text-hue-ink"}
+          >
+            {p.text}
+          </span>
+        ) : (
+          <span key={i} data-testid="mention" data-kind="plain" data-user-id={p.userId}>
+            {p.text}
+          </span>
+        ),
+      )}
+    </>
   );
 }
 

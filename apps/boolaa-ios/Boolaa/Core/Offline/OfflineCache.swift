@@ -22,6 +22,8 @@ final class OfflineCache: @unchecked Sendable {
         static func market(_ bubble: UUID) -> String { "market.\(bubble.uuidString.lowercased())" }
         static func links(_ bubble: UUID) -> String { "links.\(bubble.uuidString.lowercased())" }
         static func members(_ bubble: UUID) -> String { "members.\(bubble.uuidString.lowercased())" }
+        /// `mention_candidates`, cached beside the members.
+        static func mentionCandidates(_ bubble: UUID) -> String { "members.\(bubble.uuidString.lowercased()).mentions" }
     }
 
     let root: URL

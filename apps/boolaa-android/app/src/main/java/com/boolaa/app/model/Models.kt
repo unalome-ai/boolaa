@@ -115,10 +115,33 @@ data class ChatMessage(
     val sender: UserProfile? = null,
     @SerialName("image_path") val imagePath: String? = null,
     @SerialName("deleted_at") val deletedAt: Timestamp? = null,
+    /** Where the text mentions members (docs/boolaa-spec.md "Mentions"): code-point spans, always taken from the server row. */
+    val mentions: List<MentionSpan> = emptyList(),
 ) {
     val isDeleted: Boolean get() = deletedAt != null
     /** A photo without a caption (Home shows the "Photo" label). */
     val isPhotoOnly: Boolean get() = !isDeleted && imagePath != null && content.isBlank()
+}
+
+/**
+ * One mention in `chat_messages.mentions`: `content[start, start + length)` in Unicode **code points** (not UTF-16
+ * units) is `@` + the name as written. Convert with [com.boolaa.app.core.Mentions].
+ */
+@Serializable
+data class MentionSpan(
+    val start: Int,
+    val length: Int,
+    @SerialName("user_id") val userId: String,
+)
+
+/** One row of `mention_candidates(p_bubble_id)`: approved members except the caller, no block either way. */
+@Serializable
+data class MentionCandidate(
+    @SerialName("user_id") val userId: String,
+    val name: String = "",
+    val avatar: String? = null,
+) {
+    val profile: UserProfile get() = UserProfile(userId, name, avatar)
 }
 
 /** One row of `chat_unread_counts()`: unread messages from others (capped at 100) and the read marker. */

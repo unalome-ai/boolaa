@@ -264,7 +264,10 @@ class BoolaaApi(val client: SupabaseClient) {
         }.list()
 
     /** Inserts a message; [content] may be empty when [imagePath] (an uploaded `chat.images` object) is set. */
-    suspend fun sendMessage(bubbleId: String, senderId: String, content: String, imagePath: String? = null, id: String? = null): ChatMessage =
+    suspend fun sendMessage(
+        bubbleId: String, senderId: String, content: String, imagePath: String? = null, id: String? = null,
+        mentions: List<com.boolaa.app.model.MentionSpan> = emptyList(),
+    ): ChatMessage =
         client.from("chat_messages").insert(buildJsonObject {
             // The outbox's client id: a retry of a message that already arrived fails with 23505 instead of doubling it.
             id?.let { put("id", it) }
@@ -272,7 +275,15 @@ class BoolaaApi(val client: SupabaseClient) {
             put("sender_id", senderId)
             put("content", content)
             imagePath?.let { put("image_path", it) }
+            // Code-point spans (docs/boolaa-spec.md "Mentions"); the server drops the ones it won't keep, so the
+            // returned row's `mentions` is what counts.
+            if (mentions.isNotEmpty()) put("mentions", json.encodeToJsonElement(
+                kotlinx.serialization.builtins.ListSerializer(com.boolaa.app.model.MentionSpan.serializer()), mentions))
         }) { select(Columns.raw("*, ${author("sender", "sender_id")}")) }.one()
+
+    /** Who can be mentioned in [bubbleId]'s chat: approved members except the caller, no block either way. */
+    suspend fun mentionCandidates(bubbleId: String): List<com.boolaa.app.model.MentionCandidate> =
+        client.postgrest.rpc("mention_candidates", buildJsonObject { put("p_bubble_id", bubbleId) }).list()
 
     /**
      * Soft-deletes the caller's own message and returns the photo path the client must now remove from `chat.images`

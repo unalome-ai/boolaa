@@ -28,7 +28,7 @@ extension BoolaaAPI {
     /// The caller's prefs row; the defaults when there is none yet.
     func notificationPrefs(userID: UUID) async throws -> NotificationPrefs {
         let rows: [NotificationPrefs] = try await client.from("notification_prefs")
-            .select("user_id, enabled, chat, join_requests, approvals, new_events, event_reminders, food, market, item_requests, request_updates, preview_content")
+            .select("user_id, enabled, chat, mentions, join_requests, approvals, new_events, event_reminders, food, market, item_requests, request_updates, preview_content")
             .eq("user_id", value: userID).limit(1).execute().value
         return rows.first ?? NotificationPrefs(userId: userID)
     }

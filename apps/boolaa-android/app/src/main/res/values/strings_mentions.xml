@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chat @mentions (docs/i18n-glossary.md "Mentions"; docs/boolaa-spec.md "Mentions"). -->
+<resources>
+    <string name="chat_mention_list_label">Members to mention</string>
+    <string name="chat_mention_a11y">Mention %1$s</string>
+    <string name="chat_mention_no_match">No members match</string>
+    <string name="chat_mention_limit">You can mention up to 10 people in one message.</string>
+    <plurals name="chat_mention_count">
+        <item quantity="one">%d member</item>
+        <item quantity="other">%d members</item>
+    </plurals>
+    <string name="chat_mentioned_you">%1$s mentioned you</string>
+    <string name="error_too_many_mentions">You can mention up to 10 people in one message.</string>
+    <string name="notifications_mentions">Mentions</string>
+    <string name="notifications_mentions_hint">When someone @mentions you, even if chat messages are off.</string>
+</resources>

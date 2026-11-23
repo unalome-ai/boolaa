@@ -216,6 +216,11 @@ test("settings, subscribe from a click, queued push, mute, deep links, service w
       (self as unknown as { boolaaPush: { targetUrl: (d: object) => string } }).boolaaPush.targetUrl({ type: "event_reminder", bubble_id: "b1", target_id: "e1" }),
     ),
   ).toBe("/events?bubble=b1&event=e1");
+  expect(
+    await worker.evaluate(() =>
+      (self as unknown as { boolaaPush: { targetUrl: (d: object) => string } }).boolaaPush.targetUrl({ type: "chat_mention", bubble_id: "b1", target_id: "m1" }),
+    ),
+  ).toBe("/chat?bubble=b1&message=m1");
   await page.goto("/home");
   await expect(page.getByTestId("home-hero")).toBeVisible();
   // Headless Chromium can't display notifications, so the worker's showNotification is recorded.
@@ -240,9 +245,13 @@ test("settings, subscribe from a click, queued push, mute, deep links, service w
     type Tab = { focused: boolean };
     const sw = self as unknown as { boolaaPush: { chatOnScreen: (d: object) => Promise<boolean> }; clients: { matchAll: (o: object) => Promise<Tab[]> } };
     const tabs = await sw.clients.matchAll({ type: "window" });
-    return { onScreen: await sw.boolaaPush.chatOnScreen({ type: "chat", bubble_id: bubbleId }), focused: tabs.some((c) => c.focused) };
+    return {
+      onScreen: await sw.boolaaPush.chatOnScreen({ type: "chat", bubble_id: bubbleId }),
+      mention: await sw.boolaaPush.chatOnScreen({ type: "chat_mention", bubble_id: bubbleId, target_id: "m1" }),
+      focused: tabs.some((c) => c.focused),
+    };
   }, side.id);
-  if (suppressed.focused) expect(suppressed.onScreen).toBe(true);
+  if (suppressed.focused) expect(suppressed).toMatchObject({ onScreen: true, mention: true });
   else test.info().annotations.push({ type: "note", description: "headless tab not focused: chat suppression not asserted" });
 
   // Turn off on this browser: unregistered on the server, not re-subscribed on the next start.

@@ -8,31 +8,36 @@ import { useEffect } from "react";
 const KEY = "boolaa_chat_draft";
 const EVENT = "boolaa:chat-draft";
 
-export function setChatDraft(bubbleId: string, text: string) {
-  sessionStorage.setItem(KEY, JSON.stringify({ bubbleId, text }));
+/** The person the draft starts with (`@name`): a mention token when they are a mention candidate. */
+export type DraftMention = { userId: string; name: string };
+export type ChatDraft = { text: string; mention: DraftMention | null };
+
+export function setChatDraft(bubbleId: string, text: string, mention: DraftMention | null = null) {
+  sessionStorage.setItem(KEY, JSON.stringify({ bubbleId, text, mention }));
   window.dispatchEvent(new Event(EVENT));
 }
 
 /** Returns and clears the pending draft for this bubble, if any. */
-export function takeChatDraft(bubbleId: string): string | null {
+export function takeChatDraft(bubbleId: string): ChatDraft | null {
   const raw = sessionStorage.getItem(KEY);
   if (!raw) return null;
   try {
-    const d = JSON.parse(raw) as { bubbleId?: string; text?: string };
+    const d = JSON.parse(raw) as { bubbleId?: string; text?: string; mention?: DraftMention | null };
     if (d.bubbleId !== bubbleId || typeof d.text !== "string") return null;
     sessionStorage.removeItem(KEY);
-    return d.text;
+    const m = d.mention;
+    return { text: d.text, mention: m && typeof m.userId === "string" && typeof m.name === "string" ? m : null };
   } catch {
     sessionStorage.removeItem(KEY);
     return null;
   }
 }
 
-export function useChatDraft(bubbleId: string, onDraft: (text: string) => void) {
+export function useChatDraft(bubbleId: string, onDraft: (draft: ChatDraft) => void) {
   useEffect(() => {
     const pull = () => {
-      const text = takeChatDraft(bubbleId);
-      if (text !== null) onDraft(text);
+      const draft = takeChatDraft(bubbleId);
+      if (draft !== null) onDraft(draft);
     };
     pull();
     window.addEventListener(EVENT, pull);

@@ -7,6 +7,8 @@ import UserNotifications
 /// The `type` field of a push.
 enum PushKind: String, CaseIterable, Sendable {
     case chat
+    /// One per message per mentioned person (20261124200000_chat_mentions.sql); `target_id` is the message.
+    case chatMention = "chat_mention"
     case joinRequest = "join_request"
     case approval
     case newEvent = "new_event"
@@ -23,6 +25,7 @@ enum PushKind: String, CaseIterable, Sendable {
     var category: String {
         switch self {
         case .chat: "CHAT_MESSAGE"
+        case .chatMention: "CHAT_MENTION"
         case .joinRequest: "JOIN_REQUEST"
         case .approval: "BUBBLE_JOINED"
         case .newEvent: "NEW_EVENT"
@@ -41,10 +44,13 @@ enum PushKind: String, CaseIterable, Sendable {
     /// The owner-side types also open the item's Requests sheet (§5).
     var opensRequests: Bool { self == .itemRequest || self == .itemRequestWithdrawn }
 
+    /// Chat pushes: no banner while that bubble's chat is on screen, cleared when it opens.
+    var isChat: Bool { self == .chat || self == .chatMention }
+
     /// Where a tap on this push leads (§5). Request types go by `item_kind`; without one they open Home.
     func destination(itemKind: ItemKind? = nil) -> PushDestination {
         switch self {
-        case .chat: .chat
+        case .chat, .chatMention: .chat
         case .joinRequest: .joinRequests
         case .approval: .home
         case .newEvent, .eventReminder: .events
@@ -63,7 +69,7 @@ enum PushKind: String, CaseIterable, Sendable {
     var highlightsTarget: Bool {
         switch self {
         case .newEvent, .eventReminder, .food, .market, .itemRequest, .itemRequestWithdrawn, .itemPicked, .itemMissed: true
-        case .chat, .joinRequest, .approval: false
+        case .chat, .chatMention, .joinRequest, .approval: false
         }
     }
 }
@@ -104,12 +110,14 @@ struct PushRoute: Equatable, Identifiable, Sendable {
     let payload: PushPayload
 
     /// Resolves the screen: a bubble the user is no longer in (left, removed) opens Home without switching.
-    func resolve(joined: Set<UUID>) -> (bubble: UUID?, destination: PushDestination, highlight: UUID?, openRequests: UUID?) {
-        guard joined.contains(payload.bubbleID) else { return (nil, .home, nil, nil) }
+    /// A mention jumps to its message (`chatJump`, centred and ringed like a search hit).
+    func resolve(joined: Set<UUID>) -> (bubble: UUID?, destination: PushDestination, highlight: UUID?, openRequests: UUID?,
+                                        chatJump: UUID?) {
+        guard joined.contains(payload.bubbleID) else { return (nil, .home, nil, nil, nil) }
         let destination = payload.kind.destination(itemKind: payload.itemKind)
-        guard destination != .home || !payload.kind.isItemRequest else { return (payload.bubbleID, .home, nil, nil) }
+        guard destination != .home || !payload.kind.isItemRequest else { return (payload.bubbleID, .home, nil, nil, nil) }
         return (payload.bubbleID, destination, payload.kind.highlightsTarget ? payload.targetID : nil,
-                payload.kind.opensRequests ? payload.targetID : nil)
+                payload.kind.opensRequests ? payload.targetID : nil, payload.kind == .chatMention ? payload.targetID : nil)
     }
 
     static func == (a: PushRoute, b: PushRoute) -> Bool { a.id == b.id }
@@ -118,7 +126,7 @@ struct PushRoute: Equatable, Identifiable, Sendable {
 enum PushRules {
     /// Foreground presentation: no banner for a chat push of the chat already on screen (§8 rule 4).
     nonisolated static func presentation(for payload: PushPayload?, visibleChat: UUID?) -> UNNotificationPresentationOptions {
-        if let payload, payload.kind == .chat, payload.bubbleID == visibleChat { return [] }
+        if let payload, payload.kind.isChat, payload.bubbleID == visibleChat { return [] }
         return [.banner, .list, .sound]
     }
 
@@ -157,6 +165,8 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
     var userId: UUID
     var enabled = true
     var chat = true
+    /// `chat_mention`: decides on its own, so chat off + mentions on = only mentions.
+    var mentions = true
     var joinRequests = true
     var approvals = true
     var newEvents = true
@@ -176,6 +186,7 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
         userId = try c.decode(UUID.self, forKey: .userId)
         enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
         chat = try c.decodeIfPresent(Bool.self, forKey: .chat) ?? true
+        mentions = try c.decodeIfPresent(Bool.self, forKey: .mentions) ?? true
         joinRequests = try c.decodeIfPresent(Bool.self, forKey: .joinRequests) ?? true
         approvals = try c.decodeIfPresent(Bool.self, forKey: .approvals) ?? true
         newEvents = try c.decodeIfPresent(Bool.self, forKey: .newEvents) ?? true
@@ -188,7 +199,7 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case enabled, chat, approvals, food, market
+        case enabled, chat, mentions, approvals, food, market
         case userId = "user_id"
         case joinRequests = "join_requests"
         case newEvents = "new_events"
@@ -201,6 +212,7 @@ struct NotificationPrefs: Codable, Equatable, Sendable {
     /// The per-type switches in Settings order, with their labels (docs/push-notifications.md §9).
     static var toggles: [(key: WritableKeyPath<NotificationPrefs, Bool>, title: LocalizedStringResource, id: String)] { [
         (\.chat, LocalizedStringResource("Chat messages", comment: "Notification setting"), "chat"),
+        (\.mentions, LocalizedStringResource("Mentions", comment: "Notification setting: someone @mentions me in the chat"), "mentions"),
         (\.joinRequests, LocalizedStringResource("Join requests", comment: "Notification setting"), "join-requests"),
         (\.approvals, LocalizedStringResource("My request was approved", comment: "Notification setting"), "approvals"),
         (\.newEvents, LocalizedStringResource("New events", comment: "Notification setting"), "new-events"),

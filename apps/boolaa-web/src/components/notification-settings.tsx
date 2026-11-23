@@ -26,6 +26,7 @@ type Prefs = Omit<NotificationPrefs, "user_id" | "updated_at">;
 
 const LABEL = {
   chat: "chat",
+  mentions: "mentions",
   join_requests: "joinRequests",
   approvals: "approvals",
   new_events: "newEvents",
@@ -214,7 +215,7 @@ export function NotificationSettings() {
           <>
             <Toggle id="enabled" label={t("enabled")} checked={prefs.enabled} onChange={(v) => set({ enabled: v })} />
             {PREF_KEYS.map((k) => (
-              <Toggle key={k} id={k} label={t(LABEL[k])} checked={prefs[k]} disabled={!prefs.enabled} onChange={(v) => set({ [k]: v })} />
+              <Toggle key={k} id={k} label={t(LABEL[k])} hint={k === "mentions" ? t("mentionsHint") : undefined} checked={prefs[k]} disabled={!prefs.enabled} onChange={(v) => set({ [k]: v })} />
             ))}
             <Toggle
               id="preview_content"

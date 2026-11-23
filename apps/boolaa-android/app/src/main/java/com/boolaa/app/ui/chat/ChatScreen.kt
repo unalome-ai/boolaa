@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -71,6 +72,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -100,7 +102,10 @@ import com.boolaa.app.core.BoolaaJson
 import com.boolaa.app.core.Formats
 import com.boolaa.app.core.ImageBucket
 import com.boolaa.app.core.ImageCompression
+import com.boolaa.app.core.MentionToken
+import com.boolaa.app.core.Mentions
 import com.boolaa.app.model.ChatMessage
+import com.boolaa.app.model.MentionCandidate
 import com.boolaa.app.model.ReportTarget
 import com.boolaa.app.model.ReportTargetType
 import com.boolaa.app.model.UserProfile
@@ -228,11 +233,28 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
     private val cacheKey = com.boolaa.app.core.CacheKeys.chat(bubbleId)
     private val cacheSerializer = kotlinx.serialization.builtins.ListSerializer(ChatMessage.serializer())
+    private val _candidates = MutableStateFlow<List<MentionCandidate>?>(null)
+    /**
+     * `mention_candidates`: who the composer can mention and the rendering rule (a mention of anyone else is plain
+     * text). Null until loaded (or read from the cache).
+     */
+    val candidates = _candidates.asStateFlow()
+    private val candidatesKey = com.boolaa.app.core.CacheKeys.mentionCandidates(bubbleId)
+    private val candidatesSerializer = kotlinx.serialization.builtins.ListSerializer(MentionCandidate.serializer())
+    @Volatile private var candidatesAskedAt = 0L
 
     init {
         // The newest page shows at once from the offline cache; live merges are saved again (debounced).
         offlineAware(container, _messages, cacheKey, cacheSerializer) { load() }
+        container.session.state.value.userId?.let { user ->
+            viewModelScope.launch {
+                val cached = withContext(kotlinx.coroutines.Dispatchers.IO) { container.offlineCache.load(user, candidatesKey, candidatesSerializer) }
+                if (cached != null && _candidates.value == null) _candidates.value = cached
+            }
+        }
         load()
+        // Mention candidates again on every reconnect and return to the front (the first page loads them on open).
+        viewModelScope.launch { container.connectivity.refresh.drop(1).collect { loadCandidates() } }
         // (Re)subscribed on open, on every reconnect and on every return to the front.
         viewModelScope.launch { container.connectivity.refresh.collectLatest { keepLive() } }
         viewModelScope.launch {
@@ -250,6 +272,7 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         reloadOnBlockChange(container.session) {
             val blocked = container.session.state.value.blockedIds
             _messages.update { it?.filterNot { m -> m.senderId in blocked } }
+            loadCandidates()
             launchCatching(trackBusy = false) {
                 mergeNewestPage()
                 reactions.refresh(liveIds())
@@ -260,6 +283,31 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
     private fun merge(message: ChatMessage) {
         message.sender?.let { authors[it.id] = it }
         _messages.update { ChatMerge.merge(it.orEmpty(), message, authors) }
+    }
+
+    /** Reloads `mention_candidates` (kept as they were when it fails; an empty list if there was nothing yet). */
+    fun loadCandidates() {
+        candidatesAskedAt = System.currentTimeMillis()
+        viewModelScope.launch {
+            runCatching { api.mentionCandidates(bubbleId) }
+                .onSuccess { list ->
+                    _candidates.value = list
+                    saveCache(container, candidatesKey, candidatesSerializer, list)
+                }
+                .onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    Log.w("Boolaa", "mention_candidates failed", e)
+                    if (_candidates.value == null) _candidates.value = emptyList()
+                }
+        }
+    }
+
+    /** A live message mentions someone who is neither the reader nor a candidate: they joined meanwhile (≤ once / 30 s). */
+    private fun refreshCandidatesFor(message: ChatMessage) {
+        if (message.mentions.isEmpty()) return
+        val known = _candidates.value.orEmpty().mapTo(HashSet()) { it.userId.lowercase() }
+        val unknown = Mentions.unknownUsers(message.mentions, container.session.state.value.userId, known)
+        if (unknown.isNotEmpty() && System.currentTimeMillis() - candidatesAskedAt >= Mentions.CANDIDATES_RETRY_MS) loadCandidates()
     }
 
     /** Messages that can carry reactions (deleted ones lost theirs). */
@@ -278,6 +326,7 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
         saveCache(container, cacheKey, cacheSerializer, list.takeLast(com.boolaa.app.core.CacheKeys.CHAT_LIMIT))
 
     private fun load() = runLoad(container, hasData = { _messages.value != null }) {
+        loadCandidates()
         coroutineScope {
             val page = async { api.chatPage(bubbleId, null) }
             val members = async { runCatching { api.members(bubbleId) }.getOrDefault(emptyList()) }
@@ -369,6 +418,7 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
                     inserts.collect { action ->
                         val m = decode(action.record) ?: return@collect
                         if (m.senderId !in authors) refreshAuthors()
+                        refreshCandidatesFor(m)
                         merge(m)
                     }
                 }
@@ -403,8 +453,12 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
      * to `chat.images/<uid>/<uuid>.jpg`, then the message is inserted with its path; if the insert fails the object is
      * removed again. [onFailure] gets the draft back.
      */
-    fun send(senderId: String, text: String, photo: Uri?, resolver: ContentResolver, onFailure: (String, Uri?) -> Unit) {
-        val content = text.trim().take(4000)
+    fun send(
+        senderId: String, text: String, tokens: List<MentionToken>, photo: Uri?, resolver: ContentResolver,
+        onFailure: (String, List<MentionToken>, Uri?) -> Unit,
+    ) {
+        // Spans against the exact text sent (trimmed), stored with the outbox entry and retried unchanged.
+        val (content, mentions) = Mentions.prepareSend(text, tokens)
         if (content.isEmpty() && photo == null) return
         // The message goes to the outbox (docs/boolaa-spec.md "Offline and poor network"): shown as "Sending…", sent
         // now or when the connection is back, with a client id so a retry never doubles it. Only a photo that can't
@@ -413,10 +467,10 @@ class ChatViewModel(private val container: AppContainer, private val bubbleId: S
             val jpeg = try {
                 photo?.let { ImageCompression.jpegFromUri(resolver, it, ImageBucket.CHAT) }
             } catch (e: Throwable) {
-                onFailure(text, photo)
+                onFailure(text, tokens, photo)
                 throw e
             }
-            container.outbox.send(com.boolaa.app.core.PendingMessage.create(bubbleId, senderId, content, jpeg))
+            container.outbox.send(com.boolaa.app.core.PendingMessage.create(bubbleId, senderId, content, jpeg, mentions = mentions))
         }
     }
 
@@ -468,7 +522,7 @@ private sealed class ChatRow(val key: String) {
  */
 @Composable
 fun ChatScreen(
-    onBack: () -> Unit, pendingDraft: String? = null, onDraftTaken: () -> Unit = {},
+    onBack: () -> Unit, pendingDraft: ChatDraft? = null, onDraftTaken: () -> Unit = {},
     pendingJump: String? = null, onJumpTaken: () -> Unit = {},
 ) {
     val container = LocalAppContainer.current
@@ -485,13 +539,18 @@ fun ChatScreen(
     val reactionsByMessage = remember(reactionRows, me) { com.boolaa.app.core.ReactionMerge.summaries(reactionRows, me) }
     val issue by vm.loadIssue.collectAsStateWithLifecycle()
     val pendingAll by vm.pending.collectAsStateWithLifecycle()
-    var draft by rememberSaveable { mutableStateOf("") }
-    // A prefilled text ("Ask in chat"): put in the composer, never sent automatically; kept after what was typed.
-    LaunchedEffect(pendingDraft) {
-        if (pendingDraft != null) {
-            draft = if (draft.isBlank()) pendingDraft else "${draft.trimEnd()}\n$pendingDraft"
-            onDraftTaken()
-        }
+    val composer = rememberSaveable(saver = ComposerState.Saver) { ComposerState() }
+    val candidates by vm.candidates.collectAsStateWithLifecycle()
+    var composerFocused by remember { mutableStateOf(false) }
+    val mentionKeys = remember { MentionKeys() }
+    // A prefilled text ("Ask in chat"): put in the composer, never sent automatically; kept after what was typed. The
+    // owner's `@name` becomes a mention token when they're a candidate, so it waits for the candidates.
+    LaunchedEffect(pendingDraft, candidates != null) {
+        val d = pendingDraft ?: return@LaunchedEffect
+        if (d.mentionUserId != null && candidates == null) return@LaunchedEffect
+        val (text, token) = Mentions.draftWithToken(d.text, d.mentionUserId, d.mentionName, candidates.orEmpty())
+        composer.append(text, token)
+        onDraftTaken()
     }
     var photo by rememberSaveable { mutableStateOf<Uri?>(null) }
     val listState = rememberLazyListState()
@@ -554,6 +613,8 @@ fun ChatScreen(
     val jump by vm.jumpTarget.collectAsStateWithLifecycle()
     var highlightedId by remember { mutableStateOf<String?>(null) }
 
+    // Candidates' current names: a mention of one shows "@<name now>"; anyone else's span shows its own text.
+    val mentionNames = remember(candidates) { candidates.orEmpty().associate { it.userId.lowercase() to it.name } }
     val dividerId = remember(list, lastReadAt) { list?.let { ChatMerge.dividerBefore(it, lastReadAt, me) } }
     // Outbox messages the server list doesn't hold yet, newest at the bottom (the list is reversed).
     val pending = remember(pendingAll, list) { com.boolaa.app.core.OutboxRules.visible(pendingAll, list.orEmpty().mapTo(HashSet()) { it.id }) }
@@ -634,6 +695,7 @@ fun ChatScreen(
                                     onDelete = if (mine && !message.isDeleted) ({ deleting = message }) else null,
                                     reactions = reactionsByMessage[message.id].orEmpty(),
                                     onReact = if (!message.isDeleted) ({ kind -> vm.react(message.id, kind) }) else null,
+                                    mentionNames = mentionNames, me = me, myName = state.profile?.name,
                                 )
                             }
                             is ChatRow.Pending -> PendingMessageRow(row.message, bubbleHue, onRetry = { vm.retry(row.message.clientId) },
@@ -668,6 +730,24 @@ fun ChatScreen(
                 }
             }
         }
+        // The @mention list: a strip above the composer (docs/boolaa-spec.md "Mentions", Composer).
+        val locale = LocalConfiguration.current.locales[0]
+        val collator = remember(locale) { java.text.Collator.getInstance(locale) }
+        val query = composer.query
+        val mentionList = if (composerFocused) Mentions.listState(query, candidates.orEmpty(), composer.tokens, collator, composer.dismissedAt)
+            else Mentions.ListState.Closed
+        val rowsShown = (mentionList as? Mentions.ListState.Rows)?.candidates.orEmpty()
+        LaunchedEffect(query?.at, query?.text) { composer.active = 0 }
+        mentionKeys.update(
+            open = mentionList !is Mentions.ListState.Closed,
+            count = rowsShown.size,
+            move = { delta -> if (rowsShown.isNotEmpty()) composer.active = Math.floorMod(composer.active + delta, rowsShown.size) },
+            pick = { rowsShown.getOrNull(composer.active)?.let { cand -> query?.let { q -> composer.pick(q, cand) } } },
+            dismiss = { composer.dismissedAt = query?.at },
+        )
+        if (mentionList !is Mentions.ListState.Closed) {
+            MentionStrip(mentionList, composer.active, onPick = { cand -> query?.let { q -> composer.pick(q, cand) } })
+        }
         // Composer: photo button, a pill field on the card colour and a round send button, on a translucent bar.
         Row(
             Modifier.fillMaxWidth().background(c.background.copy(alpha = 0.86f)).navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -692,22 +772,29 @@ fun ChatScreen(
             val focused by source.collectIsFocusedAsState()
             val ring by animateColorAsState(if (focused) c.focusRing else c.fieldBorder, Motion.fade())
             val fieldShape = RoundedCornerShape(24.dp)
+            val tokenStyle = androidx.compose.ui.text.SpanStyle(color = Hue.grape.text, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+            val highlight = remember(composer.tokens, tokenStyle) { MentionHighlight(composer.tokens, tokenStyle) }
             TextField(
-                value = draft,
-                onValueChange = { draft = it },
+                value = composer.value,
+                onValueChange = composer::onValueChange,
                 placeholder = { Text(stringResource(R.string.message_placeholder), style = Type.body, color = c.textSecondary) },
                 maxLines = 5,
                 textStyle = Type.body,
                 interactionSource = source,
                 shape = fieldShape,
+                visualTransformation = highlight,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = c.card, unfocusedContainerColor = c.card,
                     focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent, cursorColor = Hue.grape.fill,
                     focusedTextColor = c.textPrimary, unfocusedTextColor = c.textPrimary,
                 ),
-                modifier = Modifier.weight(1f).border(if (focused) 2.dp else 1.dp, ring, fieldShape).testTag("chat-input"),
+                modifier = Modifier.weight(1f).border(if (focused) 2.dp else 1.dp, ring, fieldShape)
+                    // Hardware keyboard while the list is open: ↑/↓ move, Enter picks, Escape closes (keeps the text).
+                    .onPreviewKeyEvent { e -> mentionKeys.handle(e) }
+                    .testTag("chat-input"),
             )
-            val canSend = !sending && (draft.isNotBlank() || photo != null)
+            LaunchedEffect(focused) { composerFocused = focused }
+            val canSend = !sending && (composer.text.isNotBlank() || photo != null)
             val sendLabel = stringResource(R.string.send)
             val arrow by animateColorAsState(if (canSend) bubbleHue.onFill else c.textSecondary, Motion.fade())
             Box(
@@ -719,13 +806,16 @@ fun ChatScreen(
                     .then(if (canSend) Modifier.background(bubbleHue.gradient) else Modifier.background(c.field))
                     .clickableRipple(scale = 0.88f) {
                         if (canSend) {
-                            val text = draft
+                            val text = composer.text
+                            val tokens = composer.tokens
                             val picked = photo
-                            draft = ""
+                            composer.set("", emptyList())
                             photo = null
                             sends++
                             Haptics.play(view, com.boolaa.app.core.Interaction.SEND)
-                            vm.send(me, text, picked, resolver) { failedText, failedPhoto -> draft = failedText; photo = failedPhoto }
+                            vm.send(me, text, tokens, picked, resolver) { failedText, failedTokens, failedPhoto ->
+                                composer.set(failedText, failedTokens); photo = failedPhoto
+                            }
                         }
                     }
                     .semantics { contentDescription = sendLabel; role = Role.Button }
@@ -887,7 +977,14 @@ fun MessageRow(
     bubbleHue: Hue = Hue.grape,
     onReport: (() -> Unit)? = null, onDelete: (() -> Unit)? = null,
     reactions: List<com.boolaa.app.core.ReactionSummary> = emptyList(), onReact: ((com.boolaa.app.model.ReactionKind) -> Unit)? = null,
+    /** Mention candidates' current names by lower-case id; [me] / [myName] the reader (docs/boolaa-spec.md "Mentions"). */
+    mentionNames: Map<String, String> = emptyMap(), me: String? = null, myName: String? = null,
 ) {
+    val parts = remember(message.content, message.mentions, me, myName, mentionNames) {
+        Mentions.parts(message.content, message.mentions, me, myName, mentionNames)
+    }
+    val shown = remember(parts) { Mentions.displayText(parts) }
+    val mentionsMe = !isMine && !message.isDeleted && parts.any { it is Mentions.Part.Mention && it.kind == Mentions.Kind.ME }
     val reportLabel = stringResource(R.string.report)
     val reactLabel = stringResource(R.string.reaction_react)
     val picker = com.boolaa.app.ui.components.rememberReactionPicker()
@@ -908,20 +1005,32 @@ fun MessageRow(
         pluralStringResource(R.plurals.reaction_chip, r.count, com.boolaa.app.ui.components.reactionName(r.kind), r.count) +
             if (r.mine) ", $youReacted" else ""
     }
+    val mentionedYou = stringResource(R.string.chat_mentioned_you, sender)
     val description = buildList {
-        add(sender)
+        // A message that mentions the reader starts with "{name} mentioned you"; mentions read as displayed.
+        add(if (mentionsMe) mentionedYou else sender)
         if (message.isDeleted) add(deletedLabel)
         else {
             if (message.imagePath != null) add(photoLabel)
-            if (message.content.isNotEmpty()) add(message.content)
+            if (shown.isNotEmpty()) add(shown)
         }
         add(time)
         if (!message.isDeleted) addAll(reactionLabels)
     }.joinToString(", ")
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-    val links = remember(message.content) { com.boolaa.app.core.Linkify.split(message.content).mapNotNull { it.url } }
+    // Links come from the text between mentions only (never inside a span).
+    val links = remember(parts) {
+        parts.filterIsInstance<Mentions.Part.Text>().flatMap { p -> com.boolaa.app.core.Linkify.split(p.text).mapNotNull { it.url } }
+    }
+    val mentionBar = Hue.grape.fill
     Row(
         Modifier.fillMaxWidth().popFrom(popIn, originX = if (isMine) 1f else 0f, originY = 1f).testTag("message-${message.id}")
+            // Mentions the reader: a 3 dp grape bar on the leading edge, findable while scrolling.
+            .then(if (mentionsMe) Modifier.drawBehind {
+                val w = 3.dp.toPx()
+                val x = if (layoutDirection == androidx.compose.ui.unit.LayoutDirection.Ltr) 0f else size.width - w
+                drawRoundRect(mentionBar, Offset(x, 0f), Size(w, size.height), CornerRadius(w / 2))
+            }.padding(start = 7.dp) else Modifier)
             .clearAndSetSemantics {
                 contentDescription = description
                 if (!message.isDeleted) customActions = listOfNotNull(
@@ -1005,14 +1114,20 @@ fun MessageRow(
                     }
                     if (message.content.isNotEmpty()) {
                         // Links are tappable and open in the browser (no previews in chat): onFill on yours, the sender's
-                        // text shade on others' (both ≥ 4.5:1, §8.6).
+                        // text shade on others' (both ≥ 4.5:1, §8.6). Mentions: semibold grape text on others', the text
+                        // colour semibold underlined on yours, a filled grape pill for the reader.
                         val linkColor = if (isMine) bubbleHue.onFill else senderHue.text
-                        val text = remember(message.content, linkColor) { linkified(message.content, linkColor) }
+                        val memberColor = if (isMine) bubbleHue.onFill else Hue.grape.text
+                        val text = remember(parts, linkColor, memberColor, isMine) { messageText(parts, linkColor, memberColor, underlineMembers = isMine) }
+                        var layout by remember { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+                        val pill = Hue.grape.fill
                         Text(
                             text,
                             style = Type.body,
                             color = if (isMine) bubbleHue.onFill else c.textPrimary,
-                            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
+                            onTextLayout = { layout = it },
+                            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp)
+                                .drawBehind { layout?.let { drawMentionPills(it, text, pill) } },
                         )
                     }
                 }
@@ -1039,3 +1154,58 @@ internal fun linkified(content: String, linkColor: Color): androidx.compose.ui.t
             else withLink(androidx.compose.ui.text.LinkAnnotation.Url(url, style)) { append(part.text) }
         }
     }
+
+/** Annotation tag of the reader's own mentions (drawn as a filled pill behind the text). */
+internal const val MENTION_ME = "mention-me"
+/** Annotation tag of every mention (tests read the kinds from it). */
+internal const val MENTION = "mention"
+
+/**
+ * Message text from [Mentions.parts]: plain parts linkified as before; mentions never linkified and never links.
+ * The reader's mention is white semibold (its pill is drawn by [drawMentionPills]); a member's is semibold in
+ * [memberColor] (underlined on your own messages); anyone else's span stays plain text.
+ */
+internal fun messageText(
+    parts: List<Mentions.Part>, linkColor: Color, memberColor: Color, underlineMembers: Boolean,
+): androidx.compose.ui.text.AnnotatedString = androidx.compose.ui.text.buildAnnotatedString {
+    val semibold = androidx.compose.ui.text.font.FontWeight.SemiBold
+    for (part in parts) when (part) {
+        is Mentions.Part.Text -> append(linkified(part.text, linkColor))
+        is Mentions.Part.Mention -> {
+            val start = length
+            when (part.kind) {
+                Mentions.Kind.ME -> {
+                    pushStringAnnotation(MENTION_ME, part.userId)
+                    withStyle(androidx.compose.ui.text.SpanStyle(color = Color.White, fontWeight = semibold)) { append(part.text) }
+                    pop()
+                }
+                Mentions.Kind.MEMBER -> withStyle(androidx.compose.ui.text.SpanStyle(color = memberColor, fontWeight = semibold,
+                    textDecoration = if (underlineMembers) androidx.compose.ui.text.style.TextDecoration.Underline else null)) { append(part.text) }
+                Mentions.Kind.PLAIN -> append(part.text)
+            }
+            addStringAnnotation(MENTION, part.kind.name, start, length)
+        }
+    }
+}
+
+/** The reader's mentions: a rounded grape pill behind each line of the span. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMentionPills(
+    layout: androidx.compose.ui.text.TextLayoutResult, text: androidx.compose.ui.text.AnnotatedString, color: Color,
+) {
+    val pad = 3.dp.toPx()
+    for (range in text.getStringAnnotations(MENTION_ME, 0, text.length)) {
+        if (range.end > layout.layoutInput.text.length || range.start >= range.end) continue
+        for (line in layout.getLineForOffset(range.start)..layout.getLineForOffset(range.end - 1)) {
+            val s = maxOf(range.start, layout.getLineStart(line))
+            val e = minOf(range.end, layout.getLineEnd(line, visibleEnd = true))
+            if (e <= s) continue
+            val first = layout.getBoundingBox(s)
+            val last = layout.getBoundingBox(e - 1)
+            val left = minOf(first.left, last.left)
+            val right = maxOf(first.right, last.right)
+            val top = layout.getLineTop(line)
+            val height = layout.getLineBottom(line) - top
+            drawRoundRect(color, Offset(left - pad, top), Size(right - left + 2 * pad, height), CornerRadius(height / 2))
+        }
+    }
+}

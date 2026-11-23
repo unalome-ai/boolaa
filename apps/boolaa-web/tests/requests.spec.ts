@@ -397,6 +397,10 @@ test("notification settings list the two request switches", async ({ browser }) 
   await expect(settings).toHaveAttribute("data-loaded", "true");
   await expect(settings.getByTestId("pref-item_requests")).toHaveAttribute("aria-checked", "true");
   await expect(settings.getByTestId("pref-request_updates")).toHaveAttribute("aria-checked", "true");
-  await expect(settings.getByRole("switch")).toHaveCount(11); // master + 9 types + previews
+  await expect(settings.getByRole("switch")).toHaveCount(12); // master + 10 types + previews
+  // Mentions sits right after Chat messages, with its hint.
+  const ids = await settings.getByRole("switch").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
+  expect(ids.indexOf("pref-mentions")).toBe(ids.indexOf("pref-chat") + 1);
+  await expect(settings.getByText("When someone @mentions you, even if chat messages are off.")).toBeVisible();
   await ctx.close();
 });

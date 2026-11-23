@@ -99,6 +99,7 @@ struct MainShellView: View {
         if let bubble = target.bubble { session.selectBubble(bubble) }
         router.highlight = target.highlight
         router.openRequestsFor = target.openRequests
+        router.chatJump = target.chatJump
         switch target.destination {
         case .home: router.tab = .home
         case .chat: router.open(.chat)

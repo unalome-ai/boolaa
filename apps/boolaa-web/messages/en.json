@@ -199,6 +199,12 @@
     "emptyTitle": "Say hi!",
     "emptyHint": "Nobody's talked yet. Break the ice.",
     "messageLabel": "Message",
+    "mentionListLabel": "Members to mention",
+    "mentionA11y": "Mention {name}",
+    "mentionNoMatch": "No members match",
+    "mentionCount": "{count, plural, one {# member} other {# members}}",
+    "mentionLimit": "You can mention up to 10 people in one message.",
+    "mentionedYou": "{name} mentioned you",
     "placeholder": "Message {bubble}",
     "send": "Send",
     "deleted": "This message was deleted",
@@ -430,7 +436,8 @@
     "requestGone": "That request was withdrawn.",
     "requestDecided": "This request has already been decided.",
     "nothingPicked": "Pick someone first.",
-    "invalidExpiry": "Pick a time in the next 14 days."
+    "invalidExpiry": "Pick a time in the next 14 days.",
+    "tooManyMentions": "You can mention up to 10 people in one message."
   },
   "safety": {
     "moreActions": "More actions",
@@ -591,6 +598,8 @@
     "title": "Notifications",
     "enabled": "Allow notifications",
     "chat": "Chat messages",
+    "mentions": "Mentions",
+    "mentionsHint": "When someone @mentions you, even if chat messages are off.",
     "joinRequests": "Join requests",
     "approvals": "My request was approved",
     "newEvents": "New events",

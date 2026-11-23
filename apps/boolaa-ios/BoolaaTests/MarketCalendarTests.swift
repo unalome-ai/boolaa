@@ -96,7 +96,7 @@ struct MarketAvailabilityTests {
         let router = ShellRouter()
         router.openChat(draft: "@Alice, hi")
         #expect(router.path == [.chat])
-        #expect(router.takeChatDraft() == "@Alice, hi")
+        #expect(router.takeChatDraft() == ChatDraft(text: "@Alice, hi"))
         #expect(router.takeChatDraft() == nil)
     }
 }

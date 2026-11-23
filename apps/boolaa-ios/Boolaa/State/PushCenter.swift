@@ -149,7 +149,7 @@ final class PushCenter {
         let thread = bubbleID.uuidString.lowercased()
         let ids = await center.deliveredNotifications()
             .filter { $0.request.content.threadIdentifier.lowercased() == thread
-                && $0.request.content.categoryIdentifier == PushKind.chat.category }
+                && [PushKind.chat.category, PushKind.chatMention.category].contains($0.request.content.categoryIdentifier) }
             .map(\.request.identifier)
         if !ids.isEmpty { center.removeDeliveredNotifications(withIdentifiers: ids) }
     }

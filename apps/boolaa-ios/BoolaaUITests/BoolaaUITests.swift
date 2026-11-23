@@ -32,7 +32,7 @@ final class BoolaaUITests: XCTestCase {
 
         // Chat: send a message and see it appear
         app.buttons["chat-fab"].tap()
-        let input = app.textFields["chat-input"]
+        let input = app.textViews["chat-input"]
         XCTAssertTrue(input.waitForExistence(timeout: 10))
         // Each message is one VoiceOver element: "<sender>, <text>, <time>…".
         XCTAssertTrue(chatMessage(app, containing: "Who took the last oat milk? 🥛").waitForExistence(timeout: 10))

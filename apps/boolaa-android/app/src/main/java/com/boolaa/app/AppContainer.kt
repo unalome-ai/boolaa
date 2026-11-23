@@ -89,7 +89,7 @@ class AppContainer(context: Context) {
         val path = p.photoPath
         if (path != null) api.uploadChatImageAt(p.photo!!, path)
         return try {
-            api.sendMessage(p.bubbleId, p.senderId, p.content, path, id = p.clientId)
+            api.sendMessage(p.bubbleId, p.senderId, p.content, path, id = p.clientId, mentions = p.mentions)
         } catch (e: PostgrestRestException) {
             if (!OutboxRules.isUniqueViolation(e.code)) throw e
             api.chatMessage(p.clientId) ?: throw e

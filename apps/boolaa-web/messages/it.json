@@ -199,6 +199,12 @@
     "emptyTitle": "Saluta!",
     "emptyHint": "Nessuno ha ancora scritto. Rompi il ghiaccio.",
     "messageLabel": "Messaggio",
+    "mentionListLabel": "Membri da menzionare",
+    "mentionA11y": "Menziona {name}",
+    "mentionNoMatch": "Nessun membro corrisponde",
+    "mentionCount": "{count, plural, one {# membro} other {# membri}}",
+    "mentionLimit": "Puoi menzionare fino a 10 persone in un messaggio.",
+    "mentionedYou": "{name} ti ha menzionato",
     "placeholder": "Messaggio a {bubble}",
     "send": "Invia",
     "deleted": "Questo messaggio è stato eliminato",
@@ -430,7 +436,8 @@
     "requestGone": "Quella richiesta è stata ritirata.",
     "requestDecided": "Questa richiesta è già stata decisa.",
     "nothingPicked": "Scegli prima qualcuno.",
-    "invalidExpiry": "Scegli un momento entro i prossimi 14 giorni."
+    "invalidExpiry": "Scegli un momento entro i prossimi 14 giorni.",
+    "tooManyMentions": "Puoi menzionare fino a 10 persone in un messaggio."
   },
   "safety": {
     "moreActions": "Altre azioni",
@@ -591,6 +598,8 @@
     "title": "Notifiche",
     "enabled": "Consenti le notifiche",
     "chat": "Messaggi in chat",
+    "mentions": "Menzioni",
+    "mentionsHint": "Quando qualcuno ti @menziona, anche se i messaggi in chat sono disattivati.",
     "joinRequests": "Richieste di adesione",
     "approvals": "La mia richiesta è stata approvata",
     "newEvents": "Nuovi eventi",

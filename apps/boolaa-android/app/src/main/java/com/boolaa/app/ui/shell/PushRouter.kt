@@ -41,7 +41,11 @@ fun PushRouter(navigator: ShellNavigator) {
         container.push.setOpenRequests(dest.highlightId.takeIf { dest.openRequests })
         when (dest.screen) {
             PushScreen.HOME -> navigator.openTab(MainTab.HOME)
-            PushScreen.CHAT -> { navigator.openTab(MainTab.HOME); navigator.openChat() }
+            PushScreen.CHAT -> {
+                // `chat_mention`: open the chat on the message (like a search hit).
+                dest.chatMessageId?.let { navigator.chatJump = it }
+                navigator.openTab(MainTab.HOME); navigator.openChat()
+            }
             PushScreen.SETTINGS -> navigator.openTab(MainTab.SETTINGS)
             PushScreen.EVENTS -> navigator.openTab(MainTab.EVENTS)
             PushScreen.FOOD -> navigator.openTab(MainTab.FOOD)

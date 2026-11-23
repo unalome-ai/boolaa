@@ -32,6 +32,11 @@ enum A11y {
     }
 
     /// One chat message read as a single element: sender, text (or photo, or the deleted placeholder), time, reactions.
+    /// Start of the label of a message that mentions the reader.
+    nonisolated static func mentionedYou(_ name: String) -> String {
+        String(localized: "\(name) mentioned you", comment: "Accessibility: start of a chat message's label when it mentions me; the argument is the sender's name")
+    }
+
     nonisolated static func chatMessage(sender: String, isMine: Bool, text: String, hasPhoto: Bool, deleted: Bool,
                                         time: String, reactions: [ReactionSummary]) -> String {
         let who = isMine ? String(localized: "You", comment: "Author label for your own chat messages") : sender

@@ -199,6 +199,12 @@
     "emptyTitle": "Spune salut!",
     "emptyHint": "Nimeni n-a scris încă. Sparge gheața.",
     "messageLabel": "Mesaj",
+    "mentionListLabel": "Membri pe care îi poți menționa",
+    "mentionA11y": "Menționează: {name}",
+    "mentionNoMatch": "Niciun membru nu se potrivește",
+    "mentionCount": "{count, plural, one {# membru} few {# membri} other {# de membri}}",
+    "mentionLimit": "Poți menționa cel mult 10 persoane într-un mesaj.",
+    "mentionedYou": "{name} te-a menționat",
     "placeholder": "Mesaj către {bubble}",
     "send": "Trimite",
     "deleted": "Mesajul a fost șters",
@@ -430,7 +436,8 @@
     "requestGone": "Cererea a fost retrasă.",
     "requestDecided": "Cererea asta a fost deja decisă.",
     "nothingPicked": "Alege mai întâi pe cineva.",
-    "invalidExpiry": "Alege o oră din următoarele 14 zile."
+    "invalidExpiry": "Alege o oră din următoarele 14 zile.",
+    "tooManyMentions": "Poți menționa cel mult 10 persoane într-un mesaj."
   },
   "safety": {
     "moreActions": "Mai multe acțiuni",
@@ -591,6 +598,8 @@
     "title": "Notificări",
     "enabled": "Permite notificările",
     "chat": "Mesaje din chat",
+    "mentions": "Mențiuni",
+    "mentionsHint": "Când cineva te @menționează, chiar dacă mesajele din chat sunt oprite.",
     "joinRequests": "Cereri de alăturare",
     "approvals": "Cererea mea a fost aprobată",
     "newEvents": "Evenimente noi",

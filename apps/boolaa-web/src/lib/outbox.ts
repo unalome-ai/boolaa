@@ -13,6 +13,7 @@ import { CHAT_BUCKET } from "@/lib/chat";
 import { OUTBOX_PREFIX, clearOfflineData, isAlreadyUploaded, isNetworkError, isUniqueViolation, type KeyValueStore } from "@/lib/offline";
 import { AUTHOR, type ChatMessage } from "@/lib/types";
 import type { BoolaaClient } from "@/lib/supabase/client";
+import type { MentionSpan } from "@/lib/mentions";
 
 export type OutboxState = "sending" | "failed";
 
@@ -22,6 +23,8 @@ export type OutboxItem = {
   bubble_id: string;
   sender_id: string;
   content: string;
+  /** Code-point spans against `content` exactly (docs/boolaa-spec.md, "Mentions"); retried unchanged. */
+  mentions: MentionSpan[];
   /** Local time it was written (display order only; the server sets created_at). */
   created_at: string;
   state: OutboxState;
@@ -65,7 +68,7 @@ export function restore(raw: string | null): OutboxItem[] {
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((i): i is OutboxItem => !!i && typeof i.id === "string" && typeof i.bubble_id === "string" && typeof i.content === "string")
-      .map((i) => ({ ...i, image_path: null, state: "failed" as const }));
+      .map((i) => ({ ...i, mentions: Array.isArray(i.mentions) ? i.mentions : [], image_path: null, state: "failed" as const }));
   } catch {
     return [];
   }
@@ -156,13 +159,14 @@ export function onOutboxSent(listener: (row: ChatMessage) => void) {
  * Queues a message and sends it now when online; offline it waits for the reconnect flush.
  * `jpeg` is the already prepared photo (lib/image.ts), so pipeline errors surface before queueing.
  */
-export function sendMessage(supabase: BoolaaClient, msg: { bubbleId: string; userId: string; content: string; jpeg?: Blob }) {
+export function sendMessage(supabase: BoolaaClient, msg: { bubbleId: string; userId: string; content: string; mentions?: MentionSpan[]; jpeg?: Blob }) {
   const id = crypto.randomUUID();
   const item: OutboxItem = {
     id,
     bubble_id: msg.bubbleId,
     sender_id: msg.userId,
     content: msg.content,
+    mentions: msg.mentions ?? [],
     created_at: new Date().toISOString(),
     state: "sending",
     image_path: msg.jpeg ? `${msg.userId}/${id}.jpg` : null,
@@ -231,7 +235,8 @@ async function attempt(supabase: BoolaaClient, id: string) {
     const select = `*, sender:users!sender_id(${AUTHOR})`;
     let { data, error } = await supabase
       .from("chat_messages")
-      .insert({ id, bubble_id: item.bubble_id, sender_id: item.sender_id, content: item.content, image_path: item.image_path })
+      // `mentions` comes back from the server row (it drops non-members, blocks and the sender).
+      .insert({ id, bubble_id: item.bubble_id, sender_id: item.sender_id, content: item.content, image_path: item.image_path, mentions: item.mentions ?? [] })
       .select(select)
       .single();
     if (error && isUniqueViolation(error)) {

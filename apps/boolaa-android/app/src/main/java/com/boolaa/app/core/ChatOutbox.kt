@@ -45,14 +45,18 @@ data class PendingMessage(
     val createdAt: Timestamp,
     val state: OutboxState = OutboxState.SENDING,
     @Transient val photo: ByteArray? = null,
+    /** Code-point spans against [content] exactly as sent; persisted with the text and retried unchanged. */
+    val mentions: List<com.boolaa.app.model.MentionSpan> = emptyList(),
 ) {
     val hasPhoto: Boolean get() = photo != null
     /** The photo's object path: `<uid>/<clientId>.jpg`, the same on every retry. */
     val photoPath: String? get() = if (photo != null) BoolaaApi.imagePath(senderId, UUID.fromString(clientId)) else null
 
     companion object {
-        fun create(bubbleId: String, senderId: String, content: String, photo: ByteArray?, now: Instant = Instant.now()) =
-            PendingMessage(UUID.randomUUID().toString(), bubbleId, senderId, content, now, OutboxState.SENDING, photo)
+        fun create(
+            bubbleId: String, senderId: String, content: String, photo: ByteArray?, now: Instant = Instant.now(),
+            mentions: List<com.boolaa.app.model.MentionSpan> = emptyList(),
+        ) = PendingMessage(UUID.randomUUID().toString(), bubbleId, senderId, content, now, OutboxState.SENDING, photo, mentions)
     }
 }
 

@@ -82,6 +82,8 @@ object CacheKeys {
     fun market(bubbleId: String) = "market.$bubbleId"
     fun links(bubbleId: String) = "links.$bubbleId"
     fun members(bubbleId: String) = "members.$bubbleId"
+    /** The chat's mention candidates, cached beside the members (docs/boolaa-spec.md "Mentions"). */
+    fun mentionCandidates(bubbleId: String) = "members.$bubbleId.mentions"
     /** The chat cache holds the newest page only. */
     const val CHAT_LIMIT = 50
 }

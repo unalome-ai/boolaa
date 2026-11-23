@@ -14,7 +14,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         .oauthFailed, .accountSuspended, .userBanned, .invalidEmail, .imageTooLarge, .imageUnsupported,
         .tooManyInviteAttempts, .ownerOnlyRotate, .ownerOnlyAction, .chatMessageGone, .exportRateLimited,
         .itemGone, .itemNotAvailable, .alreadyRequested, .cannotRequestOwn, .requestNoteTooLong, .requestGone,
-        .requestDecided, .nothingPicked, .invalidExpiry,
+        .requestDecided, .nothingPicked, .invalidExpiry, .tooManyMentions,
     ]
 
     case invalidInviteCode
@@ -80,6 +80,8 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
     case requestDecided
     case nothingPicked
     case invalidExpiry
+    // Chat mentions (20261124200000_chat_mentions.sql): more than 10 spans. "invalid mentions" stays generic.
+    case tooManyMentions
 
     /// Classifies any error thrown by the SDK or by URLSession.
     static func classify(_ error: any Error) -> UserFacingError {
@@ -137,6 +139,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
             ("request already decided", .requestDecided),
             ("nothing picked", .nothingPicked),
             ("invalid expiry", .invalidExpiry),
+            ("too many mentions", .tooManyMentions),
             ("invalid invite code", .invalidInviteCode),
             ("too many attempts", .tooManyInviteAttempts),
             ("only the owner can change the invite code", .ownerOnlyRotate),
@@ -271,6 +274,7 @@ enum UserFacingError: Equatable, Sendable, CaseIterable {
         case .requestDecided: "This request has already been decided."
         case .nothingPicked: "Pick someone first."
         case .invalidExpiry: "Pick a time in the next 14 days."
+        case .tooManyMentions: "You can mention up to 10 people in one message."
         }
     }
 }
