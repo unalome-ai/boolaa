@@ -40,6 +40,23 @@ def svg(size, background=True, box=108):
         body += f'<ellipse cx="{T(x):.2f}" cy="{T(y):.2f}" rx="{rx*k:.2f}" ry="{ry*k:.2f}" fill="{col}" opacity="{op}"/>'
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}" width="{size}" height="{size}"><defs>{defs}</defs>{body}</svg>\n'
 
+def svg_tinted(size, box=80):
+    """iOS tinted appearance: grayscale on transparent; iOS colours it by luminance.
+    Orbs are light-to-mid gray, the face is cut out (no cheeks or shine)."""
+    k = size / box; off = -(108 - box) / 2
+    T = lambda v: (v + off) * k
+    defs = '<radialGradient id="g" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#9A9A9A"/></radialGradient>'
+    body = ""
+    for (cx, cy, r) in (CORAL, MINT):
+        body += f'<circle cx="{T(cx):.2f}" cy="{T(cy):.2f}" r="{r*k:.2f}" fill="url(#g)" opacity=".75"/>'
+    cx, cy, r = MAIN
+    d = f"M{T(cx-r):.2f},{T(cy):.2f}a{r*k:.2f},{r*k:.2f} 0 1,0 {2*r*k:.2f},0a{r*k:.2f},{r*k:.2f} 0 1,0 {-2*r*k:.2f},0Z"
+    for kind, fx, fy, rx, ry, col, op in face(*MAIN):
+        if col == "#FFFFFF":
+            d += f"M{T(fx-rx):.2f},{T(fy):.2f}a{rx*k:.2f},{ry*k:.2f} 0 1,0 {2*rx*k:.2f},0a{rx*k:.2f},{ry*k:.2f} 0 1,0 {-2*rx*k:.2f},0Z"
+    body += f'<path fill="url(#g)" fill-rule="evenodd" d="{d}"/>'
+    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}" width="{size}" height="{size}"><defs>{defs}</defs>{body}</svg>\n'
+
 def ell(cx, cy, rx, ry):  # ellipse as path data
     return f"M{cx-rx:.2f},{cy:.2f}a{rx:.2f},{ry:.2f} 0 1,0 {2*rx:.2f},0a{rx:.2f},{ry:.2f} 0 1,0 {-2*rx:.2f},0Z"
 
@@ -81,6 +98,8 @@ def android_mono():
 
 os.makedirs(OUT, exist_ok=True)
 open(f"{OUT}/icon-1024.svg", "w").write(svg(1024, box=80))
+open(f"{OUT}/icon-1024-dark.svg", "w").write(svg(1024, background=False, box=80))  # iOS dark: system draws the dark backdrop
+open(f"{OUT}/icon-1024-tinted.svg", "w").write(svg_tinted(1024))
 open(f"{OUT}/icon-192.svg", "w").write(svg(192, box=80))
 open(f"{OUT}/favicon.svg", "w").write(svg(64, background=False, box=72))
 open(f"{OUT}/ic_launcher_foreground.xml", "w").write(android_fg())
