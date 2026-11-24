@@ -245,6 +245,12 @@ final class AuthSecurityUITests: XCTestCase {
         let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: back)
         _ = await XCTWaiter().fulfillment(of: [hittable], timeout: 5)
         back.tap()
-        XCTAssertTrue(app.textFields["auth-email"].waitForExistence(timeout: 5))
+        // iOS can raise "Save Password?" late (after the 4 s wait above); it then eats the tap on Back.
+        let email = app.textFields["auth-email"], notNow = app.buttons["Not Now"]
+        for _ in 0..<10 where !email.waitForExistence(timeout: 2) {
+            if notNow.exists { notNow.tap() }
+            if back.exists && back.isHittable { back.tap() }
+        }
+        XCTAssertTrue(email.exists)
     }
 }
