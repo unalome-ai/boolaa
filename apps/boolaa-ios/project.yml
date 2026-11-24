@@ -56,7 +56,7 @@ targets:
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, ro, fr, es, it]
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "3"
+        CFBundleVersion: "5"
         # HTTPS only (exempt): skips the export-compliance question on every TestFlight build.
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:
