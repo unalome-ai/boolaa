@@ -1,10 +1,1 @@
-{
-  "versionCode": 1,
-  "versionName": "1.0",
-  "minSupported": 1,
-  "url": "https://github.com/unalome-ai/boolaa/releases/download/android-1.0/boolaa-1.0.apk",
-  "sha256": "3a4e53d4e5511d0ca2acecae00263c03c27642a901014328171a36972db735a8",
-  "size": 4140511,
-  "certSha256": "4F:65:12:5D:BF:81:83:E7:10:10:56:2D:86:0C:E6:34:6E:AA:7C:C3:B5:28:4B:97:D0:F0:63:2C:82:8E:D9:C4",
-  "released": "2026-11-23"
-}
+{"versionCode":2,"versionName":"1.1","minSupported":1,"url":"https://github.com/unalome-ai/boolaa/releases/download/android-1.1/boolaa-1.1.apk","sha256":"af251d6df265030ccda60c3867b9fc61f9fbd864b5278ed91efceba21372b6b9","size":4159611,"certSha256":"4F:65:12:5D:BF:81:83:E7:10:10:56:2D:86:0C:E6:34:6E:AA:7C:C3:B5:28:4B:97:D0:F0:63:2C:82:8E:D9:C4","released":"2026-11-24"}
