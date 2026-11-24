@@ -227,12 +227,13 @@ struct AddButton: View {
 struct PushedHeader<Subtitle: View>: View {
     var title: LocalizedStringResource
     var backID: String
-    var onBack: () -> Void
+    /// nil: no Back button (the chat pane on wide screens).
+    var onBack: (() -> Void)?
     @ViewBuilder var subtitle: Subtitle
 
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: onBack) {
+            if let onBack { Button(action: onBack) {
                 Image(systemName: "chevron.left").font(.system(size: 17, weight: .heavy))
                     .foregroundStyle(Theme.brandText)
                     .frame(width: 44, height: 44)
@@ -241,7 +242,7 @@ struct PushedHeader<Subtitle: View>: View {
             }
             .buttonStyle(.squishIcon)
             .accessibilityLabel("Back")
-            .accessibilityIdentifier(backID)
+            .accessibilityIdentifier(backID) }
             VStack(alignment: .leading, spacing: 0) {
                 DisplayTitle(title: title, pushed: true)
                     .accessibilityAddTraits(.isHeader)

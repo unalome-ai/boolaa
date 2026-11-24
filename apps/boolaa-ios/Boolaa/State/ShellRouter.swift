@@ -58,8 +58,13 @@ final class ShellRouter {
     var showSearch = false
     /// A chat message opened from search: the chat loads the window around it, scrolls to it and rings it.
     var chatJump: UUID?
+    /// Wide screens: the chat has its own pane beside the tab, so opening it pushes nothing.
+    var chatEmbedded = false {
+        didSet { if chatEmbedded { path.removeAll { $0 == .chat } } }
+    }
 
     func open(_ destination: ShellDestination) {
+        if destination == .chat && chatEmbedded { return }
         if path.last != destination { path.append(destination) }
     }
 

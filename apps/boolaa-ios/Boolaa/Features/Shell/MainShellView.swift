@@ -10,43 +10,27 @@ struct MainShellView: View {
     @State private var router = ShellRouter()
     @State private var appliedDebugHooks = false
     @State private var showMascots = false
+    /// The shell's width: from `ShellLayout.wideMinWidth` the chat gets its own pane.
+    @State private var width: CGFloat = 0
+    private var wide: Bool { ShellLayout.isWide(width: width) }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            VStack(spacing: 0) {
-                ShellHeader(title: router.tab.title)
-                    // §8.1: the band is exactly as tall as the header (plus the status bar above it).
-                    .background { FeatureBand(hue: router.tab.bandScreen.hue(bubble: bubbleHue)).ignoresSafeArea(edges: .top) }
-                ConnectivityBanner()
-                ZStack {
-                    ZStack {
-                        switch router.tab {
-                        case .home: HomeView().transition(contentTransition)
-                        case .events: EventsView().transition(contentTransition)
-                        case .food: FoodView().transition(contentTransition)
-                        case .marketplace: MarketplaceView().transition(contentTransition)
-                        case .settings: SettingsView().transition(contentTransition)
-                        }
-                    }
-                    // Rebuild tab content when the bubble changes, or after a block/unblock, so every screen reloads.
-                    .id("\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)")
-                    .transition(contentTransition)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        HStack(spacing: 0) {
+            main
+            if wide {
+                Rectangle().fill(Theme.hairline).frame(width: 1).ignoresSafeArea()
+                ChatView(embedded: true)
+                    .frame(width: ShellLayout.chatWidth(totalWidth: width))
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("chat-pane")
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
             }
-            .background { ShellBackground() }
-            .overlay(alignment: .bottom) {
-                Dock(selection: $router.tab, unread: unread.count(for: session.currentBubble?.id)) { router.open(.chat) }
-            }
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: ShellDestination.self) { destination in
-                switch destination {
-                case .chat: ChatView()
-                case .links: LinksView()
-                }
-            }
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { newWidth in
+            width = newWidth
+            router.chatEmbedded = ShellLayout.isWide(width: newWidth)
         }
         .overlay { CheerHost() }
         .environment(router)
@@ -86,6 +70,44 @@ struct MainShellView: View {
         .onAppear(perform: applyDebugHooks)
         // A tapped notification (docs/push-notifications.md §5), also one that launched the app.
         .task(id: push.pendingRoute?.id) { applyPushRoute() }
+    }
+
+    /// The tab with its header and dock; on a phone also the pushed chat.
+    private var main: some View {
+        NavigationStack(path: $router.path) {
+            VStack(spacing: 0) {
+                ShellHeader(title: router.tab.title)
+                    // §8.1: the band is exactly as tall as the header (plus the status bar above it).
+                    .background { FeatureBand(hue: router.tab.bandScreen.hue(bubble: bubbleHue)).ignoresSafeArea(edges: .top) }
+                ConnectivityBanner()
+                ZStack {
+                    ZStack {
+                        switch router.tab {
+                        case .home: HomeView().transition(contentTransition)
+                        case .events: EventsView().transition(contentTransition)
+                        case .food: FoodView().transition(contentTransition)
+                        case .marketplace: MarketplaceView().transition(contentTransition)
+                        case .settings: SettingsView().transition(contentTransition)
+                        }
+                    }
+                    // Rebuild tab content when the bubble changes, or after a block/unblock, so every screen reloads.
+                    .id("\(session.currentBubble?.id.uuidString ?? "")-\(safety.contentVersion)")
+                    .transition(contentTransition)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .background { ShellBackground() }
+            .overlay(alignment: .bottom) {
+                Dock(selection: $router.tab, unread: unread.count(for: session.currentBubble?.id), showsChat: !wide) { router.open(.chat) }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: ShellDestination.self) { destination in
+                switch destination {
+                case .chat: ChatView()
+                case .links: LinksView()
+                }
+            }
+        }
     }
 
     /// Switches to the bubble in the payload and opens its screen; a bubble the user is no longer in opens Home.
@@ -317,19 +339,23 @@ struct BubbleChip: View {
 struct Dock: View {
     @Binding var selection: MainTab
     var unread = 0
+    /// false on wide screens: the chat has its own pane, so no round chat button.
+    var showsChat = true
     var onChat: () -> Void
     @State private var rowWidth: CGFloat = 0
 
     var body: some View {
         let margin = DockLayout.sideMargin(rowWidth: rowWidth)
         HStack(spacing: DockLayout.gap) {
-            PillTabBar(selection: $selection, barWidth: DockLayout.barWidth(rowWidth: rowWidth), rowWidth: rowWidth)
-            ChatFAB(unread: unread, action: onChat)
+            PillTabBar(selection: $selection, barWidth: DockLayout.barWidth(rowWidth: rowWidth, withChat: showsChat), rowWidth: rowWidth)
+            if showsChat { ChatFAB(unread: unread, action: onChat) }
         }
         .padding(.horizontal, margin)
         .padding(.bottom, 8)
         .padding(.top, 28)
-        .frame(maxWidth: .infinity)
+        // minWidth 0: the row measures the space it's offered, not the bar inside it, so it can shrink again
+        // (an iPhone Duo folding back from the wide layout kept the wide bar and spilled off the screen).
+        .frame(minWidth: 0, maxWidth: .infinity)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
         .background {
             LinearGradient(stops: [.init(color: Theme.background.opacity(0), location: 0),

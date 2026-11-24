@@ -47,6 +47,22 @@ extension MainTab {
     }
 }
 
+/// Wide screens (an unfolded iPhone Duo, about 950 pt): the tab on the left, the bubble chat always open on the
+/// right (spec "Wide screens"). Phones stay single-column.
+enum ShellLayout {
+    /// From this width the chat gets its own pane.
+    static let wideMinWidth: CGFloat = 820
+    static let chatMinWidth: CGFloat = 340
+    static let chatMaxWidth: CGFloat = 440
+
+    static func isWide(width: CGFloat) -> Bool { width >= wideMinWidth }
+
+    /// The chat pane: 42 % of the width, kept between 340 and 440 pt.
+    static func chatWidth(totalWidth: CGFloat) -> CGFloat {
+        min(chatMaxWidth, max(chatMinWidth, (totalWidth * 0.42).rounded()))
+    }
+}
+
 /// Dock geometry and the "does the label fit" rule (§8.3).
 enum DockLayout {
     static let barPadding: CGFloat = 5
@@ -64,9 +80,9 @@ enum DockLayout {
     /// Side margin of the dock row: 16, or 12 below 360 wide.
     static func sideMargin(rowWidth: CGFloat) -> CGFloat { rowWidth < 360 ? 12 : 16 }
 
-    /// The bar fills the row left of the chat orb.
-    static func barWidth(rowWidth: CGFloat) -> CGFloat {
-        rowWidth - 2 * sideMargin(rowWidth: rowWidth) - chatOrb - gap
+    /// The bar fills the row left of the chat orb (the whole row when the chat has its own pane).
+    static func barWidth(rowWidth: CGFloat, withChat: Bool = true) -> CGFloat {
+        rowWidth - 2 * sideMargin(rowWidth: rowWidth) - (withChat ? chatOrb + gap : 0)
     }
 
     /// Width of the active pill with its label.

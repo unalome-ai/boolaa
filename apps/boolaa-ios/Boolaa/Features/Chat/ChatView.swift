@@ -288,6 +288,8 @@ private struct ViewedPhoto: Identifiable {
 /// Bubble chat (spec §6, "Chat"): pages of 50 loaded as you scroll up, realtime inserts and updates,
 /// photos, deleting your own messages, unread marker and the "New messages" divider.
 struct ChatView: View {
+    /// The always-open chat pane of a wide screen: no Back button.
+    var embedded = false
     @Environment(SessionStore.self) private var session
     @Environment(SafetyStore.self) private var safety
     @Environment(UnreadStore.self) private var unread
@@ -534,6 +536,12 @@ struct ChatView: View {
             Task { await markRead() }
         }
         .onDisappear { visible = false }
+        // The embedded pane is already on screen when "Ask in chat" hands over a draft.
+        .onChange(of: router.chatDraft) { _, draft in
+            guard embedded, draft != nil, let pending = router.takeChatDraft() else { return }
+            composerModel.append(pending.text, mention: pending.mention)
+            composerModel.focused = true
+        }
         // No banner for this chat's pushes while it's on screen; clear the ones already delivered.
         .reportsVisibleChat(session.currentBubble?.id)
         .onChange(of: scenePhase) { _, phase in
@@ -564,7 +572,7 @@ struct ChatView: View {
     private var bubbleHue: Hue { Hue.forID(session.currentBubble?.id) }
 
     private var header: some View {
-        PushedHeader(title: "Chat", backID: "chat-back", onBack: { dismiss() }) {
+        PushedHeader(title: "Chat", backID: "chat-back", onBack: embedded ? nil : { dismiss() }) {
             BubbleNameTag(bubble: session.currentBubble)
         }
         .padding(.horizontal, 16)
